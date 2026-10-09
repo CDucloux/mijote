@@ -20,7 +20,7 @@ import {
   TECHNIQUE_CATEGORIES, UTENSIL_CATEGORIES, buildTechniqueFromDraft,
 } from "@/lib/household/dataYaml.js";
 import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
-import { PRECAUTION_TONES } from "@/lib/utensils/usagePrecaution.js";
+import { PRECAUTION_TONES, PRECAUTION_LIMITS } from "@/lib/utensils/usagePrecaution.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { formatMonths } from "@/lib/food/seasonality.js";
 import { techniqueVisual } from "@/lib/recipes/techniqueDisplay.js";
@@ -990,9 +990,9 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
               <select className="field-input" value={prec.tone || "heat"} onChange={e => upPrec({ tone: e.target.value })} style={{ marginBottom: 10 }}>
                 {Object.entries(PRECAUTION_TONES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
-              <input className="field-input" placeholder="Titre (ex: Évitez le feu maximum)" value={prec.title || ""} onChange={e => upPrec({ title: e.target.value })} style={{ marginBottom: 10 }} />
-              <textarea className="field-input" placeholder="Description courte (1 à 3 phrases)" rows={3} value={prec.description || ""} onChange={e => upPrec({ description: e.target.value })} style={{ marginBottom: 10, resize: "vertical" }} />
-              <input className="field-input" placeholder="Bon réflexe (facultatif)" value={prec.tip || ""} onChange={e => upPrec({ tip: e.target.value })} style={{ marginBottom: 14 }} />
+              <input className="field-input" placeholder="Titre (ex: Évitez le feu maximum)" maxLength={PRECAUTION_LIMITS.title} value={prec.title || ""} onChange={e => upPrec({ title: e.target.value })} style={{ marginBottom: 10 }} />
+              <textarea className="field-input" placeholder="Description courte (1 à 3 phrases)" rows={3} maxLength={PRECAUTION_LIMITS.description} value={prec.description || ""} onChange={e => upPrec({ description: e.target.value })} style={{ marginBottom: 10, resize: "vertical" }} />
+              <input className="field-input" placeholder="Bon réflexe (facultatif)" maxLength={PRECAUTION_LIMITS.tip} value={prec.tip || ""} onChange={e => upPrec({ tip: e.target.value })} style={{ marginBottom: 14 }} />
             </>);
           })()}
           <div style={{ display: "flex", gap: 10 }}>

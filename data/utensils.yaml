@@ -1,5 +1,10 @@
 # Base d'ustensiles Cardamome (69) – généré, réimportable.
 
+schema_version: 1
+exported_at: 2026-10-09T06:26:00.000Z
+count: 69
+utensils:
+
 - id: db_u1782069690803
   name: Balance de cuisine
   category: mesure
@@ -28,9 +33,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqas64t2sdc598.png?alt=media&token=6452cbe7-4188-4e5c-8aee-c7da9f947e88
   usagePrecaution:
     tone: heat
-    title: "Pas besoin de chauffer trop fort"
+    title: Pas besoin de chauffer trop fort
     description: "L'inox chauffe vite et bien : inutile de dépasser les deux tiers de la puissance maximale de la plaque. Au-delà, on ne cuit pas plus vite, mais on brûle l'huile et on fait accrocher les aliments."
-    tip: "Reste autour des deux tiers de la puissance maximale de la plaque (par exemple 4 sur 6) et adapte à la taille du fond."
+    tip: Reste autour des deux tiers de la puissance maximale de la plaque (par exemple 4 sur 6) et adapte à la taille du fond.
 
 - id: db_u_cercle_a_patisserie
   name: Cercle à pâtisserie
@@ -53,8 +58,8 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsocukkv0w3g8u.jpg?alt=media&token=21bffee9-8754-4434-9312-b004ed44a318
   usagePrecaution:
     tone: heat
-    title: "Montée en température progressive"
-    description: "La fonte accumule fortement la chaleur et la restitue longtemps. À feu vif elle surchauffe et attache."
+    title: Montée en température progressive
+    description: La fonte accumule fortement la chaleur et la restitue longtemps. À feu vif elle surchauffe et attache.
     tip: "Démarre à feu moyen, puis baisse une fois chaude : elle tient la température seule."
 
 - id: db_u_cocotte_minute
@@ -63,9 +68,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsod50ff0za1rh.jpg?alt=media&token=e74c51bf-ab08-4505-9ed0-38dbdd7451e8
   usagePrecaution:
     tone: warning
-    title: "Vérifie soupape et joint"
-    description: "Sous pression, une soupape encrassée ou un joint fatigué devient dangereux, et on ne force jamais l'ouverture tant que la pression n'est pas retombée."
-    tip: "Contrôle le joint, ne remplis pas au-delà des deux tiers, et laisse la pression chuter avant d'ouvrir."
+    title: Vérifie soupape et joint
+    description: Sous pression, une soupape encrassée ou un joint fatigué devient dangereux, et on ne force jamais l'ouverture tant que la pression n'est pas retombée.
+    tip: Contrôle le joint, ne remplis pas au-delà des deux tiers, et laisse la pression chuter avant d'ouvrir.
 
 - id: db_u_corne_a_patisserie
   name: Corne à pâtisserie
@@ -93,9 +98,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsochiikydx1t4.jpg?alt=media&token=36c17c28-0b2a-45f2-83ad-938c2f3c5878
   usagePrecaution:
     tone: heat
-    title: "Chaleur vive mais constante"
-    description: "Une crêpière chauffe vite et supporte mal la surchauffe à vide, surtout si elle est antiadhésive."
-    tip: "Chauffe à feu moyen-vif, graisse légèrement et garde une chaleur régulière entre deux crêpes."
+    title: Chaleur vive mais constante
+    description: Une crêpière chauffe vite et supporte mal la surchauffe à vide, surtout si elle est antiadhésive.
+    tip: Chauffe à feu moyen-vif, graisse légèrement et garde une chaleur régulière entre deux crêpes.
 
 - id: db_u_cuillere_en_bois
   name: Cuillère en bois
@@ -139,9 +144,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqdnig9i9sbff2.png?alt=media&token=f02ba0c9-28a6-4b45-bba7-c43055787de8
   usagePrecaution:
     tone: heat
-    title: "Parfait pour mijoter doucement"
+    title: Parfait pour mijoter doucement
     description: "La fonte garde la chaleur : une fois à température, un tout petit feu suffit à entretenir le frémissement d'un bouillon ou d'une sauce."
-    tip: "Porte à ébullition puis réduis au minimum pour mijoter sans déborder."
+    tip: Porte à ébullition puis réduis au minimum pour mijoter sans déborder.
 
 - id: db_u1781461063647
   name: Film alimentaire
@@ -271,9 +276,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqdnh6nwrruh4i.png?alt=media&token=c4defd73-aed8-4093-a454-3fa11c2c723b
   usagePrecaution:
     tone: warning
-    title: "Attention au choc thermique"
-    description: "Passer une plaque brûlante sous l'eau froide la voile durablement, et une plaque déformée cuit ensuite de façon inégale."
-    tip: "Laisse-la refroidir à l'air avant de la laver."
+    title: Attention au choc thermique
+    description: Passer une plaque brûlante sous l'eau froide la voile durablement, et une plaque déformée cuit ensuite de façon inégale.
+    tip: Laisse-la refroidir à l'air avant de la laver.
 
 - id: db_u1781433337569
   name: Plaque de cuisson perforée
@@ -281,9 +286,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqdne7n6qh6oj3.png?alt=media&token=49fa001f-bb7f-4ce6-a10d-647320dbe84e
   usagePrecaution:
     tone: info
-    title: "Pensée pour la circulation d'air"
-    description: "Les perforations dorent le dessous des pâtes et des pains. Un papier cuisson plein posé dessus annule complètement cet effet."
-    tip: "Utilise-la nue ou avec un tapis perforé, jamais avec du papier cuisson classique."
+    title: Pensée pour la circulation d'air
+    description: Les perforations dorent le dessous des pâtes et des pains. Un papier cuisson plein posé dessus annule complètement cet effet.
+    tip: Utilise-la nue ou avec un tapis perforé, jamais avec du papier cuisson classique.
 
 - id: db_u1781433036296
   name: Plat à gratin
@@ -291,9 +296,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmselivcf1xu9z1.jpg?alt=media&token=321a036e-6c55-400d-8c9a-4d4e942cc184
   usagePrecaution:
     tone: warning
-    title: "Évite les chocs thermiques"
-    description: "Un plat en verre ou céramique sorti du four et posé sur une surface froide ou humide peut se fissurer d'un coup."
-    tip: "Pose-le sur un dessous sec ou un torchon plié, et évite d'y verser un liquide froid quand il est brûlant."
+    title: Évite les chocs thermiques
+    description: Un plat en verre ou céramique sorti du four et posé sur une surface froide ou humide peut se fissurer d'un coup.
+    tip: Pose-le sur un dessous sec ou un torchon plié, et évite d'y verser un liquide froid quand il est brûlant.
 
 - id: db_u_poche_a_douille
   name: Poche à douille
@@ -306,9 +311,20 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmqas7lq03q90zf.png?alt=media&token=761afab1-7933-4ef1-8364-2e7d5d2d797d
   usagePrecaution:
     tone: heat
-    title: "Chauffe juste ce qu'il faut"
-    description: "Bien chaude, l'inox devient quasi antiadhésive ; poussé à fond, il brûle l'huile. Puissance conseillée selon l'usage (en fraction du maximum) :\nMijoter, maintenir : 1/5 à 1/3\nCuisson douce : 1/3 à 1/2\nSauté, cuisson normale : 1/2 à 2/3\nPréchauffage rapide : 1/2 à 2/3\nSaisie très courte : 2/3 à fond\nÀ éviter : chauffer à vide à pleine puissance"
-    tip: "Fais le test de la goutte d'eau (elle doit perler et glisser) avant d'huiler."
+    title: Chauffe juste ce qu'il faut
+    description: |-
+      Bien chaude, l'inox devient quasi antiadhésive ; poussé à fond, il brûle l'huile. Puissance conseillée selon l'usage (en fraction du maximum) :
+
+      | Usage | Puissance |
+      | --- | --- |
+      | Mijoter, maintenir | 1/5 à 1/3 |
+      | Cuisson douce | 1/3 à 1/2 |
+      | Sauté, cuisson normale | 1/2 à 2/3 |
+      | Préchauffage rapide | 1/2 à 2/3 |
+      | Saisie très courte | 2/3 à fond |
+
+      À éviter : chauffer à vide à pleine puissance
+    tip: Fais le test de la goutte d'eau (elle doit perler et glisser) avant d'huiler.
 
 - id: db_u_presse_agrumes
   name: Presse-agrumes
@@ -357,9 +373,9 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fms5qyy9h5eaqae.jpg?alt=media&token=0f5c06ae-c972-489c-bb09-a9ceecb68174
   usagePrecaution:
     tone: heat
-    title: "Préchauffe et ne surcharge pas"
-    description: "Large et pratique pour saisir, la sauteuse perd vite sa chaleur quand on la remplit. Trop froide ou trop chargée, les aliments rendent leur eau au lieu de dorer."
-    tip: "Préchauffe à feu moyen-vif et saisis en plusieurs fois si la quantité est importante."
+    title: Préchauffe et ne surcharge pas
+    description: Large et pratique pour saisir, la sauteuse perd vite sa chaleur quand on la remplit. Trop froide ou trop chargée, les aliments rendent leur eau au lieu de dorer.
+    tip: Préchauffe à feu moyen-vif et saisis en plusieurs fois si la quantité est importante.
 
 - id: db_u1781260056927
   name: Spatule
@@ -402,6 +418,6 @@
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmsekmy12ve7rty.jpg?alt=media&token=bb5997e6-6248-42be-a25a-aa420339fa4e
   usagePrecaution:
     tone: heat
-    title: "Fais-le fumer avant de saisir"
+    title: Fais-le fumer avant de saisir
     description: "Le wok se cuisine à feu vif : il doit être brûlant pour saisir sans que les aliments bouillent. Mais l'huile versée trop tôt fume et rancit."
-    tip: "Chauffe le wok à vide jusqu'au léger filet de fumée, puis verse l'huile juste avant les aliments."
+    tip: Chauffe le wok à vide jusqu'au léger filet de fumée, puis verse l'huile juste avant les aliments.

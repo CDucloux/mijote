@@ -1,111 +1,6948 @@
-# ─── Base d'ingrédients (échantillon de format) ───────────────────────────────
-# Source de vérité versionnée pour master/ingredients. Ce fichier montre le
-# FORMAT attendu par l'import YAML (Configuration › Ingrédients) et par
-# `npm run seed`. La base réelle peut rester éditée dans l'app et exportée en
-# Markdown ; ce YAML sert de canon pour les valeurs qu'on veut figer dans le repo.
-#
-# Schéma d'une entrée :
-#   id            dbid stable (facultatif ; généré si absent à l'import).
-#   name          nom affiché (requis).
-#   aliases       autres appellations (pour le rapprochement d'ingrédients).
-#   category      clé de catégorie (voir src/constants/categories.js) : doit
-#                 exister dans les catégories de la base.
-#   months        mois de saison [1..12] (facultatif).
-#   gramsPerPiece poids moyen d'une pièce, en g (facultatif).
-#   image         URL (facultatif).
-#   nutrition     valeurs pour 100 g : calories, protein, carbs, sugar, fat,
-#                 saturatedFat, omega3, fiber, salt.
-#   tips          [{ type, text }] : voir src/constants/tipTypes.js.
+# Base d'ingrédients Cardamome (326) – généré, réimportable. Valeurs pour 100 g.
+# Valeurs nutritionnelles de référence : table Ciqual (data/ciqual/).
 
-- id: db_i_carotte
-  name: Carotte
-  aliases: [carottes]
+schema_version: 1
+exported_at: 2026-10-09T06:26:00.000Z
+count: 326
+ingredients:
+
+- id: db_i1781044604989
+  name: Ail
   category: vegetable
-  months: [1, 2, 3, 9, 10, 11, 12]
-  gramsPerPiece: 120
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  gramsPerPiece: 7
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq77yuwomhyef9.png?alt=media&token=075de6ad-0c67-4198-b842-c66c58437ef4
+  tips:
+    - type: prep
+      text: Dégermez la gousse (retirez le germe vert central) pour une saveur plus douce et digeste.
+    - type: conservation
+      text: Conservez la tête entière dans un endroit sec, aéré et à l'abri de la lumière. Jamais au frigo.
+    - type: usage
+      text: Écrasé puis laissé reposer 10 min, il libère ses composés bénéfiques. Évitez de le brûler, il devient amer.
+    - type: antigaspi
+      text: "Une gousse qui germe reste utilisable : plantez-la pour récolter de l'ail des jardins."
   nutrition:
-    calories: 41
-    protein: 0.9
-    carbs: 9.6
-    sugar: 4.7
-    fat: 0.2
-    saturatedFat: 0.04
-    fiber: 2.8
-    salt: 0.07
-  qualityRecommendation:
-    preferredForms: [fresh, frozen]
-    message: Pour un meilleur résultat, privilégiez les carottes fraîches ou surgelées.
-
-- id: db_i_petits_pois
-  name: Petits pois
-  aliases: [petit pois, pois]
-  category: vegetable
-  months: [5, 6, 7]
-  qualityRecommendation:
-    preferredForms: [fresh, frozen]
-    message: Pour un meilleur résultat, privilégiez les petits pois frais ou surgelés.
-
-- id: db_i_epinards
-  name: Épinards
-  aliases: [epinards, épinard]
-  category: vegetable
-  months: [3, 4, 5, 9, 10, 11]
-  qualityRecommendation:
-    preferredForms: [fresh, frozen]
-    message: Pour un meilleur résultat, privilégiez les épinards frais ou surgelés.
-
-- id: db_i_oignon
-  name: Oignon
-  aliases: [oignons]
-  category: vegetable
-  gramsPerPiece: 110
-  nutrition:
-    calories: 40
-    protein: 1.1
-    carbs: 9.3
-    sugar: 4.2
-    fat: 0.1
-    saturatedFat: 0.04
-    fiber: 1.7
-    salt: 0.01
-
-- id: db_i_beurre
-  name: Beurre
-  category: dairy
-  nutrition:
-    calories: 745
-    protein: 0.7
-    carbs: 0.6
-    sugar: 0.6
-    fat: 82
-    saturatedFat: 51
-    fiber: 0
+    calories: 109
+    protein: 5.31
+    carbs: 18.6
+    sugar: 1.2
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 5.8
     salt: 0.02
 
-- id: db_i_farine
-  name: Farine
-  aliases: [farine de blé]
-  category: grain
+- id: db_i17849415221388545
+  name: Artichaut
+  category: vegetable
+  months:
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  gramsPerPiece: 130
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms21s1takyokfq.png?alt=media&token=541c70bf-009d-495c-8524-fa0700f7a4d2
   nutrition:
-    calories: 364
-    protein: 10
-    carbs: 76
-    sugar: 0.3
-    fat: 1
-    saturatedFat: 0.2
+    calories: 45.4
+    protein: 3.27
+    carbs: 4.84
+    sugar: 0.99
+    fat: 0.15
+    saturatedFat: 0.036
+    omega3: 0
+    fiber: 5.4
+    salt: 0.24
+
+- id: db_i1781254007435
+  name: Asperge Blanche
+  category: vegetable
+  months:
+    - 4
+    - 5
+    - 6
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaon5ip4q81d3.png?alt=media&token=34c48556-520a-4c94-9108-66898949f3ed
+  tips:
+    - type: prep
+      text: Épluchez-les de la pointe vers la base et cassez le talon ligneux.
+    - type: conservation
+      text: Debout dans un peu d'eau au frigo, ou enroulées dans un linge humide, 3 jours max.
+    - type: usage
+      text: Cuisson douce à l'eau salée ou à la vapeur 12-18 min selon la taille. Délicieuses tièdes avec une vinaigrette.
+    - type: antigaspi
+      text: Gardez les épluchures et talons pour un velouté ou un bouillon parfumé.
+  nutrition:
+    calories: 21
+    protein: 2.2
+    carbs: 1.62
+    sugar: 1.62
+    fat: 0.12
+    saturatedFat: 0.04
+    omega3: 0
+    fiber: 2.1
+    salt: 0.01
+
+- id: db_i1781045869706
+  name: Asperge Verte
+  category: vegetable
+  months:
+    - 4
+    - 5
+    - 6
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq78pzgelcxla8.png?alt=media&token=5c6d70db-8187-46d3-ae96-225e853a68c6
+  tips:
+    - type: prep
+      text: "Inutile de les éplucher : cassez simplement le talon dur."
+    - type: conservation
+      text: Au frigo, pointes protégées, 3-4 jours. Plus fines, elles se conservent moins longtemps.
+    - type: usage
+      text: Rôties au four 10 min ou sautées au wok, elles gardent du croquant. Pointes idéales en salade.
+    - type: antigaspi
+      text: Les talons mixés font une excellente base de soupe.
+  nutrition:
+    calories: 24.7
+    protein: 2.46
+    carbs: 2.03
+    sugar: 1.5
+    fat: 0.27
+    saturatedFat: 0.07
+    omega3: 0.01
+    fiber: 2.15
+    salt: 0.01
+
+- id: db_i1781046371694
+  name: Aubergine
+  category: vegetable
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+  gramsPerPiece: 400
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq790ptdmf0ulq.png?alt=media&token=3d755826-32cb-4fe3-b814-224dc5d2944f
+  tips:
+    - type: prep
+      text: Inutile de la dégorger au sel avec les variétés actuelles. Salez-la juste avant cuisson.
+    - type: conservation
+      text: À température ambiante 2-3 jours, ou au bac à légumes 5 jours. Sensible au froid.
+    - type: usage
+      text: "Elle boit l'huile : préférez une cuisson au four ou à la vapeur avant de la poêler."
+    - type: freezing
+      text: Faites-la griller ou cuire avant de congeler ; crue elle devient spongieuse.
+  nutrition:
+    calories: 22.9
+    protein: 0.98
+    carbs: 2.7
+    sugar: 2.7
+    fat: 0.18
+    saturatedFat: 0.03
+    omega3: 0.01
+    fiber: 3
+    salt: 0.01
+
+- id: db_i1784941283079231
+  name: Betterave
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms21y2pqzerlpb.jpg?alt=media&token=d41e99d8-2f12-4747-90fb-fa60cc5278fb
+  nutrition:
+    calories: 40.2
+    protein: 1.61
+    carbs: 6.34
+    sugar: 6.34
+    fat: 0.17
+    saturatedFat: 0.027
+    omega3: 0.01
+    fiber: 2.8
+    salt: 0.2
+
+- id: db_i1781044919109
+  name: Brocoli
+  category: vegetable
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq785hgytud28k.png?alt=media&token=7629279a-16c2-4bcc-9980-72a5d6506bc2
+  tips:
+    - type: prep
+      text: "Récupérez aussi le trognon : épluché, il est tendre et savoureux."
+    - type: conservation
+      text: Au bac à légumes, non lavé, 4-5 jours. Les fleurettes jaunissent vite.
+    - type: usage
+      text: Vapeur 5-6 min pour garder couleur, croquant et vitamines. Évitez la sur-cuisson.
+    - type: freezing
+      text: "Blanchissez 3 min puis congelez : il garde sa texture plusieurs mois."
+  nutrition:
+    calories: 31.9
+    protein: 2.9
+    carbs: 2.15
+    sugar: 1.7
+    fat: 0.36
+    saturatedFat: 0.05
+    omega3: 0
+    fiber: 2.6
+    salt: 0.07
+
+- id: db_i1781047972649
+  name: Câpres
+  category: vegetable
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq79z1kwb7ucgp.png?alt=media&token=99f06c41-8a5f-4c0f-a98c-704e946bbd61
+  nutrition:
+    calories: 37.7
+    protein: 2.18
+    carbs: 3.5
+    sugar: 0.41
+    fat: 0.86
+    saturatedFat: 0.23
+    omega3: 0
+    fiber: 3.6
+    salt: 4.06
+
+- id: db_i1781044461514
+  name: Carotte
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  gramsPerPiece: 125
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq77vtc69r788p.png?alt=media&token=80f7347a-485a-49d5-96b0-85ceda782e4b
+  tips:
+    - type: prep
+      text: Un coup de brosse suffit souvent ; la peau concentre des nutriments.
+    - type: conservation
+      text: Sans les fanes (qui la dessèchent), au bac à légumes, jusqu'à 2 semaines.
+    - type: usage
+      text: Crue elle garde sa vitamine C ; cuite avec un filet d'huile elle libère mieux ses caroténoïdes.
+    - type: antigaspi
+      text: Les fanes font un pesto ou une soupe verte.
+  nutrition:
+    calories: 30.2
+    protein: 0.78
+    carbs: 5.16
+    sugar: 4.85
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 2.9
+    salt: 0.12
+
+- id: db_i1781046652013
+  name: Cébette
+  aliases:
+    - ciboule
+    - oignon nouveau
+  category: vegetable
+  months:
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq796r77alow7o.png?alt=media&token=78bcb3bf-8161-4669-bfa8-a5864cbacb7a
+  tips:
+    - type: conservation
+      text: Au frigo, racines dans un verre d'eau ou enroulée dans un linge humide, 1 semaine.
+    - type: usage
+      text: Le blanc se cuisine comme un petit oignon, le vert se cisèle cru en finition.
+    - type: antigaspi
+      text: "Replantez les racines : elles repoussent en quelques jours sur le rebord de fenêtre."
+  nutrition:
+    calories: 30.8
+    protein: 2.55
+    carbs: 2.85
+    sugar: 2.09
+    fat: 0.46
+    saturatedFat: 0.09
+    omega3: 0.1
+    fiber: 2.55
+    salt: 0.02
+
+- id: db_i17849415221285269
+  name: Céleri branche
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms22140185947z.jpg?alt=media&token=96eaccb5-c2f4-4412-b49a-08f6b375cc13
+  nutrition:
+    calories: 15.4
+    protein: 0.63
+    carbs: 2.41
+    sugar: 1.3
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 2.2
+    salt: 0.2
+
+- id: db_i17849415221309353
+  name: Céleri rave
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2254zgags06f.jpg?alt=media&token=ef31a5e7-049a-4281-9a0c-a86f586e5c81
+  nutrition:
+    calories: 26.3
+    protein: 1.38
+    carbs: 3.98
+    sugar: 1.6
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 4.5
+    salt: 0.085
+
+- id: db_i17849415221522106
+  name: Chou chinois
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms22fhs26bdnqp.jpg?alt=media&token=21049c3f-a758-46c7-8904-dee7dfca1896
+  nutrition:
+    calories: 16.4
+    protein: 1.25
+    carbs: 2.1
+    sugar: 0.82
+    fat: 0.2
+    saturatedFat: 0.042
+    omega3: 0.055
+    fiber: 0.73
+    salt: 0.023
+
+- id: db_i1781045957629
+  name: Chou de Bruxelles
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms223cuj88iocn.jpg?alt=media&token=faab7e79-069a-45ef-aab5-329730bf4715
+  tips:
+    - type: prep
+      text: Retirez les premières feuilles et incisez une croix à la base pour une cuisson homogène.
+    - type: conservation
+      text: Sur tige il se garde mieux ; sinon au bac à légumes 4-5 jours.
+    - type: usage
+      text: Rôtis au four coupés en deux, ils caramélisent et perdent leur amertume.
+    - type: freezing
+      text: Blanchis 3 min, ils se congèlent très bien.
+  nutrition:
+    calories: 43.9
+    protein: 3.38
+    carbs: 4.59
+    sugar: 2.2
+    fat: 0.3
+    saturatedFat: 0.06
+    omega3: 0.12
+    fiber: 3.8
+    salt: 0.06
+
+- id: db_i1781289581558
+  name: Chou fleur
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb9tlfdxuy13k.png?alt=media&token=5ec4d4ec-d881-41a1-bc7e-47755862f132
+  tips:
+    - type: prep
+      text: Détaillez en fleurettes ; le trognon se cuisine râpé ou en velouté.
+    - type: conservation
+      text: Au bac à légumes, tête vers le bas, 5-7 jours.
+    - type: usage
+      text: Vapeur pour rester digeste, ou rôti entier pour une texture fondante.
+    - type: antigaspi
+      text: Râpé cru, il remplace le riz ; les feuilles se cuisinent sautées.
+  nutrition:
+    calories: 24.9
+    protein: 1.81
+    carbs: 2.13
+    sugar: 1.7
+    fat: 0.7
+    saturatedFat: 0.24
+    omega3: 0.17
+    fiber: 2.2
+    salt: 0.01
+
+- id: db_i17849415221504176
+  name: Chou romanesco
+  category: vegetable
+  months:
+    - 9
+    - 10
+    - 11
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms227m2z22kb0r.jpg?alt=media&token=2b539e4e-a7cd-4050-863c-bea02a354993
+  nutrition:
+    calories: 29.7
+    protein: 2.95
+    carbs: 2.2
+    sugar: 2.2
+    fat: 0.3
+    saturatedFat: 0.047
+    omega3: 0
+    fiber: 3.2
+    salt: 0.058
+
+- id: db_i17849415221328086
+  name: Chou rouge
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms22acnmniptax.jpg?alt=media&token=6cb3473c-21f5-4581-aec2-0907640ba34c
+  nutrition:
+    calories: 26.4
+    protein: 1.13
+    carbs: 4.33
+    sugar: 3.9
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 2.8
+    salt: 0.035
+
+- id: db_i1781044515043
+  name: Concombre
+  category: vegetable
+  months:
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  gramsPerPiece: 200
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq77wwyblzdmgf.png?alt=media&token=f86723d2-64cb-4974-a4f1-59291810d514
+  tips:
+    - type: prep
+      text: Laissez la peau (bien lavée) pour les fibres, ou rayez-la pour alléger l'amertume.
+    - type: conservation
+      text: Au bac à légumes, jamais trop froid, 5 jours. Sensible à l'éthylène des fruits.
+    - type: usage
+      text: Dégorgé au sel 15 min, il rend son eau et reste croquant en salade.
+    - type: antigaspi
+      text: Trop mûr, il se mixe en gaspacho rafraîchissant.
+  nutrition:
+    calories: 16.8
+    protein: 0.65
+    carbs: 2.87
+    sugar: 1.67
+    fat: 0.11
+    saturatedFat: 0.04
+    omega3: 0.01
+    fiber: 0.5
+    salt: 0.01
+
+- id: db_i1781962266587
+  name: Cornichon
+  category: vegetable
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmebmqyhlv77g.jpg?alt=media&token=aad3f523-624b-4521-bb03-9e1a795074df
+  nutrition:
+    calories: 16
+    protein: 1.06
+    carbs: 0.78
+    sugar: 0.6
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 1.5
+    salt: 1.72
+
+- id: db_i1781046307350
+  name: Courge Butternut
+  category: vegetable
+  months:
+    - 1
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq78zd23cipquh.png?alt=media&token=a0a8365c-fa6f-4ffd-8f4a-498aaf6abff6
+  tips:
+    - type: prep
+      text: "Sa peau fine se mange une fois rôtie : inutile de l'éplucher."
+    - type: conservation
+      text: Entière, dans un endroit frais et sec, plusieurs semaines voire mois.
+    - type: usage
+      text: Rôtie au four elle développe un goût sucré ; parfaite en velouté ou purée.
+    - type: antigaspi
+      text: Torréfiez les graines au four pour un apéritif croustillant.
+  nutrition:
+    calories: 30.5
+    protein: 1
+    carbs: 5.4
+    sugar: 2.2
+    fat: 0.1
+    saturatedFat: 0.02
+    omega3: 0
+    fiber: 2
+    salt: 0.01
+
+- id: db_i1781044668591
+  name: Courgette
+  category: vegetable
+  months:
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  gramsPerPiece: 250
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq7808une9xrqv.png?alt=media&token=0bed16e1-7211-4c3d-9c08-25568cc7297f
+  tips:
+    - type: prep
+      text: "Ni épluchage ni épépinage si elle est jeune : tout se mange."
+    - type: conservation
+      text: Au bac à légumes 4-5 jours ; elle se ride vite à l'air.
+    - type: usage
+      text: Saisie à feu vif pour rester ferme, ou crue en carpaccio. Elle rend de l'eau, salez en fin de cuisson.
+    - type: freezing
+      text: Râpée et essorée, elle se congèle pour les cakes et poêlées.
+  nutrition:
+    calories: 16.7
+    protein: 1.21
+    carbs: 1.75
+    sugar: 1.74
+    fat: 0.32
+    saturatedFat: 0.08
+    omega3: 0.06
+    fiber: 1
+    salt: 0.02
+
+- id: db_i17849415221462143
+  name: Cresson
+  category: vegetable
+  months:
+    - 3
+    - 4
+    - 5
+    - 10
+    - 11
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms22bpc3ydj156.jpg?alt=media&token=564e159b-b866-4c90-917f-5003ca377231
+  nutrition:
+    calories: 23.8
+    protein: 2.6
+    carbs: 1.22
+    sugar: 1.22
+    fat: 0.7
+    saturatedFat: 0.023
+    omega3: 0.17
+    fiber: 1.1
+    salt: 0.035
+
+- id: db_i1781045398680
+  name: Échalote
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  gramsPerPiece: 25
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq78fw4ykp3u3l.png?alt=media&token=ad021158-075c-4a5e-9d7d-25a5e7764ac9
+  nutrition:
+    calories: 61.7
+    protein: 1.81
+    carbs: 12.2
+    sugar: 3.3
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 2.6
+    salt: 0.01
+
+- id: db_i1781289735966
+  name: Endive
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb9wx3aa50jr7.png?alt=media&token=d79f9d4e-f3da-41c1-bc0d-bdea3f1e495b
+  tips:
+    - type: prep
+      text: Retirez le cône amer à la base avant cuisson.
+    - type: conservation
+      text: À l'abri de la lumière (qui la verdit et l'amertume), au frigo, 1 semaine.
+    - type: usage
+      text: Braisée elle s'adoucit ; crue en salade elle apporte du croquant. Une pincée de sucre coupe l'amertume.
+    - type: antigaspi
+      text: Les feuilles extérieures font des barquettes pour l'apéritif.
+  nutrition:
+    calories: 16.6
+    protein: 1.19
+    carbs: 2.83
+    sugar: 2.4
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 1.1
+    salt: 0
+
+- id: db_i1781045023286
+  name: Épinard
+  category: vegetable
+  months:
+    - 3
+    - 4
+    - 5
+    - 6
+    - 9
+    - 10
+    - 11
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq787ssndmw3pg.png?alt=media&token=dc45eba0-7a88-4826-858f-7c537b45e820
+  tips:
+    - type: prep
+      text: Lavez en plusieurs eaux pour retirer le sable ; équeutez les grandes feuilles.
+    - type: conservation
+      text: Non lavé, au bac à légumes, 2-3 jours seulement.
+    - type: usage
+      text: "Il fond énormément : comptez 4 fois le volume cru. Cuisson express à la poêle."
+    - type: freezing
+      text: Blanchi et essoré, il se congèle en portions très pratiques.
+  nutrition:
+    calories: 33.3
+    protein: 2.68
+    carbs: 3.06
+    sugar: 0.46
+    fat: 0.39
+    saturatedFat: 0.06
+    omega3: 0.14
+    fiber: 2.6
+    salt: 0.2
+
+- id: db_i1781255702663
+  name: Fenouil
+  category: vegetable
+  description: Test pour l'accroche
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqapnh9ht6jebc.png?alt=media&token=662dd377-2d02-4a0d-885b-d69089f063ae
+  tips:
+    - type: prep
+      text: Retirez la base dure et les tiges ; gardez les plumes pour assaisonner.
+    - type: conservation
+      text: Au bac à légumes 1 semaine, bulbe bien ferme.
+    - type: usage
+      text: Cru émincé fin en salade, ou braisé/rôti pour un goût anisé plus doux.
+    - type: antigaspi
+      text: Les plumes vertes parfument un bouillon ou un poisson.
+  nutrition:
+    calories: 18.2
+    protein: 1
+    carbs: 2.63
+    sugar: 2.2
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 2.6
+    salt: 0.06
+
+- id: db_i1781045345782
+  name: Haricots Verts
+  category: vegetable
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq78erodshl50w.png?alt=media&token=5b66dada-6c5f-48df-9485-796411b868b4
+  tips:
+    - type: prep
+      text: Équeutez ; inutile de retirer le fil sur les variétés modernes.
+    - type: conservation
+      text: Au bac à légumes 3-4 jours ; ils se tachent vite.
+    - type: usage
+      text: Plongés dans l'eau bouillante salée puis refroidis à l'eau glacée, ils gardent leur vert vif.
+    - type: freezing
+      text: Blanchis 4 min, ils se congèlent toute l'année.
+  nutrition:
+    calories: 31.9
+    protein: 1.83
+    carbs: 4.14
+    sugar: 3.26
+    fat: 0.22
+    saturatedFat: 0.05
+    omega3: 0.06
     fiber: 2.7
     salt: 0.01
 
-- id: db_i_lait
-  name: Lait
-  aliases: [lait demi-écrémé]
-  category: dairy
+- id: db_i1781046225516
+  name: Laitue
+  aliases:
+    - salade
+  category: vegetable
+  months:
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq78vh5bxd2k0x.png?alt=media&token=6064ceb1-f519-4876-aaff-3b12530e9ff0
+  tips:
+    - type: prep
+      text: "Essorez bien après lavage : une feuille humide délave la vinaigrette."
+    - type: conservation
+      text: Dans un linge humide au bac à légumes, 3-4 jours.
+    - type: usage
+      text: Assaisonnez au dernier moment pour qu'elle reste croquante.
+    - type: antigaspi
+      text: Flétrie, elle se cuisine en soupe ou braisée avec des petits pois.
   nutrition:
-    calories: 47
-    protein: 3.2
-    carbs: 4.8
+    calories: 14.7
+    protein: 1.35
+    carbs: 1.22
+    sugar: 0.73
+    fat: 0.2
+    saturatedFat: 0.02
+    omega3: 0.06
+    fiber: 1.1
+    salt: 0.02
+
+- id: db_i1781289656881
+  name: Mâche
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb9v7d54sab5e.png?alt=media&token=37233a62-ea69-49f3-a01c-bf38834c003c
+  tips:
+    - type: prep
+      text: Lavez délicatement sans casser les bouquets ; retirez les racines.
+    - type: conservation
+      text: "Très fragile : au frigo dans sa barquette, 2-3 jours max."
+    - type: usage
+      text: Vinaigrette douce (noix, balsamique) pour ne pas écraser sa saveur fine.
+    - type: antigaspi
+      text: Ajoutée en fin de cuisson, elle tombe joliment dans une soupe.
+  nutrition:
+    calories: 15
+    protein: 2
+    carbs: 0.5
+    sugar: 0
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 2.3
+    salt: 0
+
+- id: db_i17849415221365523
+  name: Maïs
+  aliases:
+    - grain de maïs
+  category: vegetable
+  months:
+    - 8
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms22oi324cpnjv.jpg?alt=media&token=7202c691-62de-43bd-b6d7-9a3fac189d3b
+  nutrition:
+    calories: 97.4
+    protein: 3.36
+    carbs: 17
+    sugar: 2.74
+    fat: 1.19
+    saturatedFat: 0.19
+    omega3: 0.019
+    fiber: 2.65
+    salt: 0.01
+
+- id: db_i1781046034391
+  name: Navet
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq78th0rlgc6xr.png?alt=media&token=4db7c321-28be-4f3a-a811-73bdfb8a1b2d
+  tips:
+    - type: prep
+      text: Épluchez les gros navets ; les jeunes se cuisinent avec la peau.
+    - type: conservation
+      text: Sans fanes, au bac à légumes, 1-2 semaines.
+    - type: usage
+      text: Glacé au beurre et sucre, ou rôti, il perd son amertume.
+    - type: antigaspi
+      text: Les fanes se cuisinent comme des épinards.
+  nutrition:
+    calories: 25.6
+    protein: 0.9
+    carbs: 4.39
+    sugar: 3.71
+    fat: 0.1
+    saturatedFat: 0.01
+    omega3: 0
+    fiber: 1.8
+    salt: 0.17
+
+- id: db_i1781044286910
+  name: Oignon Jaune
+  aliases:
+    - oignon
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  gramsPerPiece: 100
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq77s02aanf6bu.png?alt=media&token=22ba85b1-cd30-406a-9278-86b0c0c1695b
+  nutrition:
+    calories: 39
+    protein: 1.1
+    carbs: 6.25
     sugar: 4.8
-    fat: 1.6
-    saturatedFat: 1
+    fat: 0.62
+    saturatedFat: 0.2
+    omega3: 0
+    fiber: 1.7
+    salt: 0.1
+
+- id: db_i1781046476361
+  name: Oignon Rouge
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  gramsPerPiece: 100
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq792ypurit5d7.png?alt=media&token=54fa4911-2667-4576-acef-5058748e8158
+  nutrition:
+    calories: 35
+    protein: 1.31
+    carbs: 5.63
+    sugar: 5.2
+    fat: 0.4
+    saturatedFat: 0.14
+    omega3: 0
+    fiber: 2.5
+    salt: 0
+
+- id: db_i1781256760879
+  name: Olive Noire
+  category: vegetable
+  gramsPerPiece: 4
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaqa4skown49v.png?alt=media&token=43fdc471-9fee-457e-8d1c-876ec7eed4c3
+  nutrition:
+    calories: 182
+    protein: 1.41
+    carbs: 0.26
+    sugar: 0.01
+    fat: 18
+    saturatedFat: 2.17
+    omega3: 0.15
+    fiber: 6.46
+    salt: 2.09
+
+- id: db_i1781046741168
+  name: Olive Verte
+  category: vegetable
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq798oesk36f5y.png?alt=media&token=90ad6b55-9e93-45d1-9b80-1431c0bd51bd
+  nutrition:
+    calories: 164
+    protein: 1.13
+    carbs: 0.61
+    sugar: 0
+    fat: 16.6
+    saturatedFat: 2.25
+    omega3: 0.17
+    fiber: 3.6
+    salt: 2.94
+
+- id: db_i17849415221406685
+  name: Panais
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 67.9
+    protein: 1.2
+    carbs: 12.6
+    sugar: 4.8
+    fat: 0.3
+    saturatedFat: 0.05
+    omega3: 0.004
+    fiber: 4.9
+    salt: 0.025
+
+- id: db_i1781047393364
+  name: Patate Douce
+  category: vegetable
+  months:
+    - 1
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq79mmnuvj1b1r.png?alt=media&token=8ebd1666-8d8b-44ff-ae75-c9aa5086a6a6
+  nutrition:
+    calories: 81.2
+    protein: 1.57
+    carbs: 17.1
+    sugar: 4.18
+    fat: 0.05
+    saturatedFat: 0.02
+    omega3: 0
+    fiber: 3
+    salt: 0.14
+
+- id: db_i1781045285910
+  name: Petits Pois
+  category: vegetable
+  months:
+    - 4
+    - 5
+    - 6
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq78dhvgmx39jc.png?alt=media&token=b5af9721-a264-4eda-96f4-595175de17e2
+  tips:
+    - type: prep
+      text: Écossez juste avant cuisson ; ils perdent leur sucre rapidement.
+    - type: conservation
+      text: En gousses au frigo 2-3 jours ; écossés, cuisez-les vite.
+    - type: usage
+      text: Cuisson courte (5-7 min) à l'eau ou à l'étouffée pour garder leur douceur.
+    - type: freezing
+      text: Écossés et blanchis 1 min, ils se congèlent parfaitement.
+  nutrition:
+    calories: 81.2
+    protein: 5.42
+    carbs: 11.4
+    sugar: 5.67
+    fat: 0.4
+    saturatedFat: 0.07
+    omega3: 0.03
+    fiber: 5.1
+    salt: 0.01
+
+- id: db_i1785155420809
+  name: Piment Rouge
+  category: vegetable
+  months:
+    - 7
+    - 8
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms37jkvwd8heq1.jpg?alt=media&token=409317e3-7c9e-4c98-b5eb-68aa7633679d
+  nutrition:
+    calories: 37.4
+    protein: 1.87
+    carbs: 5.75
+    sugar: 4.01
+    fat: 0.44
+    saturatedFat: 0.04
+    omega3: 0.01
+    fiber: 1.5
+    salt: 0.02
+
+- id: db_i1781254744509
+  name: Piment Vert
+  category: vegetable
+  months:
+    - 7
+    - 8
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqap2lcl6tqfbi.png?alt=media&token=4df4544f-d56f-4c1f-ba59-585d7dfa2ef6
+  nutrition:
+    calories: 37.4
+    protein: 1.87
+    carbs: 5.75
+    sugar: 4.01
+    fat: 0.44
+    saturatedFat: 0.04
+    omega3: 0.01
+    fiber: 1.5
+    salt: 0.02
+
+- id: db_i1781045156866
+  name: Poireau
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq78apt06ou9fg.png?alt=media&token=3456b2d3-007f-405d-92bc-ec6f7f9bc463
+  tips:
+    - type: prep
+      text: Fendez le blanc en deux et lavez sous l'eau pour retirer la terre.
+    - type: conservation
+      text: Au bac à légumes, debout, 1 semaine.
+    - type: usage
+      text: Le blanc fondu doucement, le vert pour bouillons et fondues longues.
+    - type: antigaspi
+      text: Le vert souvent jeté fait une excellente soupe ou fondue.
+  nutrition:
+    calories: 30.4
+    protein: 1.5
+    carbs: 4.55
+    sugar: 3.9
+    fat: 0.3
+    saturatedFat: 0.04
+    omega3: 0.04
+    fiber: 1.8
+    salt: 0.05
+
+- id: db_i1781253891073
+  name: Poivron Jaune
+  category: vegetable
+  months:
+    - 7
+    - 8
+    - 9
+    - 10
+  gramsPerPiece: 200
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaoknglpz6hi3.png?alt=media&token=9621e1b9-1f56-473e-80d6-5d9a9e62208d
+  nutrition:
+    calories: 29.4
+    protein: 0.94
+    carbs: 4.73
+    sugar: 4.3
+    fat: 0.3
+    saturatedFat: 0.11
+    omega3: 0.02
+    fiber: 1.2
+    salt: 0
+
+- id: db_i1781253762750
+  name: Poivron Rouge
+  category: vegetable
+  months:
+    - 7
+    - 8
+    - 9
+    - 10
+  gramsPerPiece: 200
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaohvsjwlmb1z.png?alt=media&token=a3588781-2ce0-422d-b9ac-73b336825eea
+  tips:
+    - type: prep
+      text: Retirez le pédoncule, les graines et les membranes blanches amères.
+    - type: conservation
+      text: Au bac à légumes 1 semaine ; le rouge, plus mûr, se garde moins.
+    - type: usage
+      text: Rôti puis pelé, il devient fondant et digeste. Cru, il garde le croquant et la vitamine C.
+    - type: freezing
+      text: Lanières crues ou rôties, il se congèle sans blanchir.
+  nutrition:
+    calories: 33.6
+    protein: 1.06
+    carbs: 5.98
+    sugar: 4.8
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 3.2
+    salt: 0
+
+- id: db_i1781253657119
+  name: Poivron Vert
+  category: vegetable
+  months:
+    - 7
+    - 8
+    - 9
+    - 10
+  gramsPerPiece: 200
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaofmeh621wf3.png?alt=media&token=8a77ca44-da42-4bac-bcf1-cae2cde7c1c6
+  nutrition:
+    calories: 22.5
+    protein: 0.81
+    carbs: 3.43
+    sugar: 3
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 3.2
+    salt: 0
+
+- id: db_i1781044748603
+  name: Pomme De Terre
+  category: vegetable
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  gramsPerPiece: 250
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq781x1518d2hy.png?alt=media&token=c5c9c69f-72b5-4341-ad49-57a79b3f02e1
+  nutrition:
+    calories: 76.4
+    protein: 1.94
+    carbs: 15.8
+    sugar: 0.2
+    fat: 0.3
+    saturatedFat: 0.06
+    omega3: 0.1
+    fiber: 1.35
+    salt: 0.06
+
+- id: db_i1781045712719
+  name: Radis
+  category: vegetable
+  months:
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqapojg9pp66su.png?alt=media&token=bfa39c7f-3d8a-4529-9902-efc6078dbc3d
+  tips:
+    - type: prep
+      text: Brossez et coupez les fanes ; laissez un bout de tige pour la déco.
+    - type: conservation
+      text: Sans fanes (qui le ramollissent), dans un linge humide, 1 semaine.
+    - type: usage
+      text: Croque-au-sel classique, ou rôtis pour adoucir leur piquant.
+    - type: antigaspi
+      text: Les fanes font un pesto ou une soupe veloutée.
+  nutrition:
+    calories: 11
+    protein: 0.94
+    carbs: 1.53
+    sugar: 1.1
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 1.4
+    salt: 0.04
+
+- id: db_i17849415221427897
+  name: Roquette
+  category: vegetable
+  months:
+    - 4
+    - 5
+    - 6
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms5r9pv82musyr.jpg?alt=media&token=c794aad0-3abd-4d3b-af11-890f2dc25384
+  nutrition:
+    calories: 27.9
+    protein: 2.58
+    carbs: 2.1
+    sugar: 2.05
+    fat: 0.66
+    saturatedFat: 0.086
+    omega3: 0
+    fiber: 1.6
+    salt: 0.068
+
+- id: db_i17849415221486108
+  name: Salsifis
+  category: vegetable
+  months:
+    - 1
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 83
+    protein: 3.13
+    carbs: 15.3
+    sugar: 0
+    fat: 0.3
+    saturatedFat: 0
+    omega3: 0.036
+    fiber: 3.3
+    salt: 0.011
+
+- id: db_i1781042028835
+  name: Tomate
+  category: vegetable
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+  gramsPerPiece: 175
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaoofirtkv5ut.png?alt=media&token=d9e7f607-6c37-46d4-9cf1-e79ce7a804a7
+  tips:
+    - type: conservation
+      text: "Jamais au frigo : il casse l'arôme et la texture. À température ambiante, pédoncule vers le bas."
+    - type: prep
+      text: "Inutile d'éplucher : la peau contient fibres et antioxydants."
+    - type: usage
+      text: "Crues, cuites ou rôties au four : la cuisson libère le lycopène, surtout avec un filet d'huile d'olive."
+    - type: antigaspi
+      text: "Les tomates trop mûres : transformez-les en coulis, sauce ou tomates rôties."
+  nutrition:
+    calories: 24.8
+    protein: 1.2
+    carbs: 4
+    sugar: 4
+    fat: 0.2
+    saturatedFat: 0.03
+    omega3: 0
+    fiber: 1.1
+    salt: 0.03
+
+- id: db_i1781047932000
+  name: Tomates Cerise
+  category: vegetable
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaopnagd8uf52.png?alt=media&token=b2997533-450f-4590-9b12-f0948660b6f1
+  tips:
+    - type: conservation
+      text: À température ambiante, jamais au frigo, pour préserver l'arôme.
+    - type: usage
+      text: Confites au four à basse température, elles concentrent leur sucre.
+    - type: antigaspi
+      text: Trop mûres, elles font une sauce express ou des tomates séchées maison.
+  nutrition:
+    calories: 31.8
+    protein: 1.31
+    carbs: 5.62
+    sugar: 4.8
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 1.2
+    salt: 0
+
+- id: db_i1781287803942
+  name: Abricot
+  category: fruit
+  months:
+    - 6
+    - 7
+    - 8
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb8rhksswsblh.png?alt=media&token=e72c13db-37cd-48cd-b191-87f7861ada53
+  tips:
+    - type: conservation
+      text: Mûrissez-le à température ambiante ; le frigo stoppe l'arôme.
+    - type: usage
+      text: Rôti ou poêlé, il révèle son parfum. Cru bien mûr, il est fondant.
+    - type: freezing
+      text: Dénoyauté et coupé, il se congèle pour tartes et compotes.
+    - type: antigaspi
+      text: Trop mûr, il devient une confiture ou un coulis express.
+  nutrition:
+    calories: 44.1
+    protein: 0.81
+    carbs: 9.01
+    sugar: 6.7
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 1.7
+    salt: 0
+
+- id: db_i17849415221838431
+  name: Abricot sec
+  category: fruit
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 239
+    protein: 2.88
+    carbs: 59.1
+    sugar: 34.3
+    fat: 0.5
+    saturatedFat: 0.19
+    omega3: 0.06
+    fiber: 8.3
+    salt: 0
+
+- id: db_i1781288177817
+  name: Ananas
+  category: fruit
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb8ziqixigoj5.png?alt=media&token=f3504a33-b092-479d-98db-0db3b39999b2
+  nutrition:
+    calories: 51.6
+    protein: 0.25
+    carbs: 11.7
+    sugar: 10.5
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 1.2
+    salt: 0
+
+- id: db_i1781045805184
+  name: Avocat
+  category: fruit
+  months:
+    - 1
+    - 2
+    - 3
+    - 11
+    - 12
+  gramsPerPiece: 200
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq78ojgizsab8i.png?alt=media&token=923c5226-b4a1-4407-a8e9-69376ac29974
+  tips:
+    - type: conservation
+      text: Mûrissez-le à température ambiante près d'une pomme ; ralentissez-le ensuite au frigo.
+    - type: prep
+      text: Citronnez la chair coupée pour éviter qu'elle noircisse à l'air.
+    - type: usage
+      text: "Ne le cuisez pas : la chaleur le rend amer. Parfait cru, écrasé ou en tranches."
+    - type: antigaspi
+      text: Gardez le noyau dans le guacamole pour ralentir l'oxydation.
+  nutrition:
+    calories: 203
+    protein: 1.56
+    carbs: 0
+    sugar: 0.4
+    fat: 20.6
+    saturatedFat: 4.51
+    omega3: 0.15
+    fiber: 3.6
+    salt: 0.01
+
+- id: db_i1781126553538
+  name: Banane
+  category: fruit
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  gramsPerPiece: 150
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8kr7mccm9xnw.png?alt=media&token=3bb7ecf8-9e78-4e2b-a48c-339e32682766
+  nutrition:
+    calories: 87.6
+    protein: 1.06
+    carbs: 19.7
+    sugar: 15.6
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 2.7
+    salt: 0
+
+- id: db_i17849415221697934
+  name: Cassis
+  category: fruit
+  months:
+    - 7
+    - 8
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2x3fd5vuwa42.jpg?alt=media&token=85ff4ba2-7939-4ce2-8dd8-74ef1599d52e
+  nutrition:
+    calories: 70.2
+    protein: 1.4
+    carbs: 9.68
+    sugar: 9.68
+    fat: 0.41
+    saturatedFat: 0.034
+    omega3: 0.06
+    fiber: 7.13
+    salt: 0.005
+
+- id: db_i1781287460991
+  name: Cerises
+  category: fruit
+  months:
+    - 5
+    - 6
+    - 7
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb8k52p59xjp6.png?alt=media&token=87d4b93a-d180-4155-83ab-e28a1fa58a8c
+  tips:
+    - type: prep
+      text: Lavez-les juste avant de les manger, queue gardée pour limiter l'eau.
+    - type: conservation
+      text: Au frigo dans une boîte aérée, 3-4 jours ; sortez-les avant dégustation.
+    - type: usage
+      text: Dénoyautées pour clafoutis et tartes ; les queues font une tisane drainante.
+    - type: freezing
+      text: Dénoyautées sur plaque puis en sachet, elles se congèlent très bien.
+  nutrition:
+    calories: 53.7
+    protein: 0.81
+    carbs: 13
+    sugar: 10
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 1.6
+    salt: 0
+
+- id: db_i1781125524785
+  name: Citron Jaune
+  aliases:
+    - citron
+  category: fruit
+  months:
+    - 1
+    - 2
+    - 3
+    - 10
+    - 11
+    - 12
+  gramsPerPiece: 125
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8k59q7oi7xhv.png?alt=media&token=61eccc89-2813-4546-b5f4-06e10b4aaaa6
+  tips:
+    - type: prep
+      text: "Prélevez le zeste (non traité) avant de presser : c'est le plus parfumé."
+    - type: conservation
+      text: À température ambiante quelques jours, au frigo 2-3 semaines.
+    - type: usage
+      text: Le jus ajouté en fin de cuisson réveille un plat sans le dénaturer.
+    - type: antigaspi
+      text: Zestez puis congelez les zestes ; les moitiés pressées nettoient la planche.
+  nutrition:
+    calories: 24.3
+    protein: 0.25
+    carbs: 1.56
+    sugar: 0.8
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0
+
+- id: db_i1781125562082
+  name: Citron Vert
+  category: fruit
+  gramsPerPiece: 50
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8k625mnjeomz.png?alt=media&token=9546261c-ecbe-48f0-a787-4cb23e2f6c35
+  nutrition:
+    calories: 39.3
+    protein: 1.13
+    carbs: 3.14
+    sugar: 2.1
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 4.3
+    salt: 0.01
+
+- id: db_i17849415221796241
+  name: Coing
+  category: fruit
+  months:
+    - 10
+    - 11
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2yrfeb37nwjd.jpg?alt=media&token=63c8c453-d56a-4e6e-90e5-df4959f3f6ac
+  nutrition:
+    calories: 59
+    protein: 0.4
+    carbs: 12.5
+    sugar: 6.3
+    fat: 0.1
+    saturatedFat: 0.01
+    omega3: 0
+    fiber: 1.9
+    salt: 0.01
+
+- id: db_i1781126011341
+  name: Datte
+  category: fruit
+  months:
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8kfpm42r86ud.png?alt=media&token=e8c78bcf-aca5-45e9-a9c3-5699988582af
+  nutrition:
+    calories: 287
+    protein: 1.81
+    carbs: 64.7
+    sugar: 64.7
+    fat: 0.25
+    saturatedFat: 0.07
+    omega3: 0.01
+    fiber: 7.3
+    salt: 0.1
+
+- id: db_i1781127696548
+  name: Figue
+  category: fruit
+  months:
+    - 8
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8lfufpt0c8q7.png?alt=media&token=c76b3603-92e9-49a5-a054-b8a9c2c8e78b
+  tips:
+    - type: conservation
+      text: "Très fragile : au frigo 2 jours, à consommer vite. Sortez-la avant dégustation."
+    - type: prep
+      text: "Ne l'épluchez pas : la peau se mange et concentre les fibres."
+    - type: usage
+      text: Rôtie au miel ou poêlée, elle accompagne aussi bien sucré que salé.
+    - type: antigaspi
+      text: Trop mûre, elle se transforme en confiture ou chutney.
+  nutrition:
+    calories: 67.6
+    protein: 1.19
+    carbs: 13.5
+    sugar: 12.2
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 4.1
+    salt: 0.01
+
+- id: db_i1781125398134
+  name: Fraise
+  category: fruit
+  months:
+    - 4
+    - 5
+    - 6
+    - 7
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8k2jz9lnt0ul.png?alt=media&token=2e583a56-826d-4ba9-932a-674f3ee549dd
+  tips:
+    - type: prep
+      text: Lavez-les entières avec la queue avant de les équeuter, pour éviter qu'elles se gorgent d'eau.
+    - type: conservation
+      text: Au frigo non lavées, en une seule couche, 2-3 jours.
+    - type: usage
+      text: À température ambiante pour révéler tout leur arôme.
+    - type: antigaspi
+      text: Trop mûres, mixées en coulis ou en confiture rapide.
+  nutrition:
+    calories: 35.1
+    protein: 0.63
+    carbs: 6.03
+    sugar: 5.6
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 3.8
+    salt: 0
+
+- id: db_i1784941283085961
+  name: Framboise
+  category: fruit
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2wypj0tnxvbf.jpg?alt=media&token=e054864e-413c-470e-a6c4-b0f00cb6342a
+  nutrition:
+    calories: 47.9
+    protein: 1.19
+    carbs: 5.83
+    sugar: 5.4
+    fat: 0.8
+    saturatedFat: 0.13
+    omega3: 0.16
+    fiber: 4.3
+    salt: 0
+
+- id: db_i1781288102391
+  name: Fruit de la passion
+  category: fruit
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb8xwgvzajga3.png?alt=media&token=d86eb0a6-7c63-4d50-bf07-c8c10dd4b48b
+  nutrition:
+    calories: 102
+    protein: 2.13
+    carbs: 10.9
+    sugar: 8.5
+    fat: 3
+    saturatedFat: 0.54
+    omega3: 0.17
+    fiber: 6.8
+    salt: 0
+
+- id: db_i1781127994548
+  name: Grenade
+  category: fruit
+  months:
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8lm88l0i6g6s.png?alt=media&token=73a5401c-5c0a-47c6-aa98-98d824f0e3ed
+  nutrition:
+    calories: 81
+    protein: 1.44
+    carbs: 14.3
+    sugar: 13.3
+    fat: 1.2
+    saturatedFat: 0.07
+    omega3: 0
+    fiber: 2.3
+    salt: 0
+
+- id: db_i17849415221677964
+  name: Groseille
+  category: fruit
+  months:
+    - 6
+    - 7
+    - 8
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2xzybhmq3889.jpg?alt=media&token=5a637ccf-db28-4738-af37-ca179df9bfc7
+  nutrition:
+    calories: 67.2
+    protein: 1.56
+    carbs: 7.06
+    sugar: 6.63
+    fat: 0.7
+    saturatedFat: 0.21
+    omega3: 0.14
+    fiber: 4.6
+    salt: 0
+
+- id: db_i1786531336147
+  name: Jus d'orange
+  category: fruit
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspyn9ed0r0fla.jpg?alt=media&token=6f25274f-1ae6-4713-a3aa-fed77829e4ca
+
+- id: db_i17849415221775963
+  name: Kaki
+  category: fruit
+  months:
+    - 10
+    - 11
+    - 12
+  gramsPerPiece: 150
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2yonh2jf0vsb.jpg?alt=media&token=e24a4432-4229-4707-a127-d710876324ec
+  nutrition:
+    calories: 66
+    protein: 0.88
+    carbs: 14.3
+    sugar: 13.9
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 3.4
+    salt: 0
+
+- id: db_i1781127559920
+  name: Kiwi
+  category: fruit
+  months:
+    - 1
+    - 2
+    - 3
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8lcxdzvbezn4.png?alt=media&token=73cf8499-a168-415b-8065-c7343c121f67
+  tips:
+    - type: conservation
+      text: Mûrissez-le près d'une pomme ; ferme, il se garde des semaines au frigo.
+    - type: prep
+      text: La peau (bien brossée) est comestible et riche en fibres.
+    - type: usage
+      text: "Cru uniquement dans les préparations gélifiées : il empêche la prise (enzyme)."
+    - type: antigaspi
+      text: Trop mûr, il sucre naturellement un smoothie.
+  nutrition:
+    calories: 60.9
+    protein: 0.88
+    carbs: 11
+    sugar: 8.9
+    fat: 0.6
+    saturatedFat: 0.13
+    omega3: 0.18
+    fiber: 2.4
+    salt: 0
+
+- id: db_i17849415221759680
+  name: Litchi
+  category: fruit
+  months:
+    - 1
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2y1yto31aq78.jpg?alt=media&token=267a5d8a-6bd7-422e-acc6-e8f87820fbd7
+  nutrition:
+    calories: 77.5
+    protein: 1.13
+    carbs: 16.1
+    sugar: 15.7
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 2
+    salt: 0
+
+- id: db_i1781127606052
+  name: Mangue
+  category: fruit
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8ldv7gjep3b6.png?alt=media&token=3385838b-6ab8-4aed-bc38-239fbf26fdcd
+  nutrition:
+    calories: 71.1
+    protein: 0.63
+    carbs: 14.3
+    sugar: 12.9
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 1.6
+    salt: 0
+
+- id: db_i1781287569777
+  name: Melon
+  category: fruit
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb8mhewj3q0zu.png?alt=media&token=86138f57-84d4-44d7-8236-4d19337645f2
+  tips:
+    - type: conservation
+      text: Entier à température ambiante ; entamé, filmé au frigo (son parfum imprègne tout).
+    - type: usage
+      text: Sortez-le 30 min avant pour révéler son sucre. Sucré-salé avec jambon ou feta.
+    - type: antigaspi
+      text: Les morceaux fatigués passent en gaspacho ou en granité.
+  nutrition:
+    calories: 22.2
+    protein: 0.54
+    carbs: 4.3
+    sugar: 4.25
+    fat: 0.14
+    saturatedFat: 0.04
+    omega3: 0.04
+    fiber: 0.8
+    salt: 0.04
+
+- id: db_i17849415221714472
+  name: Mûre
+  category: fruit
+  months:
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2ypk8vzjky6c.jpg?alt=media&token=207c9e8a-b17f-479d-b755-36dceb23036c
+  nutrition:
+    calories: 46
+    protein: 1.13
+    carbs: 6.53
+    sugar: 6.1
+    fat: 0.7
+    saturatedFat: 0.07
+    omega3: 0.08
+    fiber: 5.2
+    salt: 0
+
+- id: db_i1781125433070
+  name: Myrtille
+  category: fruit
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8k3bto7bvhzu.png?alt=media&token=601e6254-0c4b-4b49-b33a-26962f55ea11
+  tips:
+    - type: prep
+      text: Lavez-les juste avant usage ; rincées trop tôt, elles ramollissent.
+    - type: conservation
+      text: Au frigo en boîte aérée, 4-5 jours.
+    - type: freezing
+      text: Sur plaque puis en sachet, elles se congèlent sans s'écraser.
+    - type: usage
+      text: Crues pour les antioxydants, ou cuites en compote et muffins.
+  nutrition:
+    calories: 57.7
+    protein: 0.87
+    carbs: 10.6
+    sugar: 9.96
+    fat: 0.33
+    saturatedFat: 0.03
+    omega3: 0
+    fiber: 2.4
+    salt: 0
+
+- id: db_i17849415221624396
+  name: Nectarine
+  category: fruit
+  months:
+    - 7
+    - 8
+  gramsPerPiece: 150
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2ysjqfvznovo.jpg?alt=media&token=f172e2ab-0154-40e8-aa90-c1fa06587cb1
+  nutrition:
+    calories: 49.5
+    protein: 0.69
+    carbs: 11.3
+    sugar: 8.8
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0.6
+    salt: 0
+
+- id: db_i1781127486136
+  name: Orange
+  category: fruit
+  months:
+    - 1
+    - 2
+    - 3
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8lbcjrjluc38.png?alt=media&token=7df7d25a-df1d-439f-a2cd-128d92906d27
+  tips:
+    - type: prep
+      text: Roulez-la sous la paume avant de presser pour extraire plus de jus.
+    - type: conservation
+      text: À température ambiante 1 semaine, au frigo davantage.
+    - type: usage
+      text: Pressée au dernier moment pour la vitamine C ; les suprêmes en salade.
+    - type: antigaspi
+      text: Les écorces se confisent ou parfument un sirop.
+  nutrition:
+    calories: 42
+    protein: 0.75
+    carbs: 8.03
+    sugar: 7.6
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 2.7
+    salt: 0
+
+- id: db_i1781126205705
+  name: Pastèque
+  category: fruit
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmq8kjvdyg4mj6r.png?alt=media&token=0a045c0e-32c0-45d9-a686-05e65c86083a
+  tips:
+    - type: conservation
+      text: Entière à l'ombre ; entamée, filmée au frigo 2-3 jours.
+    - type: usage
+      text: Bien fraîche en dés, ou grillée à la plancha pour la surprise.
+    - type: antigaspi
+      text: L'écorce blanche se cuisine confite ou en pickles.
+  nutrition:
+    calories: 35.4
+    protein: 0.69
+    carbs: 8.33
+    sugar: 7.9
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0.5
+    salt: 0
+
+- id: db_i1784941283083219
+  name: Pêche
+  category: fruit
+  months:
+    - 6
+    - 7
+    - 8
+  gramsPerPiece: 150
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2wuvu3m3qrde.jpg?alt=media&token=bab1de21-6aea-4541-b203-cac76cb909ab
+  nutrition:
+    calories: 37.9
+    protein: 0.91
+    carbs: 7.55
+    sugar: 6.83
+    fat: 0.25
+    saturatedFat: 0.019
+    omega3: 0.002
+    fiber: 1.5
+    salt: 0
+
+- id: db_i1781287289649
+  name: Poire
+  category: fruit
+  months:
+    - 1
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb8ghcbzq1sd1.png?alt=media&token=778c21f7-5fef-475d-8be4-d8278677b439
+  tips:
+    - type: conservation
+      text: Mûrit à température ambiante ; ralentissez-la ensuite au frigo.
+    - type: prep
+      text: Citronnez la chair coupée pour éviter l'oxydation.
+    - type: usage
+      text: Pochée au vin ou rôtie, elle se tient ; crue, choisissez-la juste mûre.
+    - type: antigaspi
+      text: Blette, elle devient une compote ou un gâteau moelleux.
+  nutrition:
+    calories: 49.7
+    protein: 0.25
+    carbs: 11.4
+    sugar: 9.4
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 3.1
+    salt: 0
+
+- id: db_i1781287196370
+  name: Pomme
+  category: fruit
+  months:
+    - 1
+    - 2
+    - 3
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  gramsPerPiece: 150
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb8egeudg1xwb.png?alt=media&token=38b22f36-c694-4d49-a4f3-57560c47c6a0
+  tips:
+    - type: conservation
+      text: Au bac à légumes, à l'écart des autres fruits (elle dégage de l'éthylène).
+    - type: prep
+      text: Gardez la peau, riche en fibres et antioxydants ; citronnez la chair coupée.
+    - type: usage
+      text: Crue pour le croquant, cuite en compote ou tatin. Variété ferme pour la cuisson.
+    - type: antigaspi
+      text: Les épluchures font une tisane ou un sirop parfumé.
+  nutrition:
+    calories: 54
+    protein: 0.25
+    carbs: 11.6
+    sugar: 10.6
+    fat: 0.25
+    saturatedFat: 0.05
+    omega3: 0.01
+    fiber: 1.4
+    salt: 0
+
+- id: db_i17849415221659215
+  name: Prune
+  category: fruit
+  months:
+    - 8
+    - 9
+  gramsPerPiece: 60
+  nutrition:
+    calories: 2.4
+    protein: 0.54
+    carbs: 0
+    sugar: 0
+    fat: 0.03
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0
+
+- id: db_i1781287986701
+  name: Pruneau
+  category: fruit
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb8ve4ew609dx.png?alt=media&token=9a73f47a-7a8c-4c2c-ae42-7197d278b2a4
+  nutrition:
+    calories: 229
+    protein: 1.63
+    carbs: 55.4
+    sugar: 38.1
+    fat: 0.4
+    saturatedFat: 0.16
+    omega3: 0
+    fiber: 5.1
+    salt: 0
+
+- id: db_i1784941283081214
+  name: Raisin
+  category: fruit
+  months:
+    - 8
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2y9i4x6of2se.jpg?alt=media&token=5ee87097-54d0-4995-9425-8723837a7ec2
+  nutrition:
+    calories: 71
+    protein: 0.7
+    carbs: 16.3
+    sugar: 15.4
+    fat: 0.25
+    saturatedFat: 0.025
+    omega3: 0.008
+    fiber: 1.11
+    salt: 0
+
+- id: db_i17849415221812843
+  name: Raisin sec
+  category: fruit
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2wofpjv0niso.jpg?alt=media&token=ce05b8e4-e4ef-4efc-9607-4b0538b7267f
+  nutrition:
+    calories: 322
+    protein: 3
+    carbs: 73.2
+    sugar: 70.3
+    fat: 0.9
+    saturatedFat: 0.31
+    omega3: 0.01
+    fiber: 4.2
+    salt: 0.013
+
+- id: db_i17849415221738672
+  name: Rhubarbe
+  category: fruit
+  months:
+    - 4
+    - 5
+    - 6
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2wmwgrbmw1bk.jpg?alt=media&token=5de7633d-8ce0-487b-9dba-240625425798
+  nutrition:
+    calories: 18.1
+    protein: 0.73
+    carbs: 1.12
+    sugar: 1.1
+    fat: 0.16
+    saturatedFat: 0.041
+    omega3: 0.019
+    fiber: 1.8
+    salt: 0.007
+
+- id: db_i1781961105602
+  name: Beurre de baratte
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmdmbtz88dl9h.jpg?alt=media&token=45b4d8e8-efa3-40d7-99ad-40f02e6d2981
+  nutrition:
+    calories: 753
+    protein: 0.64
+    carbs: 0.71
+    sugar: 0.71
+    fat: 83
+    saturatedFat: 60
+    omega3: 0.35
+    fiber: 0
+    salt: 0.04
+
+- id: db_i1781257278747
+  name: Beurre doux
+  aliases:
+    - beurre
+    - beurre salé
+    - beurre demi-sel
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaql7o7unbg5o.png?alt=media&token=24d1e96b-3b77-42cc-8fb5-1fe8b4a7b40f
+  nutrition:
+    calories: 753
+    protein: 0.64
+    carbs: 0.71
+    sugar: 0.71
+    fat: 83
+    saturatedFat: 60
+    omega3: 0.35
+    fiber: 0
+    salt: 0.04
+
+- id: db_i17849415221949725
+  name: Bleu d'Auvergne
+  aliases:
+    - bleu
+  category: dairy
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmsptjzib9s8j9z.jpg?alt=media&token=d49b8119-ad02-4a54-aa1e-3a3d2f9cb4fe
+  nutrition:
+    calories: 342
+    protein: 20.6
+    carbs: 0
+    sugar: 0
+    fat: 29
+    saturatedFat: 20.2
+    omega3: 0.19
+    fiber: 0
+    salt: 2.68
+
+- id: db_i17849415221885038
+  name: Brie
+  category: dairy
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspsj8qoeoipwe.jpg?alt=media&token=bab00e54-0503-4445-ad2f-7d84acde7c2f
+  nutrition:
+    calories: 345
+    protein: 17.6
+    carbs: 0.68
+    sugar: 0.15
+    fat: 30.4
+    saturatedFat: 21.5
+    omega3: 0.197
+    fiber: 0.056
+    salt: 1.43
+
+- id: db_i1781457958347
+  name: Burrata
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe22jazsx82ak.png?alt=media&token=8bf04129-295c-4694-b038-d28baf7461e4
+  nutrition:
+    calories: 259
+    protein: 10.8
+    carbs: 0.93
+    sugar: 0.55
+    fat: 23.4
+    saturatedFat: 15.4
+    omega3: 0.07
+    fiber: 0
+    salt: 0.53
+
+- id: db_i1781457571022
+  name: Camembert
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe1u7rqseozt6.png?alt=media&token=558c06fd-89a9-43b0-b872-90f8b54f7513
+  nutrition:
+    calories: 267
+    protein: 20.7
+    carbs: 0
+    sugar: 0
+    fat: 20.3
+    saturatedFat: 14.1
+    omega3: 0.07
+    fiber: 0
+    salt: 1.45
+
+- id: db_i17849415221846219
+  name: Cheddar
+  category: dairy
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspsfttb4rh0w7.jpg?alt=media&token=8c312314-054b-426b-a611-1b9a490b824c
+  nutrition:
+    calories: 399
+    protein: 24.7
+    carbs: 1.2
+    sugar: 0.15
+    fat: 32.6
+    saturatedFat: 20.1
+    omega3: 0.209
+    fiber: 0
+    salt: 1.77
+
+- id: db_i1781456504217
+  name: Comté
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe17cybjst4yq.jpg?alt=media&token=b57538fb-1965-4efd-af16-d7c0cdb99039
+  nutrition:
+    calories: 413
+    protein: 27.8
+    carbs: 0
+    sugar: 0
+    fat: 33.8
+    saturatedFat: 21.7
+    omega3: 0.23
+    fiber: 0
+    salt: 0.84
+
+- id: db_i1781458481618
+  name: Crème fleurette
+  aliases:
+    - crème liquide
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe2dm7pge5z1l.jpg?alt=media&token=da17481f-5dd7-4aff-835b-609e8bace734
+  nutrition:
+    calories: 293
+    protein: 2.2
+    carbs: 3.69
+    sugar: 2.93
+    fat: 30
+    saturatedFat: 18.6
+    omega3: 0.11
+    fiber: 0
+    salt: 0.07
+
+- id: db_i1781458553643
+  name: Crème fraîche
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe2fa1grfnu3h.jpg?alt=media&token=c491c4a5-7e4b-4778-8dd0-4826176be588
+  nutrition:
+    calories: 285
+    protein: 2.32
+    carbs: 1.38
+    sugar: 1.38
+    fat: 29.9
+    saturatedFat: 19.5
+    omega3: 0.11
+    fiber: 0
+    salt: 0.07
+
+- id: db_i1781457510598
+  name: Emmental
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe1sy5a9pbj58.jpg?alt=media&token=7d83341b-bc39-45ac-8b42-cf3231206212
+  nutrition:
+    calories: 373
+    protein: 27.9
+    carbs: 0
+    sugar: 0
+    fat: 28.8
+    saturatedFat: 19.7
+    omega3: 0.11
+    fiber: 0
+    salt: 0.61
+
+- id: db_i1781256631291
+  name: Feta
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe2g3d7mcd7t7.png?alt=media&token=7b82efee-f93a-42ea-8b85-4aad7890972e
+  nutrition:
+    calories: 284
+    protein: 15.1
+    carbs: 0.45
+    sugar: 0
+    fat: 24.3
+    saturatedFat: 16.8
+    omega3: 0.17
+    fiber: 0.2
+    salt: 2.27
+
+- id: db_i1781960718181
+  name: Fromage blanc
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmdefspy6abxx.jpg?alt=media&token=d69b7f0f-cdd1-4b8d-95f6-9290ad3bf249
+  nutrition:
+    calories: 80
+    protein: 7.02
+    carbs: 6.34
+    sugar: 6.05
+    fat: 2.83
+    saturatedFat: 1.83
+    omega3: 0.05
+    fiber: 0.02
+    salt: 0.09
+
+- id: db_i1781270337617
+  name: Fromage de chèvre
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe152ribjiqvy.png?alt=media&token=64919bcf-2cb1-49e7-b059-03925e7ebe05
+  nutrition:
+    calories: 285
+    protein: 18.8
+    carbs: 0
+    sugar: 0
+    fat: 23.3
+    saturatedFat: 16.2
+    omega3: 0.1
+    fiber: 0
+    salt: 1.58
+
+- id: db_i1781289427674
+  name: Gorgonzola
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe18lhjasnyke.jpg?alt=media&token=a0bb51cd-9b9b-4ec1-a1e9-ab22dc877bdd
+  nutrition:
+    calories: 318
+    protein: 19.5
+    carbs: 0
+    sugar: 0
+    fat: 26.9
+    saturatedFat: 16.4
+    omega3: 0.08
+    fiber: 0
+    salt: 1.89
+
+- id: db_i17849415221864357
+  name: Gruyère
+  category: dairy
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspto0oncxf0yi.png?alt=media&token=f3d6a8fb-ac31-4b2f-894a-1853327de115
+  nutrition:
+    calories: 408
+    protein: 26.3
+    carbs: 0.78
+    sugar: 0
+    fat: 33.5
+    saturatedFat: 22
+    omega3: 0.34
+    fiber: 0
+    salt: 1.3
+
+- id: db_i1781902241289
+  name: Halloumi
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqlel2f89u2u17.jpg?alt=media&token=74ef135c-5a63-4845-919d-caf96ad591cb
+  nutrition:
+    calories: 393
+    protein: 22.3
+    carbs: 0.72
+    sugar: 0.25
+    fat: 33.6
+    saturatedFat: 24
+    omega3: 0
+    fiber: 0
+    salt: 1.61
+
+- id: db_i17849415221994600
+  name: Lait demi-écrémé
+  category: dairy
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 47.7
+    protein: 3.48
+    carbs: 5
+    sugar: 4.96
+    fat: 1.56
+    saturatedFat: 0.97
+    omega3: 0.007
+    fiber: 0
+    salt: 0.088
+
+- id: db_i1781256036509
+  name: Lait entier
+  aliases:
+    - lait
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqapunpz5452j3.png?alt=media&token=ad33968e-c35f-4a96-b20b-0f33257ac0b4
+  nutrition:
+    calories: 63.9
+    protein: 3.42
+    carbs: 4.78
+    sugar: 4.29
+    fat: 3.49
+    saturatedFat: 2.12
+    omega3: 0.01
+    fiber: 0
+    salt: 0.12
+
+- id: db_i1781892428303
+  name: Mascarpone
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql8qqisq8rzfy.jpg?alt=media&token=92087aef-8406-4ef8-a55e-40ed96e838e9
+  nutrition:
+    calories: 369
+    protein: 6
+    carbs: 3.1
+    sugar: 2.99
+    fat: 37
+    saturatedFat: 25.9
+    omega3: 0.15
+    fiber: 0
+    salt: 0.13
+
+- id: db_i1781457403840
+  name: Mimolette
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe1rlnlwgcczf.png?alt=media&token=592f751a-6a22-4419-8437-3c68e52b6912
+  nutrition:
+    calories: 319
+    protein: 25.8
+    carbs: 0
+    sugar: 0
+    fat: 24.2
+    saturatedFat: 16.6
+    omega3: 0
+    fiber: 0
+    salt: 2.17
+
+- id: db_i1781457726835
+  name: Mont d'Or
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe1xjabwds2m1.jpg?alt=media&token=f475b268-11ab-475e-9f11-4caad30fcd39
+  nutrition:
+    calories: 293
+    protein: 17.9
+    carbs: 0.54
+    sugar: 0.5
+    fat: 24.6
+    saturatedFat: 17
+    omega3: 0
+    fiber: 0
+    salt: 1.43
+
+- id: db_i1781458727935
+  name: Morbier
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe2j1bfmo7b74.jpg?alt=media&token=f293adeb-6c11-476a-ac27-691864fab84e
+  nutrition:
+    calories: 355
+    protein: 22.8
+    carbs: 0
+    sugar: 0
+    fat: 29.2
+    saturatedFat: 19.2
+    omega3: 0.22
+    fiber: 0
+    salt: 1.41
+
+- id: db_i1781457845177
+  name: Mozzarella
+  aliases:
+    - mozza
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe203ftihaq70.jpg?alt=media&token=103c8d57-d20f-47d2-a440-99c2f8e985b8
+  nutrition:
+    calories: 227
+    protein: 16.5
+    carbs: 0.7
+    sugar: 0.7
+    fat: 17.7
+    saturatedFat: 11.7
+    omega3: 0.06
+    fiber: 0
+    salt: 0.6
+
+- id: db_i17849415221974757
+  name: Munster
+  category: dairy
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspsd6ar8eiycf.jpg?alt=media&token=f0b08ad7-008d-4a72-84ef-5e047af468de
+  nutrition:
+    calories: 324
+    protein: 20.4
+    carbs: 0.7
+    sugar: 0.56
+    fat: 26.8
+    saturatedFat: 18.9
+    omega3: 0.14
+    fiber: 0.19
+    salt: 2
+
+- id: db_i1781256179921
+  name: Parmesan
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqapxpede649wq.png?alt=media&token=82a11a7e-5bb3-4ec7-96f2-ea1e5fb8c9da
+  nutrition:
+    calories: 411
+    protein: 31.1
+    carbs: 1.14
+    sugar: 0
+    fat: 31
+    saturatedFat: 20.6
+    omega3: 0.18
+    fiber: 0
+    salt: 1.57
+
+- id: db_i1781457657562
+  name: Pecorino Romano
+  aliases:
+    - pecorino
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe1w3mziv7yt6.jpg?alt=media&token=adc5473b-bf1d-4c4e-9e94-2bc943678f73
+  nutrition:
+    calories: 383
+    protein: 25.5
+    carbs: 1
+    sugar: 0
+    fat: 31
+    saturatedFat: 22
+    omega3: 0
+    fiber: 0
+    salt: 5.3
+
+- id: db_i17849415221929691
+  name: Petit-suisse
+  category: dairy
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 56.5
+    protein: 9.9
+    carbs: 4.2
+    sugar: 4.2
+    fat: 0.1
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.14
+
+- id: db_i17849415221908752
+  name: Raclette
+  category: dairy
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 342
+    protein: 23.4
+    carbs: 0
+    sugar: 0
+    fat: 27.5
+    saturatedFat: 18.5
+    omega3: 0.16
+    fiber: 0
+    salt: 1.69
+
+- id: db_i1781456621823
+  name: Reblochon
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe19w4h3llfwq.jpg?alt=media&token=c9127b3b-d9b4-4608-8f4b-a9396dd3397e
+  nutrition:
+    calories: 322
+    protein: 20.3
+    carbs: 0
+    sugar: 0
+    fat: 26.9
+    saturatedFat: 19
+    omega3: 0.22
+    fiber: 0
+    salt: 1.38
+
+- id: db_i1781892217010
+  name: Ricotta
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql8m7rdya6xyp.jpg?alt=media&token=0a71b6f2-2b85-4755-9de6-e38e82354f55
+  nutrition:
+    calories: 145.2
+    protein: 8.13
+    carbs: 4.09
+    sugar: 3.69
+    fat: 10.7
+    saturatedFat: 7.38
+    omega3: 0.16
+    fiber: 0
+    salt: 0.27
+
+- id: db_i1781290319180
+  name: Roquefort
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe107nd1q64o0.png?alt=media&token=34f7f155-07a5-40d6-aa6c-af1e8fa26eee
+  nutrition:
+    calories: 384
+    protein: 19.5
+    carbs: 0
+    sugar: 0
+    fat: 33.9
+    saturatedFat: 24.9
+    omega3: 0.25
+    fiber: 0
+    salt: 3.22
+
+- id: db_i17849415221953220
+  name: Saint-Nectaire
+  category: dairy
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 333
+    protein: 21.7
+    carbs: 0.9
+    sugar: 0
+    fat: 27.2
+    saturatedFat: 18.2
+    omega3: 0
+    fiber: 0
+    salt: 1.55
+
+- id: db_i1781456309909
+  name: Skyr
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe136h2hcjder.png?alt=media&token=e668c617-2aa0-4992-89c5-88c3cffcc80a
+  nutrition:
+    calories: 48.4
+    protein: 7.34
+    carbs: 4.22
+    sugar: 3.29
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0.04
+    salt: 0.09
+
+- id: db_i1781458650186
+  name: Tomme de Savoie
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe2hcjna2myp0.png?alt=media&token=264aea9d-187a-4c56-8b74-f7543feb8149
+  nutrition:
+    calories: 364
+    protein: 21.6
+    carbs: 3.37
+    sugar: 0
+    fat: 29.4
+    saturatedFat: 19.4
+    omega3: 0.16
+    fiber: 0
+    salt: 1.28
+
+- id: db_i1781255266028
+  name: Yaourt à la Grecque
+  aliases:
+    - yaourt grec
+  category: dairy
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqape41i5vv9mn.png?alt=media&token=0bb4a81f-6018-4e4b-b137-ebe4f65ed3fc
+  nutrition:
+    calories: 103
+    protein: 3.02
+    carbs: 3.73
+    sugar: 3.11
+    fat: 8.16
+    saturatedFat: 5.26
+    omega3: 0.03
+    fiber: 0.07
+    salt: 0.08
+
+- id: db_i1784941283087675
+  name: Yaourt nature
+  aliases:
+    - yaourt
+  category: dairy
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2337kdg4c7bh.jpg?alt=media&token=10ee5422-8b95-4ccf-9481-1421fcab45f9
+  nutrition:
+    calories: 50.1
+    protein: 3.83
+    carbs: 4.26
+    sugar: 4
+    fat: 1.68
+    saturatedFat: 1.08
+    omega3: 0.011
     fiber: 0
     salt: 0.1
+
+- id: db_i1781261933133
+  name: Aneth
+  category: herbs
+  months:
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqatctrzscztl7.png?alt=media&token=da2ae6d6-eae0-4ac2-bab4-4cdd072c62ad
+  tips:
+    - type: conservation
+      text: Au frigo dans un linge humide, 4-5 jours ; très fragile.
+    - type: usage
+      text: Ajouté cru en finition sur poisson, saumon et sauces au yaourt.
+    - type: freezing
+      text: Ciselé, il se congèle bien à plat.
+  nutrition:
+    calories: 48.2
+    protein: 3.93
+    carbs: 3.9
+    sugar: 1.2
+    fat: 1.1
+    saturatedFat: 0.34
+    omega3: 0.01
+    fiber: 3.5
+    salt: 0.15
+
+- id: db_i1781256287238
+  name: Basilic
+  category: herbs
+  months:
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaq00gh2ev5e9.png?alt=media&token=8711ed70-970e-447f-af74-7c5c973f1eef
+  tips:
+    - type: conservation
+      text: À température ambiante, tiges dans un verre d'eau ; le frigo le noircit.
+    - type: prep
+      text: Ciselez-le au dernier moment et à la main pour éviter l'oxydation.
+    - type: usage
+      text: Ajouté hors du feu, il garde son parfum ; la cuisson le détruit.
+    - type: freezing
+      text: En pesto ou en glaçons d'huile, il se conserve des mois.
+  nutrition:
+    calories: 35.2
+    protein: 3.15
+    carbs: 3.4
+    sugar: 0.3
+    fat: 0.64
+    saturatedFat: 0.04
+    omega3: 0
+    fiber: 1.6
+    salt: 0.01
+
+- id: db_i1781889917531
+  name: Ciboulette
+  category: herbs
+  months:
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql78vyaglpdnq.jpg?alt=media&token=3015b9ca-60ac-402e-86ef-72b90c3e70d8
+  tips:
+    - type: prep
+      text: Ciselez-la finement aux ciseaux juste avant de servir.
+    - type: conservation
+      text: Au frigo dans un linge humide, 4-5 jours.
+    - type: usage
+      text: Crue en finition sur omelettes, fromages frais et salades.
+    - type: freezing
+      text: Ciselée, elle se congèle à plat pour un usage direct.
+  nutrition:
+    calories: 30.8
+    protein: 2.55
+    carbs: 2.85
+    sugar: 2.09
+    fat: 0.46
+    saturatedFat: 0.089
+    omega3: 0.099
+    fiber: 2.55
+    salt: 0.024
+
+- id: db_i1781256964629
+  name: Coriandre
+  category: herbs
+  months:
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaqek1g0b1fsr.png?alt=media&token=5e658fb6-d621-4c2f-8936-952b9df57c62
+  tips:
+    - type: conservation
+      text: Tiges dans un verre d'eau, sachet sur les feuilles, au frigo 1 semaine.
+    - type: prep
+      text: "Tout se mange : tiges hachées en cuisson, feuilles crues en finition."
+    - type: usage
+      text: Ajoutée en fin de cuisson pour préserver son parfum citronné.
+    - type: antigaspi
+      text: Les racines parfument bouillons et currys.
+  nutrition:
+    calories: 22.3
+    protein: 2.13
+    carbs: 0.87
+    sugar: 0.87
+    fat: 0.52
+    saturatedFat: 0.01
+    omega3: 0
+    fiber: 2.8
+    salt: 0.12
+
+- id: db_i1784941283119947
+  name: Laurier
+  category: herbs
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms23g3626l0zpd.png?alt=media&token=8d58852c-696b-44fc-be90-4e855d81e4a3
+  nutrition:
+    calories: 353
+    protein: 7.61
+    carbs: 48.6
+    sugar: 48.6
+    fat: 8.36
+    saturatedFat: 2.28
+    omega3: 0
+    fiber: 26.3
+    salt: 0.058
+
+- id: db_i1781253156039
+  name: Menthe
+  category: herbs
+  months:
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqao4vhw4cuqa7.png?alt=media&token=41d54150-01cc-4636-8150-48d86b0d36df
+  tips:
+    - type: conservation
+      text: Tiges dans l'eau ou linge humide au frigo, 5-6 jours.
+    - type: prep
+      text: Froissez les feuilles pour libérer les huiles essentielles.
+    - type: usage
+      text: Crue dans les salades, taboulés, ou infusée pour une tisane digestive.
+    - type: freezing
+      text: En glaçons d'eau ou d'huile pour aromatiser à tout moment.
+  nutrition:
+    calories: 57.6
+    protein: 3.52
+    carbs: 5.3
+    sugar: 5.3
+    fat: 0.84
+    saturatedFat: 0.22
+    omega3: 0
+    fiber: 7.4
+    salt: 0.08
+
+- id: db_i1781253169929
+  name: Persil
+  aliases:
+    - persil plat
+  category: herbs
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqao57embfsgxd.png?alt=media&token=f7a58b0d-2003-4003-8e6e-be0b284fab04
+  tips:
+    - type: prep
+      text: Lavez et essorez bien ; tiges et feuilles se cuisinent.
+    - type: conservation
+      text: Tiges dans un verre d'eau au frigo, sachet par-dessus, 1 semaine.
+    - type: usage
+      text: Cru en persillade ou taboulé pour la vitamine C ; en bouquet garni pour les bouillons.
+    - type: freezing
+      text: Ciselé à plat, il se congèle pour un usage immédiat.
+  nutrition:
+    calories: 42.5
+    protein: 2.97
+    carbs: 4.1
+    sugar: 0.85
+    fat: 0.63
+    saturatedFat: 0.1
+    omega3: 0.08
+    fiber: 4.3
+    salt: 0.59
+
+- id: db_i1781890601371
+  name: Cèpe
+  category: mushroom
+  months:
+    - 9
+    - 10
+    - 11
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql7nl8z7s1pam.jpg?alt=media&token=a6f52112-dc9b-4805-bf90-f2c0f9d9d270
+  tips:
+    - type: prep
+      text: "Ne les lavez pas : brossez et essuyez avec un linge humide."
+    - type: conservation
+      text: Au frigo dans un sac papier (jamais plastique), 2-3 jours.
+    - type: usage
+      text: Poêlés à feu vif sans les noyer ; salez en fin pour qu'ils ne rendent pas trop d'eau.
+    - type: freezing
+      text: Coupés et poêlés avant congélation ; crus ils noircissent.
+  nutrition:
+    calories: 28.8
+    protein: 3.23
+    carbs: 2
+    sugar: 1.28
+    fat: 0.49
+    saturatedFat: 0.12
+    omega3: 0
+    fiber: 2.12
+    salt: 0.05
+
+- id: db_i1781890186114
+  name: Champignon de Paris Blanc
+  aliases:
+    - champignon de paris
+  category: mushroom
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql7elopmdxqnq.jpg?alt=media&token=139fa79e-a7cb-41f2-8594-6b35dc0a675f
+  nutrition:
+    calories: 21
+    protein: 2.11
+    carbs: 1.83
+    sugar: 1.55
+    fat: 0.36
+    saturatedFat: 0.07
+    omega3: 0
+    fiber: 1
+    salt: 0.1
+
+- id: db_i1781890229597
+  name: Champignon de Paris Brun
+  category: mushroom
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql7flsr3tmvgo.jpg?alt=media&token=3127307f-0ac2-4a09-8e4b-e33d1722a58d
+  nutrition:
+    calories: 21
+    protein: 2.11
+    carbs: 1.83
+    sugar: 1.55
+    fat: 0.36
+    saturatedFat: 0.07
+    omega3: 0
+    fiber: 1
+    salt: 0.1
+
+- id: db_i1781890699459
+  name: Girolle
+  category: mushroom
+  months:
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql7poytdafp8m.jpg?alt=media&token=fae09e3d-17ae-46f6-874d-8b532213d230
+  tips:
+    - type: prep
+      text: Brossez délicatement ; un rinçage très rapide si nécessaire, puis séchez aussitôt.
+    - type: conservation
+      text: Au frigo en sac papier, 2-3 jours, à plat pour ne pas les écraser.
+    - type: usage
+      text: Saisies vives au beurre ; elles rendent de l'eau, laissez-la s'évaporer.
+    - type: freezing
+      text: Poêlées puis congelées, jamais crues.
+  nutrition:
+    calories: 24.7
+    protein: 1.49
+    carbs: 1.77
+    sugar: 1.16
+    fat: 0.53
+    saturatedFat: 0.5
+    omega3: 0
+    fiber: 3.8
+    salt: 0.02
+
+- id: db_i1781890521937
+  name: Shiitaké
+  category: mushroom
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql7lvlti7lzxc.jpg?alt=media&token=fbe3a308-c649-4dc8-8e78-efb465afc8c0
+  nutrition:
+    calories: 60.9
+    protein: 1.56
+    carbs: 12.3
+    sugar: 3.84
+    fat: 0.22
+    saturatedFat: 0.05
+    omega3: 0
+    fiber: 2.1
+    salt: 0.01
+
+- id: db_i1781890426195
+  name: Trompette de la mort
+  aliases:
+    - trompette
+  category: mushroom
+  months:
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql7jpab7ng1uv.jpg?alt=media&token=027060a5-c680-4597-b70f-4cc7a7e8f171
+  tips:
+    - type: prep
+      text: Fendez-les pour retirer les débris, brossez sans tremper.
+    - type: conservation
+      text: Au frigo en sac papier, 2-3 jours.
+    - type: usage
+      text: "Elles se dessèchent facilement : parfaites séchées et réduites en poudre parfumée."
+    - type: freezing
+      text: Sautées ou séchées, elles se gardent très longtemps.
+  nutrition:
+    calories: 28.8
+    protein: 3.23
+    carbs: 2
+    sugar: 1.28
+    fat: 0.49
+    saturatedFat: 0.12
+    omega3: 0
+    fiber: 2.12
+    salt: 0.05
+
+- id: db_i1781455018734
+  name: Agneau haché
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe0c87lg5nllr.jpg?alt=media&token=4f0ac9cf-e746-4726-aaad-b3310000ec1f
+  nutrition:
+    calories: 193
+    protein: 28.5
+    carbs: 0
+    sugar: 0
+    fat: 8.78
+    saturatedFat: 3.14
+    omega3: 0.06
+    fiber: 0
+    salt: 0
+
+- id: db_i1781455099226
+  name: Bacon
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe0d9q2yh7ilt.jpg?alt=media&token=803367ae-0fcb-4d0b-875e-e8844b1699e1
+  nutrition:
+    calories: 118
+    protein: 23.1
+    carbs: 0.7
+    sugar: 0
+    fat: 2.6
+    saturatedFat: 1.07
+    omega3: 0.02
+    fiber: 0
+    salt: 3.18
+
+- id: db_i17849415222077525
+  name: Bavette de boeuf
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 133
+    protein: 20.4
+    carbs: 0
+    sugar: 0
+    fat: 5.67
+    saturatedFat: 2.2
+    omega3: 0.028
+    fiber: 0
+    salt: 0.085
+
+- id: db_i1781454961518
+  name: Boeuf haché
+  aliases:
+    - viande hachée
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqe0a59buzkei2.jpg?alt=media&token=055f6e75-9f2a-4aee-8340-d7390498620f
+  nutrition:
+    calories: 130
+    protein: 21.9
+    carbs: 0.3
+    sugar: 0
+    fat: 4.59
+    saturatedFat: 1.64
+    omega3: 0.02
+    fiber: 0
+    salt: 0.1
+
+- id: db_i17849415222166689
+  name: Boudin noir
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 297
+    protein: 12.2
+    carbs: 0.29
+    sugar: 0.2
+    fat: 27.1
+    saturatedFat: 9.57
+    omega3: 0.22
+    fiber: 1.42
+    salt: 1.29
+
+- id: db_i1784941283091383
+  name: Chorizo
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 425
+    protein: 23.5
+    carbs: 1.24
+    sugar: 1.24
+    fat: 36.1
+    saturatedFat: 14.3
+    omega3: 0.29
+    fiber: 0.93
+    salt: 4.24
+
+- id: db_i1781961330717
+  name: Cote de porc
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmdsdjwzxsywa.png?alt=media&token=64a5c9c1-01fb-4620-b582-06116f2bb31a
+  nutrition:
+    calories: 164
+    protein: 19.8
+    carbs: 0.38
+    sugar: 0
+    fat: 9.3
+    saturatedFat: 3.75
+    omega3: 0.04
+    fiber: 0
+    salt: 0.12
+
+- id: db_i1781901512371
+  name: Cote de veau
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqle5geo0evqpg.jpg?alt=media&token=f5f7c9a0-cafa-4b76-a16b-dd37458a3b09
+  nutrition:
+    calories: 189
+    protein: 18.3
+    carbs: 0
+    sugar: 0
+    fat: 12.9
+    saturatedFat: 4.84
+    omega3: 0.04
+    fiber: 0
+    salt: 0.11
+
+- id: db_i17849415222103785
+  name: Échine de porc
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 238
+    protein: 17.1
+    carbs: 0.1
+    sugar: 0
+    fat: 18.8
+    saturatedFat: 5.4
+    omega3: 0
+    fiber: 0
+    salt: 0.18
+
+- id: db_i17849415222031767
+  name: Entrecôte de boeuf
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 231
+    protein: 19.4
+    carbs: 0
+    sugar: 0
+    fat: 17.1
+    saturatedFat: 8.07
+    omega3: 0.053
+    fiber: 0
+    salt: 0.075
+
+- id: db_i17849415222195514
+  name: Escalope de dinde
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 108
+    protein: 23.7
+    carbs: 0
+    sugar: 0
+    fat: 1.48
+    saturatedFat: 0.29
+    omega3: 0.011
+    fiber: 0
+    salt: 0.28
+
+- id: db_i1784941283089470
+  name: Escalope de veau
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 114
+    protein: 20.5
+    carbs: 0.58
+    sugar: 0
+    fat: 3.28
+    saturatedFat: 0.83
+    omega3: 0.133
+    fiber: 0
+    salt: 0.097
+
+- id: db_i1781901207544
+  name: Filet de poulet
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqldyxxoys4fz5.jpg?alt=media&token=e47d0344-767f-410f-a7e8-8c03f4ea6532
+  nutrition:
+    calories: 110
+    protein: 23.4
+    carbs: 0
+    sugar: 0
+    fat: 1.5
+    saturatedFat: 0.44
+    omega3: 0.02
+    fiber: 0
+    salt: 0.11
+
+- id: db_i17849415222181825
+  name: Gigot d'agneau
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 128
+    protein: 20
+    carbs: 0.48
+    sugar: 0
+    fat: 5.13
+    saturatedFat: 1.97
+    omega3: 0.108
+    fiber: 0
+    salt: 0.12
+
+- id: db_i1781901934482
+  name: Guanciale
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqleehe8v94rwd.jpg?alt=media&token=727ca2d1-4f46-416a-9019-ea7c38ff6f46
+  nutrition:
+    calories: 253
+    protein: 17
+    carbs: 0
+    sugar: 0
+    fat: 20.5
+    saturatedFat: 7.89
+    omega3: 0.11
+    fiber: 0
+    salt: 0.14
+
+- id: db_i1784941283093456
+  name: Jambon blanc
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 125
+    protein: 19.5
+    carbs: 1.7
+    sugar: 1.7
+    fat: 4.5
+    saturatedFat: 1.78
+    omega3: 0
+    fiber: 0.08
+    salt: 2.1
+
+- id: db_i1781961770422
+  name: Jambon Serrano
+  aliases:
+    - serrano
+    - jambon cru
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqme0xiaf3dnb5.jpg?alt=media&token=711099bf-69dd-4515-892f-04aaee849dea
+  nutrition:
+    calories: 239
+    protein: 25.9
+    carbs: 4.27
+    sugar: 0.75
+    fat: 13.2
+    saturatedFat: 5.09
+    omega3: 0.1
+    fiber: 0
+    salt: 5.67
+
+- id: db_i1781901676317
+  name: Lardons
+  aliases:
+    - lardons fumés
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqle8yihji2gnu.jpg?alt=media&token=0f2d97eb-fd00-433f-b307-7899d9b88fa1
+  nutrition:
+    calories: 269
+    protein: 16.6
+    carbs: 1.01
+    sugar: 0.78
+    fat: 22.1
+    saturatedFat: 7.91
+    omega3: 0.18
+    fiber: 0.38
+    salt: 2.72
+
+- id: db_i1781961536411
+  name: Magret de canard
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmdvymhj1vtql.jpg?alt=media&token=5ad4427b-b79a-43c9-ad70-1ab1e967fbad
+  nutrition:
+    calories: 337
+    protein: 17.9
+    carbs: 0.1
+    sugar: 0.1
+    fat: 29.4
+    saturatedFat: 8.95
+    omega3: 0
+    fiber: 0
+    salt: 0.21
+
+- id: db_i17849415222127589
+  name: Merguez
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspv1n4guztapo.jpg?alt=media&token=1655a9cb-7bb2-412e-86f5-87544e372307
+  nutrition:
+    calories: 301
+    protein: 13.8
+    carbs: 1.15
+    sugar: 1.15
+    fat: 26.8
+    saturatedFat: 11.2
+    omega3: 0
+    fiber: 0
+    salt: 2.01
+
+- id: db_i1781902070878
+  name: Pancetta
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqlehfbxpyw5ec.jpg?alt=media&token=977a4bbe-9a21-45c1-b1f1-c72c42cb0548
+  nutrition:
+    calories: 349
+    protein: 20.2
+    carbs: 2.49
+    sugar: 0.43
+    fat: 28.8
+    saturatedFat: 12.4
+    omega3: 0.16
+    fiber: 0
+    salt: 4.14
+
+- id: db_i1781961468185
+  name: Poitrine de porc
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmduhr7gd5xro.jpg?alt=media&token=b84bff34-3ac8-4d98-938b-24ea01ada1b8
+  nutrition:
+    calories: 253
+    protein: 17
+    carbs: 0
+    sugar: 0
+    fat: 20.5
+    saturatedFat: 7.89
+    omega3: 0.11
+    fiber: 0
+    salt: 0.14
+
+- id: db_i1781901336394
+  name: Poulet
+  category: meat
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqle1kt0ymv7l1.jpg?alt=media&token=487c8da2-7949-467e-8efd-68061990463b
+  nutrition:
+    calories: 109
+    protein: 20.9
+    carbs: 0
+    sugar: 0
+    fat: 2.89
+    saturatedFat: 0.73
+    omega3: 0.12
+    fiber: 0
+    salt: 0.19
+
+- id: db_i17849415222213339
+  name: Rillettes
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 522
+    protein: 18
+    carbs: 0.1
+    sugar: 0
+    fat: 50
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0
+
+- id: db_i17849415222093127
+  name: Rôti de porc
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 153
+    protein: 22.3
+    carbs: 0.5
+    sugar: 0
+    fat: 6.86
+    saturatedFat: 2.84
+    omega3: 0.026
+    fiber: 0
+    salt: 0.1
+
+- id: db_i1784941283095676
+  name: Saucisse de Toulouse
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 321
+    protein: 13.3
+    carbs: 0.64
+    sugar: 0.5
+    fat: 29.5
+    saturatedFat: 11.3
+    omega3: 0.334
+    fiber: 0
+    salt: 1.89
+
+- id: db_i17849415222147767
+  name: Saucisson sec
+  category: meat
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 418
+    protein: 24.2
+    carbs: 5.48
+    sugar: 2.55
+    fat: 33.1
+    saturatedFat: 11.3
+    omega3: 0.234
+    fiber: 0.73
+    salt: 4.75
+
+- id: db_i1781887453995
+  name: Anchois
+  aliases:
+    - filet d'anchois
+  category: fish_seafood
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql5s4ee4zza4z.jpg?alt=media&token=419e0085-9380-4ed6-af47-f7112ed3c820
+  nutrition:
+    calories: 129
+    protein: 18.6
+    carbs: 0
+    sugar: 0
+    fat: 6.07
+    saturatedFat: 1.64
+    omega3: 1.48
+    fiber: 0
+    salt: 0.18
+
+- id: db_i17849415222239690
+  name: Bar
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 86.1
+    protein: 19.1
+    carbs: 0.9
+    sugar: 0
+    fat: 0.7
+    saturatedFat: 0.2
+    omega3: 0.16
+    fiber: 0
+    salt: 0.23
+
+- id: db_i1781886508648
+  name: Cabillaud
+  category: fish_seafood
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql5r6wpnouude.jpg?alt=media&token=e992d6be-136c-4b5f-af04-fac36d7866f5
+  nutrition:
+    calories: 77.4
+    protein: 18.1
+    carbs: 0
+    sugar: 0
+    fat: 0.57
+    saturatedFat: 0.1
+    omega3: 0.18
+    fiber: 0
+    salt: 0.23
+
+- id: db_i1784941283103326
+  name: Calamar
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 77
+    protein: 14.4
+    carbs: 2.17
+    sugar: 0
+    fat: 1.19
+    saturatedFat: 0.28
+    omega3: 0.392
+    fiber: 0
+    salt: 0.61
+
+- id: db_i1781888723231
+  name: Conserve de Thon
+  aliases:
+    - boite de thon
+  category: fish_seafood
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql6j4d76dr1cz.jpg?alt=media&token=e6031399-c269-43f4-8668-a04a81a853a0
+  nutrition:
+    calories: 143
+    protein: 26.8
+    carbs: 0
+    sugar: 0
+    fat: 3.94
+    saturatedFat: 1.01
+    omega3: 1.08
+    fiber: 0
+    salt: 0.74
+
+- id: db_i17849415222372959
+  name: Crabe
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspti4lzwelhur.jpg?alt=media&token=82f25890-7d57-4912-8ecc-5852f0e9d32e
+  nutrition:
+    calories: 213
+    protein: 7.44
+    carbs: 23.7
+    sugar: 2.4
+    fat: 9.2
+    saturatedFat: 1.13
+    omega3: 0.05
+    fiber: 2.7
+    salt: 1.2
+
+- id: db_i1781891264864
+  name: Crevette
+  category: fish_seafood
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql81ruq7e2klw.png?alt=media&token=dcffebe2-8365-4374-b662-f678fe98594e
+  nutrition:
+    calories: 91.3
+    protein: 20.5
+    carbs: 0.2
+    sugar: 0
+    fat: 0.79
+    saturatedFat: 0.25
+    omega3: 0.12
+    fiber: 0
+    salt: 1.61
+
+- id: db_i1781891214720
+  name: Crevette Grise
+  category: fish_seafood
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql80qgqym8jyq.jpg?alt=media&token=4df1f5f2-3a88-4d50-bc15-e779f9032511
+  nutrition:
+    calories: 91.3
+    protein: 20.5
+    carbs: 0.2
+    sugar: 0
+    fat: 0.79
+    saturatedFat: 0.25
+    omega3: 0.12
+    fiber: 0
+    salt: 1.61
+
+- id: db_i1784941283101336
+  name: Dorade
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 129
+    protein: 20.5
+    carbs: 0
+    sugar: 0
+    fat: 5.27
+    saturatedFat: 1.41
+    omega3: 0.88
+    fiber: 0
+    salt: 0.15
+
+- id: db_i17849415222315921
+  name: Hareng
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 176
+    protein: 17.7
+    carbs: 0
+    sugar: 0
+    fat: 11.7
+    saturatedFat: 2.82
+    omega3: 1.9
+    fiber: 0
+    salt: 0.22
+
+- id: db_i17849415222382805
+  name: Huître
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspsbzbwdfksui.jpg?alt=media&token=ef3bb653-2eb0-4133-92d9-b7241181ac15
+  nutrition:
+    calories: 53.5
+    protein: 10.2
+    carbs: 1.16
+    sugar: 0
+    fat: 0.9
+    saturatedFat: 0.17
+    omega3: 0
+    fiber: 0
+    salt: 1.28
+
+- id: db_i17849415222253786
+  name: Lieu noir
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 82.5
+    protein: 18.8
+    carbs: 0
+    sugar: 0
+    fat: 0.8
+    saturatedFat: 0.15
+    omega3: 0.231
+    fiber: 0
+    salt: 0.2
+
+- id: db_i17849415222296010
+  name: Lotte
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 67
+    protein: 15.1
+    carbs: 0
+    sugar: 0
+    fat: 0.74
+    saturatedFat: 0.18
+    omega3: 0.175
+    fiber: 0
+    salt: 0.19
+
+- id: db_i1781891517537
+  name: Maquereau
+  category: fish_seafood
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql877znnqu93b.jpg?alt=media&token=b490a48a-8921-4f9f-af50-f445bc75354e
+  nutrition:
+    calories: 198
+    protein: 18.1
+    carbs: 0.93
+    sugar: 0
+    fat: 13.5
+    saturatedFat: 3.22
+    omega3: 2.59
+    fiber: 0
+    salt: 0.16
+
+- id: db_i17849415222359200
+  name: Merlan
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 79.2
+    protein: 18.8
+    carbs: 0
+    sugar: 0
+    fat: 0.47
+    saturatedFat: 0.095
+    omega3: 0.187
+    fiber: 0
+    salt: 0.16
+
+- id: db_i1781891344837
+  name: Moule
+  category: fish_seafood
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql83iatw0axvk.jpg?alt=media&token=15fb7c18-f5a9-40e3-9d03-628abc5576df
+  nutrition:
+    calories: 71.8
+    protein: 11.2
+    carbs: 2.69
+    sugar: 0
+    fat: 1.82
+    saturatedFat: 0.44
+    omega3: 0.32
+    fiber: 0
+    salt: 0.85
+
+- id: db_i1781891680037
+  name: Noix de Saint Jacques
+  aliases:
+    - St Jacques
+  category: fish_seafood
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql8ansokbid01.jpg?alt=media&token=5c60d273-89f0-4cf2-b803-38314a1c4e30
+  nutrition:
+    calories: 83.6
+    protein: 17.9
+    carbs: 1.15
+    sugar: 0
+    fat: 0.84
+    saturatedFat: 0.09
+    omega3: 0.13
+    fiber: 0
+    salt: 0.34
+
+- id: db_i1781888431755
+  name: Pavé  de Saumon
+  aliases:
+    - saumon
+  category: fish_seafood
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql6d0bth51ttz.png?alt=media&token=86a6cdd7-cb4a-469e-bcb7-89fb243cb9b5
+  nutrition:
+    calories: 193
+    protein: 20.5
+    carbs: 0
+    sugar: 0
+    fat: 12.4
+    saturatedFat: 2.15
+    omega3: 1.82
+    fiber: 0
+    salt: 0.16
+
+- id: db_i17849415222339506
+  name: Rouget
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 158
+    protein: 18.4
+    carbs: 0
+    sugar: 0
+    fat: 9.37
+    saturatedFat: 2.72
+    omega3: 1.644
+    fiber: 0
+    salt: 0.17
+
+- id: db_i1781888264326
+  name: Sardine
+  category: fish_seafood
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql69hl27sun38.jpg?alt=media&token=28ce1683-99c0-4ce9-baee-21204a518eb5
+  nutrition:
+    calories: 160
+    protein: 19.5
+    carbs: 0
+    sugar: 0
+    fat: 9.17
+    saturatedFat: 2.66
+    omega3: 3.48
+    fiber: 0
+    salt: 0.22
+
+- id: db_i17849415222406872
+  name: Seiche
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 76.3
+    protein: 16.2
+    carbs: 0.51
+    sugar: 0
+    fat: 1.05
+    saturatedFat: 0.37
+    omega3: 0.3
+    fiber: 0
+    salt: 0.93
+
+- id: db_i17849415222273532
+  name: Sole
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 77.3
+    protein: 18
+    carbs: 0
+    sugar: 0
+    fat: 0.6
+    saturatedFat: 0.13
+    omega3: 0.101
+    fiber: 0
+    salt: 0.19
+
+- id: db_i1784941283097616
+  name: Thon
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 155
+    protein: 24
+    carbs: 2.72
+    sugar: 0
+    fat: 5.38
+    saturatedFat: 1
+    omega3: 2.076
+    fiber: 0
+    salt: 0.12
+
+- id: db_i1784941283098277
+  name: Truite
+  category: fish_seafood
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 114
+    protein: 19.6
+    carbs: 0.81
+    sugar: 0
+    fat: 3.63
+    saturatedFat: 0.62
+    omega3: 0
+    fiber: 0
+    salt: 0.14
+
+- id: db_i1781892089547
+  name: Edamame
+  category: legume
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql8kaqur77dqh.png?alt=media&token=6be35c72-1c40-4e9c-ad4a-151513984ed6
+  nutrition:
+    calories: 441
+    protein: 36.5
+    carbs: 20.9
+    sugar: 7.33
+    fat: 19.9
+    saturatedFat: 2.88
+    omega3: 1.29
+    fiber: 9.3
+    salt: 0.01
+
+- id: db_i17849415221549375
+  name: Fève
+  category: legume
+  months:
+    - 4
+    - 5
+    - 6
+  nutrition:
+    calories: 61.5
+    protein: 6.76
+    carbs: 4.2
+    sugar: 0.37
+    fat: 0.67
+    saturatedFat: 0.13
+    omega3: 0
+    fiber: 5.85
+    salt: 0.094
+
+- id: db_i1784941283107577
+  name: Flageolet
+  category: legume
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms5rf123arkrfo.jpg?alt=media&token=382d7986-95ec-40c8-938d-b1dad9ded8c3
+  nutrition:
+    calories: 315
+    protein: 19.1
+    carbs: 42.1
+    sugar: 0
+    fat: 2.6
+    saturatedFat: 0.35
+    omega3: 1.02
+    fiber: 23.4
+    salt: 0.02
+
+- id: db_i1781891957030
+  name: Haricot blanc
+  category: legume
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql8gna283e8gx.jpg?alt=media&token=2140b677-cd48-439c-a277-6d595aa7fa05
+  nutrition:
+    calories: 307
+    protein: 23.4
+    carbs: 43.9
+    sugar: 0
+    fat: 0.85
+    saturatedFat: 0.22
+    omega3: 0
+    fiber: 15.2
+    salt: 0.04
+
+- id: db_i1781892029037
+  name: Haricot noir
+  category: legume
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql8i5y9mpcb3l.jpg?alt=media&token=51143fc1-3fec-4c31-b2fe-bf06993f9d04
+  nutrition:
+    calories: 314
+    protein: 22.5
+    carbs: 46.1
+    sugar: 2.1
+    fat: 1.06
+    saturatedFat: 0.15
+    omega3: 0
+    fiber: 15.2
+    salt: 0.03
+
+- id: db_i1781891895654
+  name: Haricot rouge
+  category: legume
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql8fbmxh1d3j1.jpg?alt=media&token=f0aa9515-ffc5-4d69-98d3-e7e03efe848f
+  nutrition:
+    calories: 314
+    protein: 22.5
+    carbs: 46.1
+    sugar: 2.1
+    fat: 1.06
+    saturatedFat: 0.15
+    omega3: 0
+    fiber: 15.2
+    salt: 0.03
+
+- id: db_i1781890822812
+  name: Lentilles Corail
+  category: legume
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql7s9shigdgsu.png?alt=media&token=f173c3a4-3245-4e25-b808-9bc4a9d5a674
+  nutrition:
+    calories: 328
+    protein: 27.7
+    carbs: 44.9
+    sugar: 1.29
+    fat: 0.8
+    saturatedFat: 0.14
+    omega3: 0.09
+    fiber: 15.4
+    salt: 0
+
+- id: db_i1781891799585
+  name: Lentilles Vertes
+  category: legume
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql8d81pqkqs8r.jpg?alt=media&token=caa435d5-b03b-41d4-b749-cfbe10aacff8
+  nutrition:
+    calories: 327
+    protein: 25.1
+    carbs: 44.5
+    sugar: 1.1
+    fat: 1.8
+    saturatedFat: 0.24
+    omega3: 0.21
+    fiber: 16.4
+    salt: 0
+
+- id: db_i1784941283105370
+  name: Pois cassés
+  category: legume
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 347
+    protein: 23.8
+    carbs: 47.5
+    sugar: 2.56
+    fat: 1.16
+    saturatedFat: 0.16
+    omega3: 0.083
+    fiber: 25.5
+    salt: 0.038
+
+- id: db_i1781891851765
+  name: Pois chiches
+  category: legume
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql8edxsgtertb.jpg?alt=media&token=a04ed2c0-6d17-4af8-b4ae-dd0eef7ba41b
+  nutrition:
+    calories: 350
+    protein: 20.5
+    carbs: 47.5
+    sugar: 2.3
+    fat: 6.04
+    saturatedFat: 0.6
+    omega3: 0.1
+    fiber: 12.2
+    salt: 0.06
+
+- id: db_i17849415222563219
+  name: Baguette
+  category: grain
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 287
+    protein: 8.27
+    carbs: 58.3
+    sugar: 2.3
+    fat: 1.4
+    saturatedFat: 0.45
+    omega3: 0.04
+    fiber: 2.7
+    salt: 1.25
+
+- id: db_i1781956556560
+  name: Boulgour
+  aliases:
+    - boulghour
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmax89bs2ncah.jpg?alt=media&token=56496a00-ba73-4ba9-8032-ca75cd7043bc
+  nutrition:
+    calories: 347
+    protein: 11.7
+    carbs: 65.8
+    sugar: 0.41
+    fat: 1.42
+    saturatedFat: 0.23
+    omega3: 0.04
+    fiber: 10.5
+    salt: 0.04
+
+- id: db_i1781960390125
+  name: Chapelure
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmd7dc4kie44o.jpg?alt=media&token=7175d6b6-2322-4158-b760-565a93954f3b
+  nutrition:
+    calories: 365
+    protein: 9.41
+    carbs: 74.3
+    sugar: 4.29
+    fat: 1.6
+    saturatedFat: 0.46
+    omega3: 0.05
+    fiber: 5.4
+    salt: 0.72
+
+- id: db_i1781893888201
+  name: Conchiglie
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql9nrqevkenkw.jpg?alt=media&token=2305419a-35e4-4cd4-b8a6-c5d0cd6a16bd
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i17849415222488672
+  name: Couscous
+  category: grain
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 164
+    protein: 5.81
+    carbs: 31
+    sugar: 3.36
+    fat: 0.9
+    saturatedFat: 0.21
+    omega3: 0.027
+    fiber: 2.8
+    salt: 0.038
+
+- id: db_i1781893844645
+  name: Crouton de pain
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql9l3obb9ir0i.jpg?alt=media&token=74b26091-42ca-4938-873b-e87c7ce3c4d6
+  nutrition:
+    calories: 459
+    protein: 9.21
+    carbs: 62.4
+    sugar: 3.64
+    fat: 17.9
+    saturatedFat: 2.66
+    omega3: 0.03
+    fiber: 3.72
+    salt: 1.83
+
+- id: db_i1781960793928
+  name: Crozets
+  aliases:
+    - crozets au sarrasin
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmdfzy5mg3i5z.jpg?alt=media&token=3ede2507-11fe-40b8-932f-2ae049b72072
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i1781960072228
+  name: Farfalle
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmd0kx0815cn0.jpg?alt=media&token=bf718138-dba8-4825-a623-69b00e82648e
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i1781288852118
+  name: Farine de blé
+  aliases:
+    - farine
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb9dyf5vdjyd4.png?alt=media&token=34a0efc8-88fe-4c5b-a071-a602ab00d5d3
+  nutrition:
+    calories: 346
+    protein: 10
+    carbs: 71.5
+    sugar: 1.5
+    fat: 1
+    saturatedFat: 0
+    omega3: 0
+    fiber: 3.5
+    salt: 0.03
+
+- id: db_i17849415222527587
+  name: Fécule de maïs
+  aliases:
+    - maizena
+  category: grain
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspsvaa4vl879f.jpg?alt=media&token=2b37a12a-cb4a-44d6-98b3-db66a02d1a6e
+  nutrition:
+    calories: 365
+    protein: 0.26
+    carbs: 90.4
+    sugar: 0
+    fat: 0.05
+    saturatedFat: 0.009
+    omega3: 0
+    fiber: 0.9
+    salt: 0.023
+
+- id: db_i1781959838913
+  name: Flocon d'avoine
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmcvild65npl5.png?alt=media&token=241357f9-cac1-4659-b9d2-f248db5d640a
+  nutrition:
+    calories: 369
+    protein: 10.6
+    carbs: 57.7
+    sugar: 1.04
+    fat: 7.82
+    saturatedFat: 1.37
+    omega3: 0.07
+    fiber: 11.2
+    salt: 0.01
+
+- id: db_i1781960027304
+  name: Fusilli
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmczl9f9sccyg.png?alt=media&token=956c4c98-1395-480c-be44-ad1e5e078a90
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i1781289258758
+  name: Gnocchi
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb9mn1cug8erp.png?alt=media&token=0bd3fa56-1751-4f3f-8c10-866ceeee1b57
+  nutrition:
+    calories: 200
+    protein: 6.2
+    carbs: 37
+    sugar: 9.9
+    fat: 2.6
+    saturatedFat: 0.34
+    omega3: 0.01
+    fiber: 1.9
+    salt: 2.21
+
+- id: db_i1781257481760
+  name: Linguine
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaqpm08z32zdb.png?alt=media&token=f35186d1-d06b-42a7-ae6a-f63b22db0892
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i17849415222582577
+  name: Muesli
+  category: grain
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 433
+    protein: 8.87
+    carbs: 63.4
+    sugar: 19.4
+    fat: 14.3
+    saturatedFat: 3.44
+    omega3: 0.082
+    fiber: 6.9
+    salt: 0.44
+
+- id: db_i1781258532378
+  name: Orecchiette
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqarc42imrxhka.png?alt=media&token=ebc7a91e-b6cb-414e-a4e0-31b806b751d9
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i17849415222449221
+  name: Orge perlé
+  category: grain
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 346
+    protein: 9.91
+    carbs: 68.6
+    sugar: 0.8
+    fat: 1.16
+    saturatedFat: 0.24
+    omega3: 0
+    fiber: 9.1
+    salt: 0.023
+
+- id: db_i1781258287133
+  name: Orzo
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqar6uodhb6adk.png?alt=media&token=6654a212-f29a-44e7-bcba-454d3f891137
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i1781892829711
+  name: Pain
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql8zcaq6wx1pw.jpg?alt=media&token=2a25cdfd-1feb-466b-b29f-99839086c272
+  nutrition:
+    calories: 276
+    protein: 8.18
+    carbs: 55
+    sugar: 2.38
+    fat: 1.36
+    saturatedFat: 0.34
+    omega3: 0.07
+    fiber: 3.86
+    salt: 1.25
+
+- id: db_i1781893067647
+  name: Pain au levain
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql94g37df4dkz.jpg?alt=media&token=075e2315-f0e1-494a-a8dc-29a9d7ad87c2
+  nutrition:
+    calories: 261
+    protein: 7.41
+    carbs: 53.1
+    sugar: 2.4
+    fat: 1.3
+    saturatedFat: 0.17
+    omega3: 0.02
+    fiber: 2.1
+    salt: 1.25
+
+- id: db_i1781890084054
+  name: Pain de mie
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql7chkzu078xg.jpg?alt=media&token=397800e7-7671-4a7e-ade3-d442dfc925c4
+  nutrition:
+    calories: 257
+    protein: 7.3
+    carbs: 41.8
+    sugar: 5.63
+    fat: 4.1
+    saturatedFat: 0.57
+    omega3: 0.29
+    fiber: 7.3
+    salt: 1.07
+
+- id: db_i1781960318397
+  name: Pain pita
+  aliases:
+    - pita
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmd5v8vzfac5l.jpg?alt=media&token=cc6b42f8-25f3-44a4-86d6-fe388373bf6d
+  nutrition:
+    calories: 249
+    protein: 7.48
+    carbs: 48.8
+    sugar: 2.51
+    fat: 1.5
+    saturatedFat: 0.2
+    omega3: 0
+    fiber: 3.7
+    salt: 1.2
+
+- id: db_i1781258728454
+  name: Pappardelle
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqarg9xaz7buwr.png?alt=media&token=65e4dab4-7313-4d93-95f0-51bca2fbee70
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i1781959898845
+  name: Penne rigate
+  aliases:
+    - penne
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmcwvagvztqp0.jpg?alt=media&token=047246bd-0dfb-43be-8282-7107c50fef71
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i1781959695063
+  name: Petit épeautre
+  aliases:
+    - petit epeautre
+    - epeautre
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmcsawaiqsz8k.jpg?alt=media&token=e3a9ff59-e830-425a-b551-5829899062ee
+  nutrition:
+    calories: 344
+    protein: 14.6
+    carbs: 59.5
+    sugar: 6.68
+    fat: 2.43
+    saturatedFat: 0.41
+    omega3: 0.07
+    fiber: 10.7
+    salt: 0.02
+
+- id: db_i1781290047364
+  name: Polenta
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqba3lah5yh21d.png?alt=media&token=a77010f4-1f88-4497-b556-e8a31bb546d4
+  nutrition:
+    calories: 76.1
+    protein: 1.38
+    carbs: 16.9
+    sugar: 0.1
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 1.6
+    salt: 0
+
+- id: db_i1781893283169
+  name: Quinoa
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql991g2vdxuyt.jpg?alt=media&token=e701d394-2f4f-449c-a825-d3cb9c9c5d9a
+  nutrition:
+    calories: 358
+    protein: 13.2
+    carbs: 58.1
+    sugar: 0
+    fat: 6.07
+    saturatedFat: 0.71
+    omega3: 0.13
+    fiber: 7
+    salt: 0.01
+
+- id: db_i1781257428031
+  name: Rigatoni
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaqog60ti7wqn.png?alt=media&token=68d35940-9580-46f3-8fd4-a5ab837d9b0d
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i1781289102567
+  name: Riz arborio
+  aliases:
+    - riz rond
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb9jbz7bgwtkm.jpg?alt=media&token=5a6d2254-ecb7-4231-8c55-73be9082853c
+  nutrition:
+    calories: 350
+    protein: 7.02
+    carbs: 77.5
+    sugar: 0.12
+    fat: 0.79
+    saturatedFat: 0.16
+    omega3: 0
+    fiber: 1.53
+    salt: 0.01
+
+- id: db_i1781288942041
+  name: Riz basmati
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql65twhso4mfw.jpg?alt=media&token=7762552d-f659-42ac-bad8-2fd8369b3aad
+  nutrition:
+    calories: 351
+    protein: 7.08
+    carbs: 78.4
+    sugar: 0
+    fat: 0.63
+    saturatedFat: 0.18
+    omega3: 0.01
+    fiber: 1.06
+    salt: 0.03
+
+- id: db_i1784941283068516
+  name: Riz blanc
+  category: grain
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 350
+    protein: 7.02
+    carbs: 77.5
+    sugar: 0.12
+    fat: 0.79
+    saturatedFat: 0.16
+    omega3: 0.004
+    fiber: 1.53
+    salt: 0.008
+
+- id: db_i1784941283071836
+  name: Riz complet
+  category: grain
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 350
+    protein: 7.02
+    carbs: 71.4
+    sugar: 0
+    fat: 2.8
+    saturatedFat: 0.56
+    omega3: 0.026
+    fiber: 5
+    salt: 0.01
+
+- id: db_i1784941283075594
+  name: Sarrasin
+  category: grain
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 362
+    protein: 13.3
+    carbs: 67.5
+    sugar: 0
+    fat: 3.4
+    saturatedFat: 0.74
+    omega3: 0.078
+    fiber: 4
+    salt: 0.003
+
+- id: db_i17849415222469000
+  name: Seigle
+  category: grain
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 345
+    protein: 9.82
+    carbs: 68.7
+    sugar: 0.93
+    fat: 1.33
+    saturatedFat: 0.15
+    omega3: 0
+    fiber: 8
+    salt: 0.005
+
+- id: db_i1781956975581
+  name: Semoule
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmb65yt2nzu5k.png?alt=media&token=53c9b6ad-a278-408a-868e-c0762c7bccf5
+  nutrition:
+    calories: 350
+    protein: 11.8
+    carbs: 69.8
+    sugar: 1
+    fat: 1.28
+    saturatedFat: 0.23
+    omega3: 0.03
+    fiber: 3.7
+    salt: 0
+
+- id: db_i1784941283073487
+  name: Semoule de blé
+  category: grain
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 350
+    protein: 11.8
+    carbs: 69.8
+    sugar: 1
+    fat: 1.28
+    saturatedFat: 0.23
+    omega3: 0.028
+    fiber: 3.7
+    salt: 0.003
+
+- id: db_i1781960976336
+  name: Spaetzle
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmdjya8gys85w.jpg?alt=media&token=a2f9b238-d773-492d-8c55-f444130cbb6f
+  nutrition:
+    calories: 381
+    protein: 14
+    carbs: 68
+    sugar: 2.19
+    fat: 4.72
+    saturatedFat: 1.34
+    omega3: 0.06
+    fiber: 3.15
+    salt: 0.09
+
+- id: db_i1781257348789
+  name: Spaghetti
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaqmriwa99e92.png?alt=media&token=9ed895d7-3860-4660-886c-d10a5aa55ccf
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i1781257541329
+  name: Tagliatelle
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaqqw0eq6qenh.png?alt=media&token=617af7b5-adc5-4673-a9e1-2cc99916a211
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i1781960195905
+  name: Udon
+  aliases:
+    - nouilles udon
+  category: grain
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmd4btk15xfqr.jpg?alt=media&token=2c07b230-1c96-4a4b-a749-006ea562bd14
+  nutrition:
+    calories: 371
+    protein: 11.9
+    carbs: 71
+    sugar: 0.5
+    fat: 3
+    saturatedFat: 1
+    omega3: 0
+    fiber: 4
+    salt: 0.99
+
+- id: db_i17849415222607263
+  name: Huile d'arachide
+  category: oil
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspt0l6j5nw4j6.png?alt=media&token=797e1c15-1060-43f3-b2f8-9710d6ad506b
+  nutrition:
+    calories: 899
+    protein: 0.25
+    carbs: 0
+    sugar: 0
+    fat: 99.9
+    saturatedFat: 16.2
+    omega3: 0.228
+    fiber: 0
+    salt: 0
+
+- id: db_i1781128389827
+  name: Huile d'olive
+  category: oil
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqap0bwcf1s7e3.png?alt=media&token=574bf207-e450-4adb-80c3-01d10d5ec307
+  nutrition:
+    calories: 899
+    protein: 0.25
+    carbs: 0
+    sugar: 0
+    fat: 99.9
+    saturatedFat: 15.2
+    omega3: 0.65
+    fiber: 0
+    salt: 0
+
+- id: db_i1784941283112221
+  name: Huile de coco
+  category: oil
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspswteoyyimtb.jpg?alt=media&token=89d72ec1-54cb-4cef-801d-0955d0f932dc
+  nutrition:
+    calories: 899
+    protein: 0.16
+    carbs: 0
+    sugar: 0
+    fat: 99.9
+    saturatedFat: 85.4
+    omega3: 0
+    fiber: 0
+    salt: 0
+
+- id: db_i1784941283108445
+  name: Huile de colza
+  category: oil
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspt23430yzot9.jpg?alt=media&token=8a790409-d7a9-4477-9cf5-4543985e143d
+  nutrition:
+    calories: 900
+    protein: 0
+    carbs: 0
+    sugar: 0
+    fat: 100
+    saturatedFat: 7.26
+    omega3: 7.83
+    fiber: 0
+    salt: 0
+
+- id: db_i17849415222623176
+  name: Huile de noix
+  category: oil
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 900
+    protein: 0
+    carbs: 0
+    sugar: 0
+    fat: 100
+    saturatedFat: 10
+    omega3: 11.9
+    fiber: 0
+    salt: 0
+
+- id: db_i1784941283110326
+  name: Huile de sésame
+  category: oil
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspszexe7jn6bp.jpg?alt=media&token=d4841df4-bc42-4239-9727-d473144279be
+  nutrition:
+    calories: 900
+    protein: 0
+    carbs: 0
+    sugar: 0
+    fat: 100
+    saturatedFat: 14.9
+    omega3: 0.38
+    fiber: 0
+    salt: 0
+
+- id: db_i1781265063410
+  name: Huile de tournesol
+  aliases:
+    - huile végétale
+    - huile neutre
+  category: oil
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqav83tmn1yqt6.png?alt=media&token=23e27f87-a26e-48c4-ae6b-132748e5b36a
+  nutrition:
+    calories: 900
+    protein: 0.25
+    carbs: 0
+    sugar: 0
+    fat: 100
+    saturatedFat: 11.1
+    omega3: 0.05
+    fiber: 0
+    salt: 0.03
+
+- id: db_i1785309941146
+  name: Jus de citron jaune
+  aliases:
+    - jus de citron
+  category: acid
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspsm4ylaqwkzz.jpg?alt=media&token=deddca8e-6570-40a0-8ad8-099bfe14a1f7
+
+- id: db_i1781264861111
+  name: Jus de citron vert
+  category: acid
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqav3rhfyk11en.png?alt=media&token=7b48eb0f-94f7-4306-96d3-1553971ecee6
+  nutrition:
+    calories: 25.7
+    protein: 0.25
+    carbs: 1.69
+    sugar: 1.69
+    fat: 0.23
+    saturatedFat: 0.03
+    omega3: 0
+    fiber: 0.45
+    salt: 0.03
+
+- id: db_i1781264988103
+  name: Vinaigre balsamique
+  category: acid
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqav6huio08vow.png?alt=media&token=ff771a1c-669b-48fb-b2f8-a85551eaea7f
+  nutrition:
+    calories: 91.7
+    protein: 0.69
+    carbs: 18
+    sugar: 18
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0.75
+    salt: 0.07
+
+- id: db_i1781264626537
+  name: Vinaigre de cidre
+  category: acid
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqauyqa6kqt7km.png?alt=media&token=72825faa-7659-40f7-9d4d-4fb1b7062b39
+  nutrition:
+    calories: 3.7
+    protein: 0
+    carbs: 0.93
+    sugar: 0.4
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.01
+
+- id: db_i1781888541205
+  name: Vinaigre de riz
+  category: acid
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmql6fdurtqjke0.png?alt=media&token=5ad94023-bd52-42bc-bcb7-130e4ae6ddad
+  nutrition:
+    calories: 22.5
+    protein: 0.04
+    carbs: 0.95
+    sugar: 0.04
+    fat: 0.1
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.01
+
+- id: db_i1781264583436
+  name: Vinaigre de vin rouge
+  aliases:
+    - Vinaigre de vin
+    - Vinaigre
+  category: acid
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqauxsphmcc7p0.png?alt=media&token=64811fdd-1f19-4c8a-a6f6-d880e858b2af
+  nutrition:
+    calories: 20.6
+    protein: 0.25
+    carbs: 0
+    sugar: 0
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.01
+
+- id: db_i1781288589279
+  name: Concentré de tomate
+  category: sauce
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb98bvhqonq3o.png?alt=media&token=76a24742-1918-44a8-998b-e9cc035c6d47
+  nutrition:
+    calories: 99.2
+    protein: 4.4
+    carbs: 17.1
+    sugar: 13.3
+    fat: 0.53
+    saturatedFat: 0.1
+    omega3: 0.01
+    fiber: 4.2
+    salt: 0.27
+
+- id: db_i17849415222846600
+  name: Ketchup
+  category: sauce
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 108
+    protein: 1.23
+    carbs: 23.7
+    sugar: 21.1
+    fat: 0.16
+    saturatedFat: 0.035
+    omega3: 0.009
+    fiber: 1.77
+    salt: 2.35
+
+- id: db_i17849415222868036
+  name: Mayonnaise
+  category: sauce
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 692
+    protein: 1.33
+    carbs: 3.41
+    sugar: 1.2
+    fat: 74.5
+    saturatedFat: 6.76
+    omega3: 6
+    fiber: 0.26
+    salt: 1.4
+
+- id: db_i1781288392930
+  name: Moutarde
+  category: sauce
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb944sco0ysqh.png?alt=media&token=2ad1f1e6-2ca1-4b64-8664-5fb8b294ae80
+  nutrition:
+    calories: 151
+    protein: 6.92
+    carbs: 4.33
+    sugar: 1.73
+    fat: 11.2
+    saturatedFat: 1.1
+    omega3: 1.16
+    fiber: 0
+    salt: 6.3
+
+- id: db_i17849415222889319
+  name: Pesto
+  category: sauce
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 370
+    protein: 3.94
+    carbs: 6.6
+    sugar: 3.2
+    fat: 35.4
+    saturatedFat: 4.39
+    omega3: 0.06
+    fiber: 2.5
+    salt: 2.64
+
+- id: db_i1781288620974
+  name: Purée de tomate
+  aliases:
+    - coulis de tomate
+    - chair de tomate
+  category: sauce
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb991c7zvtrje.png?alt=media&token=7a1e92e6-7ecc-4255-9170-6a61716a1c96
+  nutrition:
+    calories: 45.5
+    protein: 2.05
+    carbs: 7.57
+    sugar: 5.5
+    fat: 0.2
+    saturatedFat: 0.08
+    omega3: 0
+    fiber: 2.6
+    salt: 0.88
+
+- id: db_i1781265488075
+  name: Sauce Soja
+  category: sauce
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqavh770vmzk0h.png?alt=media&token=45d1de75-547e-4868-a14f-2fe63d405b28
+  nutrition:
+    calories: 39.9
+    protein: 7.25
+    carbs: 1.72
+    sugar: 0
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0.9
+    salt: 13.1
+
+- id: db_i1781270508749
+  name: Cannelle en poudre
+  aliases:
+    - cannelle
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms5s0eej4xnehs.jpg?alt=media&token=f0dd670f-4a6b-4821-99b1-82068dc3b1aa
+  nutrition:
+    calories: 243
+    protein: 3.99
+    carbs: 27.5
+    sugar: 2.17
+    fat: 1.24
+    saturatedFat: 0.35
+    omega3: 0.01
+    fiber: 53.1
+    salt: 0.03
+
+- id: db_i1781269972919
+  name: Cardamome en poudre
+  aliases:
+    - cardamome
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqay58x3awndhf.png?alt=media&token=184e6bf9-138e-4636-a3cb-2bd3d3108afb
+  nutrition:
+    calories: 321
+    protein: 10.8
+    carbs: 40.5
+    sugar: 0
+    fat: 6.7
+    saturatedFat: 0
+    omega3: 0
+    fiber: 28
+    salt: 0.04
+
+- id: db_i1781960498929
+  name: Clou de girofle
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmd9qnqs9ai3u.jpg?alt=media&token=323fd399-dd54-4f73-a14b-c1ee7f515136
+  nutrition:
+    calories: 335
+    protein: 5.97
+    carbs: 31.6
+    sugar: 2.38
+    fat: 13
+    saturatedFat: 3.95
+    omega3: 0.59
+    fiber: 33.9
+    salt: 0.69
+
+- id: db_i1781261309453
+  name: Cumin en poudre
+  aliases:
+    - cumin
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaszmjyi7bqvm.png?alt=media&token=edb292d6-31ee-4db5-acf8-c699d442939f
+  nutrition:
+    calories: 427
+    protein: 17.8
+    carbs: 33.7
+    sugar: 2.25
+    fat: 22.3
+    saturatedFat: 1.54
+    omega3: 0
+    fiber: 10.5
+    salt: 0.42
+
+- id: db_i1781261421194
+  name: Curcuma en poudre
+  aliases:
+    - curcuma
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqat20zqleegsv.png?alt=media&token=85be41cc-be25-403e-b9ca-db6000932608
+  nutrition:
+    calories: 291
+    protein: 9.68
+    carbs: 44.4
+    sugar: 3.21
+    fat: 3.25
+    saturatedFat: 1.84
+    omega3: 0
+    fiber: 22.7
+    salt: 0.07
+
+- id: db_i1784941283121269
+  name: Curry en poudre
+  aliases:
+    - curry
+  category: condiment
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms5rwhfjeni1jg.jpg?alt=media&token=f110059e-2a4a-42c6-a10f-6fee7c267e73
+  nutrition:
+    calories: 301
+    protein: 14.5
+    carbs: 2.63
+    sugar: 2.63
+    fat: 14
+    saturatedFat: 1.65
+    omega3: 0.26
+    fiber: 53.2
+    salt: 0.13
+
+- id: db_i1786526155585
+  name: Fleur de sel
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspvkqf62t9m83.jpg?alt=media&token=b8d97fc4-cb45-4eb1-9fb7-2eb58911da6f
+
+- id: db_i1784941283114861
+  name: Gingembre
+  category: condiment
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms23dhlx1363j7.jpg?alt=media&token=cb4b4455-2edb-45f4-80da-c3e6d63a743f
+  nutrition:
+    calories: 335
+    protein: 8.98
+    carbs: 58.3
+    sugar: 3.39
+    fat: 4.24
+    saturatedFat: 2.6
+    omega3: 0.22
+    fiber: 14.1
+    salt: 0.068
+
+- id: db_i1784941283115318
+  name: Graine de coriandre
+  category: condiment
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms5s2mig8sri1i.jpg?alt=media&token=9293bd9d-a00d-4523-b3fc-7674425c079c
+  nutrition:
+    calories: 345
+    protein: 12.4
+    carbs: 13
+    sugar: 0
+    fat: 17.8
+    saturatedFat: 0.99
+    omega3: 0
+    fiber: 41.9
+    salt: 0.088
+
+- id: db_i1785311169656
+  name: Graines de cumin
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms5s67igt0ndqx.jpg?alt=media&token=0eabcb68-152e-41a3-8769-d4ce2a6521b0
+
+- id: db_i17849415222696751
+  name: Graines de fenouil
+  category: condiment
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 327
+    protein: 15.8
+    carbs: 12.5
+    sugar: 12.5
+    fat: 14.9
+    saturatedFat: 0.48
+    omega3: 0
+    fiber: 39.8
+    salt: 0.22
+
+- id: db_i1781960628994
+  name: Herbes de provence
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmdchacjw7yrt.jpg?alt=media&token=80ba7fe7-4b2f-4ed4-a485-ccc82352113f
+  nutrition:
+    calories: 283
+    protein: 11.5
+    carbs: 23.1
+    sugar: 0
+    fat: 7.2
+    saturatedFat: 1.88
+    omega3: 0
+    fiber: 40.1
+    salt: 0.09
+
+- id: db_i1781960552249
+  name: Noix de muscade
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmdaujpyibgjr.jpg?alt=media&token=7d4bb407-edf9-4018-821c-4587d756567f
+  nutrition:
+    calories: 506
+    protein: 5.84
+    carbs: 27.4
+    sugar: 2.99
+    fat: 36.3
+    saturatedFat: 25.9
+    omega3: 0
+    fiber: 20.8
+    salt: 0.04
+
+- id: db_i1781261797866
+  name: Origan
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqata14bp4ug3g.png?alt=media&token=3ee4a298-0121-4888-8032-4a5709d61f06
+  nutrition:
+    calories: 265
+    protein: 9
+    carbs: 26.4
+    sugar: 4.09
+    fat: 4.28
+    saturatedFat: 1.55
+    omega3: 0.62
+    fiber: 42.5
+    salt: 0.06
+
+- id: db_i1781261176938
+  name: Paprika doux
+  aliases:
+    - paprika
+    - paprika fumé
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaswt9zespjfu.png?alt=media&token=745182d8-b618-4ea5-9a99-c8295c84b5b0
+  nutrition:
+    calories: 318
+    protein: 14.1
+    carbs: 18.8
+    sugar: 10.3
+    fat: 12.9
+    saturatedFat: 2.14
+    omega3: 0.45
+    fiber: 34.9
+    salt: 0.17
+
+- id: db_i1781261116241
+  name: Piment d'Espelette
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqasvij2c4etgk.png?alt=media&token=747bf19a-97e4-4b0c-b7e1-6cc20e9c6c30
+  nutrition:
+    calories: 376
+    protein: 12
+    carbs: 29.4
+    sugar: 10.3
+    fat: 17.3
+    saturatedFat: 3.26
+    omega3: 0
+    fiber: 27.2
+    salt: 0.07
+
+- id: db_i17849415222739590
+  name: Piment de Cayenne
+  category: condiment
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms5rkd2ncabpuo.jpg?alt=media&token=47399ce4-e5c5-44a6-bf4e-f71f3f567350
+  nutrition:
+    calories: 376
+    protein: 12
+    carbs: 29.4
+    sugar: 10.3
+    fat: 17.3
+    saturatedFat: 3.26
+    omega3: 0
+    fiber: 27.2
+    salt: 0.075
+
+- id: db_i1781255089151
+  name: Poivre Noir
+  aliases:
+    - poivre
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqapabwp6xm6fe.png?alt=media&token=31ed2536-9bca-4294-ac9b-f26d3e22282d
+  nutrition:
+    calories: 331
+    protein: 13.3
+    carbs: 39.9
+    sugar: 0.64
+    fat: 7.5
+    saturatedFat: 2.9
+    omega3: 0.63
+    fiber: 25.3
+    salt: 0.04
+
+- id: db_i17849415222643949
+  name: Safran
+  category: condiment
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspt5fepyisvn4.jpg?alt=media&token=8142d8b7-4425-45e0-8632-c18cc36301bf
+  nutrition:
+    calories: 352
+    protein: 11.4
+    carbs: 61.5
+    sugar: 42.4
+    fat: 5.85
+    saturatedFat: 1.59
+    omega3: 0
+    fiber: 3.9
+    salt: 0.37
+
+- id: db_i1781255104335
+  name: Sel
+  aliases:
+    - sel fin
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqapao8hdq0r23.png?alt=media&token=03e8ac9f-a264-481a-af2b-037810f0912a
+  nutrition:
+    calories: 0
+    protein: 0
+    carbs: 0
+    sugar: 0
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 80.5
+
+- id: db_i1784941283117140
+  name: Thym
+  category: condiment
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms5rul4w5qvccr.jpg?alt=media&token=21772602-72bd-430d-9cd5-a411ab771ef8
+  nutrition:
+    calories: 285
+    protein: 9.11
+    carbs: 26.9
+    sugar: 1.71
+    fat: 7.43
+    saturatedFat: 2.73
+    omega3: 0
+    fiber: 37
+    salt: 0.14
+
+- id: db_i17849415222666874
+  name: Vanille
+  category: condiment
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspt77kh78rhsl.jpg?alt=media&token=e7ac0e39-71a2-49e1-adf6-3447dbe13766
+  nutrition:
+    calories: 0
+    protein: 0
+    carbs: 0
+    sugar: 0
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0
+
+- id: db_i1781261518995
+  name: Zaatar
+  category: condiment
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqat43rearuvmn.png?alt=media&token=225a1e45-fe25-4851-a40b-519f02d345a1
+  nutrition:
+    calories: 283
+    protein: 11.5
+    carbs: 23.1
+    sugar: 0
+    fat: 7.2
+    saturatedFat: 1.88
+    omega3: 0
+    fiber: 40.1
+    salt: 0.09
+
+- id: db_i1785141296471
+  name: Bicarbonate de soude
+  aliases:
+    - bicarbonate de sodium
+  category: baking
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2z2ebwa2sbje.jpg?alt=media&token=530ac851-38f7-416b-8a1c-c23abb52a1b8
+
+- id: db_i17849415222966180
+  name: Chocolat au lait
+  category: baking
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  nutrition:
+    calories: 550
+    protein: 7.5
+    carbs: 58.9
+    sugar: 56.3
+    fat: 30.8
+    saturatedFat: 18.7
+    omega3: 0.08
+    fiber: 2.9
+    salt: 0.2
+
+- id: db_i1781270882239
+  name: Chocolat Blanc
+  category: baking
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqayotlbcw0vk2.png?alt=media&token=66b26270-6457-4591-b5a9-50b8a1df5238
+  nutrition:
+    calories: 563
+    protein: 6.16
+    carbs: 57.1
+    sugar: 56
+    fat: 34.2
+    saturatedFat: 21.3
+    omega3: 0.07
+    fiber: 1
+    salt: 0.22
+
+- id: db_i1781270818797
+  name: Chocolat Noir
+  category: baking
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqayneyoyvm7r6.png?alt=media&token=7c923fad-59f6-4b94-9d1c-31671bc0e7db
+  nutrition:
+    calories: 559
+    protein: 6.38
+    carbs: 52.4
+    sugar: 48.8
+    fat: 34.8
+    saturatedFat: 16.9
+    omega3: 0.07
+    fiber: 5.07
+    salt: 0.04
+
+- id: db_i1781961989272
+  name: Levure chimique
+  aliases:
+    - levure
+  category: baking
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqme5mrhhdgn0t.png?alt=media&token=14e97be3-926e-4550-9fb7-55742cdf5255
+  nutrition:
+    calories: 108
+    protein: 0.1
+    carbs: 26.9
+    sugar: 0
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0.2
+    salt: 0
+
+- id: db_i1781280794646
+  name: Amandes
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb4l9vfan1lpp.png?alt=media&token=d65af0ae-d8bf-430f-bd2a-0bc5b8b02047
+  nutrition:
+    calories: 631
+    protein: 21.4
+    carbs: 8.76
+    sugar: 4.63
+    fat: 52.5
+    saturatedFat: 3.95
+    omega3: 0
+    fiber: 9.9
+    salt: 0.05
+
+- id: db_i1781281589219
+  name: Cacahuètes
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb52a28dymmbh.png?alt=media&token=493b1203-c537-497d-a3ad-153022f7fa6b
+  nutrition:
+    calories: 623
+    protein: 22.8
+    carbs: 14.8
+    sugar: 5.9
+    fat: 49.1
+    saturatedFat: 8.4
+    omega3: 0.04
+    fiber: 8.6
+    salt: 0.02
+
+- id: db_i1781286315929
+  name: Graines de chia
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb7vlbgzde7ps.png?alt=media&token=59041a23-9331-4b26-bb6f-9accd1648c9e
+  nutrition:
+    calories: 454
+    protein: 16.5
+    carbs: 7.72
+    sugar: 0
+    fat: 30.7
+    saturatedFat: 3.33
+    omega3: 17.8
+    fiber: 34.4
+    salt: 0.04
+
+- id: db_i1784941283124777
+  name: Graines de courge
+  category: nuts_seeds
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspurklb2j9rtj.png?alt=media&token=b8714918-5863-4208-a1a6-adc94b8de29b
+  nutrition:
+    calories: 618
+    protein: 29.5
+    carbs: 5.39
+    sugar: 1.4
+    fat: 49.1
+    saturatedFat: 8.66
+    omega3: 0.12
+    fiber: 6
+    salt: 0.018
+
+- id: db_i1784941283126181
+  name: Graines de lin
+  category: nuts_seeds
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspusogrknrqvm.jpg?alt=media&token=bac286c2-69df-4d6b-bd5f-d4553a2114f5
+  nutrition:
+    calories: 528
+    protein: 19
+    carbs: 6.49
+    sugar: 1.64
+    fat: 40.3
+    saturatedFat: 4.26
+    omega3: 19.6
+    fiber: 24.4
+    salt: 0.1
+
+- id: db_i17849415222798669
+  name: Graines de pavot
+  category: nuts_seeds
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspuoqjss3qqxn.jpg?alt=media&token=f3020f08-d989-4e52-92d0-084a179944cf
+  nutrition:
+    calories: 534
+    protein: 21.2
+    carbs: 13.7
+    sugar: 2.99
+    fat: 41.6
+    saturatedFat: 4.52
+    omega3: 0.25
+    fiber: 10
+    salt: 0.065
+
+- id: db_i1781286230182
+  name: Graines de sésame
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb7trw0dzgnq6.png?alt=media&token=ee6b2099-a4d7-4b6d-bc9b-946954fc9879
+  nutrition:
+    calories: 606
+    protein: 17.7
+    carbs: 12.8
+    sugar: 0.3
+    fat: 49.7
+    saturatedFat: 6.96
+    omega3: 0.26
+    fiber: 11.8
+    salt: 0
+
+- id: db_i1784941283122490
+  name: Graines de tournesol
+  category: nuts_seeds
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspuo3yn0qy6zg.jpg?alt=media&token=810ac671-9c43-4dd3-aeab-94262d9998a7
+  nutrition:
+    calories: 653
+    protein: 21.3
+    carbs: 10.1
+    sugar: 2.62
+    fat: 55.5
+    saturatedFat: 6.23
+    omega3: 0.16
+    fiber: 6.4
+    salt: 0.023
+
+- id: db_i1781280952064
+  name: Noisettes
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb4omr16uycsb.png?alt=media&token=e4507db2-4b2e-40c0-8af8-77fdf3950eaa
+  nutrition:
+    calories: 632
+    protein: 14.4
+    carbs: 7.16
+    sugar: 4.9
+    fat: 56.9
+    saturatedFat: 4.75
+    omega3: 0.05
+    fiber: 11.6
+    salt: 0
+
+- id: db_i1781280876573
+  name: Noix
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb4mzmurpe7bw.png?alt=media&token=d95ba929-8950-41ac-8e7e-2a854c16a7fb
+  nutrition:
+    calories: 709
+    protein: 13.3
+    carbs: 6.88
+    sugar: 3
+    fat: 67.3
+    saturatedFat: 6.45
+    omega3: 7.5
+    fiber: 6.7
+    salt: 0
+
+- id: db_i1781281106930
+  name: Noix de cajou
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb4rxstakmcng.png?alt=media&token=48c3b957-96b8-4295-9b23-8a545d30ec32
+  nutrition:
+    calories: 618
+    protein: 17.4
+    carbs: 21.3
+    sugar: 6.64
+    fat: 48.1
+    saturatedFat: 8.24
+    omega3: 0.1
+    fiber: 8.4
+    salt: 0.01
+
+- id: db_i17849415222775739
+  name: Noix de macadamia
+  category: nuts_seeds
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspuxp2egopnjg.jpg?alt=media&token=f5fba74d-e5e8-4e21-939c-8ce72ea3c108
+  nutrition:
+    calories: 757
+    protein: 7.91
+    carbs: 5.22
+    sugar: 4.24
+    fat: 75.8
+    saturatedFat: 12.1
+    omega3: 0
+    fiber: 8.6
+    salt: 0.013
+
+- id: db_i1781281279047
+  name: Noix de pécan
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb4vnh787xk7v.png?alt=media&token=4cd33040-688b-4adf-8d5a-02dd7fc8149c
+  nutrition:
+    calories: 731
+    protein: 10.2
+    carbs: 5
+    sugar: 4.9
+    fat: 73
+    saturatedFat: 7.1
+    omega3: 0
+    fiber: 3
+    salt: 1
+
+- id: db_i1781281460801
+  name: Pignons de pin
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb4zk0nr2anlg.png?alt=media&token=a5b4b977-a2ac-456f-8267-da9529ba4c7b
+  nutrition:
+    calories: 712
+    protein: 13.7
+    carbs: 2.93
+    sugar: 1.83
+    fat: 68.4
+    saturatedFat: 4.9
+    omega3: 0.11
+    fiber: 10
+    salt: 0.02
+
+- id: db_i1781281223444
+  name: Pistaches
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb4ugyrmmxvlc.png?alt=media&token=c3cc9475-2670-4eb7-9477-9be0c8e97f30
+  nutrition:
+    calories: 617
+    protein: 18.9
+    carbs: 15.9
+    sugar: 7.57
+    fat: 49.5
+    saturatedFat: 6.58
+    omega3: 0.22
+    fiber: 9.32
+    salt: 1.67
+
+- id: db_i1781286646392
+  name: Poudre d'amande
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb82o2rbs43y4.png?alt=media&token=72628348-c5f5-472a-abaa-6bbc9d7651e0
+  nutrition:
+    calories: 631
+    protein: 21.4
+    carbs: 8.76
+    sugar: 4.63
+    fat: 52.5
+    saturatedFat: 3.95
+    omega3: 0
+    fiber: 9.9
+    salt: 0.05
+
+- id: db_i1781286819573
+  name: Tahini
+  category: nuts_seeds
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb86d6hbz2l8f.png?alt=media&token=27265d35-80af-4787-b125-a61e612bd3a4
+  nutrition:
+    calories: 631
+    protein: 17.7
+    carbs: 13.8
+    sugar: 0.49
+    fat: 53.4
+    saturatedFat: 7.48
+    omega3: 0
+    fiber: 7
+    salt: 0.19
+
+- id: db_i1781278892870
+  name: Cassonade
+  category: sugar
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb3ggcu5wnx7v.png?alt=media&token=21a25d73-9c2b-427b-a6cf-304e38c3c94c
+  nutrition:
+    calories: 393
+    protein: 0.12
+    carbs: 98.1
+    sugar: 97
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.07
+
+- id: db_i1781279636899
+  name: Miel
+  category: sugar
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb3wg2m97lc61.png?alt=media&token=4d59114e-8924-4eb4-8fb2-8ceef9ab8e22
+  nutrition:
+    calories: 331
+    protein: 0.65
+    carbs: 82.1
+    sugar: 81.1
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.01
+
+- id: db_i1781279276633
+  name: Muscovado
+  category: sugar
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb3oqd7gdz6ka.png?alt=media&token=439989e2-e778-4040-90cf-1b696758bf92
+  nutrition:
+    calories: 393
+    protein: 0.12
+    carbs: 98.1
+    sugar: 97
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.07
+
+- id: db_i17849415222832113
+  name: Sirop d'agave
+  category: sugar
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmsptg9qorbzgx1.jpg?alt=media&token=2cc1edc2-3e19-4790-a99b-b533a10ce4e5
+  nutrition:
+    calories: 317.5
+    protein: 0.25
+    carbs: 78
+    sugar: 68
+    fat: 0.5
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.007
+
+- id: db_i1781279439758
+  name: Sirop d'érable
+  category: sugar
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb3s7fude5nng.png?alt=media&token=3592af5f-5317-4f5f-9b4f-f2180c48d517
+  nutrition:
+    calories: 269
+    protein: 0.04
+    carbs: 67.2
+    sugar: 60.2
+    fat: 0.06
+    saturatedFat: 0.01
+    omega3: 0
+    fiber: 0
+    salt: 0.03
+
+- id: db_i1781279360848
+  name: Sucre Blanc
+  aliases:
+    - sucre
+    - sucre en poudre
+  category: sugar
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb3qj8f1bycvr.png?alt=media&token=b5b8e883-8c8c-490a-87dd-f60892db8faa
+  nutrition:
+    calories: 399
+    protein: 0
+    carbs: 99.7
+    sugar: 99.7
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.01
+
+- id: db_i17849415222819502
+  name: Sucre glace
+  category: sugar
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspss7r2wl5wr7.jpg?alt=media&token=d58416c6-8e3a-4e09-9347-bfb1a205593f
+  nutrition:
+    calories: 381
+    protein: 4.25
+    carbs: 88.6
+    sugar: 36.4
+    fat: 0.5
+    saturatedFat: 0.14
+    omega3: 0.01
+    fiber: 2.3
+    salt: 0.81
+
+- id: db_i1786531481623
+  name: Sucre vanillé
+  category: sugar
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspyqcmkmy6xd8.jpg?alt=media&token=40b03570-fc44-4c62-8211-044bfce3e74d
+
+- id: db_i1781961671451
+  name: Amaretto
+  category: alcohol
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmdzeuamw3t4x.png?alt=media&token=35a10037-e5bc-4d1e-8c43-5d41b49fee08
+  nutrition:
+    calories: 225
+    protein: 0.1
+    carbs: 25.4
+    sugar: 17.4
+    fat: 0.23
+    saturatedFat: 0.11
+    omega3: 0.04
+    fiber: 0
+    salt: 0.02
+
+- id: db_i1781280728400
+  name: Bière
+  category: alcohol
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb4ju9x65hnd9.png?alt=media&token=97c42f14-c8d3-4d86-920e-4df3b9443177
+  nutrition:
+    calories: 40.5
+    protein: 0.43
+    carbs: 4.1
+    sugar: 4.1
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.03
+
+- id: db_i1781279973548
+  name: Cidre
+  category: alcohol
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb43kkhqbj63m.png?alt=media&token=baf6fcf4-6928-4f26-8ea4-f58582991d8d
+  nutrition:
+    calories: 36.5
+    protein: 0.07
+    carbs: 3.67
+    sugar: 3.23
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.01
+
+- id: db_i1781961630423
+  name: Kirsch
+  category: alcohol
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqmdxzgezti6ma.jpg?alt=media&token=0257f2ea-220a-4b8e-9890-7419afc62995
+  nutrition:
+    calories: 233
+    protein: 0
+    carbs: 0.63
+    sugar: 0
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0
+
+- id: db_i1781280341348
+  name: Rhum
+  category: alcohol
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb4bhkoefe16b.png?alt=media&token=7e9647bc-c4f8-4fa9-a71d-c995f841bc61
+  nutrition:
+    calories: 234
+    protein: 0
+    carbs: 0
+    sugar: 0
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0
+
+- id: db_i1781270602873
+  name: Vin Blanc
+  category: alcohol
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqayiri4kc2hv0.png?alt=media&token=60fd31ee-9700-431c-942e-85350d8d634b
+  nutrition:
+    calories: 55.3
+    protein: 0.25
+    carbs: 0.17
+    sugar: 0.17
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.01
+
+- id: db_i1781270661547
+  name: Vin Rouge
+  category: alcohol
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqayjyhlevj7bt.png?alt=media&token=91a01531-aa57-42f7-8f2b-481fcc50b9de
+  nutrition:
+    calories: 75.7
+    protein: 0.16
+    carbs: 0
+    sugar: 0
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0
+
+- id: db_i1781280068623
+  name: Whisky
+  category: alcohol
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb45oywtl2ajb.png?alt=media&token=e47e6994-fa41-4d71-ae09-871f209a81f9
+  nutrition:
+    calories: 252
+    protein: 0
+    carbs: 0.1
+    sugar: 0.1
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0
+
+- id: db_i17849415222922400
+  name: Cacao en poudre
+  category: other
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmspuahhdpdd3wi.jpg?alt=media&token=77a4ca7a-968f-4f34-b368-b54750442712
+  nutrition:
+    calories: 396
+    protein: 8.5
+    carbs: 85
+    sugar: 44.5
+    fat: 1.9
+    saturatedFat: 0.92
+    omega3: 0.006
+    fiber: 2.2
+    salt: 0.044
+
+- id: db_i1781902476803
+  name: Chips
+  category: other
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqleq32h7l9k6k.jpg?alt=media&token=f7504c5c-8694-489b-8734-9afb61c91bef
+  nutrition:
+    calories: 488
+    protein: 6.1
+    carbs: 62.6
+    sugar: 1.1
+    fat: 22.5
+    saturatedFat: 7.5
+    omega3: 0.23
+    fiber: 4.33
+    salt: 0.88
+
+- id: db_i1781290233230
+  name: Eau
+  aliases:
+    - eau minérale
+  category: other
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqba7jpjdazxjd.png?alt=media&token=b429cb9f-e07a-4469-95b6-c4036e4a99e5
+  nutrition:
+    calories: 0
+    protein: 0
+    carbs: 0
+    sugar: 0
+    fat: 0
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.01
+
+- id: db_i1785089240341
+  name: Glaçon
+  category: other
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2449jcy18bob.jpg?alt=media&token=2d63f3b3-5972-49c0-94ed-874a821be966
+  nutrition:
+    calories: 0
+    protein: 0
+    carbs: 0
+    fat: 0
+
+- id: db_i1781289935409
+  name: Harissa
+  category: other
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqba1669unzsxg.png?alt=media&token=9adf82ae-a421-4c7c-a645-a3de836bedfb
+  nutrition:
+    calories: 76.4
+    protein: 2.72
+    carbs: 7.3
+    sugar: 6.89
+    fat: 2.9
+    saturatedFat: 0.47
+    omega3: 0.04
+    fiber: 5.1
+    salt: 2.81
+
+- id: db_i17849415222944235
+  name: Lait de coco
+  category: other
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fms2yvystww3gxw.jpg?alt=media&token=94f66388-807c-4663-923f-341e68582c17
+  nutrition:
+    calories: 199
+    protein: 1.94
+    carbs: 4.29
+    sugar: 2.5
+    fat: 19.2
+    saturatedFat: 17
+    omega3: 0.02
+    fiber: 0.75
+    salt: 0.068
+
+- id: db_i1781270935951
+  name: Oeuf
+  aliases:
+    - œuf
+    - œufs
+  category: other
+  gramsPerPiece: 60
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaypzgzf3qpt2.png?alt=media&token=86b33b8c-1836-4007-aed7-e5edc63a563e
+  nutrition:
+    calories: 140
+    protein: 12.8
+    carbs: 0.06
+    sugar: 0.06
+    fat: 9.83
+    saturatedFat: 2.64
+    omega3: 0.11
+    fiber: 0
+    salt: 0.31
+
+- id: db_i17849415222907214
+  name: Tofu
+  category: other
+  months:
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmsptqiqkxy1axm.jpg?alt=media&token=5f191c28-4123-4249-a415-c0e8f4ba8fff
+  nutrition:
+    calories: 147
+    protein: 13.4
+    carbs: 2.87
+    sugar: 0.57
+    fat: 8.5
+    saturatedFat: 1.35
+    omega3: 0.55
+    fiber: 0
+    salt: 0.025

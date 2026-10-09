@@ -6,11 +6,42 @@ On édite ces fichiers YAML, puis on les pousse vers Firestore.
 | Fichier | Cible Firestore | Contenu |
 |---|---|---|
 | `techniques.yaml` | `master/techniques` | Glossaire des techniques culinaires |
-| `ingredients.yaml` | `master/ingredients` | Base d'ingrédients (échantillon de format) |
+| `ingredients.yaml` | `master/ingredients` | Base d'ingrédients complète (export de la console admin) |
 | `utensils.yaml` | `master/utensils` | Base d'ustensiles (échantillon de format) |
 | `base-preparations.yaml` | `publicRecipes/*` | Préparations de base publiées (compte `mijote-official`) |
+| `ciqual/` | aucune (référence) | Table Ciqual de l'ANSES : source des valeurs nutritionnelles saisies dans les ingrédients |
 
 Le format de chaque fichier est documenté en tête du fichier lui-même.
+
+## Versionnement des exports
+
+Les exports YAML d'ingrédients et d'ustensiles portent une **enveloppe** au-dessus
+de la liste :
+
+```yaml
+schema_version: 1                     # version du schéma des entrées
+exported_at: 2026-10-09T06:26:00.000Z # date de l'export (UTC)
+count: 326                            # nombre d'entrées
+ingredients:
+- id: …
+```
+
+À l'import, un fichier au schéma plus récent que l'app est refusé (rien n'est
+perdu en silence), et un `count` qui ne correspond pas à la liste signale un
+fichier tronqué. Les anciens exports en liste nue restent importables. Pour
+mettre à jour `ingredients.yaml`, exporter depuis la console admin et remplacer
+le fichier tel quel : le diff Git montre alors exactement ce qui a changé.
+
+## Valeurs nutritionnelles : table Ciqual
+
+`ciqual/Table_Ciqual_2025_FR_2025_11_03.xlsx` est la table de composition
+nutritionnelle **Ciqual 2025** de l'ANSES (version du 3 novembre 2025). C'est la
+référence à consulter pour renseigner `nutrition` (valeurs pour 100 g) quand on
+ajoute ou corrige un ingrédient. À chaque nouvelle édition de la table, ajouter
+le fichier daté à côté plutôt que d'écraser l'ancien.
+
+Source : ANSES, Table de composition nutritionnelle des aliments Ciqual,
+diffusée en données ouvertes sous Licence Ouverte (Etalab).
 
 ## Import / Export
 
@@ -45,9 +76,9 @@ npm run seed -- --dry-run     # valide et affiche sans écrire (aucune clé requ
 > c'est une fusion, pas un remplacement. Importer un petit fichier ne « vide »
 > donc pas la base.
 >
-> `ingredients.yaml` et `utensils.yaml` sont des **échantillons de format** : ils
-> ne sont **pas** poussés par `npm run seed` sans le flag `--ingredients` /
-> `--utensils`, pour ne pas injecter de données d'exemple dans la vraie base.
+> `ingredients.yaml` et `utensils.yaml` ne sont **pas** poussés par `npm run seed`
+> sans le flag `--ingredients` / `--utensils` : la base vit d'abord dans la
+> console admin, ces fichiers en sont l'export versionné.
 
 Le service account n'est **jamais** committé (voir `.gitignore`).
 

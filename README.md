@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.59.21-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.59.22-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -306,7 +306,8 @@ src/
 
 api/                 # Fonctions serverless Vercel (aperçu Open Graph des liens partagés)
 functions/           # Cloud Functions (import IA, paiement Stripe), extraction pure testée à part
-data/                # Base d'ingrédients (YAML, source Ciqual)
+data/                # Bases de référence versionnées (ingrédients, ustensiles, techniques en YAML
+                     #   daté et versionné) + table Ciqual 2025 de l'ANSES
 scripts/             # Outils (seed de la base de référence)
 ```
 

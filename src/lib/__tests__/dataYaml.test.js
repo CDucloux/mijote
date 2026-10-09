@@ -533,3 +533,67 @@ describe("parseUtensilsYaml – usagePrecaution", () => {
     expect(errors.join(" ")).toMatch(/tonalité/);
   });
 });
+
+describe("enveloppe des exports d'ingrédients et d'ustensiles", () => {
+  const NOW = new Date("2026-10-09T06:26:00.000Z");
+
+  it("écrit version, date et nombre en tête, entrées en colonne 0", () => {
+    const out = formatIngredientsYaml([{ id: "db_i1", name: "Ail", category: "vegetable" }], { now: NOW });
+    expect(out).toMatch(/^# Base d'ingrédients Cardamome \(1\)/);
+    expect(out).toContain("schema_version: 1\nexported_at: 2026-10-09T06:26:00.000Z\ncount: 1\ningredients:\n\n- id: db_i1");
+    const ut = formatUtensilsYaml([{ id: "db_u1", name: "Fouet" }], { now: NOW });
+    expect(ut).toContain("schema_version: 1\nexported_at: 2026-10-09T06:26:00.000Z\ncount: 1\nutensils:");
+  });
+  it("se réimporte à l'identique, et l'ancien format en liste nue reste lisible", () => {
+    const src = [{ id: "db_i1", name: "Ail", category: "vegetable", months: [1, 2] }];
+    expect(parseIngredientsYaml(formatIngredientsYaml(src, { now: NOW })).items).toEqual(src);
+    expect(parseIngredientsYaml("- id: db_i1\n  name: Ail\n").items).toEqual([{ id: "db_i1", name: "Ail" }]);
+  });
+  it("annule l'import d'un fichier tronqué ou au schéma trop récent", () => {
+    const truncated = formatIngredientsYaml([{ name: "Ail" }, { name: "Oignon" }], { now: NOW }).replace(/\n- name: Oignon\n?/, "\n");
+    expect(parseIngredientsYaml(truncated).errors[0]).toMatch(/annonce 2 entrées/);
+    expect(parseUtensilsYaml("schema_version: 9\nutensils: []\n").errors[0]).toMatch(/schéma v9/);
+  });
+  it("valide la base d'ingrédients versionnée dans data/", () => {
+    const { items, errors } = parseIngredientsYaml(readFileSync("data/ingredients.yaml", "utf8"));
+    expect(errors).toEqual([]);
+    expect(items.length).toBeGreaterThan(300);
+  });
+});
+
+describe("précaution d'ustensile : limites partagées console / import", () => {
+  const withDescription = (description) => formatUtensilsYaml([{ id: "db_u1", name: "Poêle Inox", usagePrecaution: { tone: "heat", title: "Chauffe juste ce qu'il faut", description } }]);
+
+  it("réimporte une description avec tableau de plus de 400 caractères (non-régression Poêle Inox)", () => {
+    const table = "Puissance conseillée :\n\n| Usage | Puissance |\n| --- | --- |\n" + "| Cuisson douce | 1/3 à 1/2 |\n".repeat(14);
+    expect(table.length).toBeGreaterThan(400);
+    const { items, errors } = parseUtensilsYaml(withDescription(table));
+    expect(errors).toEqual([]);
+    expect(items[0].usagePrecaution.description).toBe(table.trim());
+  });
+  it("refuse une description au-delà de la limite partagée", () => {
+    expect(parseUtensilsYaml(withDescription("x".repeat(801))).errors[0]).toMatch(/trop longue \(max 800\)/);
+  });
+});
+
+describe("bases versionnées dans data/", () => {
+  it("valident les ustensiles et les techniques exportés de la console", () => {
+    const ut = parseUtensilsYaml(readFileSync("data/utensils.yaml", "utf8"));
+    expect(ut.errors).toEqual([]);
+    expect(ut.items.length).toBeGreaterThanOrEqual(69);
+    const tech = parseTechniquesYaml(readFileSync("data/techniques.yaml", "utf8"));
+    expect(tech.errors).toEqual([]);
+    expect(tech.items.length).toBeGreaterThanOrEqual(82);
+  });
+});
+
+describe("export des techniques : ordre de clés stable", () => {
+  it("écrit les sous-objets dans le même ordre quel que soit l'ordre reçu de Firestore", () => {
+    const base = { id: "tech_ciseler", name: "Ciseler", category: "decoupe", definition: "Tailler finement." };
+    const firestoreOrder = { ...base, hierarchy: { level: 1, parent: "tech_grp" }, expected_result: { observable_indicators: ["dés réguliers"], summary: "Dés nets." }, not_to_be_confused_with: [{ distinction: "Plus fin.", technique_id: "tech_hacher" }] };
+    const canonicalOrder = { ...base, hierarchy: { parent: "tech_grp", level: 1 }, expected_result: { summary: "Dés nets.", observable_indicators: ["dés réguliers"] }, not_to_be_confused_with: [{ technique_id: "tech_hacher", distinction: "Plus fin." }] };
+    const now = new Date("2026-10-09T06:26:00.000Z");
+    expect(formatTechniquesYaml([firestoreOrder], { now })).toBe(formatTechniquesYaml([canonicalOrder], { now }));
+    expect(formatTechniquesYaml([firestoreOrder], { now })).toContain("hierarchy:\n    parent: tech_grp\n    level: 1");
+  });
+});

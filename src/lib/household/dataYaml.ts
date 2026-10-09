@@ -16,7 +16,8 @@ import { TIP_TYPES } from "@/constants/tipTypes.js";
 import { isFruitVeg } from "@/constants/categories.js";
 import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 import { INGREDIENT_FORMS, normalizePreferredForms } from "@/lib/food/qualityRecommendation.js";
-import { PRECAUTION_TONES, isPrecautionTone } from "@/lib/utensils/usagePrecaution.js";
+import { PRECAUTION_TONES, PRECAUTION_LIMITS, isPrecautionTone } from "@/lib/utensils/usagePrecaution.js";
+import { buildEnvelope, readEnvelope, INGREDIENTS_SCHEMA_VERSION, UTENSILS_SCHEMA_VERSION, TECHNIQUES_SCHEMA_VERSION } from "@/lib/household/dataEnvelope.js";
 
 /** Résultat d'un parseur : items validés (vide si `errors`) + liste d'erreurs. */
 export interface ParseResult<T = Record<string, unknown>> {
@@ -40,6 +41,22 @@ const NUT_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat"
 const dumpYaml = (rows: unknown, header: string): string => {
   const body = stringifyYaml(rows, { lineWidth: 0 }).replace(/\n(- )/g, "\n\n$1");
   return header.replace(/\s*$/, "") + "\n\n" + body;
+};
+
+/**
+ * Variante enveloppée de {@link dumpYaml} : métadonnées (`schema_version`,
+ * `exported_at`, `count`) puis la liste sous `key`. Les entrées sont sérialisées
+ * comme une liste nue, en colonne 0 sous la clé (YAML valide) : leur rendu reste
+ * octet pour octet celui des anciens exports, donc les diffs Git ne bougent pas.
+ *
+ * @param envelope - Racine produite par `buildEnvelope` (liste rangée sous `key`).
+ * @param key - Clé de la liste dans l'enveloppe.
+ * @param header - En-tête (commentaire `#`) placé en tête du document.
+ * @returns Le document YAML complet.
+ */
+const dumpEnvelopeYaml = (envelope: Record<string, unknown>, key: string, header: string): string => {
+  const { [key]: rows, ...meta } = envelope;
+  return dumpYaml(rows, header).replace(/\n\n/, `\n\n${stringifyYaml(meta, { lineWidth: 0 })}${key}:\n\n`);
 };
 
 /** Catégories du glossaire des techniques (clé → libellé affiché). */
@@ -86,21 +103,23 @@ export function slugifyId(prefix: string, name: string): string {
 }
 
 /**
- * Charge un document YAML attendu comme une LISTE d'objets.
+ * Charge un document YAML de données : enveloppe versionnée (cf. `dataEnvelope`)
+ * ou ancienne liste nue d'objets.
  *
  * @param text - Source YAML brute.
- * @returns `{ list, error }` : `error` non nul si le YAML est invalide ou n'est pas une liste.
+ * @param key - Nom de la liste dans l'enveloppe (`ingredients`, `utensils`).
+ * @param supportedVersion - Plus haute version de schéma lisible.
+ * @returns `{ list, error }` : `error` non nul si le YAML est invalide, mal formé ou trop récent.
  */
-function loadYamlList(text: string): { list: unknown[] | null; error: string | null } {
+function loadYamlList(text: string, key: string, supportedVersion: number): { list: unknown[] | null; error: string | null } {
   let doc: unknown;
   try {
     doc = parseYaml(text);
   } catch (e) {
     return { list: null, error: `YAML invalide : ${(e as Error)?.message || e}.` };
   }
-  if (doc == null) return { list: null, error: "Fichier vide." };
-  if (!Array.isArray(doc)) return { list: null, error: "Le document doit être une liste d'entrées (« - … »)." };
-  return { list: doc, error: null };
+  const { list, error } = readEnvelope(doc, key, supportedVersion);
+  return { list, error };
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
@@ -120,14 +139,7 @@ const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
  * plate historique (v1) ou la racine enrichie v2 `{ schema_version, techniques: [...] }`.
  */
 function loadTechniquesList(text: string): { list: unknown[] | null; error: string | null } {
-  let doc: unknown;
-  try { doc = parseYaml(text); }
-  catch (e) { return { list: null, error: `YAML invalide : ${(e as Error)?.message || e}.` }; }
-  if (doc == null) return { list: null, error: "Fichier vide." };
-  if (isObj(doc) && Array.isArray((doc as Record<string, unknown>).techniques))
-    return { list: (doc as Record<string, unknown>).techniques as unknown[], error: null };
-  if (Array.isArray(doc)) return { list: doc, error: null };
-  return { list: null, error: "Le document doit être une liste d'entrées (« - … »), ou un objet { schema_version, techniques: [...] }." };
+  return loadYamlList(text, "techniques", TECHNIQUES_SCHEMA_VERSION);
 }
 
 /** Liste de chaînes nettoyée (trim, vides retirés) ; `[]` si l'entrée n'est pas une liste. */
@@ -327,9 +339,11 @@ export function formatTechniquesMarkdown(list: TechniqueRow[]): string {
  * {@link parseTechniquesYaml}), trié par catégorie puis par nom.
  *
  * @param list - Techniques à exporter.
- * @returns Le document YAML réimportable.
+ * @param options - Options d'export.
+ * @param options.now - Instant d'export inscrit dans l'enveloppe (`exported_at`).
+ * @returns Le document YAML réimportable, enveloppé (version, date, nombre).
  */
-export function formatTechniquesYaml(list: TechniqueRow[]): string {
+export function formatTechniquesYaml(list: TechniqueRow[], { now = new Date() }: { now?: Date } = {}): string {
   const cats = Object.keys(TECHNIQUE_CATEGORIES);
   const rows = [...(list || [])]
     .sort((a, b) => { const ca = cats.indexOf(a.category || ""), cb = cats.indexOf(b.category || ""); return ca !== cb ? ca - cb : (a.name || "").localeCompare(b.name || "", "fr"); })
@@ -339,14 +353,22 @@ export function formatTechniquesYaml(list: TechniqueRow[]): string {
       if (t.difficulty) o.difficulty = t.difficulty;
       o.definition = t.definition;
       if (t.source) o.source = t.source;
-      if (t.hierarchy) o.hierarchy = t.hierarchy;
-      if (t.expected_result) o.expected_result = t.expected_result;
+      // Sous-objets réécrits dans un ordre de clés fixe : Firestore les renvoie dans
+      // le sien, et sans cette normalisation chaque export ferait bouger le diff Git.
+      if (t.hierarchy) o.hierarchy = t.hierarchy.level != null ? { parent: t.hierarchy.parent, level: t.hierarchy.level } : { parent: t.hierarchy.parent };
+      if (t.expected_result) {
+        const er: Record<string, unknown> = {};
+        if (t.expected_result.summary) er.summary = t.expected_result.summary;
+        if (t.expected_result.observable_indicators?.length) er.observable_indicators = t.expected_result.observable_indicators;
+        o.expected_result = er;
+      }
       if (t.common_errors?.length) o.common_errors = t.common_errors;
-      if (t.not_to_be_confused_with?.length) o.not_to_be_confused_with = t.not_to_be_confused_with;
+      if (t.not_to_be_confused_with?.length)
+        o.not_to_be_confused_with = t.not_to_be_confused_with.map(c => (c.distinction ? { technique_id: c.technique_id, distinction: c.distinction } : { technique_id: c.technique_id }));
       return o;
     });
   // Racine enrichie v2, réimportable telle quelle par parseTechniquesYaml.
-  return dumpYaml({ schema_version: 2, techniques: rows }, `# Glossaire enrichi des techniques Cardamome (${rows.length}) – généré, réimportable.\n`);
+  return dumpEnvelopeYaml(buildEnvelope("techniques", rows, TECHNIQUES_SCHEMA_VERSION, now), "techniques", `# Glossaire enrichi des techniques Cardamome (${rows.length}) – généré, réimportable.\n`);
 }
 
 /** Ingrédient (forme minimale utilisée par l'export). */
@@ -374,9 +396,10 @@ interface IngredientRow {
  * @param list - Ingrédients à exporter.
  * @param options - Options de tri.
  * @param options.categoryOrder - Ordre des catégories (sinon tri alphabétique seul).
- * @returns Le document YAML réimportable.
+ * @param options.now - Instant d'export inscrit dans l'enveloppe (`exported_at`).
+ * @returns Le document YAML réimportable, enveloppé (version, date, nombre).
  */
-export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [] }: { categoryOrder?: string[] } = {}): string {
+export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [], now = new Date() }: { categoryOrder?: string[]; now?: Date } = {}): string {
   const order = categoryOrder.length ? categoryOrder : null;
   const rows = [...(list || [])]
     .sort((a, b) => {
@@ -408,7 +431,10 @@ export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [
       }
       return o;
     });
-  return dumpYaml(rows, `# Base d'ingrédients Cardamome (${rows.length}) – généré, réimportable. Valeurs pour 100 g.\n`);
+  return dumpEnvelopeYaml(
+    buildEnvelope("ingredients", rows, INGREDIENTS_SCHEMA_VERSION, now), "ingredients",
+    `# Base d'ingrédients Cardamome (${rows.length}) – généré, réimportable. Valeurs pour 100 g.\n# Valeurs nutritionnelles de référence : table Ciqual (data/ciqual/).\n`,
+  );
 }
 
 /** Ustensile (forme minimale utilisée par l'export). */
@@ -419,9 +445,11 @@ interface UtensilRow { id?: string; name?: string; category?: string; appliance?
  * sérialisée après le nom (avant l'image) pour rester lisible en revue de diff.
  *
  * @param list - Ustensiles à exporter.
- * @returns Le document YAML réimportable.
+ * @param options - Options d'export.
+ * @param options.now - Instant d'export inscrit dans l'enveloppe (`exported_at`).
+ * @returns Le document YAML réimportable, enveloppé (version, date, nombre).
  */
-export function formatUtensilsYaml(list: UtensilRow[]): string {
+export function formatUtensilsYaml(list: UtensilRow[], { now = new Date() }: { now?: Date } = {}): string {
   const rows = [...(list || [])]
     .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))
     .map(d => {
@@ -444,7 +472,7 @@ export function formatUtensilsYaml(list: UtensilRow[]): string {
       }
       return o;
     });
-  return dumpYaml(rows, `# Base d'ustensiles Cardamome (${rows.length}) – généré, réimportable.\n`);
+  return dumpEnvelopeYaml(buildEnvelope("utensils", rows, UTENSILS_SCHEMA_VERSION, now), "utensils", `# Base d'ustensiles Cardamome (${rows.length}) – généré, réimportable.\n`);
 }
 
 // ─── INGRÉDIENTS ──────────────────────────────────────────────────────────────
@@ -459,7 +487,7 @@ export function formatUtensilsYaml(list: UtensilRow[]): string {
  * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide.
  */
 export function parseIngredientsYaml(text: string, { validCategories }: { validCategories?: Set<string> | string[] } = {}): ParseResult {
-  const { list, error } = loadYamlList(text);
+  const { list, error } = loadYamlList(text, "ingredients", INGREDIENTS_SCHEMA_VERSION);
   if (error) return { items: [], errors: [error] };
 
   const valid = validCategories instanceof Set ? validCategories : new Set(validCategories || []);
@@ -561,7 +589,7 @@ export function parseIngredientsYaml(text: string, { validCategories }: { validC
  * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide.
  */
 export function parseUtensilsYaml(text: string): ParseResult {
-  const { list, error } = loadYamlList(text);
+  const { list, error } = loadYamlList(text, "utensils", UTENSILS_SCHEMA_VERSION);
   if (error) return { items: [], errors: [error] };
 
   const errors: string[] = [];
@@ -603,9 +631,9 @@ export function parseUtensilsYaml(text: string): ParseResult {
       else {
         const title = str(p.title), description = str(p.description);
         if (!title) errors.push(`${where} : précaution sans « title ».`);
-        else if (title.length > 120) errors.push(`${where} : « title » de précaution trop long (max 120).`);
+        else if (title.length > PRECAUTION_LIMITS.title) errors.push(`${where} : « title » de précaution trop long (max ${PRECAUTION_LIMITS.title}).`);
         else if (!description) errors.push(`${where} : précaution sans « description ».`);
-        else if (description.length > 400) errors.push(`${where} : « description » de précaution trop longue (max 400).`);
+        else if (description.length > PRECAUTION_LIMITS.description) errors.push(`${where} : « description » de précaution trop longue (max ${PRECAUTION_LIMITS.description}).`);
         else if (p.tone != null && !isPrecautionTone(p.tone)) errors.push(`${where} : tonalité de précaution inconnue « ${str(p.tone) || "?"} » (${Object.keys(PRECAUTION_TONES).join(", ")}).`);
         else {
           const up: Record<string, unknown> = {};
@@ -613,7 +641,7 @@ export function parseUtensilsYaml(text: string): ParseResult {
           up.title = title;
           up.description = description;
           const tip = str(p.tip);
-          if (tip.length > 280) errors.push(`${where} : « tip » de précaution trop long (max 280).`);
+          if (tip.length > PRECAUTION_LIMITS.tip) errors.push(`${where} : « tip » de précaution trop long (max ${PRECAUTION_LIMITS.tip}).`);
           else if (tip) up.tip = tip;
           row.usagePrecaution = up;
         }
