@@ -235,9 +235,12 @@ html.light .subview-thumb { background: #fff; }
   .onboard-rail { flex-direction: column; align-items: stretch; margin-top: 0; padding-top: 0; padding-left: 24px; border-top: none; border-left: 1px solid var(--border); }
 }
 
+/* `background-color` et non le raccourci `background` : plus spécifique que
+   `select.field-input`, le raccourci y remettait `background-repeat: repeat`
+   (chevron des listes déroulantes répété sur toute la largeur). */
 html.light .field-input {
   color: #23281d;
-  background: #e9ebdf;
+  background-color: #e9ebdf;
 }
 
 /* Barre de recherche recettes : blanc franc en clair (le halo suffit à la
