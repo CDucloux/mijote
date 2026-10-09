@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.26 – Cardamome · Rien au-dessus
+
+### Console admin
+- **En-tête collant vraiment étanche** : sur certains navigateurs, le formulaire de la fiche de geste défilait dans une bande au-dessus de l'en-tête collé. L'en-tête la recouvre désormais.
+
 ## v4.59.25 – Cardamome · En-tête qui tient
 
 ### Console admin
