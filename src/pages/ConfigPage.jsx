@@ -367,7 +367,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     setImportResult({
       ok: true,
       title: "Import terminé",
-      message: `${read} entrée${read > 1 ? "s" : ""} lue${read > 1 ? "s" : ""} : ${created} créé${e}${created > 1 ? "s" : ""}, ${updated} mis${e}${updated > 1 ? "s" : ""} à jour. Rien n'a été supprimé.`,
+      message: `${read} entrée${read > 1 ? "s" : ""} lue${read > 1 ? "s" : ""} : ${created} créé${e}${created > 1 ? "s" : ""}, ${updated} mis${feminine ? `e${updated > 1 ? "s" : ""}` : ""} à jour. Rien n'a été supprimé.`,
     });
   };
 
