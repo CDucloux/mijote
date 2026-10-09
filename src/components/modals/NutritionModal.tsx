@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+import { StickySheetHeader } from "../ui/StickySheetHeader.jsx";
 import { NutriScoreBadge, type NutriLetter } from "../badges/NutriScoreBadge.jsx";
 import { Donut } from "../ui/Donut.jsx";
 import { Icon } from "../ui/Icon.jsx";
@@ -167,15 +168,17 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
   ];
 
   return (
-    <SwipeableSheet onClose={onClose} style={{ maxWidth: 460 }}>
-      {/* En-tête : Nutri-Score */}
-      <Row gap={14} style={{ marginBottom: 4 }}>
-        <NutriScoreBadge letter={letter} />
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>Analyse nutritionnelle</div>
-          {letter && <div style={{ fontSize: 12, color: "var(--text3)" }}>{NUTRI_LETTER_DESC[letter]}</div>}
-        </div>
-      </Row>
+    <SwipeableSheet onClose={onClose} hideHandle style={{ maxWidth: 460, paddingTop: 0 }}>
+      {/* En-tête collant : le Nutri-Score reste en vue pendant la lecture du détail. */}
+      <StickySheetHeader>
+        <Row gap={14}>
+          <NutriScoreBadge letter={letter} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>Analyse nutritionnelle</div>
+            {letter && <div style={{ fontSize: 12, color: "var(--text3)" }}>{NUTRI_LETTER_DESC[letter]}</div>}
+          </div>
+        </Row>
+      </StickySheetHeader>
 
       {/* Couverture trop faible → l'estimation n'aurait aucun sens : on l'explique. */}
       {!reliable ? (

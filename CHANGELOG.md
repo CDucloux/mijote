@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.59.32 – Cardamome · Toujours en vue
+
+### Interface
+- **En-tête collant sur la fiche Difficulté** : la note, son libellé et la jauge restent en haut pendant la lecture du calcul.
+- **En-tête collant sur la fiche Nutri-Score** : le badge et le titre restent en vue pendant la lecture du détail nutritionnel.
+
 ## v4.59.31 – Cardamome · Le compte est bon
 
 ### Console admin
