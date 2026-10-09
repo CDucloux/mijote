@@ -1,8 +1,8 @@
-# Glossaire enrichi des techniques Cardamome (82) – généré, réimportable.
+# Glossaire enrichi des techniques Cardamome (83) – généré, réimportable.
 
 schema_version: 2
-exported_at: 2026-10-09T06:26:00.000Z
-count: 82
+exported_at: 2026-10-09T08:49:21.000Z
+count: 83
 techniques:
 
 - id: tech_ciseler
@@ -1246,26 +1246,54 @@ techniques:
     - réaliser un roux
     - faire un roux
     - un roux
+    - roux blanc
     - roux blond
-    - roux brun
-  difficulty: 3
-  definition: Cuire à parts égales du beurre et de la farine, plus ou moins longtemps selon la couleur voulue, pour obtenir la base liante des sauces blanches et brunes.
+  difficulty: 2
+  definition: Cuire quelques minutes à parts égales du beurre et de la farine, sans coloration (roux blanc) ou jusqu'à une teinte paille (roux blond), pour obtenir la base liante des sauces blanches.
   hierarchy:
     parent: tech_lier
     level: 1
   expected_result:
-    summary: Le beurre et la farine cuits ensemble forment une pâte lisse et homogène, colorée selon l'usage, sans goût de farine crue.
+    summary: Le beurre et la farine cuits ensemble forment une pâte lisse et homogène, blanche ou à peine blonde, sans goût de farine crue.
     observable_indicators:
       - Mélange lisse, sans grumeaux
-      - Couleur atteinte, blanc, blond ou brun
-      - Odeur de noisette, plus de goût cru
+      - Couleur blanche ou paille, sans brunir
+      - Plus de goût de farine crue
   common_errors:
     - Farine insuffisamment cuite, goût farineux
-    - Roux brûlé, amer
     - Proportions déséquilibrées entre beurre et farine
   not_to_be_confused_with:
     - technique_id: tech_singer
       distinction: Le roux cuit le beurre et la farine à part avant de mouiller ; singer saupoudre la farine directement sur l'aliment en cuisson.
+    - technique_id: tech_roux_brun
+      distinction: Le roux blanc ou blond cuit quelques minutes sans colorer ; le roux brun cuit longuement jusqu'à brunir, sans brûler.
+
+- id: tech_roux_brun
+  name: Réaliser un roux brun
+  category: liaison
+  aliases:
+    - roux brun
+    - un roux brun
+    - faire un roux brun
+    - réaliser un roux brun
+  difficulty: 3
+  definition: Cuire longuement et à feu doux du beurre et de la farine en remuant sans cesse, jusqu'à une couleur brune et une odeur de noisette, sans les laisser brûler, pour lier les sauces brunes.
+  hierarchy:
+    parent: tech_lier
+    level: 1
+  expected_result:
+    summary: Le roux a pris une couleur brune régulière et une odeur de noisette grillée, sans trace d'amertume.
+    observable_indicators:
+      - Couleur brune homogène, sans points noirs
+      - Odeur de noisette grillée, pas de brûlé
+      - Mélange lisse et fluide
+  common_errors:
+    - Feu trop vif, roux brûlé et amer
+    - Cuisson arrêtée trop tôt, couleur et goût insuffisants
+    - Remuer trop peu, le fond accroche
+  not_to_be_confused_with:
+    - technique_id: tech_roux
+      distinction: Le roux brun cuit longuement jusqu'à brunir, sans brûler ; le roux blanc ou blond cuit quelques minutes sans colorer.
 
 - id: tech_serrer
   name: Serrer les blancs

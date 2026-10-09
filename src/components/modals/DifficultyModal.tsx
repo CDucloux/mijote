@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon } from "../ui/Icon.jsx";
 import { capitalize } from "../../lib/format.js";
-import { DIFFICULTY_LABEL, difficultyColor, type DifficultyExplain } from "@/lib/recipes/difficulty.js";
+import { DIFFICULTY_LABEL, difficultyColor, type DifficultyExplain, type Workload } from "@/lib/recipes/difficulty.js";
 
 // ─── EXPLICATION DE LA DIFFICULTÉ ─────────────────────────────────────────────
 // Rend le calcul du badge lisible comme un ticket de cuisine : la note en grand,
@@ -38,10 +38,12 @@ const HEADING = { fontSize: 13, fontWeight: 650, color: "var(--text2)", margin: 
 
 interface DifficultyModalProps {
   data?: DifficultyExplain | null;
+  /** Charge de travail, montrée à part : elle n'entre pas dans la note. */
+  workload?: Workload | null;
   onClose: () => void;
 }
 
-export function DifficultyModal({ data, onClose }: DifficultyModalProps) {
+export function DifficultyModal({ data, workload, onClose }: DifficultyModalProps) {
   if (!data || data.score == null) return null;
   const color = difficultyColor(data.score);
 
@@ -70,7 +72,7 @@ export function DifficultyModal({ data, onClose }: DifficultyModalProps) {
       ) : (
         <>
           <p style={{ fontSize: 14.5, color: "var(--text2)", lineHeight: 1.6, margin: "20px 2px 26px", maxWidth: "60ch" }}>
-            Le geste le plus technique des étapes{data.inheritedFromBases ? " (préparations de base comprises)" : ""} fixe le niveau de départ. La charge de travail ajoute ensuite jusqu'à deux points.
+            Le geste le plus technique des étapes{data.inheritedFromBases ? " (préparations de base comprises)" : ""} fixe le niveau de départ. La variété des gestes techniques ou une préparation de base ajoutent au plus un point, et seul un geste de niveau 4 ou plus mène à « Expert ».
           </p>
 
           {/* Le ticket : chaque ligne qui compose la note, puis le total. */}
@@ -84,7 +86,7 @@ export function DifficultyModal({ data, onClose }: DifficultyModalProps) {
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16, marginTop: 6, paddingTop: 14, borderTop: "1.5px dashed var(--border)" }}>
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Total</div>
-              {data.modsCapped && <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2 }}>Bonus plafonné à deux points</div>}
+              {data.modsCapped && <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2 }}>Un seul point de bonus retenu</div>}
             </div>
             <div style={{ fontSize: 17, fontWeight: 800, color, fontVariantNumeric: "tabular-nums" }}>{data.score}/5</div>
           </div>
@@ -108,6 +110,14 @@ export function DifficultyModal({ data, onClose }: DifficultyModalProps) {
             </div>
           )}
         </>
+      )}
+
+      {/* Charge de travail : la longueur de la recette, comptée à part de la note. */}
+      {workload && (
+        <div style={{ marginTop: 30 }}>
+          <div style={HEADING}>Charge de travail</div>
+          <LedgerRow title={workload.label} hint="Le nombre d'étapes, compté à part : une recette longue n'est pas plus technique." value={`${workload.steps} étape${workload.steps > 1 ? "s" : ""}`} />
+        </div>
       )}
     </SwipeableSheet>
   );
