@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.59.25 – Cardamome · En-tête qui tient
+
+### Console admin
+- **En-tête collant sur la fiche de geste** : l'icône, le nom et la catégorie restent en haut pendant la saisie ; dès que le formulaire défile dessous, un filet et un léger dégradé les en détachent.
+
+### Interface
+- **Listes déroulantes réparées en thème clair** : leur chevron se répétait sur toute la largeur du champ.
+
 ## v4.59.24 – Cardamome · Finitions console
 
 ### Console admin

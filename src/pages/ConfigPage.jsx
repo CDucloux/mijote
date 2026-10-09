@@ -11,6 +11,7 @@ import { ImageUpload } from "../components/ui/ImageUpload.jsx";
 import { TagInput } from "../components/ui/TagInput.jsx";
 import { OverscrollRow } from "../components/ui/OverscrollRow.jsx";
 import { UnderlineTabs } from "../components/ui/UnderlineTabs.jsx";
+import { StickySheetHeader } from "../components/ui/StickySheetHeader.jsx";
 import { countTrackingFilters, matchesTrackingFilter } from "@/lib/food/ingredientTracking.js";
 import { ReadOnlyBanner, AdminBanner } from "../components/ui/Banners.jsx";
 import { IngredientDetail } from "../components/ingredient/IngredientDetail.jsx";
@@ -850,7 +851,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           {/* En-tête calqué sur la fiche détaillée (TechniqueDetailSheet) : pastille
               d'icône colorée par catégorie, titre, puce de catégorie et pastilles de
               difficulté, pour que la saisie reflète l'affichage en recette. */}
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+          <StickySheetHeader>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${techVis.color} 16%, transparent)` }}>
               <Icon name={techVis.icon} size={27} color={techVis.color} />
             </span>
@@ -868,6 +870,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
               </div>
             </div>
           </div>
+          </StickySheetHeader>
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Émulsionner" value={editTech.name} onChange={e => setEditTech(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
           <div className="field-label">Catégorie</div>
