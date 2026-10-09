@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.33 – Cardamome · Le geste en tête
+
+### Interface
+- **En-tête collant sur la fiche de geste technique** : le pictogramme, le nom, la difficulté et le bouton fermer restent en haut pendant la lecture, comme sur les fiches Difficulté et Nutri-Score.
+
 ## v4.59.32 – Cardamome · Toujours en vue
 
 ### Interface
