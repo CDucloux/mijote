@@ -899,6 +899,13 @@ html.light select.field-input {
   border-radius: 8px;
 }
 
+/* `.btn-sm` est déclaré après `.btn-pill` à spécificité égale : sans ce combo,
+   son rayon de 8px écrasait la pilule. */
+.btn-pill.btn-sm {
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
 .btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;

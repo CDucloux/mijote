@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.59.24 – Cardamome · Finitions console
+
+### Console admin
+- **Filtre des ingrédients en onglets** : Tous, En cours, Validés, Sans photo et Sans nutrition deviennent des onglets texte avec leur effectif, soulignés d'un trait qui glisse vers l'onglet actif.
+- **Petites pills vraiment rondes** : les boutons d'export YAML et Markdown (et les autres petites pills) gardaient des coins carrés.
+- **« mis à jour » bien accordé** dans le bilan d'import, au lieu de « miss à jour ».
+
 ## v4.59.23 – Cardamome · La juste difficulté
 
 ### Fiche recette

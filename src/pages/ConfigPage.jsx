@@ -10,6 +10,8 @@ import { ImportResultDialog } from "../components/admin/ImportResultDialog.jsx";
 import { ImageUpload } from "../components/ui/ImageUpload.jsx";
 import { TagInput } from "../components/ui/TagInput.jsx";
 import { OverscrollRow } from "../components/ui/OverscrollRow.jsx";
+import { UnderlineTabs } from "../components/ui/UnderlineTabs.jsx";
+import { countTrackingFilters, matchesTrackingFilter } from "@/lib/food/ingredientTracking.js";
 import { ReadOnlyBanner, AdminBanner } from "../components/ui/Banners.jsx";
 import { IngredientDetail } from "../components/ingredient/IngredientDetail.jsx";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
@@ -367,7 +369,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     setImportResult({
       ok: true,
       title: "Import terminé",
-      message: `${read} entrée${read > 1 ? "s" : ""} lue${read > 1 ? "s" : ""} : ${created} créé${e}${created > 1 ? "s" : ""}, ${updated} mis${e}${updated > 1 ? "s" : ""} à jour. Rien n'a été supprimé.`,
+      message: `${read} entrée${read > 1 ? "s" : ""} lue${read > 1 ? "s" : ""} : ${created} créé${e}${created > 1 ? "s" : ""}, ${updated} mis${feminine ? `e${updated > 1 ? "s" : ""}` : ""} à jour. Rien n'a été supprimé.`,
     });
   };
 
@@ -508,27 +510,17 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         )}
 
         {section === "ingredients" && (() => {
-          const matchFilter = (i) =>
-            !ingFilter ? true
-              : ingFilter === "validated" ? i.status === "validated"
-              : ingFilter === "draft" ? i.status !== "validated"
-              : ingFilter === "no-image" ? !i.image
-              : ingFilter === "no-nutrition" ? (!i.nutrition || i.nutrition.calories == null)
-              : true;
-          const FILTERS = [[null, "Tous"], ["draft", "En cours"], ["validated", "Validés"], ["no-image", "Sans photo"], ["no-nutrition", "Sans nutrition"]];
+          const counts = countTrackingFilters(ingredientDB);
+          const FILTERS = [[null, "Tous", counts.all], ["draft", "En cours", counts.draft], ["validated", "Validés", counts.validated], ["no-image", "Sans photo", counts["no-image"]], ["no-nutrition", "Sans nutrition", counts["no-nutrition"]]];
           return (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {/* Filtre de suivi (piloté aussi par le dashboard) */}
-            <OverscrollRow stretch style={{ gap: 6 }} outerStyle={{ marginBottom: 2 }}>
-              {FILTERS.map(([val, lbl]) => {
-                const on = ingFilter === val;
-                return (
-                  <button key={lbl} onClick={() => setIngFilter(val)} style={{ flexShrink: 0, padding: "6px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", background: on ? "var(--accent)" : "var(--surface2)", color: on ? "#fff" : "var(--text2)", border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{lbl}</button>
-                );
-              })}
-            </OverscrollRow>
+            <div style={{ marginBottom: 4 }}>
+              <UnderlineTabs label="Filtrer les ingrédients" value={ingFilter} onChange={setIngFilter}
+                tabs={FILTERS.map(([value, label, count]) => ({ value, label, count }))} />
+            </div>
             {sortedCategoryEntries(categories).map(([catKey, cat], ci) => {
-              const catIngs = ingredientDB.filter(d => d.category === catKey && matchFilter(d))
+              const catIngs = ingredientDB.filter(d => d.category === catKey && matchesTrackingFilter(d, ingFilter))
                 .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" }));
               if (ingFilter && catIngs.length === 0) return null; // sous filtre : on masque les catégories vides
               const isOpen = ingFilter ? true : openCats[catKey];
