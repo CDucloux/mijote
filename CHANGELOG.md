@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.29 – Cardamome · Ustensiles en tête
+
+### Console admin
+- **Fiche ustensile alignée sur la fiche de geste** : en-tête collant avec la photo de l'ustensile (ou une icône tant qu'il n'en a pas), son nom en grand et sa catégorie en pastille ; pour un appareil, son type s'affiche à côté. La poignée reste visible en haut pendant la saisie.
+
 ## v4.59.28 – Cardamome · De l'air sur grand écran
 
 ### Console admin
