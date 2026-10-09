@@ -1203,6 +1203,20 @@ html.light .sheet-sticky-head::after {
 .sheet-sticky-head.is-stuck {
   border-bottom-color: var(--border);
 }
+/* Certains navigateurs font coller l'en-tête sous le padding haut de la feuille
+   (20px) plutôt qu'au bord : le contenu défilait alors dans cette bande, visible
+   au-dessus de l'en-tête. Une fois collé, l'en-tête la recouvre de sa couleur ;
+   là où il colle au bord, ce prolongement sort du cadre et ne se voit pas. */
+.sheet-sticky-head.is-stuck::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 24px;
+  background: var(--surface);
+  pointer-events: none;
+}
 .sheet-sticky-head.is-stuck::after {
   opacity: 1;
 }
