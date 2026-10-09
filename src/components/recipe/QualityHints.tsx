@@ -102,7 +102,6 @@ function PrecautionTable({ block, accent, first }: { block: TableBlock; accent: 
       {heat ? heat.map((row, r) => (
         <div key={r} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px 8px 14px", borderTop: r > 0 || block.header ? "1px solid var(--border)" : "none" }}>
           <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, lineHeight: 1.45, color: "var(--text2)" }}>{row.label}</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text3)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{row.value}</span>
           <HeatKnob notches={row.notches} accent={accent} />
         </div>
       )) : block.rows.map((row, r) => (
