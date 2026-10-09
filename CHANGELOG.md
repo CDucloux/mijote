@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.59.28 – Cardamome · De l'air sur grand écran
+
+### Console admin
+- **En-tête de la fiche de geste aéré sur desktop** : sans la poignée (masquée sur grand écran), le titre collait au bord de la fenêtre. Il retrouve de l'espace en haut comme en bas.
+
 ## v4.59.27 – Cardamome · Poignée en tête
 
 ### Console admin
