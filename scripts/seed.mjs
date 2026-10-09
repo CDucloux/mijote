@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ─── SEED : pousse la couche de données YAML vers Firestore ───────────────────
-// Lit data/*.yaml, valide avec la même lib que l'UI (src/lib/dataYaml.js), puis :
+// Lit data/*.yaml, valide avec la même lib que l'UI (src/lib/household/dataYaml.ts), puis :
 //   • écrit la Master DB    → master/ingredients · master/utensils · master/techniques
 //   • publie les bases      → publicRecipes/* sous l'auteur officiel `mijote-official`
 //
@@ -20,22 +20,38 @@
 //
 // Merge NON destructif : chaque entrée est mise à jour (par id, sinon par nom) ou
 // ajoutée, aucune entrée existante n'est jamais supprimée. `ingredients.yaml` et
-// `utensils.yaml` sont des échantillons de format, hors du seed par défaut.
+// `utensils.yaml` (exports de la console admin) restent hors du seed par défaut.
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
 
-import { parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml } from "../src/lib/dataYaml.js";
-import { validateRecipeSchema } from "../src/lib/recipeSchema.js";
-import { buildPublishBundle, OFFICIAL_AUTHOR_UID, OFFICIAL_AUTHOR_NAME } from "../src/lib/publicRecipes.js";
-import { createIngredientResolver } from "../src/lib/nameMatcher.js";
-import { computeNutriInfo } from "../src/lib/nutriscore.js";
-import { normalizeCuisine } from "../src/constants/cuisines.js";
-import { DEFAULT_CATEGORIES } from "../src/constants/categories.js";
+import { createServer } from "vite";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+// La lib métier est en TypeScript et importe via l'alias `@/` : Node ne sait charger
+// ni l'un ni l'autre. On passe par Vite en mode SSR (même config que l'app, donc
+// mêmes alias), sans serveur HTTP ni pré-bundling des dépendances du front.
+const vite = await createServer({
+  root: ROOT,
+  configFile: path.join(ROOT, "vite.config.js"),
+  server: { middlewareMode: true },
+  appType: "custom",
+  logLevel: "error",
+  optimizeDeps: { noDiscovery: true, include: [] },
+});
+const load = (p) => vite.ssrLoadModule(p);
+const { parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml } = await load("/src/lib/household/dataYaml.ts");
+const { validateRecipeSchema } = await load("/src/lib/recipes/recipeSchema.ts");
+const { buildPublishBundle, OFFICIAL_AUTHOR_UID, OFFICIAL_AUTHOR_NAME } = await load("/src/lib/household/publicRecipes.ts");
+const { createIngredientResolver } = await load("/src/lib/food/nameMatcher.ts");
+const { computeNutriInfo } = await load("/src/lib/recipes/nutriscore.ts");
+const { normalizeCuisine } = await load("/src/constants/cuisines.js");
+const { DEFAULT_CATEGORIES } = await load("/src/constants/categories.js");
+// Modules chargés : le serveur Vite n'a plus d'utilité et ne doit pas retenir le process.
+await vite.close();
 const DATA_DIR = path.join(ROOT, "data");
 const read = (f) => fs.readFileSync(path.join(DATA_DIR, f), "utf8");
 
@@ -66,9 +82,9 @@ const ONLY = new Set(argv.filter(a => !a.startsWith("--")).concat(
   ["techniques", "ingredients", "utensils", "bases"].filter(k => argv.includes("--" + k))
 ));
 // Sans flag, on ne seede QUE le contenu canonique (glossaire + bases Escoffier).
-// `ingredients.yaml` / `utensils.yaml` sont des ÉCHANTILLONS de format : on ne les
-// pousse que si explicitement demandé (`--ingredients` / `--utensils`), pour ne
-// jamais injecter de données d'exemple dans la vraie base master par accident.
+// `ingredients.yaml` / `utensils.yaml` sont l'export versionné de la console : la
+// base vit d'abord dans l'app, on ne les repousse que sur demande explicite
+// (`--ingredients` / `--utensils`).
 const DEFAULT_KEYS = new Set(["techniques", "bases"]);
 const wants = (k) => (ONLY.size ? ONLY.has(k) : DEFAULT_KEYS.has(k));
 

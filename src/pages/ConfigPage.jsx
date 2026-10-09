@@ -6,6 +6,7 @@ import { IngredientStatusBadge } from "../components/badges/IngredientStatusBadg
 import { UserAvatar } from "../components/user/UserAvatar.jsx";
 import { SwipeableSheet } from "../components/ui/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog.jsx";
+import { ImportResultDialog } from "../components/admin/ImportResultDialog.jsx";
 import { ImageUpload } from "../components/ui/ImageUpload.jsx";
 import { TagInput } from "../components/ui/TagInput.jsx";
 import { OverscrollRow } from "../components/ui/OverscrollRow.jsx";
@@ -62,15 +63,17 @@ function YamlImport({ onText, warn }) {
       )}
       <input ref={ref} type="file" accept=".yaml,.yml,.txt" style={{ display: "none" }}
         onChange={e => { read(e.target.files[0]); e.target.value = ""; }} />
-      <div
+      {/* Styles dans `.yaml-drop` (global.css) : survol desktop et glisser-déposer
+          (`data-over`) y partagent la même teinte, impossible en style inline. */}
+      <div className="yaml-drop" data-over={over || undefined} role="button" tabIndex={0}
         onDragOver={e => { e.preventDefault(); setOver(true); }}
         onDragLeave={() => setOver(false)}
         onDrop={e => { e.preventDefault(); setOver(false); read(Array.from(e.dataTransfer.files).find(f => /\.(ya?ml|txt)$/i.test(f.name))); }}
         onClick={() => ref.current.click()}
-        style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: "28px 20px", borderRadius: 12, border: `2px dashed ${over ? "var(--accent)" : "var(--border)"}`, background: over ? "rgba(var(--accent-rgb),0.06)" : "var(--surface2)", cursor: "pointer", transition: "all 0.15s" }}>
-        <Icon name="import" size={28} color={over ? "var(--accent)" : "var(--text3)"} />
+        onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ref.current.click(); } }}>
+        <span className="yaml-drop-icon"><Icon name="import" size={28} color="currentColor" /></span>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: over ? "var(--accent)" : "var(--text)" }}>Dépose un fichier YAML ici</div>
+          <div className="yaml-drop-title" style={{ fontSize: 13, fontWeight: 500 }}>Dépose un fichier YAML ici</div>
           <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3 }}>ou clique pour sélectionner</div>
         </div>
       </div>
@@ -82,7 +85,7 @@ function YamlImport({ onText, warn }) {
 // Bloc réutilisable Export/Import YAML+Markdown d'une base master (ingrédients,
 // ustensiles, techniques) : rendu et espacement IDENTIQUES quelle que soit la
 // section. Autonome (gap interne) → plus de cartes « collées » selon le parent.
-function BaseImportExport({ count, noun, exportTitle = "Exporter la base", importTitle = "Importer dans la base", onExportYaml, onExportMarkdown, onImportYaml, mdError, mdInfo }) {
+function BaseImportExport({ count, noun, exportTitle = "Exporter la base", importTitle = "Importer dans la base", onExportYaml, onExportMarkdown, onImportYaml }) {
   const card = { background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" };
   return (
     <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 6 }}>
@@ -93,16 +96,14 @@ function BaseImportExport({ count, noun, exportTitle = "Exporter la base", impor
             <p style={{ fontSize: 12, color: "var(--text2)" }}>{count} {noun}{count > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
           </div>
           <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-            <button className="btn btn-primary btn-sm" onClick={onExportYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name="download" size={14} /> YAML</button>
-            <button className="btn btn-ghost btn-sm" onClick={onExportMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name="download" size={14} /> Markdown</button>
+            <button className="btn btn-primary btn-pill btn-sm" onClick={onExportYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name="download" size={14} /> YAML</button>
+            <button className="btn btn-ghost btn-pill btn-sm" onClick={onExportMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name="download" size={14} /> Markdown</button>
           </div>
         </div>
       </div>
       <div style={card}>
         <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{importTitle}</h3>
         <YamlImport warn onText={onImportYaml} />
-        {mdError && <p style={{ color: "var(--red)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{mdError}</p>}
-        {mdInfo && <p style={{ color: "var(--accent)", fontSize: 12, marginTop: 8 }}>✓ {mdInfo}</p>}
       </div>
     </div>
   );
@@ -232,8 +233,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     finally { setModBusy(null); setConfirmMod(null); }
   };
   const [openCats, setOpenCats] = useState({});
-  const [mdError, setMdError] = useState("");
-  const [mdInfo, setMdInfo] = useState("");
+  // Résultat d'import (ou saisie refusée) présenté en popup : { ok, title, message, details? }.
+  const [importResult, setImportResult] = useState(null);
   const toggleCat = k => setOpenCats(p => ({ ...p, [k]: !p[k] }));
   const [openTechCats, setOpenTechCats] = useState({}); // catégories de techniques repliées par défaut
   const toggleTechCat = k => setOpenTechCats(p => ({ ...p, [k]: !p[k] }));
@@ -290,7 +291,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   // Upsert d'un geste technique (master). La normalisation (clés vides retirées,
   // dimensions v2 portées) vit dans `buildTechniqueFromDraft` (testé, src/lib).
   const saveTech = raw => {
-    if (!(raw.name || "").trim() || !(raw.definition || "").trim()) { setMdError("Nom et définition sont requis."); return; }
+    if (!(raw.name || "").trim() || !(raw.definition || "").trim()) { setImportResult({ ok: false, title: "Geste incomplet", message: "Le nom et la définition sont requis pour enregistrer un geste." }); return; }
     const item = buildTechniqueFromDraft(raw);
     setTechniques?.(prev => prev.find(t => t.id === item.id) ? prev.map(t => t.id === item.id ? item : t) : [...prev, item]);
     setEditTech(null);
@@ -353,90 +354,92 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     URL.revokeObjectURL(a.href);
   };
 
-  // Affiche la liste d'erreurs de validation YAML, tronquée. Annulation totale.
-  const reportErrors = (errors) => {
-    setMdError(`Import annulé – ${errors.length} erreur${errors.length > 1 ? "s" : ""} : ` + errors.slice(0, 3).join(" ") + (errors.length > 3 ? " …" : ""));
+  // Erreurs de validation YAML : annulation totale, liste complète dans la popup.
+  const reportErrors = (errors) => setImportResult({
+    ok: false,
+    title: "Import annulé",
+    message: `${errors.length} erreur${errors.length > 1 ? "s" : ""} dans le fichier : la base n'a pas été modifiée. Corrige-le puis réimporte-le.`,
+    details: errors,
+  });
+  const reportEmpty = (what) => setImportResult({ ok: false, title: "Rien à importer", message: `Aucun ${what} reconnu dans le fichier.` });
+  const reportDone = (read, created, updated, feminine = false) => {
+    const e = feminine ? "e" : "";
+    setImportResult({
+      ok: true,
+      title: "Import terminé",
+      message: `${read} entrée${read > 1 ? "s" : ""} lue${read > 1 ? "s" : ""} : ${created} créé${e}${created > 1 ? "s" : ""}, ${updated} mis${e}${updated > 1 ? "s" : ""} à jour. Rien n'a été supprimé.`,
+    });
   };
 
+  // Fusion calculée sur l'état courant (et non dans un updater de setState, que
+  // React peut différer ou rejouer en mode strict) : les compteurs restent justes.
   // Import YAML des ingrédients (master). Upsert par id puis par nom normalisé.
   const importIngredientsYaml = (text) => {
-    setMdInfo("");
     const { items: parsed, errors } = parseIngredientsYaml(text, { validCategories: new Set(Object.keys(categories)) });
     if (errors.length) return reportErrors(errors);
-    if (!parsed.length) { setMdError("Aucun ingrédient reconnu dans le YAML."); return; }
+    if (!parsed.length) return reportEmpty("ingrédient");
     let created = 0, updated = 0;
-    setIngredientDB(prev => {
-      const next = [...prev];
-      const idxById = new Map(next.map((d, i) => [d.id, i]));
-      const idxByName = new Map(next.map((d, i) => [normalizeStr(d.name), i]));
-      parsed.forEach((row, n) => {
-        const idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
-          : idxByName.has(normalizeStr(row.name)) ? idxByName.get(normalizeStr(row.name)) : -1;
-        if (idx >= 0) {
-          const cur = next[idx];
-          next[idx] = { ...cur, ...row, id: cur.id, nutrition: row.nutrition || cur.nutrition };
-          updated++;
-        } else {
-          const id = row.id || ("db_i" + Date.now() + "_" + n);
-          next.push({ ...row, id });
-          idxById.set(id, next.length - 1);
-          idxByName.set(normalizeStr(row.name), next.length - 1);
-          created++;
-        }
-      });
-      return next;
+    const next = [...ingredientDB];
+    const idxById = new Map(next.map((d, i) => [d.id, i]));
+    const idxByName = new Map(next.map((d, i) => [normalizeStr(d.name), i]));
+    parsed.forEach((row, n) => {
+      const idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
+        : idxByName.has(normalizeStr(row.name)) ? idxByName.get(normalizeStr(row.name)) : -1;
+      if (idx >= 0) {
+        const cur = next[idx];
+        next[idx] = { ...cur, ...row, id: cur.id, nutrition: row.nutrition || cur.nutrition };
+        updated++;
+      } else {
+        const id = row.id || ("db_i" + Date.now() + "_" + n);
+        next.push({ ...row, id });
+        idxById.set(id, next.length - 1);
+        idxByName.set(normalizeStr(row.name), next.length - 1);
+        created++;
+      }
     });
-    setMdError("");
-    setMdInfo(`${created} créé${created > 1 ? "s" : ""}, ${updated} mis à jour.`);
+    setIngredientDB(next);
+    reportDone(parsed.length, created, updated);
   };
 
   // Import YAML des ustensiles (master). Upsert par id puis par nom.
   const importUtensilsYaml = (text) => {
-    setMdInfo("");
     const { items: parsed, errors } = parseUtensilsYaml(text);
     if (errors.length) return reportErrors(errors);
-    if (!parsed.length) { setMdError("Aucun ustensile reconnu dans le YAML."); return; }
+    if (!parsed.length) return reportEmpty("ustensile");
     let created = 0, updated = 0;
-    setUtensilDB(prev => {
-      const next = [...prev];
-      const idxById = new Map(next.map((d, i) => [d.id, i]));
-      const idxByName = new Map(next.map((d, i) => [normalizeStr(d.name), i]));
-      parsed.forEach((row, n) => {
-        const idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
-          : idxByName.has(normalizeStr(row.name)) ? idxByName.get(normalizeStr(row.name)) : -1;
-        if (idx >= 0) { next[idx] = { ...next[idx], ...row, id: next[idx].id }; updated++; }
-        else {
-          const id = row.id || ("db_u" + Date.now() + "_" + n);
-          next.push({ ...row, id });
-          idxById.set(id, next.length - 1);
-          idxByName.set(normalizeStr(row.name), next.length - 1);
-          created++;
-        }
-      });
-      return next;
+    const next = [...utensilDB];
+    const idxById = new Map(next.map((d, i) => [d.id, i]));
+    const idxByName = new Map(next.map((d, i) => [normalizeStr(d.name), i]));
+    parsed.forEach((row, n) => {
+      const idx = (row.id != null && idxById.has(row.id)) ? idxById.get(row.id)
+        : idxByName.has(normalizeStr(row.name)) ? idxByName.get(normalizeStr(row.name)) : -1;
+      if (idx >= 0) { next[idx] = { ...next[idx], ...row, id: next[idx].id }; updated++; }
+      else {
+        const id = row.id || ("db_u" + Date.now() + "_" + n);
+        next.push({ ...row, id });
+        idxById.set(id, next.length - 1);
+        idxByName.set(normalizeStr(row.name), next.length - 1);
+        created++;
+      }
     });
-    setMdError("");
-    setMdInfo(`${created} créé${created > 1 ? "s" : ""}, ${updated} mis à jour.`);
+    setUtensilDB(next);
+    reportDone(parsed.length, created, updated);
   };
 
   // Import YAML du glossaire des techniques (master). Upsert par id.
   const importTechniquesYaml = (text) => {
-    setMdInfo("");
     const { items: parsed, errors } = parseTechniquesYaml(text);
     if (errors.length) return reportErrors(errors);
-    if (!parsed.length) { setMdError("Aucune technique reconnue dans le YAML."); return; }
+    if (!parsed.length) return reportEmpty("geste technique");
     let created = 0, updated = 0;
-    setTechniques?.(prev => {
-      const next = [...prev];
-      const idxById = new Map(next.map((d, i) => [d.id, i]));
-      parsed.forEach(row => {
-        if (idxById.has(row.id)) { next[idxById.get(row.id)] = row; updated++; }
-        else { next.push(row); idxById.set(row.id, next.length - 1); created++; }
-      });
-      return next;
+    const next = [...(techniques || [])];
+    const idxById = new Map(next.map((d, i) => [d.id, i]));
+    parsed.forEach(row => {
+      if (idxById.has(row.id)) { next[idxById.get(row.id)] = row; updated++; }
+      else { next.push(row); idxById.set(row.id, next.length - 1); created++; }
     });
-    setMdError("");
-    setMdInfo(`${created} créée${created > 1 ? "s" : ""}, ${updated} mise${updated > 1 ? "s" : ""} à jour.`);
+    setTechniques?.(next);
+    reportDone(parsed.length, created, updated);
   };
 
   const exportTechniquesMarkdown = () => downloadText("techniques_cardamome.md", formatTechniquesMarkdown(techniques), "text/markdown");
@@ -613,7 +616,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             {isAdmin && (
               <BaseImportExport count={ingredientDB.length} noun="ingrédient"
                 onExportYaml={exportIngredientsYaml} onExportMarkdown={exportIngredientsMarkdown}
-                onImportYaml={importIngredientsYaml} mdError={mdError} mdInfo={mdInfo} />
+                onImportYaml={importIngredientsYaml} />
             )}
           </div>
           );
@@ -660,7 +663,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             {isAdmin && (
               <BaseImportExport count={utensilDB.length} noun="ustensile"
                 onExportYaml={exportUtensilsYaml} onExportMarkdown={exportUtensilsMarkdown}
-                onImportYaml={importUtensilsYaml} mdError={mdError} mdInfo={mdInfo} />
+                onImportYaml={importUtensilsYaml} />
             )}
           </div>
         )}
@@ -749,7 +752,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                 <BaseImportExport count={techniques.length} noun="technique"
                   exportTitle="Exporter le glossaire" importTitle="Importer le glossaire"
                   onExportYaml={exportTechniquesYaml} onExportMarkdown={exportTechniquesMarkdown}
-                  onImportYaml={importTechniquesYaml} mdError={mdError} mdInfo={mdInfo} />
+                  onImportYaml={importTechniquesYaml} />
               )}
             </div>
           );
@@ -939,6 +942,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
       )}
 
 
+      {/* Résultat d'un import YAML (ou saisie refusée) */}
+      {importResult && <ImportResultDialog {...importResult} onClose={() => setImportResult(null)} />}
       {/* Category delete confirmation */}
       {confirmDel && (
         <ConfirmDialog title={`Supprimer ${confirmDel.type === "ing" ? "l'ingrédient" : confirmDel.type === "tech" ? "le geste" : "l'ustensile"} ?`}

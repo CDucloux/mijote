@@ -5,11 +5,16 @@
  *
  * ```text
  * base  = max(difficulté des gestes détectés)              // signal dominant
- * mods  = +1 si ≥ 4 gestes distincts
- *         +1 si ≥ 1 préparation de base (sous-recette)
- *         +1 si ≥ 12 étapes
- * score = clamp(base + min(mods, 2), 1, 5)
+ * mods  = +1 si ≥ 3 gestes distincts de niveau ≥ 2        // variété technique
+ *         +1 si ≥ 1 préparation de base (sous-recette)    // coordination
+ * score = clamp(base + min(mods, 1), 1, 5)
  * ```
+ *
+ * La difficulté mesure la TECHNIQUE, pas la longueur : les gestes de niveau 1
+ * (émincer, faire revenir…) ne comptent pas dans la variété, le nombre d'étapes
+ * n'entre plus dans le score (il nourrit l'indicateur séparé de charge de travail,
+ * cf. {@link workloadOf}). Le bonus plafonné à +1 garantit qu'« Expert » (5) exige
+ * un geste de niveau 4 ou plus : une base de niveau 3 s'arrête à 4.
  *
  * @module recipes/difficulty
  */
@@ -100,6 +105,44 @@ function collectTechniques(recipe: DiffRecipe, index: TechniqueIndex, recipes: D
   return { own, ownIds, bases, all: [...allMap.values()] };
 }
 
+/** Seuil de gestes de niveau ≥ 2 à partir duquel la variété technique compte. */
+const VARIETY_MIN_TECHNIQUES = 3;
+/** Niveau à partir duquel un geste compte dans la variété (les gestes de base, non). */
+const VARIETY_MIN_LEVEL = 2;
+/** Bonus maximal ajouté à la base, toutes règles confondues (et donc : 5 exige une base ≥ 4). */
+const MAX_BONUS = 1;
+
+/** Composantes du score, partagées par {@link computeDifficulty} et {@link explainDifficulty}. */
+interface ScoreParts {
+  base: number;
+  mods: ModExplain[];
+  modsApplied: number;
+  modsCapped: boolean;
+  score: number;
+}
+
+/** Applique les règles de difficulté aux gestes repérés (non vide) d'une recette. */
+function scoreParts(all: Technique[], recipe: DiffRecipe): ScoreParts {
+  const base = Math.max(...all.map(t => t.difficulty || 0));
+  const advanced = all.filter(t => (t.difficulty || 0) >= VARIETY_MIN_LEVEL).length;
+  const components = componentCount(recipe);
+  const mods: ModExplain[] = [
+    {
+      label: `${VARIETY_MIN_TECHNIQUES} gestes de niveau ${VARIETY_MIN_LEVEL} ou plus`,
+      detail: `${advanced} geste${advanced > 1 ? "s" : ""} de niveau ${VARIETY_MIN_LEVEL} ou plus`,
+      applied: advanced >= VARIETY_MIN_TECHNIQUES,
+    },
+    {
+      label: "Au moins une préparation de base",
+      detail: components ? `${components} sous-recette${components > 1 ? "s" : ""}` : "aucune sous-recette",
+      applied: components >= 1,
+    },
+  ];
+  const raw = mods.filter(m => m.applied).length;
+  const modsApplied = Math.min(raw, MAX_BONUS);
+  return { base, mods, modsApplied, modsCapped: raw > MAX_BONUS, score: Math.min(5, Math.max(1, base + modsApplied)) };
+}
+
 /**
  * Calcule la difficulté (1–5) d'une recette. `score` vaut `null` si aucun geste
  * n'est repéré : on préfère ne pas afficher d'indice plutôt qu'inventer.
@@ -117,15 +160,38 @@ export function computeDifficulty(recipe: DiffRecipe, techniques?: unknown, opts
   const { all } = collectTechniques(recipe, index, opts.recipes as DiffRecipe[] | undefined);
   if (!all.length) return { score: null, drivers: [], overridden: false };
 
-  const base = Math.max(...all.map(t => t.difficulty || 0));
-  let mods = 0;
-  if (all.length >= 4) mods += 1;
-  if (componentCount(recipe) >= 1) mods += 1;
-  if ((recipe?.steps || []).length >= 12) mods += 1;
-
-  const score = Math.min(5, Math.max(1, base + Math.min(mods, 2)));
+  const { base, score } = scoreParts(all, recipe);
   const drivers = all.filter(t => t.difficulty === base).map(t => t.name || "");
   return { score, drivers, overridden: false };
+}
+
+/** Charge de travail d'une recette, indépendante de sa difficulté technique. */
+export interface Workload {
+  level: 1 | 2 | 3;
+  label: string;
+  steps: number;
+}
+
+/** Bornes (en nombre d'étapes) des niveaux de charge de travail. */
+const WORKLOAD_LEVELS: { maxSteps: number; level: 1 | 2 | 3; label: string }[] = [
+  { maxSteps: 6, level: 1, label: "Légère" },
+  { maxSteps: 11, level: 2, label: "Moyenne" },
+  { maxSteps: Number.POSITIVE_INFINITY, level: 3, label: "Soutenue" },
+];
+
+/**
+ * Charge de travail d'une recette, d'après son nombre d'étapes. Indicateur SÉPARÉ
+ * de la difficulté : une recette longue n'est pas plus technique, elle demande
+ * seulement plus de temps et d'organisation.
+ *
+ * @param recipe - La recette (seules les étapes sont lues).
+ * @returns Le niveau (1 à 3), son libellé et le nombre d'étapes, ou `null` sans étape.
+ */
+export function workloadOf(recipe: { steps?: readonly unknown[] | null } | null | undefined): Workload | null {
+  const steps = (recipe?.steps || []).length;
+  if (!steps) return null;
+  const { level, label } = WORKLOAD_LEVELS.find(w => steps <= w.maxSteps) ?? WORKLOAD_LEVELS[WORKLOAD_LEVELS.length - 1];
+  return { level, label, steps };
 }
 
 interface ModExplain { label: string; detail: string; applied: boolean }
@@ -139,14 +205,15 @@ export interface DifficultyExplain {
   drivers: string[];
   mods: ModExplain[];
   modsApplied: number;
+  /** Plusieurs bonus réunis, un seul retenu (plafond +1). */
   modsCapped: boolean;
   inheritedFromBases?: boolean;
 }
 
 /**
- * Décompose le calcul (geste dominant, gestes détectés, modificateurs appliqués
- * avec le plafond de +2). Renvoie `null` s'il n'y a rien à expliquer (score non
- * calculé faute de geste noté).
+ * Décompose le calcul (geste dominant, gestes détectés, bonus retenus et
+ * plafond). Renvoie `null` s'il n'y a rien à expliquer (score non calculé faute
+ * de geste noté).
  *
  * @param recipe - La recette à expliquer.
  * @param techniques - Glossaire des techniques (sauf si `opts.index` est fourni).
@@ -163,21 +230,9 @@ export function explainDifficulty(recipe: DiffRecipe, techniques?: unknown, opts
   const { ownIds, bases, all } = collectTechniques(recipe, index, opts.recipes as DiffRecipe[] | undefined);
   if (!all.length) return null;
 
-  const base = Math.max(...all.map(t => t.difficulty || 0));
-  const distinct = all.length;
-  const nbComponents = componentCount(recipe);
-  const nbSteps = (recipe?.steps || []).length;
-
-  const mods: ModExplain[] = [
-    { label: "4 gestes techniques ou plus", detail: `${distinct} geste${distinct > 1 ? "s" : ""} détecté${distinct > 1 ? "s" : ""}`, applied: distinct >= 4 },
-    { label: "Au moins une préparation de base", detail: nbComponents ? `${nbComponents} sous-recette${nbComponents > 1 ? "s" : ""}` : "aucune sous-recette", applied: nbComponents >= 1 },
-    { label: "12 étapes ou plus", detail: `${nbSteps} étape${nbSteps > 1 ? "s" : ""}`, applied: nbSteps >= 12 },
-  ];
-  const rawMods = mods.filter(m => m.applied).length;
-  const modsApplied = Math.min(rawMods, 2);
-  const score = Math.min(5, Math.max(1, base + modsApplied));
+  const { base, mods, modsApplied, modsCapped, score } = scoreParts(all, recipe);
   const drivers = all.filter(t => t.difficulty === base).map(t => t.name || "");
   const techList: TechExplain[] = [...all].sort((a, b) => (b.difficulty || 0) - (a.difficulty || 0)).map(t => ({ ...t, inherited: !ownIds.has(t.id) }));
 
-  return { score, overridden: false, base, techniques: techList, drivers, mods, modsApplied, modsCapped: rawMods > 2, inheritedFromBases: bases.length > 0 };
+  return { score, overridden: false, base, techniques: techList, drivers, mods, modsApplied, modsCapped, inheritedFromBases: bases.length > 0 };
 }

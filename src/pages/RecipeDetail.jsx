@@ -36,7 +36,7 @@ import { formatParamSummary } from "@/lib/utensils/appliances.js";
 import { resolveQualityRecommendation } from "@/lib/food/qualityRecommendation.js";
 import { resolveUsagePrecaution } from "@/lib/utensils/usagePrecaution.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-import { computeDifficulty, explainDifficulty } from "@/lib/recipes/difficulty.js";
+import { computeDifficulty, explainDifficulty, workloadOf } from "@/lib/recipes/difficulty.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { flattenForShopping } from "@/lib/recipes/recipeComponents.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
@@ -388,7 +388,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           onApply={f => setPanFactor(f)} onReset={() => setPanFactor(1)} onClose={() => setShowCalc(false)} />
       )}
       {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}
-      {showDifficulty && <DifficultyModal data={difficultyExplain} onClose={() => setShowDifficulty(false)} />}
+      {showDifficulty && <DifficultyModal data={difficultyExplain} workload={workloadOf(recipe)} onClose={() => setShowDifficulty(false)} />}
       {showCollModal && (
         <CollectionsSheet recipe={recipe} collections={collections} onToggle={onToggleCollection} onClose={() => setShowCollModal(false)} />
       )}

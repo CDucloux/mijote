@@ -5031,3 +5031,42 @@ html.light select.field-input {
   .fav-heart[aria-pressed="true"] > svg { animation: none; }
   .cuisine-tile { transition: none; }
 }
+
+/* Zone de dépose YAML (console admin). Survol desktop : la bordure et l'icône
+   prennent l'accent, l'icône remonte d'un cran comme pour inviter au dépôt.
+   Glisser-déposer en cours (`data-over`) : même teinte, un peu plus affirmée. */
+.yaml-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px 20px;
+  border-radius: 12px;
+  border: 2px dashed var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+.yaml-drop-icon {
+  display: inline-flex;
+  color: var(--text3);
+  transition: color 0.18s ease, transform 0.22s cubic-bezier(0.33, 1, 0.68, 1);
+}
+.yaml-drop-title { color: var(--text); transition: color 0.18s ease; }
+.yaml-drop[data-over] {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.06);
+}
+.yaml-drop[data-over] .yaml-drop-icon,
+.yaml-drop[data-over] .yaml-drop-title { color: var(--accent); }
+.yaml-drop:focus-visible { outline: none; border-color: var(--accent); }
+@media (hover: hover) {
+  .yaml-drop:hover {
+    border-color: rgba(var(--accent-rgb), 0.55);
+    background: rgba(var(--accent-rgb), 0.04);
+  }
+  .yaml-drop:hover .yaml-drop-icon,
+  .yaml-drop:hover .yaml-drop-title { color: var(--accent); }
+  .yaml-drop:hover .yaml-drop-icon { transform: translateY(-2px); }
+}

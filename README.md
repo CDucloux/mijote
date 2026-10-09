@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.59.22-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.59.23-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -84,8 +84,9 @@ toujours avec vous.
   avec un diff visuel, un commentaire et l'avatar de l'auteur.
 - 🥗 **Nutri-Score & score santé** : calculés automatiquement à partir des
   ingrédients et de la base nutritionnelle (données Ciqual), avec difficulté
-  estimée et son calcul détaillé ligne par ligne (geste dominant, points de
-  charge, total).
+  estimée et son calcul détaillé ligne par ligne (geste dominant, variété des
+  gestes techniques, sous-recette, total), plus une charge de travail affichée à
+  part (nombre d'étapes).
 - 🌿 **Saisonnalité** : déduite des ingrédients ; badge « De saison » et filtre
   dédié.
 - 💡 **Qualité & précautions** : recommandation discrète de forme à l'achat pour
