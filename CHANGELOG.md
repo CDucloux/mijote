@@ -1,5 +1,21 @@
 # Changelog – Cardamome
 
+## v4.59.23 – Cardamome · La juste difficulté
+
+### Fiche recette
+- **Une difficulté qui mesure la technique, pas la longueur** : seuls les gestes de niveau 2 ou plus comptent dans la variété (émincer ou faire revenir n'alourdissent plus la note), le nombre d'étapes sort du calcul et le bonus est limité à un point. « Expert » demande désormais un geste vraiment technique (niveau 4 ou plus). Un bœuf bourguignon passe ainsi de « Difficile » à « Intermédiaire ».
+- **Charge de travail à part** : la feuille de difficulté indique si la recette est légère, moyenne ou soutenue selon son nombre d'étapes, sans que cela pèse sur la note.
+
+### Glossaire
+- **Roux blanc et roux brun distingués** : le roux blanc ou blond (quelques minutes, sans colorer) passe au niveau 2 ; le roux brun, qu'il faut mener jusqu'à la noisette sans brûler, garde le niveau 3.
+
+### Console admin
+- **Résultat d'import en popup** : succès avec le détail des entrées créées et mises à jour, ou annulation avec la liste complète des erreurs, plutôt qu'une ligne tronquée sous la zone de dépose. Les compteurs sont désormais toujours justes.
+- **Exports en pills** et **zone de dépose qui réagit au survol** sur ordinateur.
+
+### Sous le capot
+- **Script de seed réparé** : `npm run seed` charge de nouveau la lib métier (TypeScript) et valide les quatre jeux de données de `data/`.
+
 ## v4.59.22 – Cardamome · Données au carré
 
 ### Console admin
