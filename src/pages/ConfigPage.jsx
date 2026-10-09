@@ -11,7 +11,7 @@ import { ImageUpload } from "../components/ui/ImageUpload.jsx";
 import { TagInput } from "../components/ui/TagInput.jsx";
 import { OverscrollRow } from "../components/ui/OverscrollRow.jsx";
 import { UnderlineTabs } from "../components/ui/UnderlineTabs.jsx";
-import { StickySheetHeader } from "../components/ui/StickySheetHeader.jsx";
+import { SheetIdentityHeader } from "../components/ui/SheetIdentityHeader.jsx";
 import { countTrackingFilters, matchesTrackingFilter } from "@/lib/food/ingredientTracking.js";
 import { ReadOnlyBanner, AdminBanner } from "../components/ui/Banners.jsx";
 import { IngredientDetail } from "../components/ingredient/IngredientDetail.jsx";
@@ -851,26 +851,16 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
           {/* En-tête calqué sur la fiche détaillée (TechniqueDetailSheet) : pastille
               d'icône colorée par catégorie, titre, puce de catégorie et pastilles de
               difficulté, pour que la saisie reflète l'affichage en recette. */}
-          <StickySheetHeader>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${techVis.color} 16%, transparent)` }}>
-              <Icon name={techVis.icon} size={27} color={techVis.color} />
-            </span>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <h3 style={{ margin: 0, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>
-                {editTech.name?.trim() || (editTech.id ? "Modifier le geste" : "Nouveau geste")}
-              </h3>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: techVis.color, background: `color-mix(in srgb, ${techVis.color} 14%, transparent)`, padding: "3px 9px", borderRadius: 999 }}>{catLabel}</span>
-                {diff > 0 && (
-                  <span title={`Difficulté ${diff}/5`} style={{ display: "inline-flex", gap: 3, alignItems: "center" }}>
-                    {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= diff ? techVis.color : "var(--surface3)" }} />)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          </StickySheetHeader>
+          <SheetIdentityHeader
+            media={<Icon name={techVis.icon} size={27} color={techVis.color} />}
+            mediaBackground={`color-mix(in srgb, ${techVis.color} 16%, transparent)`}
+            title={editTech.name?.trim() || (editTech.id ? "Modifier le geste" : "Nouveau geste")}
+            chip={catLabel} chipColor={techVis.color}
+            extra={diff > 0 && (
+              <span title={`Difficulté ${diff}/5`} style={{ display: "inline-flex", gap: 3, alignItems: "center" }}>
+                {[1, 2, 3, 4, 5].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i <= diff ? techVis.color : "var(--surface3)" }} />)}
+              </span>
+            )} />
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Émulsionner" value={editTech.name} onChange={e => setEditTech(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
           <div className="field-label">Catégorie</div>
@@ -958,9 +948,20 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
 
       {/* Utensil editor modal */}
       {editUt && (
-        <SwipeableSheet onClose={() => setEditUt(null)}>
+        <SwipeableSheet onClose={() => setEditUt(null)} hideHandle style={{ paddingTop: 0 }}>
           {(close) => (<>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>{editUt.id ? "Modifier" : "Nouvel"} ustensile</h3>
+          {/* Même en-tête que la feuille de geste ; la photo, posée sur blanc comme
+              dans la grille, tient lieu d'icône une fois choisie. */}
+          <SheetIdentityHeader
+            media={editUt.image
+              ? <Img src={editUt.image} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 6, boxSizing: "border-box" }} />
+              : <Icon name="utensils" size={25} color="var(--accent)" />}
+            mediaBackground={editUt.image ? "#fff" : "rgba(var(--accent-rgb),0.14)"}
+            title={editUt.name?.trim() || (editUt.id ? "Modifier l'ustensile" : "Nouvel ustensile")}
+            chip={UTENSIL_CATEGORIES[editUt.category || "divers"] || UTENSIL_CATEGORIES.divers} chipColor="var(--accent)"
+            extra={editUt.category === "appareils" && editUt.appliance && APPLIANCE_LABELS[editUt.appliance] && (
+              <span style={{ fontSize: 12, color: "var(--text3)" }}>{APPLIANCE_LABELS[editUt.appliance]}</span>
+            )} />
           <div className="field-label">Nom</div>
           <input className="field-input" placeholder="ex: Casserole" value={editUt.name} onChange={e => setEditUt(p => ({ ...p, name: e.target.value }))} style={{ marginBottom: 12 }} />
           <div className="field-label">Catégorie</div>
