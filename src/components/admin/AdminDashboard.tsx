@@ -1,6 +1,7 @@
 import { Icon } from "../ui/Icon.jsx";
 import type { ReactNode } from "react";
 import type { IconName } from "../ui/Icon.jsx";
+import { countTrackingFilters } from "@/lib/food/ingredientTracking.js";
 import type { IngredientDbItem, UtensilDbItem } from "@/lib/types.js";
 import type { TechniqueEntry } from "@/lib/recipes/techniques.js";
 
@@ -73,11 +74,8 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques = [], onGoto }: AdminDashboardProps) {
   const ing = ingredientDB.length, ust = utensilDB.length, tech = techniques.length;
-  const ingNoImg = ingredientDB.filter(i => !i.image).length;
   const ustNoImg = utensilDB.filter(u => !u.image).length;
-  const ingNoNut = ingredientDB.filter(i => !i.nutrition || i.nutrition.calories == null).length;
-  const validated = ingredientDB.filter(i => i.status === "validated").length;
-  const draft = ing - validated;
+  const { "no-image": ingNoImg, "no-nutrition": ingNoNut, validated, draft } = countTrackingFilters(ingredientDB);
   const pct = ing ? Math.round((validated / ing) * 100) : 0;
 
   return (
