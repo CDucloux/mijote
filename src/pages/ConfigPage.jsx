@@ -841,7 +841,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
 
       {/* Éditeur de geste technique (admin) */}
       {editTech && (
-        <SwipeableSheet onClose={() => setEditTech(null)}>
+        <SwipeableSheet onClose={() => setEditTech(null)} hideHandle style={{ paddingTop: 0 }}>
           {(close) => {
           const techOptions = [...techniques].filter(t => t.id !== editTech.id).sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
           const techVis = techniqueVisual(editTech.category);

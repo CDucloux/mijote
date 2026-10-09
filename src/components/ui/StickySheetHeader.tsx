@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-/** Débord vertical de l'en-tête au-dessus de son contenu (cf. `.sheet-sticky-head`). */
-const HEAD_BLEED = 12;
-
 // En-tête collant d'un `.modal-sheet` (la feuille est elle-même le conteneur de
-// défilement). Le séparateur n'apparaît qu'une fois du contenu passé dessous :
-// une sentinelle juste avant l'en-tête sort du cadre au moment où il colle.
+// défilement). La feuille doit être SANS padding haut (`paddingTop: 0`, comme la
+// feuille Filtres) : un sticky `top: 0` se colle au bord du scrollport, le contenu
+// défilerait sinon dans ce padding, au-dessus de l'en-tête. L'en-tête porte donc
+// lui-même cet espace. Le séparateur n'apparaît qu'une fois du contenu passé
+// dessous : une sentinelle juste avant l'en-tête sort du cadre dès le défilement.
 export function StickySheetHeader({ children }: { children: ReactNode }) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [stuck, setStuck] = useState(false);
@@ -15,8 +15,7 @@ export function StickySheetHeader({ children }: { children: ReactNode }) {
     const sentinel = sentinelRef.current;
     const root = sentinel?.closest(".modal-sheet");
     if (!sentinel || !root) return;
-    const observer = new IntersectionObserver(([entry]) => setStuck(!entry.isIntersecting),
-      { root, rootMargin: `-${HEAD_BLEED}px 0px 0px 0px` });
+    const observer = new IntersectionObserver(([entry]) => setStuck(!entry.isIntersecting), { root });
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, []);
