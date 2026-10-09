@@ -1172,6 +1172,41 @@ html.light select.field-input {
   animation: alertPopOut 0.17s ease-in forwards;
 }
 
+/* En-tête collant d'une feuille (StickySheetHeader) : déborde des 20px de
+   padding latéral pour couvrir toute la largeur au défilement. Une fois collé,
+   un filet et un très léger dégradé dessous détachent le contenu qui passe. */
+.sheet-sticky-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: -12px -20px 6px;
+  padding: 12px 20px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+.sheet-sticky-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 10px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.18), transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+html.light .sheet-sticky-head::after {
+  background: linear-gradient(to bottom, rgba(40, 45, 30, 0.06), transparent);
+}
+.sheet-sticky-head.is-stuck {
+  border-bottom-color: var(--border);
+}
+.sheet-sticky-head.is-stuck::after {
+  opacity: 1;
+}
+
 .modal-handle {
   width: 40px;
   height: 4px;
