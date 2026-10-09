@@ -27,6 +27,13 @@ export const PRECAUTION_TONES: Record<PrecautionTone, PrecautionVisual> = {
   warning: { icon: "warning", label: "Attention", accent: "#d99a10" },
 };
 
+/**
+ * Longueurs maximales d'une précaution, partagées par le formulaire de la console
+ * (`maxLength`) et l'import YAML : ce que l'une accepte, l'autre le réimporte. La
+ * description admet un petit tableau Markdown (puissance de chauffe par usage…).
+ */
+export const PRECAUTION_LIMITS = { title: 120, description: 800, tip: 280 } as const;
+
 /** Garde de type : `x` est une tonalité de précaution connue. */
 export function isPrecautionTone(x: unknown): x is PrecautionTone {
   return typeof x === "string" && x in PRECAUTION_TONES;

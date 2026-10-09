@@ -18,6 +18,8 @@
  * @module household/dataEnvelope
  */
 
+/** Version du schéma des techniques (v2 : hiérarchie, résultat attendu, erreurs, confusions). */
+export const TECHNIQUES_SCHEMA_VERSION = 2;
 /** Version du schéma des entrées d'ingrédients écrite à l'export. */
 export const INGREDIENTS_SCHEMA_VERSION = 1;
 /** Version du schéma des entrées d'ustensiles écrite à l'export. */
