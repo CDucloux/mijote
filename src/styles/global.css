@@ -2548,6 +2548,32 @@ html.light .sheet-sticky-head::after {
 }
 .legal-md td:first-child { color: var(--text); }
 
+/* Mobile : un tableau à 2-3 colonnes ne tient pas en largeur. Chaque ligne
+   devient une fiche (filet dessous), chaque cellule une ligne précédée de son
+   intitulé de colonne (`data-label`, posé par legalDocs.js). La première cellule
+   sert de titre de fiche, son intitulé est donc omis. */
+@media (max-width: 600px) {
+  .legal-md table,
+  .legal-md tbody,
+  .legal-md tr,
+  .legal-md td { display: block; width: 100%; }
+  .legal-md table { overflow: visible; border-top: 1px solid var(--border); }
+  .legal-md thead { display: none; }
+  .legal-md tr { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .legal-md td { min-width: 0; padding: 2px 0; border-bottom: none; }
+  .legal-md td:first-child { font-weight: 600; margin-bottom: 4px; }
+  .legal-md td + td::before {
+    content: attr(data-label);
+    display: block;
+    margin-top: 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+}
+
 .legal-md-updated {
   font-size: 11.5px;
   color: var(--text3);
