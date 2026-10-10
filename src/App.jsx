@@ -38,6 +38,8 @@ import { useIsDesktop } from "./hooks/useIsDesktop.js";
 import { useSoftKeyboardOpen } from "./hooks/useSoftKeyboardOpen.js";
 import { usePageZoom } from "./hooks/usePageZoom.js";
 import { useAndroidBackButton } from "./hooks/useAndroidBackButton.js";
+import { useLaunchLinks } from "./hooks/useLaunchLinks.js";
+import { useLauncherSync } from "./hooks/useLauncherSync.js";
 import { SwipeableSheet } from "./components/ui/SwipeableSheet.jsx";
 import { PullToRefresh } from "./components/ui/PullToRefresh.jsx";
 import { RecipeNotFound } from "./components/recipe/RecipeNotFound.jsx";
@@ -386,6 +388,11 @@ function AppInner({ user, isDark, toggleTheme }) {
   // en visant l'onglet courant, pour ne pas perdre les modifications non sauvées.
   // Sur la fiche recette, `dismissDetail` enrobe le recul d'une sortie animée.
   useAndroidBackButton({ isEditing, onLeaveEditor: () => setPendingTab(tab), onBackDismiss: dismissDetail });
+
+  // Lanceur Android : raccourcis de l'icône (appui long) et widgets, tenus à jour
+  // depuis le planning et les courses ; leurs taps rouvrent l'écran visé.
+  useLaunchLinks();
+  useLauncherSync({ ready: workspaceReady && !sharedHydrating, mealPlan, recipes, shoppingLists, ingredientDB });
 
   // Navigate with guard: if editing, show confirm dialog first
   const requestTab = (newTab) => {

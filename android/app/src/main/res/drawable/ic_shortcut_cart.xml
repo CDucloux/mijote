@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icone de raccourci (API 25) : pastille d'accent + glyphe. L'API 26+ prend la
+     variante adaptative de drawable-v26, decoupee par le lanceur. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/shortcut_background" />
+            <size android:width="48dp" android:height="48dp" />
+        </shape>
+    </item>
+    <item android:drawable="@drawable/ic_glyph_cart" android:inset="13dp" />
+</layer-list>
