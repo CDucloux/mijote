@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.60.0 – Cardamome · Sous le pouce
+
+### Application Android
+- **Raccourcis intelligents à l'appui long sur l'icône** : quatre accès qui suivent le foyer. Le prochain repas planifié en tête (« Ce soir : Risotto aux cèpes », qui ouvre la recette, ou « Planifier la semaine » si rien n'est prévu), les courses avec le nombre d'articles restants, l'ajout d'une recette en photo et le planning.
+- **Widget « Au menu »** : les repas du jour sur l'écran d'accueil, chacun dans la couleur de son créneau, un tap pour ouvrir la recette, le reste du widget ouvrant le planning.
+- **Widget « Courses »** : le nombre d'articles restant à acheter en grand et les premiers articles avec leur quantité ; un tap ouvre la liste.
+- Les widgets suivent le thème clair ou sombre du téléphone et passent minuit seuls ; ils se mettent à jour quand l'app tourne (rebuild Android nécessaire, cf. MOBILE.md).
+
 ## v4.59.33 – Cardamome · Le geste en tête
 
 ### Interface
