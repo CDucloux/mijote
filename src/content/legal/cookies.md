@@ -2,6 +2,7 @@
 short: Cookies
 icon: settings
 title: Politique de cookies
+lead: "Uniquement le strict nécessaire : aucun traceur, donc aucun bandeau."
 order: 4
 ---
 

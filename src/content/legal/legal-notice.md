@@ -2,6 +2,7 @@
 short: Mentions légales
 icon: info
 title: Mentions légales
+lead: "Qui édite Cardamome, qui l'héberge et comment nous joindre."
 order: 1
 ---
 

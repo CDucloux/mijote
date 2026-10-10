@@ -2,6 +2,7 @@
 short: CGU
 icon: fileText
 title: Conditions générales d'utilisation
+lead: "Les règles d'usage du service, de vos recettes et de l'espace public."
 order: 3
 ---
 

@@ -2,6 +2,7 @@
 short: Confidentialité
 icon: eyeOff
 title: Politique de confidentialité
+lead: "Les données traitées, pourquoi, combien de temps, et vos droits."
 order: 2
 ---
 

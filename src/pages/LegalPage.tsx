@@ -1,7 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import type { NavigateFunction } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
-import type { IconName } from "../components/ui/Icon.jsx";
 import { ElasticScroll } from "../components/ui/ElasticScroll.jsx";
 import { useInternalNav } from "../hooks/useInternalNav.js";
 import { LEGAL_DOCS, LEGAL_BY_ID, LEGAL_UPDATED } from "../constants/legalDocs.js";
@@ -11,6 +10,10 @@ interface LegalDoc {
   id: string;
   title: string;
   short: string;
+  /** Ce que couvre le document, en une phrase. */
+  lead: string;
+  /** Temps de lecture estimé (minutes). */
+  minutes: number;
   icon: string;
   html: string;
 }
@@ -51,30 +54,33 @@ export function LegalPage() {
   );
 }
 
+// Index : une seule liste groupée (et non une carte par document), numérotée
+// comme un sommaire. Chaque ligne dit ce que couvre le document et combien de
+// temps il demande, pour choisir sans ouvrir. Le contact ferme la page : c'est
+// la question qu'on se pose après avoir lu.
 function Index({ navigate }: { navigate: NavigateFunction }) {
   return (
     <>
-      <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.55, margin: "0 0 20px" }}>
-        Retrouvez ici les documents encadrant l'utilisation de Cardamome et le traitement de vos données.
+      <p style={{ fontSize: 14.5, color: "var(--text2)", lineHeight: 1.55, margin: "4px 0 22px", maxWidth: "56ch" }}>
+        Ce qui encadre l'usage de Cardamome et le traitement de vos données, en clair.
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {LEGAL_DOCS.map(d => (
-          <button key={d.id} onClick={() => navigate(`/legal/${d.id}`)} className="legal-row ripple"
-            style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
-            <span style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 11, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.18)" }}>
-              <Icon name={d.icon as IconName} size={18} color="var(--accent)" />
-            </span>
+      <nav aria-label="Documents légaux" className="legal-list">
+        {LEGAL_DOCS.map((d, i) => (
+          <button key={d.id} onClick={() => navigate(`/legal/${d.id}`)} className="legal-row ripple">
+            <span className="legal-row-num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: "block", fontSize: 14.5, fontWeight: 600 }}>{d.title}</span>
-              <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.short}</span>
+              <span style={{ display: "block", fontSize: 15, fontWeight: 600, color: "var(--text)" }}>{d.title}</span>
+              {d.lead && <span style={{ display: "block", fontSize: 12.5, color: "var(--text3)", marginTop: 3, lineHeight: 1.45 }}>{d.lead}</span>}
             </span>
-            <Icon name="forward" size={15} color="var(--text3)" />
+            {d.minutes > 0 && <span style={{ flexShrink: 0, fontSize: 12, color: "var(--text3)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{d.minutes} min</span>}
+            <span className="legal-row-chevron"><Icon name="forward" size={15} color="currentColor" /></span>
           </button>
         ))}
+      </nav>
+      <div style={{ marginTop: 18, padding: "0 4px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "6px 16px", fontSize: 12, color: "var(--text3)" }}>
+        <span>Mis à jour le {LEGAL_UPDATED}</span>
+        <span>Une question ? <a href="mailto:contact.cardamome@gmail.com" className="legal-contact">contact.cardamome@gmail.com</a></span>
       </div>
-      <p style={{ fontSize: 11, color: "var(--text3)", marginTop: 22, textAlign: "center" }}>
-        Dernière mise à jour : {LEGAL_UPDATED}
-      </p>
     </>
   );
 }

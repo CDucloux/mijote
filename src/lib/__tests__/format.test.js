@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fmtTime, fmtElapsed, relativeDate, fmtQty, fmtQtyUnit, pluralizeName, stripAiDashes, allowsFractionGlyph, isoWeek } from "../format.js";
+import { fmtTime, fmtElapsed, relativeDate, fmtQty, fmtQtyUnit, pluralizeName, stripAiDashes, allowsFractionGlyph, isoWeek, readingMinutes } from "../format.js";
 
 const EM_DASH = "\u2014";
 const EN_DASH = "\u2013";
@@ -230,5 +230,23 @@ describe("isoWeek", () => {
   });
   it("accepte un objet Date", () => {
     expect(isoWeek(new Date("2026-08-31T12:00:00"))).toEqual({ week: 36, year: 2026 });
+  });
+});
+
+describe("readingMinutes", () => {
+  it("arrondit à la minute supérieure", () => {
+    expect(readingMinutes("mot ".repeat(200))).toBe(1);
+    expect(readingMinutes("mot ".repeat(201))).toBe(2);
+  });
+  it("compte au moins une minute pour un texte court", () => {
+    expect(readingMinutes("Mentions légales")).toBe(1);
+  });
+  it("ignore la ponctuation et la syntaxe Markdown", () => {
+    expect(readingMinutes("## Titre\n\n- **un** - deux, trois !")).toBe(1);
+    expect(readingMinutes("--- ** ## ---")).toBe(0);
+  });
+  it("renvoie 0 pour un texte vide ou absent", () => {
+    expect(readingMinutes("")).toBe(0);
+    expect(readingMinutes(null)).toBe(0);
   });
 });

@@ -2360,9 +2360,52 @@ html.light .sheet-sticky-head::after {
 }
 
 @media (hover:hover) {
-  .legal-row:hover {
+  .guide-row:hover {
     border-color: var(--accent) !important;
   }
+}
+
+/* Index des documents légaux : une liste groupée (un seul conteneur, lignes
+   séparées d'un filet), numérotée comme un sommaire. Survol neutre, comme le
+   reste de l'app : voile d'un cran et chevron qui glisse vers le document. */
+.legal-list {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.legal-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.15s ease;
+}
+.legal-row + .legal-row { border-top: 1px solid var(--border); }
+.legal-row-num {
+  flex-shrink: 0;
+  width: 22px;
+  font-family: var(--ff-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text3);
+  font-variant-numeric: tabular-nums;
+}
+.legal-row-chevron { display: inline-flex; color: var(--text3); transition: color 0.15s ease, transform 0.15s ease; }
+.legal-contact { color: var(--text2); text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  .legal-row:hover { background: color-mix(in srgb, var(--text) 4%, var(--surface)); }
+  .legal-row:hover .legal-row-num { color: var(--accent); }
+  .legal-row:hover .legal-row-chevron { color: var(--text2); transform: translateX(2px); }
+  .legal-contact:hover { color: var(--text); text-decoration-color: currentColor; }
 }
 
 /* Rendu Markdown des documents légaux */
