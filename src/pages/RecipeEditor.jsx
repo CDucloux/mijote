@@ -458,7 +458,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                   <span style={{ position: "absolute", left: 15, top: "50%", marginTop: -9, display: "flex", pointerEvents: "none" }}>
                     <Icon name="chef" size={18} color={form.chef ? "var(--accent)" : "var(--text3)"} />
                   </span>
-                  <input className="field-input field-soft" placeholder="ex : Adam Byatt" maxLength={120} value={form.chef || ""} onChange={e => up("chef", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46, paddingLeft: 44 }} />
+                  <input className="field-input field-soft" placeholder="ex : Auguste Escoffier" maxLength={120} value={form.chef || ""} onChange={e => up("chef", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46, paddingLeft: 44 }} />
                 </div>
               </div>
               <div>
@@ -467,7 +467,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                   <span style={{ position: "absolute", left: 15, top: "50%", marginTop: -9, display: "flex", pointerEvents: "none" }}>
                     <Icon name="link" size={18} color={form.source ? "var(--accent)" : "var(--text3)"} />
                   </span>
-                  <input className="field-input field-soft" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46, paddingLeft: 44 }} />
+                  <input className="field-input field-soft" placeholder="ex : cestmafournee.com" value={form.source || ""} onChange={e => up("source", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46, paddingLeft: 44 }} />
                 </div>
               </div>
             </div>
