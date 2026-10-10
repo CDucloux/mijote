@@ -5165,3 +5165,14 @@ html.light .sheet-sticky-head::after {
 @media (hover: hover) and (pointer: fine) {
   .cut-dot-empty:hover > span { background: var(--surface3); border-color: var(--text3); color: var(--text); }
 }
+
+/* Dashboard de la console admin : cartes actionnables. Survol neutre (voile
+   d'un cran porté par une ombre interne, l'inline gardant fond et bordure),
+   chevron qui s'affirme et glisse de 2px vers la destination. Légende : soulignée. */
+.dash-card { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+.dash-chevron { display: inline-flex; color: var(--text3); transition: color 0.15s ease, transform 0.15s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .dash-card:hover { box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--text) 4%, transparent); }
+  .dash-card:hover .dash-chevron { color: var(--text2); transform: translateX(2px); }
+  .dash-legend:hover > span:last-child { text-decoration: underline; text-underline-offset: 3px; }
+}
