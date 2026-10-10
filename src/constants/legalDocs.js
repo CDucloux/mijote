@@ -24,6 +24,24 @@ function splitFrontMatter(raw) {
   return { meta: parseYaml(m[1]) || {}, body: m[2] };
 }
 
+// Repère les mentions encore à renseigner (« [... à compléter ...] ») pour qu'elles
+// sautent aux yeux au rendu. Les liens Markdown `[texte](url)` sont épargnés.
+function markPlaceholders(body) {
+  return body.replace(/\*{0,2}\[([^\]]*à (?:compléter|confirmer)[^\]]*)\]\*{0,2}(?!\()/g, '<mark class="legal-todo">$1</mark>');
+}
+
+// Recopie l'intitulé de colonne sur chaque cellule (`data-label`) : sur mobile, les
+// tableaux s'empilent en fiches et chaque valeur y garde son intitulé (cf. CSS).
+function labelTableCells(html) {
+  return html.replace(/<table>([\s\S]*?)<\/table>/g, (table) => {
+    const heads = [...table.matchAll(/<th(?:\s[^>]*)?>([\s\S]*?)<\/th>/g)].map(m => m[1].replace(/<[^>]+>/g, "").trim().replace(/"/g, "&quot;"));
+    return table.replace(/<tr>([\s\S]*?)<\/tr>/g, (row) => {
+      let i = 0;
+      return row.replace(/<td([^>]*)>/g, (_, attrs) => `<td${attrs} data-label="${heads[i++] ?? ""}">`);
+    });
+  });
+}
+
 const modules = import.meta.glob("../content/legal/*.md", { query: "?raw", import: "default", eager: true });
 
 export const LEGAL_DOCS = Object.entries(modules)
@@ -38,7 +56,7 @@ export const LEGAL_DOCS = Object.entries(modules)
       icon: meta.icon || "fileText",
       title: meta.title || id,
       order: meta.order ?? 99,
-      html: marked.parse(body.trim()),
+      html: labelTableCells(marked.parse(markPlaceholders(body.trim()))),
     };
   })
   .sort((a, b) => a.order - b.order);

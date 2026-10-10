@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.61.1 – Cardamome · Lu et approuvé
+
+### Informations légales
+- **Mise en page de lecture** pour les documents légaux : texte justifié avec césure, colonne de lecture confortable, sections numérotées et séparées d'un filet, titres plus sobres, encadré pour le modèle de rétractation, et mentions encore à renseigner repérées d'une pastille.
+- **Tableaux lisibles sur mobile** : chaque ligne devient une fiche empilée, chaque valeur précédée de son intitulé de colonne, au lieu de déborder en largeur.
+
+### Données
+- **Cuiseur à riz** : un « À savoir » sur le ratio eau/riz (gobelet et graduations, tableau par variété, riz trempé, repos et ajustement). À réimporter via `data/utensils.yaml`.
+
 ## v4.61.0 – Cardamome · En bonne et due forme
 
 ### Informations légales

@@ -132,6 +132,21 @@ utensils:
   category: appareils
   appliance: cuiseur_riz
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Futensils%2Fmselqe2idytffm.jpg?alt=media&token=970027cb-5bfd-4cc1-8183-955dceea894d
+  usagePrecaution:
+    tone: info
+    title: Moins d'eau qu'à la casserole
+    description: |-
+      Couvercle fermé, presque rien ne s'évapore : le cuiseur demande moins d'eau qu'une cuisson à la casserole. Ses graduations sont calibrées pour son propre gobelet (environ 180 ml, plus petit qu'un verre) et pour du riz blanc rincé ; un verre ordinaire fausse tout. Hors graduations, compte en volume d'eau pour 1 volume de riz :
+
+      | Riz | Eau |
+      | --- | --- |
+      | Rond (japonais, sushi) | 1,1 à 1,2 |
+      | Thaï (jasmin) | 1,2 à 1,25 |
+      | Basmati | 1,25 à 1,5 |
+      | Complet, programme dédié | 1,75 à 2 |
+
+      Un riz trempé au préalable a déjà absorbé de l'eau : vise le bas de la fourchette.
+    tip: "Rince jusqu'à ce que l'eau soit presque claire et égoutte bien, laisse reposer 10 minutes couvercle fermé en fin de cycle, puis ajuste de 10 % la fois suivante si le riz est trop sec ou trop collant."
 
 - id: db_u1781461473635
   name: Cul de poule
