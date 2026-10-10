@@ -5,4 +5,16 @@
          enchainement continu vers le logo anime. La variante sombre vit dans
          values-night/colors.xml et suit le theme systeme. -->
     <color name="splash_background">#f3f4ec</color>
+
+    <!-- Lanceur : pastille des raccourcis d'icone (accent de l'app, tous themes). -->
+    <color name="shortcut_background">#6e9a3f</color>
+
+    <!-- Widgets, theme clair : memes valeurs que les tokens web du theme clair. -->
+    <color name="widget_surface">#ffffff</color>
+    <color name="widget_text">#23281d</color>
+    <color name="widget_text2">#565b4c</color>
+    <color name="widget_text3">#838872</color>
+    <color name="widget_accent">#6e9a3f</color>
+    <color name="widget_chip">#1f6e9a3f</color>
+    <color name="widget_divider">#17000000</color>
 </resources>

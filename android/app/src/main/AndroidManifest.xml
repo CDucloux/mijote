@@ -28,6 +28,31 @@
             android:name="studio.cardamome.cooksession.CookActionReceiver"
             android:exported="false" />
 
+        <!-- Widgets d'ecran d'accueil, nourris par LauncherPlugin. -->
+        <receiver
+            android:name="studio.cardamome.launcher.MenuWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_menu_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_menu_info" />
+        </receiver>
+
+        <receiver
+            android:name="studio.cardamome.launcher.ShoppingWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_shopping_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_shopping_info" />
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

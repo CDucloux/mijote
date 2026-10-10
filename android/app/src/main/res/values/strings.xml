@@ -4,4 +4,8 @@
     <string name="title_activity_main">Cardamome</string>
     <string name="package_name">studio.cardamome</string>
     <string name="custom_url_scheme">studio.cardamome</string>
+    <string name="widget_menu_label">Au menu</string>
+    <string name="widget_menu_description">Les repas prévus aujourd\'hui, un tap pour ouvrir la recette.</string>
+    <string name="widget_shopping_label">Courses</string>
+    <string name="widget_shopping_description">Ce qu\'il reste à acheter, d\'un coup d\'œil.</string>
 </resources>

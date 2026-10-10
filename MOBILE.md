@@ -280,3 +280,23 @@ Pièges rencontrés lors du premier build/run, avec le fix qui marche.
   puis un rebuild Android Studio** sont nécessaires pour embarquer le code natif du plugin.
 - La **permission de notification** (Android 13+) est demandée **à la volée au premier
   minuteur** ; refusée, les minuteurs fonctionnent quand même en premier plan.
+
+### Raccourcis d'icône et widgets (lanceur Android)
+
+- **Appui long sur l'icône** : quatre raccourcis **dynamiques**, recalculés par l'app à
+  chaque changement du planning ou des courses et au retour au premier plan
+  (`src/lib/launcher/shortcuts.ts`) : le prochain repas planifié (« Ce soir : Risotto »,
+  sinon « Planifier la semaine »), les courses avec le nombre d'articles restants, l'import
+  d'une recette en photo, puis le planning (ou « Mes recettes »). Ils n'apparaissent
+  qu'**après une première ouverture connectée** de l'app : avant, elle n'a rien poussé.
+- **Widgets** « Au menu » (repas du jour, 4x2) et « Courses » (restant à acheter, 3x3),
+  dans le sélecteur de widgets du lanceur. Ils n'ont **ni réseau ni Firestore** : l'app leur
+  laisse un instantané (`src/lib/launcher/widgetSnapshot.ts`, 3 jours d'avance pour passer
+  minuit seuls). Ils se mettent donc à jour **quand l'app tourne** ; une modification faite
+  depuis un autre appareil n'y apparaît qu'à la prochaine ouverture ici.
+- Un tap (raccourci, ligne de widget) ouvre `cardamome://open/<chemin>`, rejoué dans le
+  routeur par `useLaunchLinks` (chemins validés par `launchPath`). Un raccourci relance
+  l'activité (comportement imposé par Android), un widget la ramène au premier plan.
+- Côté natif : `android/app/src/main/java/studio/cardamome/launcher/` (plugin `Launcher`,
+  providers des widgets), layouts `res/layout/widget_*.xml`. Les glyphes `ic_glyph_*`
+  reprennent les icônes Phosphor de l'app.

@@ -4,4 +4,13 @@
          (#boot-splash par defaut, cf. index.html) et sur capacitor.config.json
          (android.backgroundColor). Applique automatiquement par l'OS en dark. -->
     <color name="splash_background">#0f110d</color>
+
+    <!-- Widgets, theme sombre : tokens web du theme sombre. -->
+    <color name="widget_surface">#191d15</color>
+    <color name="widget_text">#eef1e7</color>
+    <color name="widget_text2">#a7ac9c</color>
+    <color name="widget_text3">#6b7061</color>
+    <color name="widget_accent">#75a63f</color>
+    <color name="widget_chip">#2475a63f</color>
+    <color name="widget_divider">#1affffff</color>
 </resources>
