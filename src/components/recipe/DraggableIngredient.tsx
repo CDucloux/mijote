@@ -124,13 +124,13 @@ function DraggableIngredientBase({
   // (alcool, huile…) : pas de pastille, sauf découpe déjà posée, pour pouvoir la retirer.
   const cutLabel = ing.cut?.forme ? `Découpe : ${CUT_GUIDE[ing.cut.forme].name}${cutSize ? ` · ${cutSize}` : ""}` : "Choisir une découpe";
   const cutBtn = ing.name && onCutChange && (ing.cut?.forme || isCuttableCategory(dbItem?.category)) && (
-    <button type="button" className="tap" onClick={() => setShowCut(true)} title={cutLabel} aria-label={cutLabel}
+    <button type="button" className={ing.cut?.forme ? "tap" : "tap cut-dot-empty"} onClick={() => setShowCut(true)} title={cutLabel} aria-label={cutLabel}
       style={{ position: "absolute", left: 17, top: 17, width: 28, height: 28, padding: 0, border: "none", background: "transparent", display: "grid", placeItems: "center", cursor: "pointer" }}>
       <span style={{ width: 18, height: 18, borderRadius: "50%", display: "grid", placeItems: "center", boxSizing: "border-box",
         ...(ing.cut?.forme
           ? { background: "var(--accent)", border: "2px solid var(--surface)" }
-          : { background: "var(--surface2)", border: "1px solid var(--border)" }) }}>
-        <Icon name="knife" size={10} color={ing.cut?.forme ? "#fff" : "var(--text3)"} />
+          : {}) }}>
+        <Icon name="knife" size={10} color={ing.cut?.forme ? "#fff" : "currentColor"} />
       </span>
     </button>
   );
