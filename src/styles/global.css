@@ -5160,9 +5160,9 @@ html.light .sheet-sticky-head::after {
 }
 
 /* Pastille couteau de l'éditeur, sans découpe choisie : discrète au repos (styles
-   ici et non en inline, sinon l'inline battrait :hover), teintée d'accent au survol
-   pour signaler l'action. Le survol ne vit que sur pointeur fin. */
+   ici et non en inline, sinon l'inline battrait :hover), un cran plus contrastée au
+   survol, en restant opaque et neutre (elle mord sur la photo). Pointeur fin seulement. */
 .cut-dot-empty > span { background: var(--surface2); border: 1px solid var(--border); color: var(--text3); transition: background 0.15s, border-color 0.15s, color 0.15s; }
 @media (hover: hover) and (pointer: fine) {
-  .cut-dot-empty:hover > span { background: rgba(var(--accent-rgb), 0.16); border-color: rgba(var(--accent-rgb), 0.5); color: var(--accent); }
+  .cut-dot-empty:hover > span { background: var(--surface3); border-color: var(--text3); color: var(--text); }
 }
