@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.60.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.61.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -138,8 +138,9 @@ toujours avec vous.
   coupées, badges vegan / cuisine / difficulté, chef sous le titre) et JSON (import / export).
 - 👤 **Profil** : nom d'affichage, heatmap d'activité cuisine façon GitHub, et
   zone de danger (purge ciblée, **suppression de compte** RGPD).
-- 📜 **Informations légales** : mentions légales, confidentialité, CGU et
-  cookies (Markdown), consultables même déconnecté.
+- 📜 **Informations légales** : mentions légales, confidentialité, CGU et CGV
+  (abonnement Cardamome+) et cookies (Markdown), présentées en sommaire avec
+  temps de lecture, consultables même déconnecté.
 - 🪧 **Vitrine publique** : la racine du site présente Cardamome avant toute
   connexion (manifeste, scènes vivantes en CSS, import intelligent, offre) en
   slides plein écran sur desktop et défilement naturel sur mobile, barre de
