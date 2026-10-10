@@ -1,5 +1,18 @@
 # Changelog – Cardamome
 
+## v4.61.0 – Cardamome · En bonne et due forme
+
+### Informations légales
+- **Documents légaux réécrits** à partir du fonctionnement réel de l'app : mentions légales à jour (LCEN post-SREN, point de contact DSA), politique de confidentialité détaillée (finalités et bases légales, sous-traitants dont l'IA et le paiement, transferts, durées de conservation, allergènes traités comme données de santé, mineurs), CGU devenues **CGU et CGV** avec l'abonnement Cardamome+ (renouvellement, résiliation, rétractation de 14 jours, garantie, médiation), l'import par IA, la modération de l'espace public et une limitation de responsabilité compatible avec le droit de la consommation, politique de cookies détaillée.
+- **Sommaire repensé** : une seule liste numérotée, avec ce que couvre chaque document et son temps de lecture, et le contact en pied de page. Les documents affichent désormais proprement leurs tableaux.
+
+### Interface
+- **Survols harmonisés sur desktop**, neutres et sans teinte : éléments cliquables du hero de la fiche recette (assombrissement), cartes du dashboard admin, zone de dépose YAML, pilules Filtres et Tri.
+- **Lien source souligné en douceur** au survol, sur la fiche recette.
+- **Découpe en pastille couteau** posée sur l'image de l'ingrédient dans l'éditeur, au lieu d'une ligne entière sous le champ.
+- **En-tête collant sur la fiche Découpe**.
+- **Éditeur de recette** : icône lien sur le champ Source, plus de mention « optionnel », placeholders Escoffier et cestmafournee.com, et la préparation de base en tête du Classement.
+
 ## v4.60.0 – Cardamome · Sous le pouce
 
 ### Application Android

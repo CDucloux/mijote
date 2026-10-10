@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+import { StickySheetHeader } from "../ui/StickySheetHeader.jsx";
 import { Icon } from "../ui/Icon.jsx";
 import { capitalize } from "../../lib/format.js";
 import { CUT_FAMILIES, CUT_GUIDE, cutShortlist, familyOf, hasSizes } from "@/lib/recipes/cutGuide.js";
@@ -66,11 +67,13 @@ export function CutSheet({ name, category, cut, onChange, onClose }: CutSheetPro
   const guide = forme ? CUT_GUIDE[forme] : null;
 
   return (
-    <SwipeableSheet onClose={onClose}>
+    <SwipeableSheet onClose={onClose} hideHandle style={{ paddingTop: 0 }}>
       {(close) => (
       <>
-      {/* En-tête : icône couteau + intitulé, nom de l'ingrédient en sous-titre. */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
+      {/* En-tête collant : icône couteau + intitulé, nom de l'ingrédient en sous-titre,
+          gardés en vue pendant qu'on parcourt les familles de découpes. */}
+      <StickySheetHeader>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <span style={{ width: 46, height: 46, borderRadius: 14, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
           <Icon name="knife" size={22} color="var(--accent)" />
         </span>
@@ -79,9 +82,10 @@ export function CutSheet({ name, category, cut, onChange, onClose }: CutSheetPro
           {name && <div style={{ fontSize: 13, color: "var(--text3)", fontWeight: 500, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(name)}</div>}
         </div>
       </div>
+      </StickySheetHeader>
 
       {/* Découpes usuelles de l'ingrédient (la découpe posée toujours incluse). */}
-      <div style={{ ...SECTION_LABEL, margin: "0 2px 10px" }}>Les plus courantes</div>
+      <div style={{ ...SECTION_LABEL, margin: "16px 2px 10px" }}>Les plus courantes</div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {shortlist.map(f => <CutPill key={f} forme={f} active={forme === f} withGlyph onPick={pickForme} />)}
       </div>

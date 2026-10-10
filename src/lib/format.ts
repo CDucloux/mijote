@@ -245,3 +245,18 @@ export function stripAiDashes(s: string | null | undefined): string {
   if (typeof s !== "string") return s ?? "";
   return s.replace(/\s*\u2014\s*/g, ", ").replace(/\s+,/g, ",").replace(/ {2,}/g, " ").trim();
 }
+
+/** Vitesse de lecture retenue pour un texte juridique (mots par minute, lecture attentive). */
+const READING_WPM = 200;
+
+/**
+ * Temps de lecture estimé d'un texte, affiché à côté d'un document pour qu'on
+ * sache avant de l'ouvrir s'il se lit en passant ou demande un moment.
+ *
+ * @param text - Le texte brut (Markdown accepté : la ponctuation ne compte pas).
+ * @returns Le nombre de minutes, arrondi au supérieur, au moins 1 dès qu'il y a un mot ; 0 pour un texte vide.
+ */
+export function readingMinutes(text: string | null | undefined): number {
+  const words = (text || "").match(/[\p{L}\p{N}][\p{L}\p{N}'’-]*/gu)?.length ?? 0;
+  return words ? Math.max(1, Math.ceil(words / READING_WPM)) : 0;
+}

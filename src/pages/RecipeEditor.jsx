@@ -453,17 +453,22 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <input className="field-input field-soft" placeholder="ex : Tarte Tatin" value={form.name} onChange={e => up("name", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46 }} />
               </div>
               <div>
-                <div className="field-label">Chef <span style={{ color: "var(--text3)", fontWeight: 400 }}>· optionnel</span></div>
+                <div className="field-label">Chef</div>
                 <div style={{ position: "relative" }}>
                   <span style={{ position: "absolute", left: 15, top: "50%", marginTop: -9, display: "flex", pointerEvents: "none" }}>
                     <Icon name="chef" size={18} color={form.chef ? "var(--accent)" : "var(--text3)"} />
                   </span>
-                  <input className="field-input field-soft" placeholder="ex : Adam Byatt" maxLength={120} value={form.chef || ""} onChange={e => up("chef", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46, paddingLeft: 44 }} />
+                  <input className="field-input field-soft" placeholder="ex : Auguste Escoffier" maxLength={120} value={form.chef || ""} onChange={e => up("chef", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46, paddingLeft: 44 }} />
                 </div>
               </div>
               <div>
-                <div className="field-label">Source <span style={{ color: "var(--text3)", fontWeight: 400 }}>· optionnel</span></div>
-                <input className="field-input field-soft" placeholder="marmiton.org…" value={form.source || ""} onChange={e => up("source", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46 }} />
+                <div className="field-label">Source</div>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: 15, top: "50%", marginTop: -9, display: "flex", pointerEvents: "none" }}>
+                    <Icon name="link" size={18} color={form.source ? "var(--accent)" : "var(--text3)"} />
+                  </span>
+                  <input className="field-input field-soft" placeholder="ex : cestmafournee.com" value={form.source || ""} onChange={e => up("source", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46, paddingLeft: 44 }} />
+                </div>
               </div>
             </div>
 
@@ -493,39 +498,38 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
               </div>
             </div>
 
-            {/* Préparation de base (composant) : réutilisable comme ingrédient. */}
-            <div style={{ background: form.isComponent ? "rgba(var(--accent-rgb),0.05)" : "var(--surface)", border: `1px solid ${form.isComponent ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`, borderRadius: 16, overflow: "hidden", transition: "border-color 0.2s, background-color 0.2s" }}>
-              {/* `.ripple` sur la rangée seule : l'onde ne déborde pas sur le rendement déplié. */}
-              <label className="ripple" style={{ display: "flex", alignItems: "center", gap: 12, padding: 15, cursor: "pointer" }}>
-                <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: form.isComponent ? "rgba(var(--accent-rgb),0.16)" : "var(--surface2)" }}><BaseIcon size={20} color={form.isComponent ? "var(--accent)" : "var(--text2)"} /></span>
-                <div style={{ flex: 1, minWidth: 0 }} onClick={() => toggleComponent()}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>Préparation de base</div>
-                  <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2, lineHeight: 1.4 }}>Réutilisable comme ingrédient (béchamel, sauce, pâte…)</div>
-                </div>
-                <button type="button" onClick={() => toggleComponent()}
-                  style={{ width: 44, height: 25, borderRadius: 13, flexShrink: 0, border: "none", cursor: "pointer", background: form.isComponent ? "var(--accent)" : "var(--surface3)", position: "relative", transition: "background 0.2s" }}>
-                  <span style={{ position: "absolute", top: 2, left: form.isComponent ? 21 : 2, width: 21, height: 21, borderRadius: "50%", background: "#fff", transition: "left 0.18s cubic-bezier(0.4,0,0.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
-                </button>
-              </label>
-              {form.isComponent && (
-                <div style={{ margin: "0 15px", padding: "14px 0 15px", borderTop: "1px solid rgba(var(--accent-rgb),0.25)" }}>
-                  <div className="field-label">Rendement <span style={{ color: "var(--accent2)" }}>*</span> <span style={{ color: "var(--text3)", fontWeight: 400 }}>· ce que produit la préparation</span></div>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <input className="field-input field-soft" type="number" min="0" step="any" placeholder="ex : 400" value={form.yield?.amount ?? ""} onChange={e => upYield("amount", e.target.value === "" ? "" : +e.target.value)} style={{ flex: 2, background: "var(--surface)", borderRadius: 12 }} />
-                    <select className="field-input field-soft" value={form.yield?.unit || "g"} onChange={e => upYield("unit", e.target.value)} style={{ flex: 1, background: "var(--surface)", borderRadius: 12 }}>
-                      <option value="g">g</option>
-                      <option value="ml">ml</option>
-                      <option value="pièce">pièce(s)</option>
-                    </select>
-                  </div>
-                  <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6 }}>Les recettes qui l'utilisent en consommeront une partie (ex : 150 {form.yield?.unit || "g"}).</div>
-                </div>
-              )}
-            </div>
-
             {/* Classement */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {head("grid", "Classement")}
+              {/* Préparation de base (composant) : réutilisable comme ingrédient. */}
+              <div style={{ background: form.isComponent ? "rgba(var(--accent-rgb),0.05)" : "var(--surface)", border: `1px solid ${form.isComponent ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`, borderRadius: 16, overflow: "hidden", transition: "border-color 0.2s, background-color 0.2s" }}>
+                {/* `.ripple` sur la rangée seule : l'onde ne déborde pas sur le rendement déplié. */}
+                <label className="ripple" style={{ display: "flex", alignItems: "center", gap: 12, padding: 15, cursor: "pointer" }}>
+                  <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: form.isComponent ? "rgba(var(--accent-rgb),0.16)" : "var(--surface2)" }}><BaseIcon size={20} color={form.isComponent ? "var(--accent)" : "var(--text2)"} /></span>
+                  <div style={{ flex: 1, minWidth: 0 }} onClick={() => toggleComponent()}>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>Préparation de base</div>
+                    <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2, lineHeight: 1.4 }}>Réutilisable comme ingrédient (béchamel, sauce, pâte…)</div>
+                  </div>
+                  <button type="button" onClick={() => toggleComponent()}
+                    style={{ width: 44, height: 25, borderRadius: 13, flexShrink: 0, border: "none", cursor: "pointer", background: form.isComponent ? "var(--accent)" : "var(--surface3)", position: "relative", transition: "background 0.2s" }}>
+                    <span style={{ position: "absolute", top: 2, left: form.isComponent ? 21 : 2, width: 21, height: 21, borderRadius: "50%", background: "#fff", transition: "left 0.18s cubic-bezier(0.4,0,0.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+                  </button>
+                </label>
+                {form.isComponent && (
+                  <div style={{ margin: "0 15px", padding: "14px 0 15px", borderTop: "1px solid rgba(var(--accent-rgb),0.25)" }}>
+                    <div className="field-label">Rendement <span style={{ color: "var(--accent2)" }}>*</span> <span style={{ color: "var(--text3)", fontWeight: 400 }}>· ce que produit la préparation</span></div>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <input className="field-input field-soft" type="number" min="0" step="any" placeholder="ex : 400" value={form.yield?.amount ?? ""} onChange={e => upYield("amount", e.target.value === "" ? "" : +e.target.value)} style={{ flex: 2, background: "var(--surface)", borderRadius: 12 }} />
+                      <select className="field-input field-soft" value={form.yield?.unit || "g"} onChange={e => upYield("unit", e.target.value)} style={{ flex: 1, background: "var(--surface)", borderRadius: 12 }}>
+                        <option value="g">g</option>
+                        <option value="ml">ml</option>
+                        <option value="pièce">pièce(s)</option>
+                      </select>
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6 }}>Les recettes qui l'utilisent en consommeront une partie (ex : 150 {form.yield?.unit || "g"}).</div>
+                  </div>
+                )}
+              </div>
               <div>
                 <div className="field-label" style={{ marginBottom: 8 }}>{form.isComponent ? "Type de préparation" : "Type de recette"}</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>

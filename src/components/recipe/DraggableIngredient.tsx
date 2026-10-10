@@ -117,13 +117,33 @@ function DraggableIngredientBase({
       <Icon name={tone.icon} size={14} color={tone.fg} />
     </button>
   );
+  // Découpe de mise en place : optionnelle, donc une simple pastille couteau posée en
+  // bas à droite de l'image (contour discret à vide, pleine accent une fois choisie)
+  // plutôt qu'une ligne entière sous le champ. Le bouton (28px) déborde la pastille
+  // visible (18px) pour offrir une cible tactile correcte. Catégorie non découpable
+  // (alcool, huile…) : pas de pastille, sauf découpe déjà posée, pour pouvoir la retirer.
+  const cutLabel = ing.cut?.forme ? `Découpe : ${CUT_GUIDE[ing.cut.forme].name}${cutSize ? ` · ${cutSize}` : ""}` : "Choisir une découpe";
+  const cutBtn = ing.name && onCutChange && (ing.cut?.forme || isCuttableCategory(dbItem?.category)) && (
+    <button type="button" className={ing.cut?.forme ? "tap" : "tap cut-dot-empty"} onClick={() => setShowCut(true)} title={cutLabel} aria-label={cutLabel}
+      style={{ position: "absolute", left: 17, top: 17, width: 28, height: 28, padding: 0, border: "none", background: "transparent", display: "grid", placeItems: "center", cursor: "pointer" }}>
+      <span style={{ width: 18, height: 18, borderRadius: "50%", display: "grid", placeItems: "center", boxSizing: "border-box",
+        ...(ing.cut?.forme
+          ? { background: "var(--accent)", border: "2px solid var(--surface)" }
+          : {}) }}>
+        <Icon name="knife" size={10} color={ing.cut?.forme ? "#fff" : "currentColor"} />
+      </span>
+    </button>
+  );
   return (
     <div {...rowProps} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: `1px solid ${aimed ? "var(--accent)" : "var(--border)"}`, transition: "border-color 0.15s, box-shadow 0.2s", ...dragStyle }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {handle}
-        {img
-          ? <IngImage src={img} alt={ing.name} size={36} />
-          : <span style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: "var(--surface2)", border: "1px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="leaf" size={15} color="var(--text3)" /></span>}
+        <span style={{ position: "relative", width: 36, height: 36, flexShrink: 0, display: "flex" }}>
+          {img
+            ? <IngImage src={img} alt={ing.name} size={36} />
+            : <span style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: "var(--surface2)", border: "1px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="leaf" size={15} color="var(--text3)" /></span>}
+          {cutBtn}
+        </span>
         {/* Champ + pastille de statut logée à l'intérieur (padding-right réservé). */}
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex" }}>
           <input className="field-input field-soft" placeholder="ex: 500g pois chiches, 2 oeufs…"
@@ -142,26 +162,6 @@ function DraggableIngredientBase({
         {trashBtn}
       </div>
       {showMatch && <IngredientMatchSheet ing={ing} image={img} onClose={() => setShowMatch(false)} />}
-      {/* Découpe de mise en place : optionnelle, donc réduite à UN déclencheur discret
-          quand rien n'est posé (« + Découpe »), ou à une pill accent résumant le choix.
-          L'édition (forme + calibre) se fait dans une feuille dédiée, pas en <select>.
-          Catégorie non découpable (alcool, huile…) : pas de déclencheur, mais une découpe
-          déjà posée reste visible pour pouvoir la retirer. */}
-      {ing.name && onCutChange && (ing.cut?.forme || isCuttableCategory(dbItem?.category)) && (
-        <div style={{ marginTop: 8, marginLeft: isDraggable ? 72 : 82 }}>{/* Aligné au bord gauche
-            du champ gris : poignée (16/26) + image (36) + 2 gouttières (10). */}
-          {ing.cut?.forme
-            ? <button type="button" className="tap ripple" onClick={() => setShowCut(true)}
-                style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 12px 6px 10px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.35)" }}>
-                <Icon name="knife" size={13} color="var(--accent)" />
-                {CUT_GUIDE[ing.cut.forme].name}{cutSize ? ` · ${cutSize}` : ""}
-              </button>
-            : <button type="button" className="tap ripple" onClick={() => setShowCut(true)}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px 6px 9px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", background: "transparent", color: "var(--text3)", border: "1px dashed var(--border)" }}>
-                <Icon name="plus" size={13} color="var(--text3)" /> Découpe
-              </button>}
-        </div>
-      )}
       {showCut && (
         <CutSheet name={ing.name} category={dbItem?.category} cut={ing.cut}
           onChange={(cut: Cut | null) => onCutChange?.(ing.id, cut)} onClose={() => setShowCut(false)} />

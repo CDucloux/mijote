@@ -1,5 +1,6 @@
 import { parse as parseYaml } from "yaml";
 import { marked } from "marked";
+import { readingMinutes } from "../lib/format.js";
 
 // ─── DOCUMENTS LÉGAUX ─────────────────────────────────────────────────────────
 // Les documents vivent en Markdown dans src/content/legal/*.md (un fichier par
@@ -12,7 +13,7 @@ import { marked } from "marked";
 //    FAIRE RELIRE. Le slug du document = le nom de fichier (ex. privacy.md →
 //    /legal/privacy).
 
-export const LEGAL_UPDATED = "24 juillet 2026";
+export const LEGAL_UPDATED = "10 octobre 2026";
 
 marked.setOptions({ gfm: true, breaks: false });
 
@@ -32,6 +33,8 @@ export const LEGAL_DOCS = Object.entries(modules)
     return {
       id,
       short: meta.short || meta.title || id,
+      lead: meta.lead || "",
+      minutes: readingMinutes(body),
       icon: meta.icon || "fileText",
       title: meta.title || id,
       order: meta.order ?? 99,
