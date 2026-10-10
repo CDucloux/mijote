@@ -2466,6 +2466,35 @@ html.light .sheet-sticky-head::after {
   opacity: 0.8;
 }
 
+/* Tableaux des documents légaux (finalités, sous-traitants, durées) : filets
+   horizontaux seulement, première colonne en texte fort ; défilement horizontal
+   sur petit écran plutôt qu'un écrasement des colonnes. */
+.legal-md table {
+  display: block;
+  overflow-x: auto;
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4px 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.legal-md th,
+.legal-md td {
+  text-align: left;
+  vertical-align: top;
+  padding: 9px 14px 9px 0;
+  border-bottom: 1px solid var(--border);
+  min-width: 140px;
+}
+.legal-md th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.legal-md td:first-child { color: var(--text); }
+
 .legal-md-updated {
   font-size: 11.5px;
   color: var(--text3);

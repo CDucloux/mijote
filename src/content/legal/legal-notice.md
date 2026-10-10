@@ -6,37 +6,53 @@ lead: "Qui édite Cardamome, qui l'héberge et comment nous joindre."
 order: 1
 ---
 
-Informations relatives à l'éditeur et à l'hébergeur du service Cardamome, en application de l'article 6 III de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN).
+Informations relatives à l'éditeur et aux hébergeurs du service Cardamome, fournies en application de l'article 1-1 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN), dans sa rédaction issue de la loi n° 2024-449 du 21 mai 2024 (dite « SREN »).
+
+Le service Cardamome (ci-après « l'Application ») est accessible sur le web et via l'application Android « Cardamome ».
 
 ## Éditeur
 
-Le service Cardamome (ci-après « l'Application ») est édité par **[nom de l'éditeur à compléter]**, *particulier* [ou statut à préciser : auto-entrepreneur / société].
+L'Application est éditée par :
 
-Contact : **contact.cardamome@gmail.com**
+- **[Prénom NOM à compléter]**, [statut à compléter : entrepreneur individuel (micro-entreprise)]
+- Adresse : **[adresse postale à compléter]**
+- SIREN : **[numéro à compléter]**, immatriculé au [registre à compléter]
+- TVA : [numéro de TVA intracommunautaire à compléter, ou mention « TVA non applicable, article 293 B du Code général des impôts »]
+- Contact : **contact.cardamome@gmail.com**
 
 ## Directeur de la publication
 
-Le directeur de la publication est l'éditeur de l'Application, **[nom de l'éditeur à compléter]**.
+**[Prénom NOM à compléter]**, en qualité d'éditeur.
 
-## Hébergeur
+## Hébergement
 
-L'Application est hébergée par :
+- **Vercel Inc.**, 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis ([vercel.com](https://vercel.com)) : hébergement et diffusion de l'application web.
+- **Google Ireland Limited** (Firebase / Google Cloud Platform), Gordon House, Barrow Street, Dublin 4, Irlande ([firebase.google.com](https://firebase.google.com)) : hébergement des comptes, des contenus et des traitements serveur, dans l'Union européenne.
 
-- **Vercel Inc.**, 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis ([vercel.com](https://vercel.com)). Hébergement de l'application.
-- **Google Ireland Limited** (Firebase / Google Cloud Platform), Gordon House, Barrow Street, Dublin 4, Irlande, région **europe-west1** (Union européenne). Stockage des données de compte et de contenu.
+L'application Android est distribuée par **Google Play**, service de Google Ireland Limited (adresse ci-dessus).
 
-Les autres prestataires intervenant dans le traitement de vos données, dont le fournisseur d'analyse par intelligence artificielle utilisé pour l'import de recettes, sont détaillés dans la [Politique de confidentialité](/legal/privacy).
+Les autres prestataires qui traitent des données pour le compte de l'éditeur (intelligence artificielle, paiement) sont listés dans la [Politique de confidentialité](/legal/privacy).
+
+## Point de contact unique
+
+Conformément aux articles 11 et 12 du règlement (UE) 2022/2065 sur les services numériques (« DSA »), le point de contact unique de l'Application, pour les autorités comme pour les utilisateurs, est l'adresse **contact.cardamome@gmail.com**. Les échanges peuvent avoir lieu en français ou en anglais.
+
+## Signaler un contenu illicite
+
+Un contenu publié sur l'espace public peut être signalé depuis l'Application (bouton « Signaler » de la recette) ou par écrit à **contact.cardamome@gmail.com**. La procédure de traitement est décrite dans les [Conditions générales](/legal/terms).
 
 ## Propriété intellectuelle
 
-L'ensemble des éléments de l'Application (structure, code, marque « Cardamome », textes, éléments graphiques et illustrations) est protégé par le droit de la propriété intellectuelle et demeure la propriété exclusive de l'éditeur. Toute reproduction, représentation, modification ou extraction, totale ou partielle, sans autorisation écrite préalable, est interdite et susceptible de constituer une contrefaçon.
+La structure de l'Application, son code, son design, ses textes, ses illustrations, ses bases de données éditoriales (ingrédients, ustensiles, gestes techniques) et la marque « Cardamome » sont la propriété de l'éditeur ou font l'objet d'une autorisation d'usage. Toute reproduction, représentation, adaptation ou extraction, totale ou partielle, sans autorisation écrite préalable, est interdite et peut constituer une contrefaçon (articles L. 335-2 et suivants du Code de la propriété intellectuelle) ou une atteinte aux droits du producteur de bases de données (articles L. 341-1 et suivants du même code).
 
-Les recettes et contenus que vous créez restent votre propriété, sous réserve des garanties et responsabilités décrites dans les [Conditions générales d'utilisation](/legal/terms).
+Les recettes et contenus créés par les utilisateurs restent leur propriété, dans les conditions prévues par les [Conditions générales](/legal/terms).
 
-## Responsabilité
+Les noms de chefs, d'auteurs, de sites ou de marques cités dans les recettes le sont à seule fin d'identifier une source ou une inspiration ; ils n'impliquent aucun partenariat ni aucune approbation de leur part.
 
-L'éditeur met tout en œuvre pour assurer l'exactitude et la mise à jour des informations diffusées, sans pouvoir en garantir l'exhaustivité ni l'absence d'erreur. L'Application est fournie « en l'état », sans garantie de disponibilité continue. L'éditeur ne saurait être tenu responsable des contenus publiés par les utilisateurs, ni des dommages directs ou indirects résultant de l'utilisation de l'Application.
+## Crédits
+
+Icônes : [Phosphor Icons](https://phosphoricons.com) (licence MIT). Polices de caractères : [Google Fonts](https://fonts.google.com) (licence SIL Open Font License).
 
 ## Contact
 
-Pour toute question, réclamation ou signalement relatif à l'Application, vous pouvez écrire à **contact.cardamome@gmail.com**.
+Pour toute question, réclamation ou demande relative à l'Application ou à vos données : **contact.cardamome@gmail.com**.

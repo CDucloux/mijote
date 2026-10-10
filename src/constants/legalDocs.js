@@ -13,7 +13,7 @@ import { readingMinutes } from "../lib/format.js";
 //    FAIRE RELIRE. Le slug du document = le nom de fichier (ex. privacy.md →
 //    /legal/privacy).
 
-export const LEGAL_UPDATED = "24 juillet 2026";
+export const LEGAL_UPDATED = "10 octobre 2026";
 
 marked.setOptions({ gfm: true, breaks: false });
 
