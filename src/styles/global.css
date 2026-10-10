@@ -5186,3 +5186,18 @@ html.light .sheet-sticky-head::after {
   .dash-card:hover .dash-chevron { color: var(--text2); transform: translateX(2px); }
   .dash-legend:hover > span:last-child { text-decoration: underline; text-underline-offset: 3px; }
 }
+
+/* Lien vers la source (hero de la fiche) : au survol desktop, un trait fin se
+   dessine sous le domaine, de gauche à droite (dégradé plein dont la largeur
+   s'anime, plutôt que text-decoration qui ne se transitionne pas). */
+.source-link-label {
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+  padding-bottom: 1px;
+  transition: background-size 0.25s cubic-bezier(0.33, 1, 0.68, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .source-link:hover .source-link-label { background-size: 100% 1px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .source-link-label { transition: none; }
+}

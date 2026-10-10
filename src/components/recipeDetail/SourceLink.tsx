@@ -26,9 +26,9 @@ export function SourceLink({ source, style, iconSize = 10, iconColor = "rgba(255
   // même type de ref pour l'animation du hero, sans faux lien cliquable.
   if (!href) return <a ref={ref} style={base}>{label}</a>;
   return (
-    <a ref={ref} href={href} target="_blank" rel="noopener noreferrer" style={base}
+    <a ref={ref} href={href} target="_blank" rel="noopener noreferrer" className="source-link" style={base}
       onClick={() => { void recordSourceClick(source); }}>
-      {label}
+      <span className="source-link-label">{label}</span>
       <Icon name="externalLink" size={iconSize} color={iconColor} />
     </a>
   );
