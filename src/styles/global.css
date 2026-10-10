@@ -654,8 +654,14 @@ html.light select.field-input {
   position: relative;
   overflow: hidden;
 }
-.toolbar-pill:hover {
-  border-color: var(--text3);
+/* Survol : même langage neutre que le reste (dashboard admin, zone de dépose) :
+   fond voilé d'un cran, bordure et texte qui s'affirment, aucune teinte. */
+@media (hover: hover) and (pointer: fine) {
+  .toolbar-pill:not([data-active="1"]):hover {
+    border-color: var(--text3);
+    background: color-mix(in srgb, var(--text) 4%, var(--surface));
+    color: var(--text);
+  }
 }
 .toolbar-pill[data-active="1"] {
   background: rgba(var(--accent-rgb), 0.14);
@@ -717,8 +723,12 @@ html.light select.field-input {
   padding-right: 12px;
   color: var(--accent);
 }
-.sort-control .sort-dir:hover {
-  background: rgba(var(--accent-rgb), 0.12);
+/* Les deux moitiés partagent leur bordure : survoler l'une affirme le contour
+   des deux (sinon la couture se dessine en deux tons), seul le fond suit la
+   moitié visée. La flèche garde son accent : c'est l'état du tri, pas le survol. */
+@media (hover: hover) and (pointer: fine) {
+  .sort-control:hover .toolbar-pill { border-color: var(--text3); }
+  .sort-control .sort-dir:hover { color: var(--accent); }
 }
 
 .field-input::placeholder {
