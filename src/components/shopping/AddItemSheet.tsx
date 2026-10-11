@@ -8,13 +8,13 @@ import { splitBulletLines } from "@/lib/food/shoppingList.js";
 import { MAX_ITEM_CHARS, MAX_LIST_ITEMS, MAX_LIST_CHARS } from "../../hooks/useShopping.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 
-// Analyse de la saisie en pills neutres (pas une couleur par champ : l'étiquette
-// dit déjà ce qu'est la valeur), le nom ressortant par la graisse.
-function ParsedPill({ label, value, strong = false }: { label?: string; value: string; strong?: boolean }) {
+// Analyse de la saisie en pills neutres (pas une couleur par champ : le libellé
+// dit déjà ce qu'est la valeur).
+function ParsedPill({ label, value }: { label?: string; value: string }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "baseline", gap: 5, padding: "5px 11px", borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)", fontSize: 12.5, lineHeight: 1.2, maxWidth: "100%" }}>
-      {label && <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: 0.3, textTransform: "uppercase", color: "var(--text3)" }}>{label}</span>}
-      <span style={{ fontWeight: strong ? 650 : 600, color: strong ? "var(--text)" : "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
+    <span style={{ display: "inline-flex", alignItems: "baseline", gap: 4, padding: "5px 11px", borderRadius: 999, background: "var(--surface2)", fontSize: 12.5, lineHeight: 1.2, maxWidth: "100%", color: "var(--text2)" }}>
+      {label && <span style={{ color: "var(--text3)" }}>{label} :</span>}
+      <span style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
     </span>
   );
 }
@@ -25,7 +25,7 @@ function MatchThumb({ image, name, known }: { image?: string; name: string; know
   const status = known ? "Reconnu" : "Non référencé";
   return (
     <span role="img" aria-label={`${name} : ${status.toLowerCase()}`} title={status} style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
-      <IngImage src={image} alt="" size={38} />
+      <IngImage key={image || "none"} src={image} alt="" size={38} />
       <span aria-hidden style={{ position: "absolute", right: -3, bottom: -3, width: 17, height: 17, borderRadius: "50%", display: "grid", placeItems: "center",
         border: "2px solid var(--surface)", background: known ? "var(--ok)" : "var(--surface3)", color: known ? "#fff" : "var(--text2)" }}>
         <Icon name={known ? "check" : "help"} size={9} color="currentColor" />
@@ -123,9 +123,9 @@ export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onA
               <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center" }}>
                 <MatchThumb image={match?.image} name={match?.name || name} known={!!match} />
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", minWidth: 0 }}>
-                  {p.amount && <ParsedPill label="Qté" value={String(p.amount)} />}
+                  {p.amount && <ParsedPill label="Quantité" value={String(p.amount)} />}
                   {p.unit && <ParsedPill label="Unité" value={p.unit} />}
-                  {p.name && <ParsedPill value={p.name} strong />}
+                  {p.name && <ParsedPill value={p.name} />}
                 </div>
               </div>
             );

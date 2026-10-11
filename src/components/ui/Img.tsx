@@ -56,9 +56,16 @@ interface IngImageProps {
 
 // Image d'ingrédient (ronde, un peu plus grande, adaptée au transparent), pour un
 // rendu circulaire cohérent partout. `cover` remplit le cercle (vraies photos).
+// L'image arrive en fondu léger (opacité + échelle) au lieu d'apparaître d'un coup ;
+// servie depuis le cache, elle est montrée d'emblée, sans animation.
 export const IngImage = ({ src, alt, size = 48, cover = false }: IngImageProps) => {
   const [err, setErr] = useState(false);
-  useEffect(() => { setErr(false); }, [src]);
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+  useEffect(() => { setErr(false); setLoaded(false); }, [src]);
+  useLayoutEffect(() => {
+    if (imgAlreadyLoaded(imgRef.current)) setLoaded(true);
+  }, [src]);
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
@@ -66,8 +73,8 @@ export const IngImage = ({ src, alt, size = 48, cover = false }: IngImageProps) 
       display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
     }}>
       {src && !err
-        ? <img src={src} alt={alt || ""} onError={() => setErr(true)} referrerPolicy="no-referrer"
-          loading="lazy" decoding="async"
+        ? <img ref={imgRef} src={src} alt={alt || ""} onLoad={() => setLoaded(true)} onError={() => setErr(true)} referrerPolicy="no-referrer"
+          loading="lazy" decoding="async" className="ing-img-reveal" data-loaded={loaded ? "1" : undefined}
           style={cover
             ? { width: "100%", height: "100%", objectFit: "cover" }
             : { width: "82%", height: "82%", objectFit: "contain" }} />

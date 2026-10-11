@@ -5356,3 +5356,14 @@ html.light .sheet-sticky-head::after {
     box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--text) 4%, transparent);
   }
 }
+
+/* Image d'ingrédient (IngImage) : arrivée en fondu léger plutôt qu'en « pop ». */
+.ing-img-reveal {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.28s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ing-img-reveal[data-loaded] { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ing-img-reveal { transform: none; transition: opacity 0.15s linear; }
+}
