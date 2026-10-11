@@ -190,24 +190,32 @@ function GlobeIllustration() {
     </svg>
   );
 }
+// Maison du foyer : murs crème et toit terre cuite (deux pans pour le volume),
+// fenêtre allumée, porte au vert de la diapo marquée d'un cœur, fumée légère.
 function HouseIllustration() {
   return (
     <svg {...IL}>
-      {/* cheminée + fumée en cœur */}
-      <rect x="72" y="30" width="9" height="18" rx="2" fill="#c85a2a" />
-      <path d="M80 28 C84 25 88 27 87 31 C86 34 82 34 80 32 C78 34 74 34 73 31 C72 27 76 25 80 28 Z" fill="#f0a875" opacity="0.7" />
-      {/* toit */}
-      <path d="M24 60 L60 28 L96 60 Z" fill="#e8703a" />
-      <path d="M60 28 L96 60 L88 60 L60 35 Z" fill="#c85a2a" opacity="0.55" />
-      {/* corps de la maison */}
-      <rect x="34" y="58" width="52" height="40" rx="5" fill="#f4a663" />
-      <rect x="34" y="58" width="52" height="40" rx="5" fill="none" stroke="#e08a4a" strokeWidth="2" />
-      {/* fenêtre gauche, chaleureuse */}
-      <rect x="41" y="66" width="16" height="16" rx="3" fill="#ffd98a" stroke="#e08a4a" strokeWidth="2" />
-      <path d="M49 66 V82 M41 74 H57" stroke="#e08a4a" strokeWidth="2" />
-      {/* porte avec cœur */}
-      <rect x="64" y="72" width="16" height="26" rx="3" fill="#c85a2a" />
-      <path d="M72 84 C69 81.5 66.5 80 66.5 77.3 C66.5 75.6 67.8 74.5 69.2 74.5 C70.4 74.5 71.5 75.6 72 76.4 C72.5 75.6 73.6 74.5 74.8 74.5 C76.2 74.5 77.5 75.6 77.5 77.3 C77.5 80 75 81.5 72 84 Z" fill="#ffd98a" />
+      {/* fumée */}
+      <g fill="#e4ddd3">
+        <circle cx="79" cy="22" r="4" />
+        <circle cx="85" cy="17" r="3" />
+      </g>
+      {/* cheminée */}
+      <rect x="73" y="28" width="10" height="20" rx="2" fill="#a8432f" />
+      <rect x="71.5" y="26" width="13" height="5" rx="2" fill="#8f3726" />
+      {/* murs */}
+      <rect x="32" y="56" width="56" height="42" rx="5" fill="#f7ead8" stroke="#e3cba9" strokeWidth="2" />
+      {/* toit : pan clair + pan ombré, débord sur les murs */}
+      <path d="M22 60 L60 27 L98 60 C99.5 61.3 98.6 64 96.6 64 H23.4 C21.4 64 20.5 61.3 22 60 Z" fill="#c8553d" />
+      <path d="M60 27 L98 60 C99.5 61.3 98.6 64 96.6 64 H84 L60 38 Z" fill="#a8432f" />
+      {/* fenêtre allumée */}
+      <rect x="40" y="70" width="17" height="16" rx="3" fill="#ffd98a" stroke="#c98a45" strokeWidth="2" />
+      <path d="M48.5 70 V86 M40 78 H57" stroke="#c98a45" strokeWidth="1.8" />
+      {/* porte et son cœur */}
+      <path d="M65 98 V79 C65 74.6 68.6 71 73 71 C77.4 71 81 74.6 81 79 V98 Z" fill="#6e9a3f" />
+      <path d="M73 87.5 C70.5 85.5 68.7 84.2 68.7 82.2 C68.7 80.9 69.7 80 70.8 80 C71.8 80 72.6 80.7 73 81.3 C73.4 80.7 74.2 80 75.2 80 C76.3 80 77.3 80.9 77.3 82.2 C77.3 84.2 75.5 85.5 73 87.5 Z" fill="#f7ead8" />
+      {/* seuil */}
+      <rect x="28" y="96" width="64" height="4" rx="2" fill="#e3cba9" />
     </svg>
   );
 }
@@ -350,8 +358,8 @@ export function OnboardingCarousel() {
       {/* Bas : barre de progression + indice/CTA */}
       <div style={{ position: "absolute", left: 0, right: 0, bottom: "calc(30px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", alignItems: "center", gap: 20, padding: "0 32px" }}>
         {last
-          ? <button onClick={finish} className="onb-cta" style={{ background: "#fff", color: SLIDES[active].color, border: "none", borderRadius: 16, padding: "15px 44px", fontSize: 16, fontWeight: 600, cursor: "pointer", boxShadow: "0 10px 30px -12px rgba(0,0,0,0.4)" }}>C'est parti !</button>
-          : <button onClick={next} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "rgba(255,255,255,0.9)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Glisse pour continuer <Icon name="forward" size={15} color="rgba(255,255,255,0.9)" /></button>}
+          ? <button onClick={finish} className="onb-cta" style={{ color: SLIDES[active].color, border: "none", borderRadius: 999, padding: "15px 44px", fontSize: 16, fontWeight: 600, cursor: "pointer", boxShadow: "0 10px 30px -12px rgba(0,0,0,0.4)" }}>C'est parti !</button>
+          : <button onClick={next} className="onb-skip" style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "none", color: "rgba(255,255,255,0.9)", fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "6px 14px", borderRadius: 999, transition: "background 0.18s ease, color 0.18s ease" }}>Glisse pour continuer <Icon name="forward" size={15} color="rgba(255,255,255,0.9)" /></button>}
         {/* Progression continue */}
         <div style={{ width: 170, height: 5, borderRadius: 999, background: "rgba(255,255,255,0.28)", overflow: "hidden" }}>
           <div style={{ height: "100%", background: "#fff", borderRadius: 999, width: `${((active + 1) / N) * 100}%`, transition: "width 0.45s cubic-bezier(0.4,0,0.2,1)" }} />

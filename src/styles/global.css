@@ -2328,11 +2328,17 @@ html.light .sheet-sticky-head::after {
   }
 }
 
+/* « C'est parti ! » : pill blanche. Fond en CSS (pas en inline) pour que le survol
+   puisse le voiler d'un cran ; aucune translation ni ombre qui grossit. */
 .onb-cta {
-  transition: transform .18s ease, box-shadow .18s ease;
+  background: #fff;
+  transition: background-color .18s ease, transform .12s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .onb-cta:hover { background: #f1f1ee; }
 }
 
-/* Bouton « Passer » de l'onboarding : fond transparent au repos (défini ici et non en
+/* Boutons « Passer » et « Glisse pour continuer » de l'onboarding : fond transparent au repos (défini ici et non en
    inline, sinon le style inline battrait la règle :hover), fond « pill » translucide au
    survol (desktop / pointeur fin). Rien au tactile pour ne pas laisser d'état collé. */
 .onb-skip { background: transparent; }
@@ -2831,11 +2837,6 @@ html.light .sheet-sticky-head::after {
 }
 
 @media (hover:hover) {
-  .onb-cta:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5);
-  }
-
   /* Bouton fermer du mode cuisine : retour de survol (desktop). */
   .cook-close-btn {
     transition: background-color 0.15s ease, color 0.15s ease;
@@ -3067,7 +3068,7 @@ html.light .sheet-sticky-head::after {
 }
 
 .onb-cta:active {
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
 /* ─── ONBOARDING – CARROUSEL DE BIENVENUE ─────────────────────────────────────
