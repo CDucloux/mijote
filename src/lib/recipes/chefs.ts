@@ -13,6 +13,8 @@ export interface Chef {
   name: string;
   /** Repère affiché sous le nom (restaurant, ville, ouvrage). */
   note?: string;
+  /** Titre exact de l'article Wikipédia en français, absent s'il n'y en a pas. */
+  wiki?: string;
 }
 
 const MAX_NAME = 120;
@@ -39,7 +41,11 @@ export function parseChefs(raw: unknown): Chef[] {
     if (!name || name.length > MAX_NAME || seen.has(key)) continue;
     seen.add(key);
     const note = typeof entry.note === "string" ? entry.note.trim() : "";
-    chefs.push(note ? { name, note } : { name });
+    const wiki = typeof entry.wiki === "string" ? entry.wiki.trim() : "";
+    const chef: Chef = { name };
+    if (note) chef.note = note;
+    if (wiki) chef.wiki = wiki;
+    chefs.push(chef);
   }
   return chefs;
 }
@@ -85,4 +91,18 @@ export function canonicalChef(chefs: Chef[], raw: string | null | undefined): st
     return first.length === 1 ? parts[0].startsWith(first) : parts[0] === first;
   });
   return hits.length === 1 ? hits[0].name : name;
+}
+
+/**
+ * Lien vers l'article Wikipédia en français d'un chef de la liste. Seul un titre
+ * renseigné à la main dans `data/chefs.yaml` produit un lien : deviner l'article
+ * depuis un nom saisi mènerait vers un homonyme ou une page inexistante.
+ *
+ * @param chefs - Liste de référence.
+ * @param name - Valeur de `recipe.chef`.
+ * @returns L'URL de l'article, ou `null` (chef hors liste ou sans article).
+ */
+export function chefWikipediaUrl(chefs: Chef[], name: string | null | undefined): string | null {
+  const title = findChef(chefs, name)?.wiki;
+  return title ? `https://fr.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, "_"))}` : null;
 }
