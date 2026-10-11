@@ -21,12 +21,19 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 // tons chauds « garde-manger », choisis déterministiquement par ingrédient.
 const STK_FILL = ["#cdb98a", "#c9a15c", "#b98c4a", "#a6743a", "#8f6b3f", "#7d5a34", "#c7b552", "#9aa15a", "#b5773f", "#d3a86a"];
 
-/** Couleur de contenu stable pour un ingrédient (hash simple -> palette chaude). */
-function stkFillColor(seed) {
+// Huiles et vinaigres se rangent en BOUTEILLE, pas en bocal : liquides dorés pour
+// les huiles, du vinaigre blanc au balsamique pour les acides.
+const BOTTLE_FILL = {
+  oil: ["#d8b44a", "#c9a23a", "#b9a646", "#e0c46a"],
+  acid: ["#a8483a", "#d6c38a", "#7a3b2a", "#c58a4a"],
+};
+
+/** Couleur de contenu stable pour un ingrédient (hash simple -> palette). */
+function stkFillColor(seed, palette = STK_FILL) {
   const s = String(seed || "");
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return STK_FILL[h % STK_FILL.length];
+  return palette[h % palette.length];
 }
 
 const STATE_LABEL = { full: "en stock", low: "bientôt vide", empty: "à racheter" };
@@ -40,14 +47,16 @@ const SHELVES_PAGE = 4; // planches (rangées) montées par lot
  * Un bocal. Mémoïsé sur `(ing, state, onCycle)` : toggler un bocal ne re-rend que
  * lui, pas les 139. Le niveau de remplissage est piloté en CSS par `data-state`.
  */
-const Jar = memo(function Jar({ ing, state, onCycle }) {
+const Jar = memo(function Jar({ ing, state, onCycle, catKey }) {
   const [imgErr, setImgErr] = useState(false);
+  const bottle = BOTTLE_FILL[catKey];
   return (
     <button
       className="stk-jar"
       data-state={state}
+      data-vessel={bottle ? "bottle" : undefined}
       onClick={() => onCycle(ing.id)}
-      style={{ "--fill": stkFillColor(ing.dbId || ing.id) }}
+      style={{ "--fill": stkFillColor(ing.dbId || ing.id, bottle) }}
       aria-label={`${ing.name} : ${STATE_LABEL[state]}`}
     >
       <span className="stk-lid" aria-hidden="true" />
@@ -69,7 +78,7 @@ const Jar = memo(function Jar({ ing, state, onCycle }) {
       )}
     </button>
   );
-}, (a, b) => a.state === b.state && a.ing === b.ing && a.onCycle === b.onCycle);
+}, (a, b) => a.state === b.state && a.ing === b.ing && a.onCycle === b.onCycle && a.catKey === b.catKey);
 
 /** Équerre vue de FACE (comme l'étagère) : on n'en voit que la tranche, une barre
  *  étroite qui descend sous la planche et s'affine vers le mur, avec sa vis de
@@ -444,7 +453,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                       <div className="stk-jars">
                         {row.map(ing => {
                           const state = lowSet.has(ing.id) ? "low" : stockSet.has(ing.id) ? "full" : "empty";
-                          return <Jar key={ing.id} ing={ing} state={state} onCycle={cycle} />;
+                          return <Jar key={ing.id} ing={ing} state={state} onCycle={cycle} catKey={catKey} />;
                         })}
                       </div>
                       {roomForSprig && <ShelfSprig />}
