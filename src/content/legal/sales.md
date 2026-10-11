@@ -6,9 +6,9 @@ lead: "L'abonnement Cardamome+ : prix, paiement, renouvellement, résiliation et
 order: 4
 ---
 
-Les présentes conditions générales de vente (les « **CGV** ») régissent la souscription et l'exécution de l'abonnement payant **Cardamome+** (l'« **Abonnement** ») au service Cardamome (l'« **Application** »), sur le web et sur Android. Elles sont conclues entre l'éditeur identifié dans les [Mentions légales](/legal/legal-notice) et toute personne physique qui souscrit l'Abonnement à des fins non professionnelles (« **vous** »).
+Les présentes conditions générales de vente (les **CGV**) régissent la souscription et l'exécution de l'abonnement payant **Cardamome+** (l'**Abonnement**) au service Cardamome (l'**Application**), sur le web et sur Android. Elles sont conclues entre l'éditeur identifié dans les [Mentions légales](/legal/legal-notice) et toute personne physique qui souscrit l'Abonnement à des fins non professionnelles (**vous**).
 
-Elles complètent les [Conditions générales d'utilisation](/legal/terms) (« **CGU** »), qui restent applicables à l'usage de l'Application. En cas de contradiction sur un point relatif à l'Abonnement, les présentes CGV prévalent. Elles sont accessibles à tout moment dans l'Application et peuvent être enregistrées ou imprimées depuis votre navigateur.
+Elles complètent les [Conditions générales d'utilisation](/legal/terms) (**CGU**), qui restent applicables à l'usage de l'Application. En cas de contradiction sur un point relatif à l'Abonnement, les présentes CGV prévalent. Elles sont accessibles à tout moment dans l'Application et peuvent être enregistrées ou imprimées depuis votre navigateur.
 
 ## Le vendeur
 
@@ -55,7 +55,7 @@ La suppression de votre compte ne vaut pas résiliation d'un abonnement souscrit
 
 Conformément aux articles L. 221-18 et suivants du Code de la consommation, vous disposez d'un délai de **14 jours** à compter de la conclusion du contrat pour vous rétracter, sans avoir à motiver votre décision.
 
-Pour l'exercer, il suffit d'adresser une déclaration dénuée d'ambiguïté (par exemple : « Je me rétracte de mon abonnement Cardamome+ souscrit le [date] avec le compte [e-mail] ») à **contact.cardamome@gmail.com**, ou d'utiliser le modèle de formulaire ci-dessous.
+Pour l'exercer, il suffit d'adresser une déclaration dénuée d'ambiguïté (par exemple : *Je me rétracte de mon abonnement Cardamome+ souscrit le [date] avec le compte [e-mail]*) à **contact.cardamome@gmail.com**, ou d'utiliser le modèle de formulaire ci-dessous.
 
 En cas de rétractation, vous êtes **remboursé intégralement**, y compris si vous avez commencé à utiliser Cardamome+, dans un délai de 14 jours à compter de la réception de votre demande, par le même moyen de paiement que celui utilisé pour la souscription. Pour un abonnement souscrit sur Google Play, vous pouvez également demander le remboursement à Google selon ses conditions.
 

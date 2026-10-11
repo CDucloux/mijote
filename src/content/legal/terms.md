@@ -6,9 +6,9 @@ lead: "Les règles du service, de vos recettes et de l'espace public."
 order: 3
 ---
 
-Les présentes conditions générales d'utilisation (les « **Conditions** ») régissent l'utilisation du service Cardamome, sur le web et sur Android (l'« **Application** »). Elles sont conclues entre vous et l'éditeur identifié dans les [Mentions légales](/legal/legal-notice).
+Les présentes conditions générales d'utilisation (les **Conditions**) régissent l'utilisation du service Cardamome, sur le web et sur Android (l'**Application**). Elles sont conclues entre vous et l'éditeur identifié dans les [Mentions légales](/legal/legal-notice).
 
-La souscription de l'abonnement payant **Cardamome+** est régie en outre par les [Conditions générales de vente](/legal/sales) (« **CGV** »). En cas de contradiction sur un point relatif à l'abonnement, les CGV prévalent.
+La souscription de l'abonnement payant **Cardamome+** est régie en outre par les [Conditions générales de vente](/legal/sales) (**CGV**). En cas de contradiction sur un point relatif à l'abonnement, les CGV prévalent.
 
 En créant un compte, vous acceptez les présentes Conditions et reconnaissez avoir pris connaissance de la [Politique de confidentialité](/legal/privacy). Si vous ne les acceptez pas, n'utilisez pas l'Application.
 
@@ -34,7 +34,7 @@ Il vous appartient de conserver une copie de vos contenus importants, notamment 
 
 ## Vos contenus
 
-**Propriété.** Vous restez titulaire des droits sur les recettes, textes et photos que vous créez (vos « **Contenus** »).
+**Propriété.** Vous restez titulaire des droits sur les recettes, textes et photos que vous créez (vos **Contenus**).
 
 **Licence pour faire fonctionner le service.** Vous accordez à l'éditeur, pour la durée de conservation de vos Contenus, une licence non exclusive, gratuite et mondiale de les héberger, stocker, reproduire, adapter techniquement (redimensionnement, mise en page, export PDF) et afficher, dans le seul but de vous fournir le service et, pour les Contenus que vous publiez, de les rendre accessibles sur l'espace public et dans les aperçus de partage. Cette licence prend fin à la suppression du Contenu, sous réserve des copies techniques temporaires et des obligations légales de conservation.
 
@@ -64,7 +64,7 @@ Vous restez seul responsable des Contenus que vous publiez. L'éditeur, qui n'op
 
 ## Signalement et modération
 
-**Signaler.** Tout contenu de l'espace public peut être signalé depuis l'Application (bouton « Signaler ») ou à **contact.cardamome@gmail.com**. Un signalement par e-mail précise, si possible, le contenu visé (lien), les raisons pour lesquelles il est jugé illicite et, pour une atteinte à vos droits (droit d'auteur notamment), les éléments qui établissent votre qualité. Un signalement abusif peut engager la responsabilité de son auteur.
+**Signaler.** Tout contenu de l'espace public peut être signalé depuis l'Application (bouton **Signaler**) ou à **contact.cardamome@gmail.com**. Un signalement par e-mail précise, si possible, le contenu visé (lien), les raisons pour lesquelles il est jugé illicite et, pour une atteinte à vos droits (droit d'auteur notamment), les éléments qui établissent votre qualité. Un signalement abusif peut engager la responsabilité de son auteur.
 
 **Traiter.** Les signalements sont examinés avec diligence, de manière objective et non arbitraire. L'éditeur peut, à titre de mesures proportionnées, dépublier ou retirer un contenu, restreindre la possibilité de publier, ou suspendre puis supprimer un compte, en cas de contenu illicite, de violation des présentes Conditions, ou d'atteinte aux droits d'un tiers. L'éditeur peut aussi agir de sa propre initiative ou sur injonction d'une autorité.
 

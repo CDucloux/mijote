@@ -6,7 +6,7 @@ lead: "Les données traitées, pourquoi, combien de temps, et vos droits."
 order: 2
 ---
 
-Cette politique explique quelles données personnelles Cardamome traite, pourquoi, sur quelle base légale, avec qui, combien de temps, et comment exercer vos droits. Elle s'applique à l'application web et à l'application Android, conformément au règlement (UE) 2016/679 (« **RGPD** ») et à la loi n° 78-17 du 6 janvier 1978 (« loi Informatique et Libertés »).
+Cette politique explique quelles données personnelles Cardamome traite, pourquoi, sur quelle base légale, avec qui, combien de temps, et comment exercer vos droits. Elle s'applique à l'application web et à l'application Android, conformément au règlement (UE) 2016/679 (**RGPD**) et à la loi n° 78-17 du 6 janvier 1978 (loi Informatique et Libertés).
 
 ## En bref
 
