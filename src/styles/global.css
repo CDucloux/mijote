@@ -2417,6 +2417,9 @@ html.light .sheet-sticky-head::after {
   line-height: 1.68;
   color: var(--text2);
   max-width: 68ch;
+  /* Colonne plus étroite que le conteneur (680px) : centrée, sinon le surplus
+     tombe tout entier à droite. */
+  margin-inline: auto;
 }
 
 .legal-md p,
