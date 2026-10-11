@@ -2987,31 +2987,64 @@ html.light .sheet-sticky-head::after {
   transform: scale(0.99);
 }
 
-/* Bouton « Nouvelle section » : distinct des ajouts (fond teinté accent, coins
-   doux). Le survol n'existe qu'au vrai pointeur ; sur tactile, l'onde (.ripple)
-   fait le retour. AUCUN glow/box-shadow décoratif (cf. CLAUDE.md §3.1). */
-.editor-new-section {
+/* « Nouvelle section » : filet de coupe titré au repos (deux traits fins et un
+   libellé neutre au centre), pas une carte. Survol desktop : traits et libellé
+   foncent, rien ne se teinte. La saisie du nom remplace le filet. */
+.section-cut {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 11px 14px;
-  border-radius: 16px;
+  padding: 10px 2px;
+  background: none;
+  border: none;
   cursor: pointer;
-  text-align: left;
-  border: 1px solid rgba(var(--accent-rgb), 0.4);
-  background: rgba(var(--accent-rgb), 0.07);
+  color: var(--text3);
+}
+.section-cut::before,
+.section-cut::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
   transition: background-color 0.15s ease;
 }
-
-@media (hover: hover) {
-  .editor-new-section:hover {
-    background: rgba(var(--accent-rgb), 0.12);
-  }
+.section-cut-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: color 0.15s ease;
 }
-
-.editor-new-section:active {
-  transform: scale(0.99);
+.section-cut:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+@media (hover: hover) and (pointer: fine) {
+  .section-cut:hover { color: var(--text); }
+  .section-cut:hover::before,
+  .section-cut:hover::after { background: var(--text3); }
+}
+.section-cut-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+.section-cut-cancel {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .section-cut-cancel:hover { background: var(--surface2); color: var(--text); }
 }
 
 .nr-choice {

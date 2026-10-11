@@ -91,38 +91,23 @@ function NewSectionButton({ onAdd }) {
   useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
   const close = () => { setDraft(""); setOpen(false); };
   const submit = () => { const t = draft.trim(); if (t) { onAdd(t); close(); } };
-  const chip = (
-    <span style={{ width: 34, height: 34, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.16)" }}>
-      <Icon name="layers" size={17} color="var(--accent)" />
-    </span>
-  );
+  // Repos : un filet de coupe titré, pas une carte. Une section découpe la liste,
+  // l'affordance le dit littéralement (« couper ici ») sans rien teinter.
   if (!open) return (
-    <button type="button" className="editor-new-section ripple" onClick={() => setOpen(true)}>
-      {chip}
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nouvelle section</span>
-        <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>Regrouper en sous-préparation</span>
-      </span>
-      <Icon name="plus" size={17} color="var(--accent)" />
+    <button type="button" className="section-cut" onClick={() => setOpen(true)}>
+      <span className="section-cut-label"><Icon name="plus" size={13} color="currentColor" /> Nouvelle section</span>
     </button>
   );
+  // Saisie : le nom s'écrit à la place du libellé, au gabarit d'un en-tête de section.
   return (
-    <div style={{ padding: 12, borderRadius: 16, border: "1px solid rgba(var(--accent-rgb),0.45)", background: "rgba(var(--accent-rgb),0.07)", display: "flex", flexDirection: "column", gap: 11 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {chip}
-        <span style={{ flex: 1, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nommer la section</span>
-        <button type="button" onClick={close} aria-label="Annuler" style={{ width: 30, height: 30, borderRadius: "50%", border: "none", background: "transparent", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text3)" /></button>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <input ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submit(); } if (e.key === "Escape") close(); }}
-          placeholder="ex. La pâte, La crème, Le sirop…"
-          style={{ flex: 1, minWidth: 0, height: 42, padding: "0 15px", borderRadius: 12, border: "1px solid transparent", background: "var(--surface)", color: "var(--text)", fontSize: 14, fontWeight: 500, outline: "none" }} />
-        <button type="button" onClick={submit} disabled={!draft.trim()}
-          style={{ flexShrink: 0, height: 42, padding: "0 16px", borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontSize: 13.5, fontWeight: 600, cursor: draft.trim() ? "pointer" : "default", opacity: draft.trim() ? 1 : 0.45, display: "inline-flex", alignItems: "center", gap: 6, transition: "opacity 0.15s" }}>
-          <Icon name="check" size={15} color="#fff" /> Créer
-        </button>
-      </div>
+    <div className="section-cut-form">
+      <input ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submit(); } if (e.key === "Escape") close(); }}
+        onBlur={() => { if (!draft.trim()) close(); }}
+        placeholder="Nom de la section, ex. La pâte" aria-label="Nom de la nouvelle section"
+        className="field-input field-soft" style={{ flex: 1, minWidth: 0, height: 42, borderRadius: 12, background: "var(--surface)" }} />
+      <button type="button" className="btn btn-primary btn-pill btn-sm" onMouseDown={e => e.preventDefault()} onClick={submit} disabled={!draft.trim()}>Créer</button>
+      <button type="button" className="section-cut-cancel" onMouseDown={e => e.preventDefault()} onClick={close} aria-label="Annuler"><Icon name="close" size={14} color="currentColor" /></button>
     </div>
   );
 }
