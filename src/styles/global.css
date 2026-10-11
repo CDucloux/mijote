@@ -1926,7 +1926,9 @@ html.light .sheet-sticky-head::after {
   border-radius: 16px 16px 26px 26px / 12px 12px 34px 34px;
 }
 
-.stk-group { position: relative; margin-bottom: 30px; }
+/* Marge basse : les équerres (~32px) pendent sous la dernière planche, l'étiquette
+   du rayon suivant garde un vrai blanc au-dessus d'elles. */
+.stk-group { position: relative; margin-bottom: 64px; }
 .stk-group:last-child { margin-bottom: 0; }
 
 /* Étiquette de rayon, posée sur le mur. */
@@ -1977,7 +1979,8 @@ html.light .sheet-sticky-head::after {
 .stk-board {
   position: relative;
   height: 17px;
-  margin-top: -3px;
+  /* Contact d'1px seulement : les bocaux reposent SUR la planche, sans s'y enfoncer. */
+  margin-top: -1px;
   border-radius: 3px;
   background: linear-gradient(180deg,
     var(--oak-hi) 0, var(--oak-top) 2px,
@@ -2210,8 +2213,8 @@ html.light .sheet-sticky-head::after {
 .stk-sprig {
   position: absolute;
   right: 20px;
-  /* Posé sur le dessus de la planche (17px moins le recouvrement de 3px), comme les bocaux. */
-  bottom: 14px;
+  /* Posé sur le dessus de la planche (17px moins le contact d'1px), comme les bocaux. */
+  bottom: 16px;
   width: 50px;
   height: 89px;
   z-index: 2;
@@ -2226,6 +2229,7 @@ html.light .sheet-sticky-head::after {
   .stk-lid { height: 16px; }
   .stk-bracket { width: 22px; height: 27px; }
   .stk-shelf { margin-bottom: 46px; }
+  .stk-group { margin-bottom: 56px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

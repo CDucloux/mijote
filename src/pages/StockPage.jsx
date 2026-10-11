@@ -71,37 +71,52 @@ const Jar = memo(function Jar({ ing, state, onCycle }) {
   );
 }, (a, b) => a.state === b.state && a.ing === b.ing && a.onCycle === b.onCycle);
 
-/** Équerre en fer (support de planche), décalée du bord (cf. .stk-bracket). */
+/** Équerre en fonte (support de planche) : platine sous la planche, jambe contre
+ *  le mur, gousset ajouré d'une volute, deux vis. Décalée du bord (cf. .stk-bracket). */
 function ShelfBracket({ side }) {
   return (
     <svg className={`stk-bracket ${side}`} viewBox="0 0 26 32" fill="none" aria-hidden="true">
-      <path d="M2 1h13a1 1 0 0 1 .8 1.6L3.6 30.4A1 1 0 0 1 1.7 30V2a1 1 0 0 1 1-1Z" fill="var(--iron)" />
-      <path d="M4 4h8L4 22V4Z" fill="rgba(255,255,255,.06)" />
-      <circle cx="6" cy="5.5" r="1.1" fill="var(--iron-hi)" />
+      <path fillRule="evenodd" d="M1.5 0H24a1.5 1.5 0 0 1 1.2 2.4L4.3 30.6A1.5 1.5 0 0 1 1.5 29.8V1.5A1.5 1.5 0 0 1 1.5 0Z M8.5 6.2a4.3 4.3 0 1 0 0 8.6a4.3 4.3 0 1 0 0-8.6Z" fill="var(--iron)" />
+      <path d="M1.5 0H24a1.5 1.5 0 0 1 1.2 2.4L24 4H3.6V27.6L1.5 29.8V1.5Z" fill="rgba(255,255,255,.08)" />
+      <path d="M12.8 10.5C15 9 17.5 7.6 19.6 6.4" stroke="rgba(255,255,255,.1)" strokeWidth="1" strokeLinecap="round" />
+      <circle cx="18" cy="2" r="0.9" fill="var(--iron-hi)" />
+      <circle cx="2.6" cy="21" r="0.9" fill="var(--iron-hi)" />
     </svg>
   );
 }
 
-/** Fioriture unique : un brin d'eucalyptus dans son pot de terre cuite, posé en bout de rayon (décoratif). */
+// Feuilles du brin : position (base sur la tige), angle, longueur, largeur, teinte.
+// Tailles et teintes irrégulières : un vrai brin n'est jamais symétrique.
+const SPRIG_LEAVES = [
+  { x: 27.4, y: 60, r: -58, l: 13, w: 7.5, c: "#6d9447" },
+  { x: 27.6, y: 56, r: 62, l: 12, w: 7, c: "#7fa155" },
+  { x: 26.6, y: 48, r: -48, l: 14, w: 8, c: "#7fa155" },
+  { x: 27, y: 44, r: 52, l: 12.5, w: 7, c: "#8cae60" },
+  { x: 26.2, y: 36, r: -40, l: 12, w: 6.8, c: "#8cae60" },
+  { x: 26.6, y: 32, r: 44, l: 11, w: 6.2, c: "#9cbb73" },
+  { x: 26.4, y: 25, r: -22, l: 9, w: 5.4, c: "#a6c47f" },
+  { x: 26.8, y: 23, r: 26, l: 8, w: 5, c: "#a6c47f" },
+  { x: 33.5, y: 47, r: 70, l: 9.5, w: 5.6, c: "#9cbb73" },
+  { x: 37, y: 41.5, r: 30, l: 8.5, w: 5, c: "#a6c47f" },
+];
+const leafPath = (l, w) => `M0 0C${w / 2} ${-l * 0.28} ${w / 2} ${-l * 0.72} 0 ${-l}C${-w / 2} ${-l * 0.72} ${-w / 2} ${-l * 0.28} 0 0Z`;
+
+/** Fioriture unique : un brin dans son pot de terre cuite, posé en bout de rayon (décoratif). */
 function ShelfSprig() {
   return (
     <svg className="stk-sprig" viewBox="0 0 54 96" aria-hidden="true">
-      {/* brin, planté dans le pot */}
-      <path d="M28 68 C26 52 25 40 26 24" stroke="#5a7d3e" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-      <g fill="#7fa155">
-        <ellipse cx="19" cy="32" rx="8" ry="4.6" transform="rotate(-32 19 32)" />
-        <ellipse cx="34" cy="36" rx="8" ry="4.6" transform="rotate(28 34 36)" />
-        <ellipse cx="18" cy="46" rx="7.5" ry="4.4" transform="rotate(-30 18 46)" />
-        <ellipse cx="34" cy="50" rx="7.5" ry="4.4" transform="rotate(26 34 50)" />
-        <ellipse cx="20" cy="60" rx="6.6" ry="4" transform="rotate(-26 20 60)" />
-      </g>
-      <g fill="#9cbb73">
-        <ellipse cx="18" cy="25" rx="5.5" ry="3.2" transform="rotate(-34 18 25)" />
-        <ellipse cx="28" cy="20" rx="5" ry="3" transform="rotate(-4 28 20)" />
-      </g>
+      {/* tige principale et rameau */}
+      <path d="M28 68C27.4 56 26 44 26.5 21" stroke="#56773a" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M27.2 52C31 49 34.5 45 37.5 40" stroke="#56773a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+      {SPRIG_LEAVES.map((leaf, i) => (
+        <g key={i} transform={`translate(${leaf.x} ${leaf.y}) rotate(${leaf.r})`}>
+          <path d={leafPath(leaf.l, leaf.w)} fill={leaf.c} />
+          <path d={`M0 -1.5V${-leaf.l * 0.8}`} stroke="rgba(40,60,25,.28)" strokeWidth="0.7" strokeLinecap="round" />
+        </g>
+      ))}
       {/* pot : corps évasé, rebord, ombre du côté droit */}
-      <path d="M14 72 H42 L39 93 C38.8 94.7 37.6 96 35.9 96 H20.1 C18.4 96 17.2 94.7 17 93 Z" fill="#c8693f" />
-      <path d="M33 72 H42 L39 93 C38.8 94.7 37.6 96 35.9 96 H32 Z" fill="#a9532f" />
+      <path d="M14 72H42L39 93C38.8 94.7 37.6 96 35.9 96H20.1C18.4 96 17.2 94.7 17 93Z" fill="#c8693f" />
+      <path d="M33 72H42L39 93C38.8 94.7 37.6 96 35.9 96H32Z" fill="#a9532f" />
       <rect x="11" y="66" width="34" height="8" rx="2.5" fill="#d9804f" />
       <rect x="11" y="66" width="34" height="2.4" rx="1.2" fill="#e89a6b" />
     </svg>
