@@ -358,7 +358,7 @@ export function OnboardingCarousel() {
       {/* Bas : barre de progression + indice/CTA */}
       <div style={{ position: "absolute", left: 0, right: 0, bottom: "calc(30px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", alignItems: "center", gap: 20, padding: "0 32px" }}>
         {last
-          ? <button onClick={finish} className="onb-cta" style={{ color: SLIDES[active].color, border: "none", borderRadius: 999, padding: "15px 44px", fontSize: 16, fontWeight: 600, cursor: "pointer", boxShadow: "0 10px 30px -12px rgba(0,0,0,0.4)" }}>C'est parti !</button>
+          ? <button onClick={finish} className="onb-cta" style={{ display: "inline-flex", alignItems: "center", color: SLIDES[active].color, border: "none", borderRadius: 999, padding: "6px 14px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>C'est parti !</button>
           : <button onClick={next} className="onb-skip" style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "none", color: "rgba(255,255,255,0.9)", fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "6px 14px", borderRadius: 999, transition: "background 0.18s ease, color 0.18s ease" }}>Glisse pour continuer <Icon name="forward" size={15} color="rgba(255,255,255,0.9)" /></button>}
         {/* Progression continue */}
         <div style={{ width: 170, height: 5, borderRadius: 999, background: "rgba(255,255,255,0.28)", overflow: "hidden" }}>

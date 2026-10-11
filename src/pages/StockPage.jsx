@@ -82,22 +82,28 @@ function ShelfBracket({ side }) {
   );
 }
 
-/** Fioriture unique : un brin d'eucalyptus en bout de rayon (décoratif). */
+/** Fioriture unique : un brin d'eucalyptus dans son pot de terre cuite, posé en bout de rayon (décoratif). */
 function ShelfSprig() {
   return (
-    <svg className="stk-sprig" viewBox="0 0 54 78" aria-hidden="true">
-      <path d="M40 78 C36 55 34 40 33 22" stroke="#5a7d3e" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+    <svg className="stk-sprig" viewBox="0 0 54 96" aria-hidden="true">
+      {/* brin, planté dans le pot */}
+      <path d="M28 68 C26 52 25 40 26 24" stroke="#5a7d3e" strokeWidth="2.2" fill="none" strokeLinecap="round" />
       <g fill="#7fa155">
-        <ellipse cx="26" cy="30" rx="8" ry="4.6" transform="rotate(-32 26 30)" />
-        <ellipse cx="41" cy="34" rx="8" ry="4.6" transform="rotate(28 41 34)" />
-        <ellipse cx="24" cy="44" rx="7.5" ry="4.4" transform="rotate(-30 24 44)" />
-        <ellipse cx="40" cy="49" rx="7.5" ry="4.4" transform="rotate(26 40 49)" />
-        <ellipse cx="27" cy="59" rx="6.6" ry="4" transform="rotate(-26 27 59)" />
+        <ellipse cx="19" cy="32" rx="8" ry="4.6" transform="rotate(-32 19 32)" />
+        <ellipse cx="34" cy="36" rx="8" ry="4.6" transform="rotate(28 34 36)" />
+        <ellipse cx="18" cy="46" rx="7.5" ry="4.4" transform="rotate(-30 18 46)" />
+        <ellipse cx="34" cy="50" rx="7.5" ry="4.4" transform="rotate(26 34 50)" />
+        <ellipse cx="20" cy="60" rx="6.6" ry="4" transform="rotate(-26 20 60)" />
       </g>
       <g fill="#9cbb73">
-        <ellipse cx="24" cy="24" rx="5.5" ry="3.2" transform="rotate(-34 24 24)" />
-        <ellipse cx="34" cy="19" rx="5" ry="3" transform="rotate(-4 34 19)" />
+        <ellipse cx="18" cy="25" rx="5.5" ry="3.2" transform="rotate(-34 18 25)" />
+        <ellipse cx="28" cy="20" rx="5" ry="3" transform="rotate(-4 28 20)" />
       </g>
+      {/* pot : corps évasé, rebord, ombre du côté droit */}
+      <path d="M14 72 H42 L39 93 C38.8 94.7 37.6 96 35.9 96 H20.1 C18.4 96 17.2 94.7 17 93 Z" fill="#c8693f" />
+      <path d="M33 72 H42 L39 93 C38.8 94.7 37.6 96 35.9 96 H32 Z" fill="#a9532f" />
+      <rect x="11" y="66" width="34" height="8" rx="2.5" fill="#d9804f" />
+      <rect x="11" y="66" width="34" height="2.4" rx="1.2" fill="#e89a6b" />
     </svg>
   );
 }

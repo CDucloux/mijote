@@ -2210,9 +2210,10 @@ html.light .sheet-sticky-head::after {
 .stk-sprig {
   position: absolute;
   right: 20px;
-  bottom: 0;
+  /* Posé sur le dessus de la planche (17px moins le recouvrement de 3px), comme les bocaux. */
+  bottom: 14px;
   width: 50px;
-  height: 74px;
+  height: 89px;
   z-index: 2;
   pointer-events: none;
   opacity: 0.9;
