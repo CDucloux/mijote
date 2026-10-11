@@ -1,5 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { exportTextFile } from "@/lib/ui/fileExport.js";
+import { reportError } from "@/lib/observability/observability.js";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner.jsx";
@@ -228,13 +230,9 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       memberEmails: household?.memberEmails,
     });
     if (!ics) { notify?.("Aucun repas dans le planning à exporter", "error"); return; }
-    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "Cardamome - Planning repas.ics";
-    a.click();
-    URL.revokeObjectURL(a.href);
-    notify?.("Planning exporté dans ton calendrier");
+    exportTextFile("Cardamome - Planning repas.ics", ics, "text/calendar;charset=utf-8")
+      .then(outcome => { if (outcome === "downloaded") notify?.("Planning exporté dans ton calendrier"); })
+      .catch(e => { reportError(e, { action: "export", filename: "planning.ics" }); notify?.("Export du planning impossible", "error"); });
   };
 
   const isDesktop = useIsDesktop();

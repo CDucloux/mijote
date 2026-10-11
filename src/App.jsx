@@ -6,6 +6,8 @@ import { subscribeHouseholdPointer } from "@/lib/firebase/households.js";
 import { fetchUserDirectory } from "@/lib/firebase/userDirectory.js";
 import { deletePublicRecipe, reportPublicRecipe } from "@/lib/firebase/community.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
+import { exportTextFile } from "@/lib/ui/fileExport.js";
+import { reportError } from "@/lib/observability/observability.js";
 import { SAMPLE_RECIPES, SAMPLE_COLLECTIONS } from "./constants/categories.js";
 import { DEFAULT_PREFERENCES } from "./constants/preferences.js";
 import { AppShellProvider } from "./context/AppShellContext.jsx";
@@ -451,7 +453,7 @@ function AppInner({ user, isDark, toggleTheme }) {
       {visibleTab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} recipes={recipes} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
       {visibleTab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} components={recipes.filter(r => r.isComponent)} />}
       {visibleTab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} sources={sources} setSources={setSources} />}
-      {visibleTab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => { const b = new Blob([JSON.stringify(recipes.map(cleanRecipeForExport), null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "all_recipes.json"; a.click(); notify("Export complet téléchargé"); }} onImport={importJSON} />}
+      {visibleTab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => exportTextFile("all_recipes.json", JSON.stringify(recipes.map(cleanRecipeForExport), null, 2), "application/json").then(o => { if (o === "downloaded") notify("Export complet téléchargé"); }).catch(e => { reportError(e, { action: "export", filename: "all_recipes.json" }); notify("Export impossible", "error"); })} onImport={importJSON} />}
       {visibleTab === "legal" && <LegalPage />}
       {visibleTab === "guide" && <GuidePage />}
       {visibleTab === "notifications" && <NotificationsPage activities={activities} loading={activitiesLoading} />}

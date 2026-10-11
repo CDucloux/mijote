@@ -33,17 +33,16 @@ import { AdminDashboard } from "../components/admin/AdminDashboard.jsx";
 import { SourcesAdmin } from "../components/admin/SourcesAdmin.jsx";
 import { loadReports, resolveReport, resolveReportsForRecipe, deletePublicRecipe } from "@/lib/firebase/community.js";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
+import { exportTextFile } from "@/lib/ui/fileExport.js";
+import { reportError } from "@/lib/observability/observability.js";
 
 // ─── CONFIG TAB ───────────────────────────────────────────────────────────────
 
-// Déclenche le téléchargement d'un fichier texte généré (export).
-function downloadText(filename, text, type = "text/plain") {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], { type }));
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
+// Exporte un fichier texte généré : téléchargement sur le web, feuille de
+// partage dans l'app native (la WebView Android ignore <a download>).
+const downloadText = (filename, text, type = "text/plain") => {
+  exportTextFile(filename, text, type).catch(e => reportError(e, { action: "export", filename }));
+};
 
 // Bouton rond d'action (modifier / supprimer) des cartes de la console : le survol
 // desktop vient des classes `.icon-btn-soft` / `.icon-btn-danger` (global.css).
@@ -346,11 +345,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     const header = `| ${ING_MD_COLUMNS.map(c => c.label).join(" | ")} |\n|${ING_MD_COLUMNS.map(() => "---").join("|")}|`;
     const body = rows.map(r => `| ${ING_MD_COLUMNS.map(c => cell(r, c)).join(" | ")} |`).join("\n");
     const md = `# Base d'ingrédients Cardamome (${rows.length})\n\nValeurs nutritionnelles pour 100g. Oméga-3 inclus dans les lipides. \`Légume\` est recalculé depuis la catégorie à l'import.\n\n${header}\n${body}\n`;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
-    a.download = "ingredients_cardamome.md";
-    a.click();
-    URL.revokeObjectURL(a.href);
+    downloadText("ingredients_cardamome.md", md, "text/markdown");
   };
 
   const exportUtensilsMarkdown = () => {
@@ -359,11 +354,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
     const header = `| Nom | dbid | Image |\n|---|---|---|`;
     const body = rows.map(r => `| ${esc(r.name)} | ${esc(r.id)} | ${esc(r.image)} |`).join("\n");
     const md = `# Base d'ustensiles Cardamome (${rows.length})\n\n${header}\n${body}\n`;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
-    a.download = "ustensiles_cardamome.md";
-    a.click();
-    URL.revokeObjectURL(a.href);
+    downloadText("ustensiles_cardamome.md", md, "text/markdown");
   };
 
   // Erreurs de validation YAML : annulation totale, liste complète dans la popup.
