@@ -56,8 +56,9 @@ interface IngImageProps {
 
 // Image d'ingrédient (ronde, un peu plus grande, adaptée au transparent), pour un
 // rendu circulaire cohérent partout. `cover` remplit le cercle (vraies photos).
-// L'image arrive en fondu léger (opacité + échelle) au lieu d'apparaître d'un coup ;
-// servie depuis le cache, elle est montrée d'emblée, sans animation.
+// Pendant le chargement, un petit anneau tourne ; l'image arrive ensuite en fondu
+// léger (opacité + échelle) au lieu d'apparaître d'un coup. Servie depuis le cache,
+// elle est montrée d'emblée, sans anneau ni animation.
 export const IngImage = ({ src, alt, size = 48, cover = false }: IngImageProps) => {
   const [err, setErr] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -70,8 +71,12 @@ export const IngImage = ({ src, alt, size = 48, cover = false }: IngImageProps) 
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
       background: "#fff", border: "1px solid var(--border)",
-      display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+      display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative",
     }}>
+      {src && !err && !loaded && (
+        <span className="ing-img-spinner" role="status" aria-label="Chargement"
+          style={{ width: Math.max(12, Math.round(size * 0.36)), height: Math.max(12, Math.round(size * 0.36)) }} />
+      )}
       {src && !err
         ? <img ref={imgRef} src={src} alt={alt || ""} onLoad={() => setLoaded(true)} onError={() => setErr(true)} referrerPolicy="no-referrer"
           loading="lazy" decoding="async" className="ing-img-reveal" data-loaded={loaded ? "1" : undefined}
