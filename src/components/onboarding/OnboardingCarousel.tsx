@@ -39,22 +39,37 @@ function PodIllustration() {
     </svg>
   );
 }
+const MEALS = [
+  { food: "#f0902a", y: 56, w: 28 },
+  { food: "#4caf7d", y: 70, w: 24 },
+  { food: "#e5533b", y: 84, w: 18 },
+];
+// Semainier : une page de menu (anneaux, bandeau), trois repas posés chacun dans
+// son assiette, et la pastille « c'est prévu » en débord, comme un autocollant.
 function PlanningIllustration() {
   return (
     <svg {...IL}>
-      {/* reliure */}
-      <rect x="40" y="24" width="7" height="20" rx="3.5" fill="#3f6fb0" />
-      <rect x="73" y="24" width="7" height="20" rx="3.5" fill="#3f6fb0" />
-      {/* corps */}
-      <rect x="24" y="34" width="72" height="62" rx="11" fill="#eaf1fb" stroke="#cdddf2" strokeWidth="2" />
-      {/* bandeau */}
-      <path d="M24 46 C24 39.4 29.4 34 36 34 H84 C90.6 34 96 39.4 96 46 V52 H24 Z" fill="#5b9cf6" />
-      {/* jours */}
-      <circle cx="40" cy="66" r="4" fill="#c9d8ee" />
-      <circle cx="60" cy="66" r="4" fill="#c9d8ee" />
-      <circle cx="80" cy="66" r="4" fill="#c9d8ee" />
-      {/* coche */}
-      <path d="M41 81 L53 91 L81 65" stroke="#4caf7d" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+      {/* anneaux de reliure */}
+      <rect x="38" y="22" width="7" height="18" rx="3.5" fill="#3f6fb0" />
+      <rect x="75" y="22" width="7" height="18" rx="3.5" fill="#3f6fb0" />
+      {/* page */}
+      <rect x="22" y="30" width="76" height="68" rx="12" fill="#f4f8fe" stroke="#cdddf2" strokeWidth="2" />
+      {/* bandeau de la semaine */}
+      <path d="M22 42 C22 35.4 27.4 30 34 30 H86 C92.6 30 98 35.4 98 42 V46 H22 Z" fill="#5b9cf6" />
+      <rect x="32" y="36" width="26" height="4" rx="2" fill="rgba(255,255,255,0.8)" />
+      <rect x="62" y="36" width="12" height="4" rx="2" fill="rgba(255,255,255,0.45)" />
+      {/* trois repas : assiette garnie + intitulé */}
+      {MEALS.map(({ food, y, w }) => (
+        <g key={y}>
+          <circle cx="38" cy={y} r="6.5" fill="#ffffff" stroke="#dbe6f5" strokeWidth="2" />
+          <circle cx="38" cy={y} r="3.4" fill={food} />
+          <rect x="50" y={y - 4} width={w} height="3.6" rx="1.8" fill="#c9d8ee" />
+          <rect x="50" y={y + 1.5} width={w * 0.6} height="3" rx="1.5" fill="#dde7f5" />
+        </g>
+      ))}
+      {/* pastille « prévu » */}
+      <circle cx="88" cy="89" r="11" fill="#4caf7d" stroke="#ffffff" strokeWidth="3" />
+      <path d="M83 89.5 L86.6 93 L93 85.8" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   );
 }
@@ -149,15 +164,29 @@ function BasketIllustration() {
     </svg>
   );
 }
+// Globe de la communauté : continents, ombre propre et reflet, ceinturé d'une
+// orbite (moitié arrière sous le globe, moitié avant dessus) qui porte un cœur :
+// les recettes qui circulent et qu'on partage.
 function GlobeIllustration() {
   return (
     <svg {...IL}>
-      <circle cx="60" cy="60" r="34" fill="#c080e0" />
-      <path d="M44 44 C52 50 52 70 44 78 M76 44 C68 50 68 70 76 78" stroke="#9b4fc0" strokeWidth="4" fill="none" />
-      <path d="M46 40 C40 62 44 82 46 82 M74 40 C80 62 76 82 74 82" fill="#a860c8" opacity="0.5" />
-      <line x1="26" y1="60" x2="94" y2="60" stroke="rgba(255,255,255,0.55)" strokeWidth="3" />
-      <path d="M30 46 H90 M30 74 H90" stroke="rgba(255,255,255,0.4)" strokeWidth="3" />
-      <ellipse cx="60" cy="60" rx="15" ry="34" stroke="rgba(255,255,255,0.55)" strokeWidth="3" fill="none" />
+      <g transform="rotate(-18 60 62)">
+        <ellipse cx="60" cy="62" rx="46" ry="14" stroke="#dcb8ef" strokeWidth="3" fill="none" />
+      </g>
+      <circle cx="60" cy="60" r="30" fill="#b56fdc" />
+      <g fill="#e2bdf3">
+        <path d="M44 40 C50 36 58 38 60 43 C62 48 56 50 57 55 C58 60 52 63 47 60 C42 57 40 50 38 47 C38 44 40 42 44 40 Z" />
+        <path d="M66 58 C72 55 80 58 82 64 C84 71 78 78 72 80 C68 81 66 76 67 71 C68 66 63 62 66 58 Z" />
+        <ellipse cx="75" cy="43" rx="4" ry="2.5" />
+      </g>
+      <path d="M60 30 A30 30 0 0 1 60 90 A22 30 0 0 0 60 30 Z" fill="#8f45b8" opacity="0.35" />
+      <path d="M40 47 A24 24 0 0 1 52 35" stroke="rgba(255,255,255,0.6)" strokeWidth="3" strokeLinecap="round" fill="none" />
+      <g transform="rotate(-18 60 62)">
+        <path d="M14 62 A46 14 0 0 0 106 62" stroke="#dcb8ef" strokeWidth="3" fill="none" />
+      </g>
+      {/* cœur posé sur l'orbite */}
+      <circle cx="91.5" cy="63" r="9.5" fill="#e8703a" stroke="#ffffff" strokeWidth="3" />
+      <path d="M91.5 67.4 C88.6 65 86.4 63.5 86.4 61.1 C86.4 59.5 87.6 58.5 88.9 58.5 C90 58.5 91 59.3 91.5 60.1 C92 59.3 93 58.5 94.1 58.5 C95.4 58.5 96.6 59.5 96.6 61.1 C96.6 63.5 94.4 65 91.5 67.4 Z" fill="#ffffff" />
     </svg>
   );
 }
