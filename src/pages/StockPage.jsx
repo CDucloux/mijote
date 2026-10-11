@@ -21,12 +21,13 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 // tons chauds « garde-manger », choisis déterministiquement par ingrédient.
 const STK_FILL = ["#cdb98a", "#c9a15c", "#b98c4a", "#a6743a", "#8f6b3f", "#7d5a34", "#c7b552", "#9aa15a", "#b5773f", "#d3a86a"];
 
-// Contenant selon le rayon : huiles et vinaigres en BOUTEILLE (liquides dorés,
-// du vinaigre blanc au balsamique), condiments et épices en POT À ÉPICES
+// Contenant selon le rayon : huiles, vinaigres et alcools en BOUTEILLE (liquides
+// dorés, du vinaigre blanc au balsamique, vins et spiritueux), condiments et épices en POT À ÉPICES
 // (poudres : paprika, curcuma, poivre, herbes séchées…). Le reste en bocal.
 const VESSELS = {
   oil: { kind: "bottle", fill: ["#d8b44a", "#c9a23a", "#b9a646", "#e0c46a"] },
   acid: { kind: "bottle", fill: ["#a8483a", "#d6c38a", "#7a3b2a", "#c58a4a"] },
+  alcohol: { kind: "bottle", fill: ["#6e1f2a", "#e3cf86", "#e8a3a0", "#b8742a", "#8a2b3a"] },
   condiment: { kind: "spice", fill: ["#b8432c", "#d9a42a", "#4a3a2c", "#7c8a45", "#a0522d", "#c9b48a"] },
 };
 
