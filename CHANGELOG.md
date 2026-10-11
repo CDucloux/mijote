@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.63.1 – Cardamome · Par le bon chemin
+
+### Correctifs
+- **Rapports d'erreur Sentry** : ils passent désormais par le domaine de Cardamome (`/monitoring`) au lieu d'appeler Sentry directement, appels que les protections anti-pistage des navigateurs et les bloqueurs de pub coupaient. Les erreurs remontent donc aussi depuis Firefox et les navigateurs équipés d'un bloqueur.
+
 ## v4.63.0 – Cardamome · Sous surveillance
 
 ### Observabilité

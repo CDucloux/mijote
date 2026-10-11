@@ -1,6 +1,16 @@
 {
   "rewrites": [
-    { "source": "/discover/:id", "destination": "/api/og?id=:id" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/monitoring",
+      "destination": "https://o4512238392180736.ingest.de.sentry.io/api/4512238423769168/envelope/"
+    },
+    {
+      "source": "/discover/:id",
+      "destination": "/api/og?id=:id"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
