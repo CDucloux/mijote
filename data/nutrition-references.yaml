@@ -1,0 +1,17 @@
+# ─── Repères nutritionnels ────────────────────────────────────────────────────
+# Apports de référence journaliers d'un adulte (base 2000 kcal) : situent chaque
+# apport en % d'une journée type. Règlement (UE) n° 1169/2011, annexe XIII, sauf
+# fibres et oméga-3 (repères ANSES).
+#
+# Schéma : nutriment -> quantité par jour (kcal pour `calories`, g sinon).
+
+daily:
+  calories: 2000
+  fat: 70
+  saturatedFat: 20
+  carbs: 260
+  sugar: 90
+  fiber: 30
+  protein: 50
+  salt: 6
+  omega3: 2

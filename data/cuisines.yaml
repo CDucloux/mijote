@@ -1,0 +1,28 @@
+# ─── Styles de cuisine ────────────────────────────────────────────────────────
+# Liste fermée proposée dans l'éditeur (Classement › Style de cuisine), embarquée
+# dans l'app à la compilation : modifier ce fichier puis MEP suffit.
+#
+# Schéma :
+#   label   libellé affiché ET valeur stockée dans `recipe.cuisine` (unique) :
+#           le renommer orpheline les recettes existantes.
+#   emoji   drapeau ou pictogramme du badge.
+
+cuisines:
+  - { label: "Française", emoji: "🇫🇷" }
+  - { label: "Italienne", emoji: "🇮🇹" }
+  - { label: "Espagnole", emoji: "🇪🇸" }
+  - { label: "Portugaise", emoji: "🇵🇹" }
+  - { label: "Grecque", emoji: "🇬🇷" }
+  - { label: "Marocaine", emoji: "🇲🇦" }
+  - { label: "Tunisienne", emoji: "🇹🇳" }
+  - { label: "Libanaise", emoji: "🇱🇧" }
+  - { label: "Turque", emoji: "🇹🇷" }
+  - { label: "Indienne", emoji: "🇮🇳" }
+  - { label: "Chinoise", emoji: "🇨🇳" }
+  - { label: "Japonaise", emoji: "🇯🇵" }
+  - { label: "Coréenne", emoji: "🇰🇷" }
+  - { label: "Thaïlandaise", emoji: "🇹🇭" }
+  - { label: "Vietnamienne", emoji: "🇻🇳" }
+  - { label: "Mexicaine", emoji: "🇲🇽" }
+  - { label: "Américaine", emoji: "🇺🇸" }
+  - { label: "Fusion", emoji: "🍴" }
