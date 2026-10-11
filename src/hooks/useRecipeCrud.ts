@@ -10,6 +10,8 @@ import { printRecipe, type PdfRecipe } from "@/lib/recipes/recipePdf.js";
 import type { Recipe, IngredientLine, Collection } from "@/lib/types.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
 import type { ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
+import { exportTextFile } from "@/lib/ui/fileExport.js";
+import { reportError } from "@/lib/observability/observability.js";
 
 /** Liste de courses (forme minimale manipulée ici). */
 export interface ShoppingList {
@@ -130,9 +132,10 @@ export function useRecipeCrud({
   };
 
   const exportJSON = (recipe: Recipe): void => {
-    const blob = new Blob([JSON.stringify(cleanRecipeForExport(recipe), null, 2)], { type: "application/json" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${(recipe.name || "").split(" ").join("_")}.json`; a.click();
-    notify("Export JSON téléchargé");
+    const filename = `${(recipe.name || "recette").split(" ").join("_")}.json`;
+    exportTextFile(filename, JSON.stringify(cleanRecipeForExport(recipe), null, 2), "application/json")
+      .then(outcome => { if (outcome === "downloaded") notify("Export JSON téléchargé"); })
+      .catch(e => { reportError(e, { action: "export", filename }); notify("Export JSON impossible", "error"); });
   };
 
   const importJSON = (json: string): void => {

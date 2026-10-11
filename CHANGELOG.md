@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.64.1 – Cardamome · Bon pour envoi
+
+### Correctifs
+- **Exports dans l'app Android** : les exports JSON, YAML et Markdown de la console admin, l'export d'une recette ou de toutes les recettes et l'ajout du planning à l'agenda ne produisaient aucun fichier, la WebView Android ignorant les téléchargements. Ils ouvrent désormais la feuille de partage du téléphone (Fichiers, Drive, agenda…). Sur le web, rien ne change. Nécessite un nouveau build Android.
+
 ## v4.64.0 – Cardamome · Rayons de saison
 
 ### Stock
