@@ -5282,6 +5282,33 @@ html.light .sheet-sticky-head::after {
   .yaml-drop:not([data-over]):hover .yaml-drop-icon { color: var(--text2); }
 }
 
+/* Zone « Choisir une photo » (ImageUpload) : même langage que la zone de dépose
+   YAML. Survol neutre : liseré qui fonce, fond d'un cran, icône et titre qui
+   s'affirment ; aucun survol pendant l'upload. */
+.photo-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border-radius: 12px;
+  border: 1.5px dashed var(--border);
+  background: var(--surface2);
+  color: var(--text3);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+.photo-drop[data-busy] { cursor: progress; }
+@media (hover: hover) and (pointer: fine) {
+  .photo-drop:not([data-busy]):hover {
+    border-color: var(--text3);
+    background: var(--surface3);
+    color: var(--text2);
+  }
+  .photo-drop:not([data-busy]):hover .photo-drop-title { color: var(--text); }
+}
+
 /* Bouton de plaque (précautions d'ustensile) : le repère part du cran 1 et tourne
    jusqu'à son cran ; seul le `from` est donné, l'arrivée est la rotation inline. */
 @keyframes heatKnobTurn {
