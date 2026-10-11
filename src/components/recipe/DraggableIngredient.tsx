@@ -75,22 +75,27 @@ function DraggableIngredientBase({
   );
 
   // ── Ligne composant (préparation de base référencée) ──
+  // Même carte neutre qu'un ingrédient (fond surface, liseré, vignette ronde) : une
+  // base est un ingrédient de la recette comme un autre. Seul un libellé discret la
+  // distingue, aucune teinte.
   if (ing.recipeId) {
     const comp = (recipes || []).find(r => r.id === ing.recipeId);
     return (
-      <div {...rowProps} style={{ background: "rgba(var(--accent-rgb),0.06)", borderRadius: 12, padding: 12, border: `1px solid ${aimed ? "var(--accent)" : "rgba(var(--accent-rgb),0.4)"}`, transition: "border-color 0.15s, box-shadow 0.2s", display: "flex", alignItems: "center", gap: 10, ...dragStyle }}>
+      <div {...rowProps} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: `1px solid ${aimed ? "var(--accent)" : "var(--border)"}`, transition: "border-color 0.15s, box-shadow 0.2s", display: "flex", alignItems: "center", gap: 10, ...dragStyle }}>
         {handle}
-        <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}><BaseIcon size={20} /></span>
+        {comp?.image
+          ? <IngImage src={comp.image} alt={comp.name} size={36} cover />
+          : <span style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: "var(--surface2)", display: "grid", placeItems: "center" }}><BaseIcon size={17} color="var(--text3)" /></span>}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {comp?.name || ing.name || "Base supprimée"}
-            <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", marginLeft: 6 }}>BASE</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, minWidth: 0 }}>
+            <span style={{ fontSize: 14, fontWeight: 500, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{comp?.name || ing.name || "Base supprimée"}</span>
+            <span style={{ flexShrink: 0, fontSize: 11.5, color: "var(--text3)" }}>Préparation de base</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-            <input className="field-input field-soft no-spin" type="number" min="0" step="any" placeholder="Quantité" value={ing.amount} onChange={e => onUpdateAmount(ing.id, e.target.value === "" ? "" : +e.target.value)} style={{ marginBottom: 0, maxWidth: 120 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+            <input className="field-input field-soft no-spin" type="number" min="0" step="any" placeholder="Quantité" value={ing.amount} onChange={e => onUpdateAmount(ing.id, e.target.value === "" ? "" : +e.target.value)} style={{ marginBottom: 0, width: 110, height: 38 }} />
             <span style={{ fontSize: 13, color: "var(--text2)", fontWeight: 500 }}>{ing.unit}</span>
-            {!comp ? <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 600 }}>⚠ introuvable</span>
-              : comp.yield?.amount ? <span style={{ fontSize: 11, color: "var(--text3)" }}>/ {comp.yield.amount} {comp.yield.unit} produits</span> : null}
+            {!comp ? <span style={{ fontSize: 11.5, color: "var(--red)", fontWeight: 600 }}>Base introuvable</span>
+              : comp.yield?.amount ? <span style={{ fontSize: 11.5, color: "var(--text3)" }}>sur {comp.yield.amount} {comp.yield.unit} produits</span> : null}
           </div>
         </div>
         {trashBtn}
