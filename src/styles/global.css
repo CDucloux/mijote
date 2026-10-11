@@ -2408,7 +2408,7 @@ html.light .sheet-sticky-head::after {
   .legal-contact:hover { color: var(--text); text-decoration-color: currentColor; }
 }
 
-/* Rendu Markdown des documents légaux. Lecture longue : colonne bornée (~68
+/* Rendu Markdown des documents légaux. Lecture longue : colonne bornée (~80
    caractères), texte justifié avec césure (document en `lang="fr"`) pour un
    gris typographique régulier, sections séparées d'un filet, titres en
    couleur de texte (l'accent reste aux liens). */
@@ -2416,9 +2416,9 @@ html.light .sheet-sticky-head::after {
   font-size: 14.5px;
   line-height: 1.68;
   color: var(--text2);
-  max-width: 68ch;
-  /* Colonne plus étroite que le conteneur (680px) : centrée, sinon le surplus
-     tombe tout entier à droite. */
+  max-width: 80ch;
+  /* Colonne bornée (~80 caractères, haut de la fourchette lisible) et centrée
+     dans son conteneur, sinon le surplus tombe tout entier à droite. */
   margin-inline: auto;
 }
 
