@@ -45,8 +45,9 @@ export function LegalPage() {
         </h1>
       </div>
 
+      {/* Documents en pleine largeur (aligné sur l'en-tête), sommaire en colonne. */}
       <ElasticScroll style={{ flex: 1, padding: "18px 20px var(--page-pad-b)" }} resetKey={seg || "index"}>
-        <div key={seg || "index"} className="page-slide-in" onClick={onProseClick} style={{ maxWidth: 680, margin: "0 auto" }}>
+        <div key={seg || "index"} className="page-slide-in" onClick={onProseClick} style={doc ? undefined : { maxWidth: 680, margin: "0 auto" }}>
           {doc ? <Document doc={doc} /> : <Index navigate={navigate} />}
         </div>
       </ElasticScroll>

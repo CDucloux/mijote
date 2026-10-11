@@ -2408,15 +2408,14 @@ html.light .sheet-sticky-head::after {
   .legal-contact:hover { color: var(--text); text-decoration-color: currentColor; }
 }
 
-/* Rendu Markdown des documents légaux. Lecture longue : colonne bornée (~68
-   caractères), texte justifié avec césure (document en `lang="fr"`) pour un
-   gris typographique régulier, sections séparées d'un filet, titres en
-   couleur de texte (l'accent reste aux liens). */
+/* Rendu Markdown des documents légaux. Pleine largeur de la page, texte
+   justifié avec césure (document en `lang="fr"`) pour un gris typographique
+   régulier, sections séparées d'un filet, titres en couleur de texte (l'accent
+   reste aux liens). */
 .legal-md {
   font-size: 14.5px;
   line-height: 1.68;
   color: var(--text2);
-  max-width: 68ch;
 }
 
 .legal-md p,
