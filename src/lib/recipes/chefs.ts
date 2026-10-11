@@ -55,3 +55,34 @@ export function findChef(chefs: Chef[], name: string | null | undefined): Chef |
   const key = normalizeStr(name);
   return key ? chefs.find(chef => normalizeStr(chef.name) === key) ?? null : null;
 }
+
+/** Nom découpé en mots normalisés, ponctuation retirée (« A. Escoffier » → a, escoffier). */
+const words = (name: string): string[] => normalizeStr(name).split(/[^a-z0-9]+/).filter(Boolean);
+
+/**
+ * Rattache un chef extrait par l'import IA à la liste. Le LLM écrit le nom comme
+ * la source le donne (« Escoffier », « A. Escoffier », « Paul Bocuse »), alors
+ * que la liste fixe une graphie : on reconnaît le nom de famille, accompagné au
+ * plus d'un prénom ou d'une initiale compatible. Un nom qui ne désigne pas un seul
+ * chef de la liste reste tel quel (l'éditeur l'affiche « Hors liste »).
+ *
+ * @param chefs - Liste de référence.
+ * @param raw - Chef renvoyé par l'import.
+ * @returns La graphie de la liste si un seul chef correspond, sinon `raw` nettoyé.
+ */
+export function canonicalChef(chefs: Chef[], raw: string | null | undefined): string {
+  const name = (raw ?? "").replace(/\s+/g, " ").trim();
+  const exact = findChef(chefs, name);
+  if (exact || !name) return exact?.name ?? "";
+  const given = words(name);
+  const surname = given.at(-1);
+  if (!surname || given.length > 2) return name;
+  const first = given.length === 2 ? given[0] : "";
+  const hits = chefs.filter(chef => {
+    const parts = words(chef.name);
+    if (parts.at(-1) !== surname) return false;
+    if (!first) return true;
+    return first.length === 1 ? parts[0].startsWith(first) : parts[0] === first;
+  });
+  return hits.length === 1 ? hits[0].name : name;
+}

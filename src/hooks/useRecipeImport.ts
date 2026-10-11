@@ -3,6 +3,8 @@ import { importRecipeFromUrl, importRecipeFromImages, importRecipeFromText, impo
 import { uploadImage } from "@/lib/firebase/storage.js";
 import { applianceImportInfos, sanitizeStepUtensilParams } from "@/lib/utensils/appliances.js";
 import { GIFT_RECIPE } from "@/lib/onboarding/giftRecipe.js";
+import { canonicalChef } from "@/lib/recipes/chefs.js";
+import { CHEFS } from "@/constants/chefs.js";
 import type { Recipe } from "@/lib/types.js";
 
 /** base64 (sans préfixe) → Blob, pour ré-uploader une photo importée vers Storage. */
@@ -66,6 +68,10 @@ export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeI
         return step;
       }),
     };
+    // Chef : graphie de la liste de l'éditeur quand le nom extrait la désigne.
+    const chef = canonicalChef(CHEFS, draft.chef);
+    if (chef) draft.chef = chef;
+    else delete draft.chef;
     if (coverUrl) draft.image = coverUrl;
     openEditor(withItemIds(draft));
   };
