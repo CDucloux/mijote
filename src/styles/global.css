@@ -862,10 +862,15 @@ html.light select.field-input {
 
 /* Variante « fond surface » d'une pastille fantôme : fond blanc en thème clair
    (var(--surface)) plutôt que le gris-vert de surface2, pour les CTA secondaires
-   des états vides. Survol : un cran vers surface2. */
+   des états vides. Survol : même langage que les pilules Filtres / Tri (fond
+   voilé d'un cran, bordure et texte qui s'affirment, aucune teinte). */
 .btn-ghost.btn-ghost-plain { background: var(--surface); }
-@media (hover: hover) {
-  .btn-ghost.btn-ghost-plain:hover { background: var(--surface2); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-ghost.btn-ghost-plain:hover {
+    background: color-mix(in srgb, var(--text) 4%, var(--surface));
+    border-color: var(--text3);
+    color: var(--text);
+  }
 }
 
 /* Variante pleine SANS halo accent : pour les contextes où l'ombre colorée fait
@@ -2408,7 +2413,7 @@ html.light .sheet-sticky-head::after {
   .legal-contact:hover { color: var(--text); text-decoration-color: currentColor; }
 }
 
-/* Rendu Markdown des documents légaux. Lecture longue : colonne bornée (~68
+/* Rendu Markdown des documents légaux. Lecture longue : colonne bornée (~80
    caractères), texte justifié avec césure (document en `lang="fr"`) pour un
    gris typographique régulier, sections séparées d'un filet, titres en
    couleur de texte (l'accent reste aux liens). */
@@ -2416,7 +2421,10 @@ html.light .sheet-sticky-head::after {
   font-size: 14.5px;
   line-height: 1.68;
   color: var(--text2);
-  max-width: 68ch;
+  max-width: 80ch;
+  /* Colonne bornée (~80 caractères, haut de la fourchette lisible) et centrée
+     dans son conteneur, sinon le surplus tombe tout entier à droite. */
+  margin-inline: auto;
 }
 
 .legal-md p,
@@ -2847,12 +2855,13 @@ html.light .sheet-sticky-head::after {
     color: var(--text2);
   }
 
-  /* Ligne de suggestion « compléter le repas » : mise en avant au survol.
-     `!important` : ces cartes portent des `border`/`box-shadow` en style inline
-     (bordure d'état, ombre de base) qui, sinon, l'emportent sur ce survol. */
+  /* Ligne de choix (compléter le repas, ajouter au planning, assigner une base) :
+     survol neutre, liseré qui fonce et voile d'un cran, sans halo ni teinte.
+     `!important` + voile en ombre interne : ces cartes portent `border`,
+     `background` et `box-shadow` en style inline, qui l'emporteraient sinon. */
   .complete-row:hover {
-    border-color: rgba(var(--accent-rgb), 0.45) !important;
-    box-shadow: 0 6px 18px -10px rgba(var(--accent-rgb), 0.55) !important;
+    border-color: var(--text3) !important;
+    box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--text) 4%, transparent) !important;
   }
 
   .complete-row:hover .complete-add {
@@ -2956,54 +2965,89 @@ html.light .sheet-sticky-head::after {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px;
+  padding: 11px 12px;
   border-radius: 999px;
-  border: 1.5px dashed color-mix(in srgb, var(--accent) 45%, var(--border));
-  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
-  color: var(--accent);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
   font-weight: 600;
   font-size: 13.5px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.2s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
-
-@media (hover: hover) {
+/* Le « + » garde l'accent (c'est une action de création) ; le reste est neutre. */
+.editor-add > svg { color: var(--accent); }
+/* Survol : même langage que les pilules Filtres / Tri (voile, liseré et texte qui
+   s'affirment, aucune teinte). */
+@media (hover: hover) and (pointer: fine) {
   .editor-add:hover {
-    border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-    box-shadow: 0 6px 18px -12px rgba(var(--accent-rgb), 0.5);
+    border-color: var(--text3);
+    background: color-mix(in srgb, var(--text) 4%, var(--surface));
+    color: var(--text);
   }
 }
-
 .editor-add:active {
   transform: scale(0.99);
 }
 
-/* Bouton « Nouvelle section » : distinct des ajouts (fond teinté accent, coins
-   doux). Le survol n'existe qu'au vrai pointeur ; sur tactile, l'onde (.ripple)
-   fait le retour. AUCUN glow/box-shadow décoratif (cf. CLAUDE.md §3.1). */
-.editor-new-section {
+/* « Nouvelle section » : filet de coupe titré au repos (deux traits fins et un
+   libellé neutre au centre), pas une carte. Survol desktop : traits et libellé
+   foncent, rien ne se teinte. La saisie du nom remplace le filet. */
+.section-cut {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 11px 14px;
-  border-radius: 16px;
+  padding: 10px 2px;
+  background: none;
+  border: none;
   cursor: pointer;
-  text-align: left;
-  border: 1px solid rgba(var(--accent-rgb), 0.4);
-  background: rgba(var(--accent-rgb), 0.07);
+  color: var(--text3);
+}
+.section-cut::before,
+.section-cut::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
   transition: background-color 0.15s ease;
 }
-
-@media (hover: hover) {
-  .editor-new-section:hover {
-    background: rgba(var(--accent-rgb), 0.12);
-  }
+.section-cut-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: color 0.15s ease;
 }
-
-.editor-new-section:active {
-  transform: scale(0.99);
+.section-cut:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+@media (hover: hover) and (pointer: fine) {
+  .section-cut:hover { color: var(--text); }
+  .section-cut:hover::before,
+  .section-cut:hover::after { background: var(--text3); }
+}
+.section-cut-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+.section-cut-cancel {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .section-cut-cancel:hover { background: var(--surface2); color: var(--text); }
 }
 
 .nr-choice {
@@ -5274,6 +5318,31 @@ html.light .sheet-sticky-head::after {
   .yaml-drop:not([data-over]):hover .yaml-drop-icon { color: var(--text2); }
 }
 
+/* Zone « Choisir une photo » (ImageUpload) : aplat sans bordure. Survol neutre :
+   fond d'un cran, icône et titre qui s'affirment ; aucun survol pendant l'upload. */
+.photo-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border-radius: 12px;
+  border: none;
+  background: var(--surface2);
+  color: var(--text3);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.photo-drop[data-busy] { cursor: progress; }
+@media (hover: hover) and (pointer: fine) {
+  .photo-drop:not([data-busy]):hover {
+    background: var(--surface3);
+    color: var(--text2);
+  }
+  .photo-drop:not([data-busy]):hover .photo-drop-title { color: var(--text); }
+}
+
 /* Bouton de plaque (précautions d'ustensile) : le repère part du cran 1 et tourne
    jusqu'à son cran ; seul le `from` est donné, l'arrivée est la rotation inline. */
 @keyframes heatKnobTurn {
@@ -5347,4 +5416,30 @@ html.light .sheet-sticky-head::after {
     border-color: var(--text3);
     box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--text) 4%, transparent);
   }
+}
+
+/* Image d'ingrédient (IngImage) : arrivée en fondu léger plutôt qu'en « pop ». */
+.ing-img-reveal {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.28s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ing-img-reveal[data-loaded] { opacity: 1; transform: none; }
+/* Anneau de chargement, centré par-dessus l'image encore invisible. Il n'apparaît
+   qu'après un court délai : un chargement rapide passe sans clignotement. */
+.ing-img-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  opacity: 0;
+  animation: spin 0.8s linear infinite, ing-spinner-in 0.2s ease 0.15s forwards;
+}
+@keyframes ing-spinner-in { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .ing-img-reveal { transform: none; transition: opacity 0.15s linear; }
 }

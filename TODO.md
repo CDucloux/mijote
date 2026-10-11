@@ -35,26 +35,19 @@ Depuis que Cardamome tourne aussi en app native, tout un pan « feel natif » et
 - [ ] **Scan code-barres vers le stock.** Ajouter un produit au frigo en scannant
   son code-barres (plugin caméra / barcode).
 
-## Observabilité prod (Sentry) : à finir de brancher
+## Observabilité prod (Sentry)
 
-Chantier commencé puis laissé en plan. La **couture est déjà là et déjà
-utilisée** : `src/lib/observability/observability.ts` expose une API
-vendor-agnostique (`reportError`, `logEvent`, `setObservabilityUser`,
-`installGlobalErrorHandlers`), appelée par l'`ErrorBoundary`, `useFirestoreSync`
-(corrélation utilisateur + erreurs de bootstrap / sync) et `firestore`. Il manque
-seulement d'**enregistrer un vrai provider** : sans `initObservability(sink)`, en
-prod tous ces signaux tombent dans le vide.
+La couture `src/lib/observability/observability.ts` (API vendor-agnostique :
+`reportError`, `logEvent`, `setObservabilityUser`, `installGlobalErrorHandlers`)
+est raccordée à Sentry côté front.
 
-- [ ] **Brancher Sentry côté front.** Installer `@sentry/react`, poser le DSN
-  (`VITE_SENTRY_DSN`) en variable d'env Vercel, puis dans `main.jsx` :
-  `Sentry.init(...)` + `initObservability({ captureError, captureEvent, setUser })`
-  (le branchement exact est déjà écrit dans la docstring de `observability.ts`).
-- [ ] **Release + source maps.** Taguer la release avec la version du
-  `package.json` et uploader les source maps (plugin Vite Sentry ou CLI) pour des
-  stack traces lisibles ; activer les source maps au build prod.
-- [ ] **Régler l'échantillonnage et la vie privée.** Choisir `tracesSampleRate`
-  (et session replay si retenu), et s'assurer qu'on ne fuite rien de sensible
-  au-delà de l'`uid` / email déjà corrélés (scrubbing PII).
+- [x] **Sentry côté front.** `@sentry/react` initialisé dans `main.jsx` (prod et
+  DSN `VITE_SENTRY_DSN` présents), sink `src/lib/observability/sentrySink.ts`
+  (utilisateur réduit à l'uid, sans e-mail, `sendDefaultPii` off), erreurs
+  uniquement : ni tracing ni session replay. Région de données UE.
+- [x] **Release + source maps.** Release `cardamome@<version>` ; source maps
+  envoyées par `@sentry/vite-plugin` quand `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` et
+  `SENTRY_PROJECT` sont définis (Vercel), puis supprimées de `dist/`.
 - [ ] **Observabilité backend (Cloud Functions).** Capturer les erreurs des
   functions (`imports`, `quota`, `subscriptions`) via un provider serveur
   (`@sentry/node` ou équivalent), DSN en secret Firebase, pour couvrir aussi

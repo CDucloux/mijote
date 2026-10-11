@@ -6,7 +6,7 @@ lead: "Les données traitées, pourquoi, combien de temps, et vos droits."
 order: 2
 ---
 
-Cette politique explique quelles données personnelles Cardamome traite, pourquoi, sur quelle base légale, avec qui, combien de temps, et comment exercer vos droits. Elle s'applique à l'application web et à l'application Android, conformément au règlement (UE) 2016/679 (« **RGPD** ») et à la loi n° 78-17 du 6 janvier 1978 (« loi Informatique et Libertés »).
+Cette politique explique quelles données personnelles Cardamome traite, pourquoi, sur quelle base légale, avec qui, combien de temps, et comment exercer vos droits. Elle s'applique à l'application web et à l'application Android, conformément au règlement (UE) 2016/679 (**RGPD**) et à la loi n° 78-17 du 6 janvier 1978 (loi Informatique et Libertés).
 
 ## En bref
 
@@ -37,7 +37,7 @@ L'éditeur n'est pas tenu de désigner un délégué à la protection des donné
 
 **Abonnement Cardamome+.** Statut, formule, dates de période et canal de paiement (Stripe ou Google Play). Nous ne voyons **jamais** vos données bancaires : elles sont saisies et conservées par le prestataire de paiement.
 
-**Données techniques.** Journaux serveur (adresse IP, date, requête, erreurs) nécessaires à la sécurité et au fonctionnement, et un **compteur anonyme** des clics vers les sites sources des recettes (domaine et mois uniquement, sans aucun lien avec votre compte), qui nous sert à rendre compte aux créateurs de l'audience que nous leur apportons.
+**Données techniques.** Journaux serveur (adresse IP, date, requête, erreurs) nécessaires à la sécurité et au fonctionnement ; en cas de plantage de l'Application, un **rapport d'erreur** (message et emplacement de l'erreur dans le code, version de l'Application, navigateur ou appareil, derniers écrans et actions techniques ayant précédé l'erreur, identifiant technique de votre compte, sans votre e-mail ni le contenu de vos recettes) ; et un **compteur anonyme** des clics vers les sites sources des recettes (domaine et mois uniquement, sans aucun lien avec votre compte), qui nous sert à rendre compte aux créateurs de l'audience que nous leur apportons.
 
 ### Données relatives à la santé
 
@@ -55,6 +55,7 @@ Vos allergènes et votre régime alimentaire peuvent révéler des informations 
 | Gérer l'abonnement Cardamome+ et la facturation | Exécution du contrat ; obligation légale pour la conservation comptable (art. 6.1.c) |
 | Traiter les signalements et modérer l'espace public | Obligation légale (règlement sur les services numériques) et intérêt légitime |
 | Sécuriser le service, prévenir les abus, limiter l'usage de l'IA | Intérêt légitime (art. 6.1.f) |
+| Détecter et corriger les plantages de l'Application (rapports d'erreur) | Intérêt légitime (art. 6.1.f) |
 | Mesurer anonymement l'audience envoyée aux sites sources | Intérêt légitime (aucune donnée personnelle conservée) |
 | Répondre à vos demandes et à celles des autorités | Obligation légale et intérêt légitime |
 
@@ -79,6 +80,7 @@ Nous ne prenons **aucune décision automatisée** produisant des effets juridiqu
 | Anthropic PBC | Extraction de recettes par IA (modèles Claude), **uniquement** quand vous lancez un import | États-Unis |
 | Stripe Payments Europe Ltd | Paiement de l'abonnement sur le web | Irlande, avec transferts possibles aux États-Unis |
 | Google Ireland Ltd (Google Play) | Paiement de l'abonnement dans l'application Android | Irlande, avec transferts possibles |
+| Functional Software Inc. (Sentry) | Collecte des rapports d'erreur de l'Application | Union européenne (Allemagne) ; société établie aux États-Unis |
 | Google LLC (Google Fonts) | Fourniture des polices de caractères ; reçoit votre adresse IP lors du chargement | États-Unis |
 
 **Ce qu'il faut savoir sur l'import par IA.** Lorsque vous importez une recette, le contenu concerné est envoyé à Anthropic pour en extraire les ingrédients et les étapes. Pour un PDF, seul le texte extrait sur votre appareil est envoyé, jamais le fichier. Pour un lien, notre serveur télécharge la page publique à votre place. Selon ses conditions commerciales, Anthropic n'utilise pas ces données pour entraîner ses modèles et ne les conserve que pour une durée limitée, à des fins de sécurité. N'importez pas de contenus contenant des informations personnelles de tiers.
@@ -87,7 +89,7 @@ Nous ne prenons **aucune décision automatisée** produisant des effets juridiqu
 
 ## Transferts hors de l'Union européenne
 
-Certains prestataires (Vercel, Anthropic, et le cas échéant Stripe et Google) peuvent traiter des données aux États-Unis. Ces transferts reposent sur la décision d'adéquation de la Commission européenne relative au **cadre de protection des données UE-États-Unis** (Data Privacy Framework) pour les prestataires certifiés, et à défaut sur les **clauses contractuelles types** adoptées par la Commission européenne. Vous pouvez en obtenir une copie en nous écrivant.
+Certains prestataires (Vercel, Anthropic, et le cas échéant Stripe, Google et Sentry) peuvent traiter des données aux États-Unis. Ces transferts reposent sur la décision d'adéquation de la Commission européenne relative au **cadre de protection des données UE-États-Unis** (Data Privacy Framework) pour les prestataires certifiés, et à défaut sur les **clauses contractuelles types** adoptées par la Commission européenne. Vous pouvez en obtenir une copie en nous écrivant.
 
 ## Combien de temps nous conservons vos données
 
@@ -101,6 +103,7 @@ Certains prestataires (Vercel, Anthropic, et le cas échéant Stripe et Google) 
 | Signalements | Le temps de leur traitement, puis 12 mois au plus pour répondre à une éventuelle contestation |
 | Abonnement et facturation | Durée de l'abonnement, puis **10 ans** pour les pièces comptables (article L. 123-22 du Code de commerce) |
 | Journaux techniques du serveur | 30 jours |
+| Rapports d'erreur | 90 jours au plus |
 | Compteur de clics vers les sources | Sans limite (données anonymes, agrégées par domaine et par mois) |
 
 ## Ce qui est stocké sur votre appareil

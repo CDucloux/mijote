@@ -22,9 +22,7 @@ export function ShoppingEmptyState({ onCreate, onBrowseRecipes }: ShoppingEmptyS
         <button className="btn btn-primary btn-pill" style={{ fontSize: 14 }} onClick={onCreate}>
           <Icon name="plus" size={16} color="#fff" /> Créer une liste
         </button>
-        <button className="btn btn-pill" style={{ fontSize: 14, background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.15s ease" }} onClick={onBrowseRecipes}
-          onMouseEnter={e => e.currentTarget.style.borderColor = "var(--text3)"}
-          onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
+        <button className="btn btn-ghost btn-pill btn-ghost-plain" style={{ fontSize: 14 }} onClick={onBrowseRecipes}>
           <Icon name="book" size={16} color="currentColor" /> Partir d'une recette
         </button>
       </div>

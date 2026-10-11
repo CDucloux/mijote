@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useCallback, memo } from "react";
 import { Icon } from "../components/ui/Icon.jsx";
+import { ClearSearchButton } from "../components/ui/ClearSearchButton.jsx";
 import { EmptyArt } from "../components/ui/EmptyArt.jsx";
 import { UserAvatar } from "../components/user/UserAvatar.jsx";
 import { NewRecipeButton } from "../components/recipe/NewRecipeButton.jsx";
@@ -19,6 +20,7 @@ import { useLongPress } from "../hooks/useLongPress.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { OverscrollRow } from "../components/ui/OverscrollRow.jsx";
+import { busyFloor } from "@/lib/ui/busyFloor.js";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 // Toutes les cartes s'animent à l'entrée ; le décalage est plafonné pour que les
@@ -530,9 +532,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             {/* Reset discret quand une recherche est active (les CTA principaux vont
                 de l'avant ; ce lien reste la porte de retour vers la bibliothèque). */}
             {q && (
-              <button onClick={reset} className="empty-clear-link" style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 6, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
-                <Icon name="eraser" size={15} color="var(--text3)" /> {hasFilters ? "Réinitialiser recherche et filtres" : "Effacer la recherche"}
-              </button>
+              <ClearSearchButton onClick={reset} label={hasFilters ? "Réinitialiser recherche et filtres" : undefined} style={{ marginTop: 16 }} />
             )}
           </div>
           );
@@ -553,10 +553,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           onCancel={() => setConfirmDelete(null)}
           onConfirm={async () => {
             setDeleting(true);
-            // Délai plancher : le spinner reste visible un minimum même quand la
-            // suppression optimiste répond instantanément (confort visuel, comme
-            // la dissolution d'un foyer).
-            await new Promise(r => setTimeout(r, 650));
+            await busyFloor();
             if (confirmDelete.kind === "carnet") {
               setCollections(prev => prev.filter(c => c.id !== confirmDelete.item.id));
               if (filterCol === confirmDelete.item.id) setFilterCol(null);

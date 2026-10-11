@@ -717,6 +717,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
           <nav className="lp-footer__col">
             <span className="lp-footer__h">Légal</span>
             <a href="/legal/terms">CGU</a>
+            <a href="/legal/sales">CGV</a>
             <a href="/legal/privacy">Confidentialité</a>
             <a href="/legal">Informations légales</a>
           </nav>

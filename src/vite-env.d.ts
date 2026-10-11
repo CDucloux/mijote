@@ -19,6 +19,8 @@ interface ImportMetaEnv {
   readonly VITE_STRIPE_PRICE_MONTHLY?: string;
   readonly VITE_STRIPE_PRICE_YEARLY?: string;
   readonly VITE_STRIPE_EXT_REGION?: string;
+  // DSN Sentry (erreurs de prod). Absent : aucun envoi.
+  readonly VITE_SENTRY_DSN?: string;
 }
 
 interface ImportMeta {

@@ -173,6 +173,16 @@
   align-items: center;
   gap: 7px;
 }
+/* Lien vers les CGV, accepté au paiement : discret mais visible avant de payer. */
+.plus-reassure-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .plus-reassure-link:hover { color: var(--text2); text-decoration-color: currentColor; }
+}
 
 /* ─── CTA : deux emplacements, un seul masqué selon le breakpoint ───────────── */
 .plus-cta-rail {

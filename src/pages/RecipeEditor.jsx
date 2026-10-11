@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback, Fragment } from "react";
 import { Icon } from "../components/ui/Icon.jsx";
 import { ImageUpload } from "../components/ui/ImageUpload.jsx";
+import { IngImage } from "../components/ui/Img.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RECIPE_CATEGORIES, BASE_CATEGORIES, BASE_CATEGORY_IDS } from "../constants/recipeCategories.js";
 import { UtensilPicker } from "../components/recipe/UtensilPicker.jsx";
@@ -16,37 +17,13 @@ import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 
-// Carte de section (« Pour la pâte »…) dans l'éditeur : en-tête avec nom renommable
-// (clic → champ) et bouton de dissolution, puis le contenu (items + bouton d'ajout).
-function SectionCard({ name, onRename, onDelete, onZoneDrop, children }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(name);
-  const [eraseHover, setEraseHover] = useState(false);
-  const [zoneOver, setZoneOver] = useState(false);
-  const inputRef = useRef(null);
-  useEffect(() => { setDraft(name); }, [name]);
-  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
-  const commit = () => { setEditing(false); onRename(draft); };
+// Section encore vide (« Pour la pâte »…) : même en-tête en ligne qu'une section
+// remplie, suivi de ses boutons d'ajout. Pas de carte : une section vide ne doit
+// pas se distinguer visuellement d'une section qui a déjà ses éléments.
+function SectionCard({ name, onRename, onDelete, children }) {
   return (
-    <div
-      onDragOver={onZoneDrop ? (e => { e.preventDefault(); setZoneOver(true); }) : undefined}
-      onDragLeave={onZoneDrop ? (() => setZoneOver(false)) : undefined}
-      onDrop={onZoneDrop ? (e => { setZoneOver(false); onZoneDrop(e); }) : undefined}
-      style={{ background: zoneOver ? "rgba(var(--accent-rgb),0.1)" : "rgba(var(--accent-rgb),0.04)", border: `1px solid ${zoneOver ? "var(--accent)" : "rgba(var(--accent-rgb),0.3)"}`, borderRadius: 16, padding: 12, display: "flex", flexDirection: "column", gap: 10, transition: "background 0.15s, border-color 0.15s" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Icon name="layers" size={15} color="var(--accent)" />
-        {editing ? (
-          <input ref={inputRef} className="field-input" value={draft} onChange={e => setDraft(e.target.value)}
-            onBlur={commit} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commit(); } if (e.key === "Escape") { setDraft(name); setEditing(false); } }}
-            style={{ marginBottom: 0, flex: 1, minWidth: 0, height: 32, fontSize: 13.5, fontWeight: 600 }} />
-        ) : (
-          <button type="button" onClick={() => setEditing(true)} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: "text", padding: 0, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</button>
-        )}
-        <button type="button" onClick={onDelete} title="Dissoudre la section" onMouseEnter={() => setEraseHover(true)} onMouseLeave={() => setEraseHover(false)}
-          style={{ flexShrink: 0, width: 32, height: 32, borderRadius: "50%", background: eraseHover ? "var(--surface2)" : "transparent", border: "none", display: "grid", placeItems: "center", cursor: "pointer", transition: "background 0.15s" }}>
-          <Icon name="eraser" size={14} color="var(--text3)" />
-        </button>
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <EditorSectionHeader name={name} onRename={onRename} onDelete={onDelete} />
       {children}
     </div>
   );
@@ -81,9 +58,8 @@ function EditorSectionHeader({ name, onRename, onDelete }) {
   );
 }
 
-// Bouton « Nouvelle section », volontairement DISTINCT des ajouts d'ingrédient/étape
-// (fond teinté accent + icône layers), pour ne pas les confondre. Au clic, il se
-// déplie en une petite carte de nommage soignée.
+// Bouton « Nouvelle section » : filet de coupe titré, distinct des boutons d'ajout
+// d'ingrédient / d'étape. Au clic, il laisse place à la saisie du nom.
 function NewSectionButton({ onAdd }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
@@ -91,38 +67,23 @@ function NewSectionButton({ onAdd }) {
   useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
   const close = () => { setDraft(""); setOpen(false); };
   const submit = () => { const t = draft.trim(); if (t) { onAdd(t); close(); } };
-  const chip = (
-    <span style={{ width: 34, height: 34, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.16)" }}>
-      <Icon name="layers" size={17} color="var(--accent)" />
-    </span>
-  );
+  // Repos : un filet de coupe titré, pas une carte. Une section découpe la liste,
+  // l'affordance le dit littéralement (« couper ici ») sans rien teinter.
   if (!open) return (
-    <button type="button" className="editor-new-section ripple" onClick={() => setOpen(true)}>
-      {chip}
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nouvelle section</span>
-        <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>Regrouper en sous-préparation</span>
-      </span>
-      <Icon name="plus" size={17} color="var(--accent)" />
+    <button type="button" className="section-cut" onClick={() => setOpen(true)}>
+      <span className="section-cut-label"><Icon name="plus" size={13} color="currentColor" /> Nouvelle section</span>
     </button>
   );
+  // Saisie : le nom s'écrit à la place du libellé, au gabarit d'un en-tête de section.
   return (
-    <div style={{ padding: 12, borderRadius: 16, border: "1px solid rgba(var(--accent-rgb),0.45)", background: "rgba(var(--accent-rgb),0.07)", display: "flex", flexDirection: "column", gap: 11 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {chip}
-        <span style={{ flex: 1, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--accent)" }}>Nommer la section</span>
-        <button type="button" onClick={close} aria-label="Annuler" style={{ width: 30, height: 30, borderRadius: "50%", border: "none", background: "transparent", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text3)" /></button>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <input ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submit(); } if (e.key === "Escape") close(); }}
-          placeholder="ex. La pâte, La crème, Le sirop…"
-          style={{ flex: 1, minWidth: 0, height: 42, padding: "0 15px", borderRadius: 12, border: "1px solid transparent", background: "var(--surface)", color: "var(--text)", fontSize: 14, fontWeight: 500, outline: "none" }} />
-        <button type="button" onClick={submit} disabled={!draft.trim()}
-          style={{ flexShrink: 0, height: 42, padding: "0 16px", borderRadius: 12, border: "none", background: "var(--accent)", color: "#fff", fontSize: 13.5, fontWeight: 600, cursor: draft.trim() ? "pointer" : "default", opacity: draft.trim() ? 1 : 0.45, display: "inline-flex", alignItems: "center", gap: 6, transition: "opacity 0.15s" }}>
-          <Icon name="check" size={15} color="#fff" /> Créer
-        </button>
-      </div>
+    <div className="section-cut-form">
+      <input ref={inputRef} value={draft} onChange={e => setDraft(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submit(); } if (e.key === "Escape") close(); }}
+        onBlur={() => { if (!draft.trim()) close(); }}
+        placeholder="Nom de la section, ex. La pâte" aria-label="Nom de la nouvelle section"
+        className="field-input field-soft" style={{ flex: 1, minWidth: 0, height: 42, borderRadius: 12, background: "var(--surface)" }} />
+      <button type="button" className="btn btn-primary btn-pill btn-sm" onMouseDown={e => e.preventDefault()} onClick={submit} disabled={!draft.trim()}>Créer</button>
+      <button type="button" className="section-cut-cancel" onMouseDown={e => e.preventDefault()} onClick={close} aria-label="Annuler"><Icon name="close" size={14} color="currentColor" /></button>
     </div>
   );
 }
@@ -142,10 +103,12 @@ function SectionAddBar({ onAddIngredient, components, canBase = true }) {
         {components.length === 0 ? (
           <p style={{ fontSize: 12, color: "var(--text3)", textAlign: "center", padding: "10px 0", lineHeight: 1.5 }}>Aucune base disponible.<br />Crée d'abord une recette en « préparation de base ».</p>
         ) : components.map(comp => (
-          <button key={comp.id} onClick={() => { comp.onPick(); setPicking(false); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", textAlign: "left", cursor: "pointer" }}>
-            <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.1)" }}><BaseIcon size={16} /></span>
-            <span style={{ flex: 1, fontSize: 13, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{comp.name}</span>
-            <span style={{ fontSize: 11, color: "var(--text3)" }}>{comp.yield?.amount} {comp.yield?.unit}</span>
+          <button key={comp.id} onClick={() => { comp.onPick(); setPicking(false); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: 12, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", textAlign: "left", cursor: "pointer" }}>
+            {comp.image
+              ? <IngImage src={comp.image} alt="" size={36} cover />
+              : <span style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "var(--surface2)" }}><BaseIcon size={17} color="var(--text3)" /></span>}
+            <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{comp.name}</span>
+            {comp.yield?.amount ? <span style={{ fontSize: 11.5, color: "var(--text3)", flexShrink: 0 }}>{comp.yield.amount} {comp.yield.unit}</span> : null}
             <span className="complete-add" style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}><Icon name="plus" size={15} color="currentColor" /></span>
           </button>
         ))}
@@ -311,6 +274,16 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const [sectionNames, setSectionNames] = useState(() => groupOrder(form));
   // Union ordonnée : sections déclarées + toute section présente dans les données.
   const allSections = [...new Set([...sectionNames, ...groupOrder(form)])];
+  // Tant qu'aucune section n'existe, « Nouvelle section » se place en tête de liste
+  // (on structure avant de remplir) ; ensuite il suit les sections, en bas.
+  const noSection = allSections.length === 0;
+  // Blocs à plat et premier bloc hors section : son bouton d'ajout se colle dessous.
+  const ingRuns = sectionRuns(form.ingredients);
+  const ingFreeRun = ingRuns.find(r => r.group == null);
+  const stepRuns = sectionRuns(form.steps);
+  const stepFreeRun = stepRuns.find(r => r.group == null);
+  const freeIngBar = (at) => <SectionAddBar onAddIngredient={() => addIngAt(at, "")} components={[]} canBase={false} />;
+  const freeStepBtn = (at) => <button className="editor-add" onClick={() => addStepAt(at, "")}><Icon name="plus" size={16} /> Ajouter une étape</button>;
   const addSection = (name) => { const t = (name || "").trim(); if (t && !allSections.includes(t)) setSectionNames(s => [...s, t]); };
   const renameSection = (from, to) => {
     const t = (to || "").trim();
@@ -327,7 +300,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
   const ingsOf = (g) => form.ingredients.filter(i => (i.group || "") === g);
   // Bases disponibles pour une zone d'ajout : insérées à `index` avec la section `group`.
-  const compsAt = (group, index) => (form.isComponent ? [] : availableComponents.map(c => ({ id: c.id, name: c.name, yield: c.yield, onPick: () => addComponentAt(index, c, group) })));
+  const compsAt = (group, index) => (form.isComponent ? [] : availableComponents.map(c => ({ id: c.id, name: c.name, image: c.image, yield: c.yield, onPick: () => addComponentAt(index, c, group) })));
 
   const isDesktop = useIsDesktop();
 
@@ -564,9 +537,13 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="warning" size={16} color="var(--red)" /> {saveError}
               </div>
             )}
+            {noSection && <NewSectionButton onAdd={addSection} />}
+            {/* Ajout hors section : collé sous les ingrédients sans section (le premier
+                bloc libre), ou en tête s'il n'y en a pas, jamais sous les sections. */}
+            {!ingFreeRun && freeIngBar(0)}
             {/* Liste À PLAT dans l'ordre réel : en-têtes de section en ligne, chaque
                 bloc a son bouton d'ajout (ingrédient / base). Réordonnancement libre. */}
-            {sectionRuns(form.ingredients).map(run => {
+            {ingRuns.map(run => {
               const g = run.group; // null = hors section
               const endIdx = run.start + run.items.length; // insertion en fin de bloc
               const rawInSection = g != null && ingsOf(g).some(i => !i.recipeId);
@@ -587,17 +564,17 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     );
                   })}
                   {g != null && <SectionAddBar onAddIngredient={() => addIngAt(endIdx, g)} components={compsAt(g, endIdx)} canBase={!form.isComponent && !rawInSection} />}
+                  {run === ingFreeRun && freeIngBar(endIdx)}
                 </Fragment>
               );
             })}
-            {/* Ajout hors section (ingrédient seul) + création de section + sections vides */}
-            <SectionAddBar onAddIngredient={() => addIngAt(form.ingredients.length, "")} components={[]} canBase={false} />
-            <NewSectionButton onAdd={addSection} />
+            {/* Sections vides, puis création d'une nouvelle section, toujours en dernier */}
             {allSections.filter(n => !form.ingredients.some(i => (i.group || "") === n)).map(name => (
               <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
                 <SectionAddBar onAddIngredient={() => addIngAt(form.ingredients.length, name)} components={compsAt(name, form.ingredients.length)} canBase={!form.isComponent} />
               </SectionCard>
             ))}
+            {!noSection && <NewSectionButton onAdd={addSection} />}
           </div>
         </div>
 
@@ -613,9 +590,11 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="drag" size={14} color="var(--text3)" /> Glisse les étapes pour les réorganiser.
               </div>
             )}
+            {noSection && <NewSectionButton onAdd={addSection} />}
+            {!stepFreeRun && freeStepBtn(0)}
             {/* Liste À PLAT dans l'ordre réel : en-têtes de section en ligne, ajout par
                 bloc, réordonnancement libre (l'étape adopte la section du bloc d'arrivée). */}
-            {sectionRuns(form.steps).map(run => {
+            {stepRuns.map(run => {
               const g = run.group;
               const endIdx = run.start + run.items.length;
               return (
@@ -632,16 +611,16 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                     );
                   })}
                   {g != null && <button className="editor-add" onClick={() => addStepAt(endIdx, g)}><Icon name="plus" size={16} /> Ajouter une étape</button>}
+                  {run === stepFreeRun && freeStepBtn(endIdx)}
                 </Fragment>
               );
             })}
-            <button className="editor-add" onClick={() => addStepAt(form.steps.length, "")}><Icon name="plus" size={16} /> Ajouter une étape</button>
-            <NewSectionButton onAdd={addSection} />
             {allSections.filter(n => !form.steps.some(s => (s.group || "") === n)).map(name => (
               <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
                 <button className="editor-add" onClick={() => addStepAt(form.steps.length, name)}><Icon name="plus" size={16} /> Ajouter une étape</button>
               </SectionCard>
             ))}
+            {!noSection && <NewSectionButton onAdd={addSection} />}
           </div>
         </div>
 
