@@ -10,6 +10,7 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { vesselColor } from "@/lib/food/vesselColor.js";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
 // Gestion binaire du stock présentée en « mur d'étagères » : chaque ingrédient est
@@ -21,12 +22,24 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 // tons chauds « garde-manger », choisis déterministiquement par ingrédient.
 const STK_FILL = ["#cdb98a", "#c9a15c", "#b98c4a", "#a6743a", "#8f6b3f", "#7d5a34", "#c7b552", "#9aa15a", "#b5773f", "#d3a86a"];
 
-/** Couleur de contenu stable pour un ingrédient (hash simple -> palette chaude). */
-function stkFillColor(seed) {
+// Contenant selon le rayon : huiles, vinaigres et alcools en BOUTEILLE (liquides
+// dorés, du vinaigre blanc au balsamique, vins et spiritueux), condiments et
+// épices en POT À ÉPICES (poudres : paprika, curcuma, poivre, herbes séchées…).
+// Le reste en bocal. La couleur vient d'abord du nom (`vesselColor` : vin rouge,
+// balsamique, paprika…), la palette du rayon ne sert qu'à défaut.
+const VESSELS = {
+  oil: { kind: "bottle", fill: ["#d8b44a", "#c9a23a", "#b9a646", "#e0c46a"] },
+  acid: { kind: "bottle", fill: ["#a8483a", "#d6c38a", "#7a3b2a", "#c58a4a"] },
+  alcohol: { kind: "bottle", fill: ["#6e1f2a", "#e3cf86", "#e8a3a0", "#b8742a", "#8a2b3a"] },
+  condiment: { kind: "spice", fill: ["#b8432c", "#d9a42a", "#4a3a2c", "#7c8a45", "#a0522d", "#c9b48a"] },
+};
+
+/** Couleur de contenu stable pour un ingrédient (hash simple -> palette). */
+function stkFillColor(seed, palette = STK_FILL) {
   const s = String(seed || "");
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return STK_FILL[h % STK_FILL.length];
+  return palette[h % palette.length];
 }
 
 const STATE_LABEL = { full: "en stock", low: "bientôt vide", empty: "à racheter" };
@@ -40,14 +53,16 @@ const SHELVES_PAGE = 4; // planches (rangées) montées par lot
  * Un bocal. Mémoïsé sur `(ing, state, onCycle)` : toggler un bocal ne re-rend que
  * lui, pas les 139. Le niveau de remplissage est piloté en CSS par `data-state`.
  */
-const Jar = memo(function Jar({ ing, state, onCycle }) {
+const Jar = memo(function Jar({ ing, state, onCycle, catKey }) {
   const [imgErr, setImgErr] = useState(false);
+  const vessel = VESSELS[catKey];
   return (
     <button
       className="stk-jar"
       data-state={state}
+      data-vessel={vessel?.kind}
       onClick={() => onCycle(ing.id)}
-      style={{ "--fill": stkFillColor(ing.dbId || ing.id) }}
+      style={{ "--fill": (vessel && vesselColor(ing.name, catKey)) || stkFillColor(ing.dbId || ing.id, vessel?.fill) }}
       aria-label={`${ing.name} : ${STATE_LABEL[state]}`}
     >
       <span className="stk-lid" aria-hidden="true" />
@@ -69,35 +84,55 @@ const Jar = memo(function Jar({ ing, state, onCycle }) {
       )}
     </button>
   );
-}, (a, b) => a.state === b.state && a.ing === b.ing && a.onCycle === b.onCycle);
+}, (a, b) => a.state === b.state && a.ing === b.ing && a.onCycle === b.onCycle && a.catKey === b.catKey);
 
-/** Équerre en fer (support de planche), décalée du bord (cf. .stk-bracket). */
+/** Équerre vue de FACE (comme l'étagère) : on n'en voit que la tranche, une barre
+ *  étroite qui descend sous la planche et s'affine vers le mur, avec sa vis de
+ *  fixation. Décalée du bord (cf. .stk-bracket). */
 function ShelfBracket({ side }) {
   return (
-    <svg className={`stk-bracket ${side}`} viewBox="0 0 26 32" fill="none" aria-hidden="true">
-      <path d="M2 1h13a1 1 0 0 1 .8 1.6L3.6 30.4A1 1 0 0 1 1.7 30V2a1 1 0 0 1 1-1Z" fill="var(--iron)" />
-      <path d="M4 4h8L4 22V4Z" fill="rgba(255,255,255,.06)" />
-      <circle cx="6" cy="5.5" r="1.1" fill="var(--iron-hi)" />
+    <svg className={`stk-bracket ${side}`} viewBox="0 0 10 30" fill="none" aria-hidden="true">
+      <path d="M0.5 0H9.5L7.6 27.2C7.4 29 6.4 30 5 30C3.6 30 2.6 29 2.4 27.2Z" fill="var(--iron)" />
+      <path d="M0.5 0H3L3.8 26.5C3.2 26.5 2.6 26.9 2.4 27.2Z" fill="rgba(255,255,255,.09)" />
+      <circle cx="5" cy="21" r="1.3" fill="var(--iron-hi)" />
     </svg>
   );
 }
 
-/** Fioriture unique : un brin d'eucalyptus en bout de rayon (décoratif). */
+// Feuilles du brin : position (base sur la tige), angle, longueur, largeur, teinte.
+// Tailles et teintes irrégulières : un vrai brin n'est jamais symétrique.
+const SPRIG_LEAVES = [
+  { x: 27.4, y: 60, r: -58, l: 13, w: 7.5, c: "#6d9447" },
+  { x: 27.6, y: 56, r: 62, l: 12, w: 7, c: "#7fa155" },
+  { x: 26.6, y: 48, r: -48, l: 14, w: 8, c: "#7fa155" },
+  { x: 27, y: 44, r: 52, l: 12.5, w: 7, c: "#8cae60" },
+  { x: 26.2, y: 36, r: -40, l: 12, w: 6.8, c: "#8cae60" },
+  { x: 26.6, y: 32, r: 44, l: 11, w: 6.2, c: "#9cbb73" },
+  { x: 26.4, y: 25, r: -22, l: 9, w: 5.4, c: "#a6c47f" },
+  { x: 26.8, y: 23, r: 26, l: 8, w: 5, c: "#a6c47f" },
+  { x: 33.5, y: 47, r: 70, l: 9.5, w: 5.6, c: "#9cbb73" },
+  { x: 37, y: 41.5, r: 30, l: 8.5, w: 5, c: "#a6c47f" },
+];
+const leafPath = (l, w) => `M0 0C${w / 2} ${-l * 0.28} ${w / 2} ${-l * 0.72} 0 ${-l}C${-w / 2} ${-l * 0.72} ${-w / 2} ${-l * 0.28} 0 0Z`;
+
+/** Fioriture unique : un brin dans son pot de terre cuite, posé en bout de rayon (décoratif). */
 function ShelfSprig() {
   return (
-    <svg className="stk-sprig" viewBox="0 0 54 78" aria-hidden="true">
-      <path d="M40 78 C36 55 34 40 33 22" stroke="#5a7d3e" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-      <g fill="#7fa155">
-        <ellipse cx="26" cy="30" rx="8" ry="4.6" transform="rotate(-32 26 30)" />
-        <ellipse cx="41" cy="34" rx="8" ry="4.6" transform="rotate(28 41 34)" />
-        <ellipse cx="24" cy="44" rx="7.5" ry="4.4" transform="rotate(-30 24 44)" />
-        <ellipse cx="40" cy="49" rx="7.5" ry="4.4" transform="rotate(26 40 49)" />
-        <ellipse cx="27" cy="59" rx="6.6" ry="4" transform="rotate(-26 27 59)" />
-      </g>
-      <g fill="#9cbb73">
-        <ellipse cx="24" cy="24" rx="5.5" ry="3.2" transform="rotate(-34 24 24)" />
-        <ellipse cx="34" cy="19" rx="5" ry="3" transform="rotate(-4 34 19)" />
-      </g>
+    <svg className="stk-sprig" viewBox="0 0 54 96" aria-hidden="true">
+      {/* tige principale et rameau */}
+      <path d="M28 68C27.4 56 26 44 26.5 21" stroke="#56773a" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M27.2 52C31 49 34.5 45 37.5 40" stroke="#56773a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+      {SPRIG_LEAVES.map((leaf, i) => (
+        <g key={i} transform={`translate(${leaf.x} ${leaf.y}) rotate(${leaf.r})`}>
+          <path d={leafPath(leaf.l, leaf.w)} fill={leaf.c} />
+          <path d={`M0 -1.5V${-leaf.l * 0.8}`} stroke="rgba(40,60,25,.28)" strokeWidth="0.7" strokeLinecap="round" />
+        </g>
+      ))}
+      {/* pot : corps évasé, rebord, ombre du côté droit */}
+      <path d="M14 72H42L39 93C38.8 94.7 37.6 96 35.9 96H20.1C18.4 96 17.2 94.7 17 93Z" fill="#c8693f" />
+      <path d="M33 72H42L39 93C38.8 94.7 37.6 96 35.9 96H32Z" fill="#a9532f" />
+      <rect x="11" y="66" width="34" height="8" rx="2.5" fill="#d9804f" />
+      <rect x="11" y="66" width="34" height="2.4" rx="1.2" fill="#e89a6b" />
     </svg>
   );
 }
@@ -424,7 +459,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                       <div className="stk-jars">
                         {row.map(ing => {
                           const state = lowSet.has(ing.id) ? "low" : stockSet.has(ing.id) ? "full" : "empty";
-                          return <Jar key={ing.id} ing={ing} state={state} onCycle={cycle} />;
+                          return <Jar key={ing.id} ing={ing} state={state} onCycle={cycle} catKey={catKey} />;
                         })}
                       </div>
                       {roomForSprig && <ShelfSprig />}
