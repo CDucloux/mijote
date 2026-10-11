@@ -862,10 +862,15 @@ html.light select.field-input {
 
 /* Variante « fond surface » d'une pastille fantôme : fond blanc en thème clair
    (var(--surface)) plutôt que le gris-vert de surface2, pour les CTA secondaires
-   des états vides. Survol : un cran vers surface2. */
+   des états vides. Survol : même langage que les pilules Filtres / Tri (fond
+   voilé d'un cran, bordure et texte qui s'affirment, aucune teinte). */
 .btn-ghost.btn-ghost-plain { background: var(--surface); }
-@media (hover: hover) {
-  .btn-ghost.btn-ghost-plain:hover { background: var(--surface2); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-ghost.btn-ghost-plain:hover {
+    background: color-mix(in srgb, var(--text) 4%, var(--surface));
+    border-color: var(--text3);
+    color: var(--text);
+  }
 }
 
 /* Variante pleine SANS halo accent : pour les contextes où l'ombre colorée fait
