@@ -1,8 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { fileURLToPath, URL } from 'node:url'
+import process from 'node:process'
 import pkg from './package.json';
+
+// Source maps Sentry : générées et envoyées UNIQUEMENT quand le jeton est présent
+// (build Vercel de prod), puis supprimées de dist/ pour ne pas publier le code
+// source. Sans jeton (dev, CI, build local), rien ne change.
+const sentryUpload = Boolean(process.env.SENTRY_AUTH_TOKEN)
 
 export default defineConfig({
   plugins: [
@@ -52,7 +59,16 @@ export default defineConfig({
         ],
       },
     }),
-  ],
+    // Toujours en dernier : il lit les bundles finaux.
+    sentryUpload && sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: { name: `cardamome@${pkg.version}` },
+      sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
+      telemetry: false,
+    }),
+  ].filter(Boolean),
   resolve: {
     // Alias racine `@/` → `src/` : imports stables et lisibles, insensibles aux
     // déplacements de fichiers (hérité par Vitest via la config Vite).
@@ -65,6 +81,7 @@ export default defineConfig({
   },
   appType: 'spa',
   build: {
+    sourcemap: sentryUpload ? 'hidden' : false,
     rollupOptions: {
       output: {
         // Sépare les dépendances stables dans leurs propres chunks : elles ne

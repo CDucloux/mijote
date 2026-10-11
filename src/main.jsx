@@ -6,14 +6,34 @@ import { Capacitor } from '@capacitor/core'
 import App from './App.jsx'
 import { PublicApp } from './PublicApp.jsx'
 import { ErrorBoundary } from './components/ui/ErrorBoundary.jsx'
-import { installGlobalErrorHandlers } from './lib/observability/observability.js'
+import * as Sentry from '@sentry/react'
+import { installGlobalErrorHandlers, initObservability } from './lib/observability/observability.js'
+import { createSentrySink } from './lib/observability/sentrySink.js'
 import { markNativeFeel } from './lib/ui/nativeFeel.js'
 import { isAppContext, getRuntimeContext } from './lib/ui/runtimeContext.js'
 import { isAppZone, toAppPath, APP_BASE } from './lib/ui/appZone.js'
 import { registerSW } from 'virtual:pwa-register'
 
-// Filets globaux : erreurs non catchées + rejets de promesse non gérés. La
-// destination (Sentry) se branche via initObservability (voir observability.ts).
+// Sentry, en prod seulement et si le DSN est fourni (variable Vercel) : le dev
+// local et les builds sans DSN restent muets. Erreurs uniquement (ni tracing ni
+// replay), aucune donnée personnelle par défaut (`sendDefaultPii` off), utilisateur
+// réduit à son uid par le sink. Les filets globaux de Sentry sont retirés : les
+// nôtres (ci-dessous) passent déjà par la couture, sans double remontée.
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
+if (import.meta.env.PROD && SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    release: `cardamome@${__APP_VERSION__}`,
+    environment: 'production',
+    sendDefaultPii: false,
+    integrations: defaults => defaults.filter(i => i.name !== 'GlobalHandlers'),
+    initialScope: { tags: { platform: Capacitor.isNativePlatform() ? 'android' : 'web' } },
+  })
+  initObservability(createSentrySink(Sentry))
+}
+
+// Filets globaux : erreurs non catchées + rejets de promesse non gérés, remontés
+// via la couture d'observabilité (voir observability.ts).
 installGlobalErrorHandlers()
 
 // Feel « app native » (pas de sélection de texte / callout) : posé sur <html> avant
