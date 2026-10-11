@@ -8,6 +8,7 @@ import { useAppShell } from "../../context/AppShellContext.jsx";
 import { useHousehold } from "../../hooks/useHousehold.js";
 import { peopleCount, isOwner, MAX_HOUSEHOLD, type Household } from "@/lib/household/household.js";
 import { Row, Col } from "../ui/primitives.jsx";
+import { busyFloor } from "@/lib/ui/busyFloor.js";
 
 // Entrée d'annuaire (forme Firestore souple réduite aux champs lus ici).
 interface DirRow { uid?: string; email?: string; displayName?: string; photoURL?: string }
@@ -226,11 +227,9 @@ export function HouseholdPanel({ onClose }: { onClose?: () => void }) {
           onConfirm={async () => {
             setFrozenHh(household); // fige l'affichage avant la suppression optimiste
             setWorking(true);
-            // Délai plancher : le spinner reste visible un minimum même si le serveur
-            // répond instantanément (confort visuel, comme la déconnexion).
             const [ok] = await Promise.all([
               confirmSnap.owner ? actions.dissolve() : actions.leave(),
-              new Promise(r => setTimeout(r, 650)),
+              busyFloor(),
             ]);
             if (ok) { setLeaving(true); onClose?.(); }
             else { setWorking(false); setConfirmLeave(false); }

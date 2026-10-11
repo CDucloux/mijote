@@ -17,6 +17,7 @@ import { ListMenuSheet } from "../components/shopping/ListMenuSheet.jsx";
 import { ConfirmClearSheet } from "../components/shopping/ConfirmClearSheet.jsx";
 import { AddItemSheet } from "../components/shopping/AddItemSheet.jsx";
 import { ListConfigSheet } from "../components/shopping/ListConfigSheet.jsx";
+import { busyFloor } from "@/lib/ui/busyFloor.js";
 
 export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, recipes = [], categories = DEFAULT_CATEGORIES, loading = false, setStock, setLowStock }) {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, re
   const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
 
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [deletingList, setDeletingList] = useState(false); // spinner du dialogue de suppression
   const [confirmClearId, setConfirmClearId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [listMenu, setListMenu] = useState(null);      // liste dont le menu (⋯ / appui long) est ouvert
@@ -134,9 +136,15 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, re
 
       {/* Confirm delete – uniquement pour les listes libres */}
       {confirmDeleteId && (
-        <ConfirmDialog title="Supprimer la liste ?"
+        <ConfirmDialog title="Supprimer la liste ?" busy={deletingList}
           onCancel={() => setConfirmDeleteId(null)}
-          onConfirm={() => { deleteList(confirmDeleteId); setConfirmDeleteId(null); }}>
+          onConfirm={async () => {
+            setDeletingList(true);
+            await busyFloor();
+            deleteList(confirmDeleteId);
+            setDeletingList(false);
+            setConfirmDeleteId(null);
+          }}>
           <strong style={{ color: "var(--text)" }}>« {shoppingLists.find(l => l.id === confirmDeleteId)?.name} »</strong> sera supprimée définitivement avec tous ses articles.
         </ConfirmDialog>
       )}

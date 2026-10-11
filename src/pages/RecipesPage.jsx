@@ -20,6 +20,7 @@ import { useLongPress } from "../hooks/useLongPress.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { OverscrollRow } from "../components/ui/OverscrollRow.jsx";
+import { busyFloor } from "@/lib/ui/busyFloor.js";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 // Toutes les cartes s'animent à l'entrée ; le décalage est plafonné pour que les
@@ -552,10 +553,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           onCancel={() => setConfirmDelete(null)}
           onConfirm={async () => {
             setDeleting(true);
-            // Délai plancher : le spinner reste visible un minimum même quand la
-            // suppression optimiste répond instantanément (confort visuel, comme
-            // la dissolution d'un foyer).
-            await new Promise(r => setTimeout(r, 650));
+            await busyFloor();
             if (confirmDelete.kind === "carnet") {
               setCollections(prev => prev.filter(c => c.id !== confirmDelete.item.id));
               if (filterCol === confirmDelete.item.id) setFilterCol(null);
