@@ -21,11 +21,13 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 // tons chauds « garde-manger », choisis déterministiquement par ingrédient.
 const STK_FILL = ["#cdb98a", "#c9a15c", "#b98c4a", "#a6743a", "#8f6b3f", "#7d5a34", "#c7b552", "#9aa15a", "#b5773f", "#d3a86a"];
 
-// Huiles et vinaigres se rangent en BOUTEILLE, pas en bocal : liquides dorés pour
-// les huiles, du vinaigre blanc au balsamique pour les acides.
-const BOTTLE_FILL = {
-  oil: ["#d8b44a", "#c9a23a", "#b9a646", "#e0c46a"],
-  acid: ["#a8483a", "#d6c38a", "#7a3b2a", "#c58a4a"],
+// Contenant selon le rayon : huiles et vinaigres en BOUTEILLE (liquides dorés,
+// du vinaigre blanc au balsamique), condiments et épices en POT À ÉPICES
+// (poudres : paprika, curcuma, poivre, herbes séchées…). Le reste en bocal.
+const VESSELS = {
+  oil: { kind: "bottle", fill: ["#d8b44a", "#c9a23a", "#b9a646", "#e0c46a"] },
+  acid: { kind: "bottle", fill: ["#a8483a", "#d6c38a", "#7a3b2a", "#c58a4a"] },
+  condiment: { kind: "spice", fill: ["#b8432c", "#d9a42a", "#4a3a2c", "#7c8a45", "#a0522d", "#c9b48a"] },
 };
 
 /** Couleur de contenu stable pour un ingrédient (hash simple -> palette). */
@@ -49,14 +51,14 @@ const SHELVES_PAGE = 4; // planches (rangées) montées par lot
  */
 const Jar = memo(function Jar({ ing, state, onCycle, catKey }) {
   const [imgErr, setImgErr] = useState(false);
-  const bottle = BOTTLE_FILL[catKey];
+  const vessel = VESSELS[catKey];
   return (
     <button
       className="stk-jar"
       data-state={state}
-      data-vessel={bottle ? "bottle" : undefined}
+      data-vessel={vessel?.kind}
       onClick={() => onCycle(ing.id)}
-      style={{ "--fill": stkFillColor(ing.dbId || ing.id, bottle) }}
+      style={{ "--fill": stkFillColor(ing.dbId || ing.id, vessel?.fill) }}
       aria-label={`${ing.name} : ${STATE_LABEL[state]}`}
     >
       <span className="stk-lid" aria-hidden="true" />
