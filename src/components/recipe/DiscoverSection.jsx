@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Icon } from "../ui/Icon.jsx";
+import { ClearSearchButton } from "../ui/ClearSearchButton.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { ElasticScroll } from "../ui/ElasticScroll.jsx";
@@ -424,9 +425,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
                 </button>
               )}
               {q && (
-                <button onClick={reset} style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>
-                  <Icon name="eraser" size={15} color="var(--text3)" /> {hasConstraint ? "Réinitialiser recherche et filtres" : "Effacer la recherche"}
-                </button>
+                <ClearSearchButton onClick={reset} label={hasConstraint ? "Réinitialiser recherche et filtres" : undefined} style={{ marginTop: 16 }} />
               )}
             </div>
           );

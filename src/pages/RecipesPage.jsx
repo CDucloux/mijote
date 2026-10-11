@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useCallback, memo } from "react";
 import { Icon } from "../components/ui/Icon.jsx";
+import { ClearSearchButton } from "../components/ui/ClearSearchButton.jsx";
 import { EmptyArt } from "../components/ui/EmptyArt.jsx";
 import { UserAvatar } from "../components/user/UserAvatar.jsx";
 import { NewRecipeButton } from "../components/recipe/NewRecipeButton.jsx";
@@ -530,9 +531,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
             {/* Reset discret quand une recherche est active (les CTA principaux vont
                 de l'avant ; ce lien reste la porte de retour vers la bibliothèque). */}
             {q && (
-              <button onClick={reset} className="empty-clear-link" style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 6, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
-                <Icon name="eraser" size={15} color="var(--text3)" /> {hasFilters ? "Réinitialiser recherche et filtres" : "Effacer la recherche"}
-              </button>
+              <ClearSearchButton onClick={reset} label={hasFilters ? "Réinitialiser recherche et filtres" : undefined} style={{ marginTop: 16 }} />
             )}
           </div>
           );

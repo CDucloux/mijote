@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, memo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
+import { ClearSearchButton } from "../components/ui/ClearSearchButton.jsx";
 import { EmptyArt } from "../components/ui/EmptyArt.jsx";
 import { UserAvatar } from "../components/user/UserAvatar.jsx";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
@@ -383,9 +384,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
               <StockEmpty art="bocal" title="Aucun ingrédient trouvé"
                 body={<>Rien ne correspond à « <strong style={{ color: "var(--text)", fontWeight: 600 }}>{qShort}</strong> » dans ta base d'ingrédients.<br />Vérifie l'orthographe ou essaie un autre terme.</>}
                 action={
-                  <button onClick={() => setSearch("")} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text3)" }}>
-                    <Icon name="eraser" size={15} color="var(--text3)" /> Effacer la recherche
-                  </button>
+                  <ClearSearchButton onClick={() => setSearch("")} />
                 } />
             );
           }
