@@ -1,5 +1,33 @@
 # Changelog – Cardamome
 
+## v4.63.0 – Cardamome · Sous surveillance
+
+### Observabilité
+- **Sentry branché en production** : les erreurs de l'app (web et Android) remontent dans Sentry, données hébergées dans l'UE. Erreurs uniquement, sans suivi de performance ni enregistrement de session ; l'utilisateur n'est identifié que par son identifiant technique, jamais par son e-mail. Source maps envoyées au build puis retirées du site publié.
+
+### Informations légales
+- **CGU et CGV séparées** : les conditions de l'abonnement Cardamome+ ont leur propre document (commande, renouvellement, résiliation, rétractation, garantie), lié depuis la page Cardamome+ et le pied de page.
+- **Lecture plus confortable** : colonne plus large sur desktop et centrée, plus aucun guillemet, Sentry ajouté à la politique de confidentialité.
+
+### Éditeur de recette
+- **Sections repensées** : « Nouvelle section » devient un filet discret, placé en tête tant qu'aucune section n'existe puis sous la dernière ; une section vide a le même en-tête qu'une section remplie.
+- **Boutons d'ajout neutres** et placés au bon endroit : l'ajout hors section suit les ingrédients sans section.
+- **Préparations de base** au même gabarit qu'un ingrédient, dans la liste comme au moment de les choisir, sans halo vert au survol.
+- **Zone photo** : survol desktop.
+
+### Courses
+- **Ajout d'article** : saisie analysée en pills (Quantité, Unité, nom), statut reconnu ou non en pastille sur l'image.
+- **Suppression d'une liste** avec spinner, comme pour une recette ; suggestions de nom et état vide avec survol desktop.
+
+### Interface
+- **Images d'ingrédients** : petit anneau de chargement puis fondu, au lieu d'un affichage brutal.
+- **Effacer la recherche** : même bouton et même survol partout.
+- **Fiche recette** : une seule flèche de renvoi dans les crédits du chef.
+
+### Correctifs
+- **Spinner infini** sur l'image d'un ingrédient après un réordonnancement.
+- **README restauré** : il avait été vidé par erreur lors de la v4.62.1.
+
 ## v4.62.1 – Cardamome · Qui est ce chef ?
 
 ### Recettes
