@@ -43,15 +43,14 @@ export function ListConfigSheet({ configList, setConfigList, focusNoScroll, onCl
           onChange={e => setConfigList(p => ({ ...p, name: e.target.value }))}
           onKeyDown={e => e.key === "Enter" && e.currentTarget.blur()} style={{ background: "var(--surface)", borderRadius: 13, height: 46 }} />
 
-        {/* Suggestions de nom (nouvelle liste uniquement) */}
+        {/* Suggestions de nom (nouvelle liste uniquement), même pill que les filtres
+            (`.filter-chip` : survol desktop, état choisi en accent). */}
         {configList.isNew && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 10 }}>
             {["Courses de la semaine", "Marché", "Épicerie", "Week-end", "Apéro"].map(s => (
-              <button key={s} onClick={() => setConfigList(p => ({ ...p, name: s }))} className="pressable"
-                style={{ fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 999, cursor: "pointer",
-                  background: configList.name === s ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)",
-                  color: configList.name === s ? "var(--accent)" : "var(--text2)",
-                  border: `1px solid ${configList.name === s ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}` }}>{s}</button>
+              <button key={s} type="button" onClick={() => setConfigList(p => ({ ...p, name: s }))} className="filter-chip pressable"
+                data-on={configList.name === s ? "1" : undefined}
+                style={{ fontSize: 12, fontWeight: 600, padding: "6px 12px", borderRadius: 999 }}>{s}</button>
             ))}
           </div>
         )}
