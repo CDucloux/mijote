@@ -271,10 +271,9 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   const [sectionNames, setSectionNames] = useState(() => groupOrder(form));
   // Union ordonnée : sections déclarées + toute section présente dans les données.
   const allSections = [...new Set([...sectionNames, ...groupOrder(form)])];
-  // Liste vierge (ni élément ni section) : « Nouvelle section » s'affiche au-dessus
-  // du bouton d'ajout, on structure la recette avant de la remplir.
-  const ingBlank = form.ingredients.length === 0 && allSections.length === 0;
-  const stepBlank = form.steps.length === 0 && allSections.length === 0;
+  // Tant qu'aucune section n'existe, « Nouvelle section » se place en tête de liste
+  // (on structure avant de remplir) ; ensuite il suit les sections, en bas.
+  const noSection = allSections.length === 0;
   const addSection = (name) => { const t = (name || "").trim(); if (t && !allSections.includes(t)) setSectionNames(s => [...s, t]); };
   const renameSection = (from, to) => {
     const t = (to || "").trim();
@@ -528,6 +527,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="warning" size={16} color="var(--red)" /> {saveError}
               </div>
             )}
+            {noSection && <NewSectionButton onAdd={addSection} />}
             {/* Liste À PLAT dans l'ordre réel : en-têtes de section en ligne, chaque
                 bloc a son bouton d'ajout (ingrédient / base). Réordonnancement libre. */}
             {sectionRuns(form.ingredients).map(run => {
@@ -554,11 +554,9 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </Fragment>
               );
             })}
-            {/* Ajout hors section (ingrédient seul) + création de section + sections vides.
-                Liste vierge : la section passe d'abord, on structure avant de remplir. */}
-            {ingBlank && <NewSectionButton onAdd={addSection} />}
+            {/* Ajout hors section (ingrédient seul) + création de section + sections vides */}
             <SectionAddBar onAddIngredient={() => addIngAt(form.ingredients.length, "")} components={[]} canBase={false} />
-            {!ingBlank && <NewSectionButton onAdd={addSection} />}
+            {!noSection && <NewSectionButton onAdd={addSection} />}
             {allSections.filter(n => !form.ingredients.some(i => (i.group || "") === n)).map(name => (
               <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
                 <SectionAddBar onAddIngredient={() => addIngAt(form.ingredients.length, name)} components={compsAt(name, form.ingredients.length)} canBase={!form.isComponent} />
@@ -579,6 +577,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 <Icon name="drag" size={14} color="var(--text3)" /> Glisse les étapes pour les réorganiser.
               </div>
             )}
+            {noSection && <NewSectionButton onAdd={addSection} />}
             {/* Liste À PLAT dans l'ordre réel : en-têtes de section en ligne, ajout par
                 bloc, réordonnancement libre (l'étape adopte la section du bloc d'arrivée). */}
             {sectionRuns(form.steps).map(run => {
@@ -601,9 +600,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </Fragment>
               );
             })}
-            {stepBlank && <NewSectionButton onAdd={addSection} />}
             <button className="editor-add" onClick={() => addStepAt(form.steps.length, "")}><Icon name="plus" size={16} /> Ajouter une étape</button>
-            {!stepBlank && <NewSectionButton onAdd={addSection} />}
+            {!noSection && <NewSectionButton onAdd={addSection} />}
             {allSections.filter(n => !form.steps.some(s => (s.group || "") === n)).map(name => (
               <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
                 <button className="editor-add" onClick={() => addStepAt(form.steps.length, name)}><Icon name="plus" size={16} /> Ajouter une étape</button>
