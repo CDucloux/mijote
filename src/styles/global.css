@@ -5282,9 +5282,8 @@ html.light .sheet-sticky-head::after {
   .yaml-drop:not([data-over]):hover .yaml-drop-icon { color: var(--text2); }
 }
 
-/* Zone « Choisir une photo » (ImageUpload) : même langage que la zone de dépose
-   YAML. Survol neutre : liseré qui fonce, fond d'un cran, icône et titre qui
-   s'affirment ; aucun survol pendant l'upload. */
+/* Zone « Choisir une photo » (ImageUpload) : aplat sans bordure. Survol neutre :
+   fond d'un cran, icône et titre qui s'affirment ; aucun survol pendant l'upload. */
 .photo-drop {
   display: flex;
   flex-direction: column;
@@ -5293,16 +5292,15 @@ html.light .sheet-sticky-head::after {
   gap: 8px;
   width: 100%;
   border-radius: 12px;
-  border: 1.5px dashed var(--border);
+  border: none;
   background: var(--surface2);
   color: var(--text3);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 .photo-drop[data-busy] { cursor: progress; }
 @media (hover: hover) and (pointer: fine) {
   .photo-drop:not([data-busy]):hover {
-    border-color: var(--text3);
     background: var(--surface3);
     color: var(--text2);
   }
