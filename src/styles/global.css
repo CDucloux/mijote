@@ -5339,3 +5339,12 @@ html.light .sheet-sticky-head::after {
 @media (prefers-reduced-motion: reduce) {
   .source-link-label { transition: none; }
 }
+
+/* Champ-sélecteur (ouvre une feuille) : même survol neutre que les autres champs
+   cliquables, liseré qui fonce et voile opaque, jamais d'accent. */
+@media (hover: hover) and (pointer: fine) {
+  .field-picker:hover {
+    border-color: var(--text3);
+    box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--text) 4%, transparent);
+  }
+}

@@ -8,6 +8,7 @@ On édite ces fichiers YAML, puis on les pousse vers Firestore.
 | `techniques.yaml` | `master/techniques` | Glossaire des techniques culinaires |
 | `ingredients.yaml` | `master/ingredients` | Base d'ingrédients complète (export de la console admin) |
 | `utensils.yaml` | `master/utensils` | Base d'ustensiles (échantillon de format) |
+| `chefs.yaml` | aucune (embarqué dans l'app) | Liste des chefs proposés dans l'éditeur de recette |
 | `base-preparations.yaml` | `publicRecipes/*` | Préparations de base publiées (compte `mijote-official`) |
 | `ciqual/` | aucune (référence) | Table Ciqual de l'ANSES : source des valeurs nutritionnelles saisies dans les ingrédients |
 

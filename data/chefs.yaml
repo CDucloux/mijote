@@ -1,0 +1,35 @@
+# ─── Chefs ────────────────────────────────────────────────────────────────────
+# Liste fermée proposée dans le champ « Chef » de l'éditeur de recette. Elle est
+# embarquée dans l'app à la compilation (pas d'import en console) : modifier ce
+# fichier puis MEP suffit.
+#
+# Schéma :
+#   name   nom affiché et stocké dans `recipe.chef` (unique).
+#   note   repère affiché sous le nom dans la liste : restaurant, ville, ouvrage.
+#
+# Une recette dont le chef n'est pas dans la liste (import, saisie ancienne) le
+# garde tel quel ; l'éditeur l'affiche en tête de liste.
+
+chefs:
+  - { name: Alain Ducasse, note: "Louis XV (Monaco), Plaza Athénée" }
+  - { name: Alain Passard, note: "L'Arpège, Paris" }
+  - { name: Anne-Sophie Pic, note: "Maison Pic, Valence" }
+  - { name: Auguste Escoffier, note: "Le Guide culinaire" }
+  - { name: Daniel Humm, note: "Eleven Madison Park, New York" }
+  - { name: Eugénie Brazier, note: "La Mère Brazier, Lyon" }
+  - { name: Fernand Point, note: "La Pyramide, Vienne" }
+  - { name: Ferran Adrià, note: "elBulli" }
+  - { name: Gordon Ramsay, note: "Londres" }
+  - { name: Heston Blumenthal, note: "The Fat Duck" }
+  - { name: Jamie Oliver, note: "Royaume-Uni" }
+  - { name: Jiro Ono, note: "Sukiyabashi Jiro, Tokyo" }
+  - { name: Joël Robuchon, note: "Paris" }
+  - { name: Marie-Antoine Carême, note: "« Roi des chefs »" }
+  - { name: Massimo Bottura, note: "Osteria Francescana, Modène" }
+  - { name: Michel Guérard, note: "Eugénie-les-Bains" }
+  - { name: Paul Bocuse, note: "Collonges-au-Mont-d'Or" }
+  - { name: Pierre Gagnaire, note: "Paris" }
+  - { name: Pierre Hermé, note: "Pâtissier" }
+  - { name: René Redzepi, note: "Noma, Copenhague" }
+  - { name: Thomas Keller, note: "The French Laundry, Per Se" }
+  - { name: Yotam Ottolenghi, note: "Londres" }
