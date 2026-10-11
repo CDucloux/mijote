@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback, Fragment } from "react";
 import { Icon } from "../components/ui/Icon.jsx";
 import { ImageUpload } from "../components/ui/ImageUpload.jsx";
+import { IngImage } from "../components/ui/Img.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RECIPE_CATEGORIES, BASE_CATEGORIES, BASE_CATEGORY_IDS } from "../constants/recipeCategories.js";
 import { UtensilPicker } from "../components/recipe/UtensilPicker.jsx";
@@ -102,10 +103,12 @@ function SectionAddBar({ onAddIngredient, components, canBase = true }) {
         {components.length === 0 ? (
           <p style={{ fontSize: 12, color: "var(--text3)", textAlign: "center", padding: "10px 0", lineHeight: 1.5 }}>Aucune base disponible.<br />Crée d'abord une recette en « préparation de base ».</p>
         ) : components.map(comp => (
-          <button key={comp.id} onClick={() => { comp.onPick(); setPicking(false); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", textAlign: "left", cursor: "pointer" }}>
-            <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.1)" }}><BaseIcon size={16} /></span>
-            <span style={{ flex: 1, fontSize: 13, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{comp.name}</span>
-            <span style={{ fontSize: 11, color: "var(--text3)" }}>{comp.yield?.amount} {comp.yield?.unit}</span>
+          <button key={comp.id} onClick={() => { comp.onPick(); setPicking(false); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: 12, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", textAlign: "left", cursor: "pointer" }}>
+            {comp.image
+              ? <IngImage src={comp.image} alt="" size={36} cover />
+              : <span style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "var(--surface2)" }}><BaseIcon size={17} color="var(--text3)" /></span>}
+            <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{comp.name}</span>
+            {comp.yield?.amount ? <span style={{ fontSize: 11.5, color: "var(--text3)", flexShrink: 0 }}>{comp.yield.amount} {comp.yield.unit}</span> : null}
             <span className="complete-add" style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}><Icon name="plus" size={15} color="currentColor" /></span>
           </button>
         ))}
@@ -297,7 +300,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   };
   const ingsOf = (g) => form.ingredients.filter(i => (i.group || "") === g);
   // Bases disponibles pour une zone d'ajout : insérées à `index` avec la section `group`.
-  const compsAt = (group, index) => (form.isComponent ? [] : availableComponents.map(c => ({ id: c.id, name: c.name, yield: c.yield, onPick: () => addComponentAt(index, c, group) })));
+  const compsAt = (group, index) => (form.isComponent ? [] : availableComponents.map(c => ({ id: c.id, name: c.name, image: c.image, yield: c.yield, onPick: () => addComponentAt(index, c, group) })));
 
   const isDesktop = useIsDesktop();
 

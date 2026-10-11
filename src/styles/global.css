@@ -2855,12 +2855,13 @@ html.light .sheet-sticky-head::after {
     color: var(--text2);
   }
 
-  /* Ligne de suggestion « compléter le repas » : mise en avant au survol.
-     `!important` : ces cartes portent des `border`/`box-shadow` en style inline
-     (bordure d'état, ombre de base) qui, sinon, l'emportent sur ce survol. */
+  /* Ligne de choix (compléter le repas, ajouter au planning, assigner une base) :
+     survol neutre, liseré qui fonce et voile d'un cran, sans halo ni teinte.
+     `!important` + voile en ombre interne : ces cartes portent `border`,
+     `background` et `box-shadow` en style inline, qui l'emporteraient sinon. */
   .complete-row:hover {
-    border-color: rgba(var(--accent-rgb), 0.45) !important;
-    box-shadow: 0 6px 18px -10px rgba(var(--accent-rgb), 0.55) !important;
+    border-color: var(--text3) !important;
+    box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--text) 4%, transparent) !important;
   }
 
   .complete-row:hover .complete-add {
