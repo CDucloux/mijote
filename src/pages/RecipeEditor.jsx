@@ -4,6 +4,7 @@ import { ImageUpload } from "../components/ui/ImageUpload.jsx";
 import { CUISINES } from "../constants/cuisines.js";
 import { RECIPE_CATEGORIES, BASE_CATEGORIES, BASE_CATEGORY_IDS } from "../constants/recipeCategories.js";
 import { UtensilPicker } from "../components/recipe/UtensilPicker.jsx";
+import { ChefSheet } from "../components/recipe/ChefSheet.jsx";
 import { DraggableStep } from "../components/recipe/DraggableStep.jsx";
 import { DraggableIngredient } from "../components/recipe/DraggableIngredient.jsx";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
@@ -173,6 +174,7 @@ function ClassementPill({ active, emoji, label, onClick }) {
 export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB, recipes }) {
   const [form, setForm] = useState({ ...recipe, ingredients: recipe.ingredients || [], utensils: recipe.utensils || [], steps: recipe.steps || [], cuisine: recipe.cuisine || "", category: recipe.category || "", collections: recipe.collections || [], isComponent: !!recipe.isComponent, yield: recipe.yield || { amount: "", unit: "g" } });
   const [section, setSection] = useState("info");
+  const [chefOpen, setChefOpen] = useState(false);
   const up = (f, v) => setForm(p => ({ ...p, [f]: v }));
   // Bascule « préparation de base » : les types de recette diffèrent (rôle repas vs
   // familles de base), on nettoie donc la catégorie si elle n'a plus de sens.
@@ -454,12 +456,12 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
               </div>
               <div>
                 <div className="field-label">Chef</div>
-                <div style={{ position: "relative" }}>
-                  <span style={{ position: "absolute", left: 15, top: "50%", marginTop: -9, display: "flex", pointerEvents: "none" }}>
-                    <Icon name="chef" size={18} color={form.chef ? "var(--accent)" : "var(--text3)"} />
-                  </span>
-                  <input className="field-input field-soft" placeholder="ex : Auguste Escoffier" maxLength={120} value={form.chef || ""} onChange={e => up("chef", e.target.value)} style={{ background: "var(--surface)", borderRadius: 12, height: 46, paddingLeft: 44 }} />
-                </div>
+                <button type="button" className="field-input field-soft field-picker" onClick={() => setChefOpen(true)} aria-haspopup="dialog"
+                  style={{ background: "var(--surface)", borderRadius: 12, height: 46, paddingLeft: 15, display: "flex", alignItems: "center", gap: 11, cursor: "pointer", textAlign: "left" }}>
+                  <Icon name="chef" size={18} color={form.chef ? "var(--accent)" : "var(--text3)"} />
+                  <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: form.chef ? "var(--text)" : "var(--text3)" }}>{form.chef || "Choisir un chef"}</span>
+                  <Icon name="chevronDown" size={16} color="var(--text3)" />
+                </button>
               </div>
               <div>
                 <div className="field-label">Source</div>
@@ -644,6 +646,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
         </div>
 
       </div>
+      {chefOpen && <ChefSheet value={form.chef} onChange={v => up("chef", v)} onClose={() => setChefOpen(false)} />}
     </div>
   );
 }

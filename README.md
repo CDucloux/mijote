@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.61.1-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.62.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -304,7 +304,7 @@ src/
 ├── hooks/           # Hooks réutilisables (useFirestoreSync, useHousehold, useLS…)
 ├── lib/             # Logique pure : domaine (Nutri-Score, planning, parsing,
 │                    #   import/export, PDF) + infra Firebase
-├── constants/       # Données figées (catégories, créneaux, changelog)
+├── constants/       # Constantes d'UI et chargeurs des données de data/ (créneaux, onglets…)
 ├── content/         # Contenu Markdown (documents légaux)
 ├── components/      # Composants de présentation réutilisables
 ├── pages/           # Écrans (Home, MealPlan, Shopping, Recipes, Profile…)
@@ -312,8 +312,10 @@ src/
 
 api/                 # Fonctions serverless Vercel (aperçu Open Graph des liens partagés)
 functions/           # Cloud Functions (import IA, paiement Stripe), extraction pure testée à part
-data/                # Bases de référence versionnées (ingrédients, ustensiles, techniques en YAML
-                     #   daté et versionné) + table Ciqual 2025 de l'ANSES
+data/                # Données de référence en YAML : bases importées en console (ingrédients,
+                     #   ustensiles, techniques), listes embarquées au build (chefs, cuisines,
+                     #   types de recette, catégories, sources, repères nutritionnels)
+                     #   + table Ciqual 2025 de l'ANSES
 scripts/             # Outils (seed de la base de référence)
 ```
 

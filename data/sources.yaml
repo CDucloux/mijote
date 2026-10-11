@@ -1,0 +1,12 @@
+# ─── Sources recommandées ─────────────────────────────────────────────────────
+# Repli de la page Import tant que `master/sources` n'est pas configuré dans la
+# console admin. Des créatrices et créateurs aux recettes soignées, dont les
+# pages s'importent proprement.
+#
+# Schéma : id, name, url, category, mono (monogramme), tint (teinte de la
+# pastille), net (logo sur fond blanc), order. Validé par `sanitizeSources`.
+
+sources:
+  - { id: "src_cestmafournee", name: "C'est ma fournée", url: "https://www.cestmafournee.com/", category: "Pâtisserie", mono: "C", tint: "spice", order: 0 }
+  - { id: "src_grecque", name: "Cuisine à la grecque", url: "https://cuisine-a-la-grecque.fr/", category: "Grèce", mono: "Γ", tint: "accent", net: true, order: 1 }
+  - { id: "src_undejeuner", name: "Un déjeuner de soleil", url: "https://www.undejeunerdesoleil.com/", category: "Italie", mono: "U", tint: "coral", net: true, order: 2 }

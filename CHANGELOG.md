@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.62.0 – Cardamome · Signé du chef
+
+### Recettes
+- **Champ Chef en liste** dans l'éditeur : on choisit le chef dans une fiche avec recherche (nom et repère : restaurant, ville, ouvrage) au lieu de le taper. Un chef hors liste déjà posé sur une recette est conservé et signalé « Hors liste ».
+- **Import IA** : le chef extrait est rattaché à la liste quand il la désigne sans ambiguïté (« Escoffier », « A. Escoffier » → Auguste Escoffier).
+
+### Informations légales
+- **Sections sans numéros** : les documents légaux gardent leurs filets de séparation, sans les numéros au-dessus des titres.
+
+### Données
+- **Données de référence dans `data/`** : chefs, styles de cuisine, types de recette, catégories d'ingrédients, sources recommandées et repères nutritionnels passent en fichiers YAML embarqués au build, validés et testés. Les modifier puis MEP suffit.
+
 ## v4.61.1 – Cardamome · Lu et approuvé
 
 ### Informations légales

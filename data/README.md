@@ -8,10 +8,21 @@ On édite ces fichiers YAML, puis on les pousse vers Firestore.
 | `techniques.yaml` | `master/techniques` | Glossaire des techniques culinaires |
 | `ingredients.yaml` | `master/ingredients` | Base d'ingrédients complète (export de la console admin) |
 | `utensils.yaml` | `master/utensils` | Base d'ustensiles (échantillon de format) |
+| `chefs.yaml` | aucune (embarqué dans l'app) | Liste des chefs proposés dans l'éditeur de recette |
+| `cuisines.yaml` | aucune (embarqué dans l'app) | Styles de cuisine proposés dans l'éditeur |
+| `recipe-categories.yaml` | aucune (embarqué dans l'app) | Types de recette et familles de préparations de base |
+| `ingredient-categories.yaml` | `master/categories` (seed) | Catégories par défaut de la base d'ingrédients |
+| `sources.yaml` | aucune (embarqué dans l'app) | Sources recommandées par défaut, tant que `master/sources` est vide |
+| `nutrition-references.yaml` | aucune (embarqué dans l'app) | Repères nutritionnels journaliers (% d'une journée type) |
 | `base-preparations.yaml` | `publicRecipes/*` | Préparations de base publiées (compte `mijote-official`) |
 | `ciqual/` | aucune (référence) | Table Ciqual de l'ANSES : source des valeurs nutritionnelles saisies dans les ingrédients |
 
 Le format de chaque fichier est documenté en tête du fichier lui-même.
+
+Les fichiers **embarqués dans l'app** sont lus à la compilation (`import ?raw`,
+validés par `src/lib/data/referenceData.ts`) : les modifier puis MEP suffit, sans
+import en console. Une entrée malformée est ignorée à l'exécution, et les tests
+(`npm test`) échouent si un fichier livré perd une entrée.
 
 ## Versionnement des exports
 

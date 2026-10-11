@@ -1,0 +1,38 @@
+# ─── Types de recette ─────────────────────────────────────────────────────────
+# Rôle de la recette dans le repas (`recipe.category`, l'`id`), embarqué dans
+# l'app à la compilation.
+#
+#   meal   catégories des recettes courantes (apéritif, plat, dessert…).
+#   base   familles des préparations de base (fond, sauce mère, pâte…) : le rôle
+#          dans le repas n'a pas de sens pour un composant.
+#
+# Schéma d'une entrée :
+#   id      identifiant stable stocké dans la recette (unique sur les deux listes).
+#   label   libellé affiché.
+#   emoji   pictogramme de la pill.
+
+meal:
+  - { id: "aperitif", label: "Apéritif", emoji: "🫒" }
+  - { id: "entree", label: "Entrée", emoji: "🥗" }
+  - { id: "soupe", label: "Soupe chaude", emoji: "🍲" }
+  - { id: "soupe-froide", label: "Soupe froide", emoji: "🥶" }
+  - { id: "salade", label: "Salade", emoji: "🥬" }
+  - { id: "plat", label: "Plat", emoji: "🍽️" }
+  - { id: "gratin", label: "Gratin", emoji: "🧀" }
+  - { id: "pasta", label: "Pasta", emoji: "🍝" }
+  - { id: "pizza", label: "Pizza", emoji: "🍕" }
+  - { id: "accompagnement", label: "Accompagnement", emoji: "🥔" }
+  - { id: "dessert", label: "Dessert", emoji: "🍰" }
+  - { id: "tarte", label: "Tarte", emoji: "🥧" }
+  - { id: "petit-dej", label: "Petit-déjeuner", emoji: "🥐" }
+  - { id: "boisson", label: "Boisson", emoji: "🥤" }
+  - { id: "boulangerie", label: "Boulangerie", emoji: "🍞" }
+
+base:
+  - { id: "fond", label: "Fond", emoji: "🥣" }
+  - { id: "sauce", label: "Sauce", emoji: "🫙" }
+  - { id: "appareil", label: "Appareil", emoji: "🥚" }
+  - { id: "liaison", label: "Liaison", emoji: "🧈" }
+  - { id: "pate", label: "Pâte", emoji: "🥟" }
+  - { id: "sirop", label: "Sirop", emoji: "🍯" }
+  - { id: "marinade", label: "Marinade", emoji: "🧄" }
