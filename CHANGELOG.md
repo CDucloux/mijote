@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.62.1 – Cardamome · Qui est ce chef ?
+
+### Recettes
+- **Chef cliquable** sur la fiche recette : le nom d'un chef de la liste ouvre sa page Wikipédia en français, avec le même soulignement au survol que le lien source. Un chef hors liste ou sans article reste un simple texte (titres d'articles renseignés dans `data/chefs.yaml`).
+
 ## v4.62.0 – Cardamome · Signé du chef
 
 ### Recettes
