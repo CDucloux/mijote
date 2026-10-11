@@ -1,5 +1,19 @@
 # Changelog – Cardamome
 
+## v4.64.0 – Cardamome · Rayons de saison
+
+### Stock
+- **Contenants adaptés au rayon** : huiles, vinaigres et alcools en bouteilles, condiments et épices en pots à épices, le reste en bocaux.
+- **Couleur du contenu déduite du nom** : un vin blanc est doré, un vin rouge bordeaux, un balsamique presque noir, un paprika rouge. Les noms non reconnus gardent une teinte stable de la palette du rayon.
+- **Étagère retravaillée** : équerres vues de face, bocaux posés sur la planche, plante en pot plus organique, plus d'air entre une catégorie et le rayon du dessus.
+
+### Onboarding
+- **Illustrations redessinées** : planning de la semaine, communauté et maison du foyer.
+- **« C'est parti ! » en pill** au gabarit de « Glisse pour continuer », sans montée au survol ; « Glisse pour continuer » a le même survol que « Passer ».
+
+### Interface
+- **Infobulles** : « Ajoute le planning à ton agenda » sur le bouton Agenda, « Glisser pour réordonner » sur les carnets.
+
 ## v4.63.1 – Cardamome · Par le bon chemin
 
 ### Correctifs
