@@ -8,7 +8,7 @@ order: 1
 
 Informations relatives à l'éditeur et aux hébergeurs du service Cardamome, fournies en application de l'article 1-1 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN), dans sa rédaction issue de la loi n° 2024-449 du 21 mai 2024 (dite « SREN »).
 
-Le service Cardamome (ci-après « l'Application ») est accessible sur le web et via l'application Android « Cardamome ».
+Le service Cardamome (ci-après « l'Application ») est accessible sur le web et via l'application Android Cardamome.
 
 ## Éditeur
 
@@ -43,7 +43,7 @@ Un contenu publié sur l'espace public peut être signalé depuis l'Application 
 
 ## Propriété intellectuelle
 
-La structure de l'Application, son code, son design, ses textes, ses illustrations, ses bases de données éditoriales (ingrédients, ustensiles, gestes techniques) et la marque « Cardamome » sont la propriété de l'éditeur ou font l'objet d'une autorisation d'usage. Toute reproduction, représentation, adaptation ou extraction, totale ou partielle, sans autorisation écrite préalable, est interdite et peut constituer une contrefaçon (articles L. 335-2 et suivants du Code de la propriété intellectuelle) ou une atteinte aux droits du producteur de bases de données (articles L. 341-1 et suivants du même code).
+La structure de l'Application, son code, son design, ses textes, ses illustrations, ses bases de données éditoriales (ingrédients, ustensiles, gestes techniques) et la marque Cardamome sont la propriété de l'éditeur ou font l'objet d'une autorisation d'usage. Toute reproduction, représentation, adaptation ou extraction, totale ou partielle, sans autorisation écrite préalable, est interdite et peut constituer une contrefaçon (articles L. 335-2 et suivants du Code de la propriété intellectuelle) ou une atteinte aux droits du producteur de bases de données (articles L. 341-1 et suivants du même code).
 
 Les recettes et contenus créés par les utilisateurs restent leur propriété, dans les conditions prévues par les [Conditions générales d'utilisation](/legal/terms).
 
