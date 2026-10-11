@@ -393,7 +393,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => { e.preventDefault(); if (dragCarnetId && dragCarnetId !== col.id) reorderCollections(dragCarnetId, col.id); setDragCarnetId(null); }}
                   onDragEnd={() => setDragCarnetId(null)}
-                  title="Glisser pour réordonner · appui long pour modifier"
+                  title="Glisser pour réordonner"
                   style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "grab", borderRadius: 14, opacity: dragCarnetId === col.id ? 0.4 : 1 }}>
                   <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 0 0 2px ${col.color}` : "none" }}>
                     {/* Page lignée + reliure colorée */}
