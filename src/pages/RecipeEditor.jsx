@@ -565,13 +565,13 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </Fragment>
               );
             })}
-            {/* Création de section + sections vides */}
-            {!noSection && <NewSectionButton onAdd={addSection} />}
+            {/* Sections vides, puis création d'une nouvelle section, toujours en dernier */}
             {allSections.filter(n => !form.ingredients.some(i => (i.group || "") === n)).map(name => (
               <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
                 <SectionAddBar onAddIngredient={() => addIngAt(form.ingredients.length, name)} components={compsAt(name, form.ingredients.length)} canBase={!form.isComponent} />
               </SectionCard>
             ))}
+            {!noSection && <NewSectionButton onAdd={addSection} />}
           </div>
         </div>
 
@@ -612,12 +612,12 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                 </Fragment>
               );
             })}
-            {!noSection && <NewSectionButton onAdd={addSection} />}
             {allSections.filter(n => !form.steps.some(s => (s.group || "") === n)).map(name => (
               <SectionCard key={name} name={name} onRename={t => renameSection(name, t)} onDelete={() => deleteSection(name)}>
                 <button className="editor-add" onClick={() => addStepAt(form.steps.length, name)}><Icon name="plus" size={16} /> Ajouter une étape</button>
               </SectionCard>
             ))}
+            {!noSection && <NewSectionButton onAdd={addSection} />}
           </div>
         </div>
 
