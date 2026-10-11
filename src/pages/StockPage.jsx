@@ -10,6 +10,7 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import { vesselColor } from "@/lib/food/vesselColor.js";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
 // Gestion binaire du stock présentée en « mur d'étagères » : chaque ingrédient est
@@ -24,7 +25,8 @@ const STK_FILL = ["#cdb98a", "#c9a15c", "#b98c4a", "#a6743a", "#8f6b3f", "#7d5a3
 // Contenant selon le rayon : huiles, vinaigres et alcools en BOUTEILLE (liquides
 // dorés, du vinaigre blanc au balsamique, vins et spiritueux), condiments et
 // épices en POT À ÉPICES (poudres : paprika, curcuma, poivre, herbes séchées…).
-// Le reste en bocal.
+// Le reste en bocal. La couleur vient d'abord du nom (`vesselColor` : vin rouge,
+// balsamique, paprika…), la palette du rayon ne sert qu'à défaut.
 const VESSELS = {
   oil: { kind: "bottle", fill: ["#d8b44a", "#c9a23a", "#b9a646", "#e0c46a"] },
   acid: { kind: "bottle", fill: ["#a8483a", "#d6c38a", "#7a3b2a", "#c58a4a"] },
@@ -60,7 +62,7 @@ const Jar = memo(function Jar({ ing, state, onCycle, catKey }) {
       data-state={state}
       data-vessel={vessel?.kind}
       onClick={() => onCycle(ing.id)}
-      style={{ "--fill": stkFillColor(ing.dbId || ing.id, vessel?.fill) }}
+      style={{ "--fill": (vessel && vesselColor(ing.name, catKey)) || stkFillColor(ing.dbId || ing.id, vessel?.fill) }}
       aria-label={`${ing.name} : ${STATE_LABEL[state]}`}
     >
       <span className="stk-lid" aria-hidden="true" />
