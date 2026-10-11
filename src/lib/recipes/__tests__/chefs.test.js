@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { parse } from "yaml";
 import { describe, it, expect } from "vitest";
-import { parseChefs, findChef, canonicalChef } from "@/lib/recipes/chefs.js";
+import { parseChefs, findChef, canonicalChef, chefWikipediaUrl } from "@/lib/recipes/chefs.js";
 
 describe("parseChefs", () => {
   it("keeps valid entries in file order, with optional note", () => {
@@ -18,6 +18,11 @@ describe("parseChefs", () => {
     expect(parseChefs(null)).toEqual([]);
     expect(parseChefs([{ name: "X" }])).toEqual([]);
     expect(parseChefs({ chefs: "nope" })).toEqual([]);
+  });
+
+  it("keeps the wiki title when given", () => {
+    expect(parseChefs({ chefs: [{ name: "Jiro Ono", wiki: " Jirō Ono " }, { name: "X", wiki: 4 }] }))
+      .toEqual([{ name: "Jiro Ono", wiki: "Jirō Ono" }, { name: "X" }]);
   });
 
   it("parses the shipped data/chefs.yaml without losing an entry", () => {
@@ -68,5 +73,18 @@ describe("canonicalChef", () => {
   it("returns an empty string for an empty value", () => {
     expect(canonicalChef(chefs, "")).toBe("");
     expect(canonicalChef(chefs, undefined)).toBe("");
+  });
+});
+
+describe("chefWikipediaUrl", () => {
+  const chefs = [{ name: "Jiro Ono", wiki: "Jirō Ono" }, { name: "Marie-Antoine Carême", wiki: "Marie-Antoine Carême" }, { name: "Thomas Keller" }];
+  it("builds the French article URL from the listed title", () => {
+    expect(chefWikipediaUrl(chefs, "jiro ono")).toBe("https://fr.wikipedia.org/wiki/Jir%C5%8D_Ono");
+    expect(chefWikipediaUrl(chefs, "Marie-Antoine Carême")).toBe("https://fr.wikipedia.org/wiki/Marie-Antoine_Car%C3%AAme");
+  });
+  it("returns null without an article or for an off-list chef", () => {
+    expect(chefWikipediaUrl(chefs, "Thomas Keller")).toBeNull();
+    expect(chefWikipediaUrl(chefs, "Mamie Jeanne")).toBeNull();
+    expect(chefWikipediaUrl(chefs, "")).toBeNull();
   });
 });
