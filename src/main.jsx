@@ -26,6 +26,11 @@ if (import.meta.env.PROD && SENTRY_DSN) {
     release: `cardamome@${__APP_VERSION__}`,
     environment: 'production',
     sendDefaultPii: false,
+    // Envois relayés par notre domaine (réécriture /monitoring dans vercel.json) :
+    // même origine, donc ni CORS ni bloqueurs de pub/pistage (Firefox, uBlock)
+    // qui coupent les appels directs à sentry.io. L'app Android (origine
+    // https://localhost) vise l'URL absolue du site.
+    tunnel: Capacitor.isNativePlatform() ? 'https://cardamome.studio/monitoring' : '/monitoring',
     integrations: defaults => defaults.filter(i => i.name !== 'GlobalHandlers'),
     initialScope: { tags: { platform: Capacitor.isNativePlatform() ? 'android' : 'web' } },
   })
