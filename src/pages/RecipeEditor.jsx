@@ -16,37 +16,13 @@ import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // ─── RECIPE EDITOR ────────────────────────────────────────────────────────────
 
-// Carte de section (« Pour la pâte »…) dans l'éditeur : en-tête avec nom renommable
-// (clic → champ) et bouton de dissolution, puis le contenu (items + bouton d'ajout).
-function SectionCard({ name, onRename, onDelete, onZoneDrop, children }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(name);
-  const [eraseHover, setEraseHover] = useState(false);
-  const [zoneOver, setZoneOver] = useState(false);
-  const inputRef = useRef(null);
-  useEffect(() => { setDraft(name); }, [name]);
-  useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
-  const commit = () => { setEditing(false); onRename(draft); };
+// Section encore vide (« Pour la pâte »…) : même en-tête en ligne qu'une section
+// remplie, suivi de ses boutons d'ajout. Pas de carte : une section vide ne doit
+// pas se distinguer visuellement d'une section qui a déjà ses éléments.
+function SectionCard({ name, onRename, onDelete, children }) {
   return (
-    <div
-      onDragOver={onZoneDrop ? (e => { e.preventDefault(); setZoneOver(true); }) : undefined}
-      onDragLeave={onZoneDrop ? (() => setZoneOver(false)) : undefined}
-      onDrop={onZoneDrop ? (e => { setZoneOver(false); onZoneDrop(e); }) : undefined}
-      style={{ background: zoneOver ? "rgba(var(--accent-rgb),0.1)" : "rgba(var(--accent-rgb),0.04)", border: `1px solid ${zoneOver ? "var(--accent)" : "rgba(var(--accent-rgb),0.3)"}`, borderRadius: 16, padding: 12, display: "flex", flexDirection: "column", gap: 10, transition: "background 0.15s, border-color 0.15s" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Icon name="layers" size={15} color="var(--accent)" />
-        {editing ? (
-          <input ref={inputRef} className="field-input" value={draft} onChange={e => setDraft(e.target.value)}
-            onBlur={commit} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); commit(); } if (e.key === "Escape") { setDraft(name); setEditing(false); } }}
-            style={{ marginBottom: 0, flex: 1, minWidth: 0, height: 32, fontSize: 13.5, fontWeight: 600 }} />
-        ) : (
-          <button type="button" onClick={() => setEditing(true)} style={{ flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: "text", padding: 0, fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, letterSpacing: "-0.01em", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</button>
-        )}
-        <button type="button" onClick={onDelete} title="Dissoudre la section" onMouseEnter={() => setEraseHover(true)} onMouseLeave={() => setEraseHover(false)}
-          style={{ flexShrink: 0, width: 32, height: 32, borderRadius: "50%", background: eraseHover ? "var(--surface2)" : "transparent", border: "none", display: "grid", placeItems: "center", cursor: "pointer", transition: "background 0.15s" }}>
-          <Icon name="eraser" size={14} color="var(--text3)" />
-        </button>
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <EditorSectionHeader name={name} onRename={onRename} onDelete={onDelete} />
       {children}
     </div>
   );
@@ -81,9 +57,8 @@ function EditorSectionHeader({ name, onRename, onDelete }) {
   );
 }
 
-// Bouton « Nouvelle section », volontairement DISTINCT des ajouts d'ingrédient/étape
-// (fond teinté accent + icône layers), pour ne pas les confondre. Au clic, il se
-// déplie en une petite carte de nommage soignée.
+// Bouton « Nouvelle section » : filet de coupe titré, distinct des boutons d'ajout
+// d'ingrédient / d'étape. Au clic, il laisse place à la saisie du nom.
 function NewSectionButton({ onAdd }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");

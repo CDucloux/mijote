@@ -2964,25 +2964,27 @@ html.light .sheet-sticky-head::after {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px;
+  padding: 11px 12px;
   border-radius: 999px;
-  border: 1.5px dashed color-mix(in srgb, var(--accent) 45%, var(--border));
-  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
-  color: var(--accent);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
   font-weight: 600;
   font-size: 13.5px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.2s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
-
-@media (hover: hover) {
+/* Le « + » garde l'accent (c'est une action de création) ; le reste est neutre. */
+.editor-add > svg { color: var(--accent); }
+/* Survol : même langage que les pilules Filtres / Tri (voile, liseré et texte qui
+   s'affirment, aucune teinte). */
+@media (hover: hover) and (pointer: fine) {
   .editor-add:hover {
-    border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
-    box-shadow: 0 6px 18px -12px rgba(var(--accent-rgb), 0.5);
+    border-color: var(--text3);
+    background: color-mix(in srgb, var(--text) 4%, var(--surface));
+    color: var(--text);
   }
 }
-
 .editor-add:active {
   transform: scale(0.99);
 }
