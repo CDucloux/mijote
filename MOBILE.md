@@ -281,6 +281,16 @@ Pièges rencontrés lors du premier build/run, avec le fix qui marche.
 - La **permission de notification** (Android 13+) est demandée **à la volée au premier
   minuteur** ; refusée, les minuteurs fonctionnent quand même en premier plan.
 
+### Exports de fichiers (JSON, YAML, Markdown, agenda)
+
+- La WebView Android **ignore** `<a download>` sur un blob : aucun fichier, aucune erreur.
+  Tous les exports passent donc par `src/lib/ui/fileExport.ts` : téléchargement direct
+  sur le web, et en natif écriture dans le cache de l'app (`@capacitor/filesystem`) puis
+  **feuille de partage** de l'OS (`@capacitor/share`), d'où l'on enregistre dans Fichiers
+  ou Drive, ou ouvre un `.ics` dans l'agenda.
+- Tout nouvel export doit passer par `exportTextFile`, jamais par un lien `download`.
+- Comme pour tout plugin : `npm ci`, `npm run cap:sync`, puis rebuild Android Studio.
+
 ### Raccourcis d'icône et widgets (lanceur Android)
 
 - **Appui long sur l'icône** : quatre raccourcis **dynamiques**, recalculés par l'app à
