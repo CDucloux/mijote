@@ -3,7 +3,7 @@ short: Cookies
 icon: settings
 title: Politique de cookies
 lead: "Uniquement le strict nécessaire : aucun traceur, donc aucun bandeau."
-order: 4
+order: 5
 ---
 
 Cette politique décrit les informations que Cardamome lit ou enregistre sur votre appareil (cookies, stockage local, cache), conformément à l'article 82 de la loi Informatique et Libertés et aux recommandations de la CNIL.

@@ -39,13 +39,13 @@ Conformément aux articles 11 et 12 du règlement (UE) 2022/2065 sur les service
 
 ## Signaler un contenu illicite
 
-Un contenu publié sur l'espace public peut être signalé depuis l'Application (bouton « Signaler » de la recette) ou par écrit à **contact.cardamome@gmail.com**. La procédure de traitement est décrite dans les [Conditions générales](/legal/terms).
+Un contenu publié sur l'espace public peut être signalé depuis l'Application (bouton « Signaler » de la recette) ou par écrit à **contact.cardamome@gmail.com**. La procédure de traitement est décrite dans les [Conditions générales d'utilisation](/legal/terms).
 
 ## Propriété intellectuelle
 
 La structure de l'Application, son code, son design, ses textes, ses illustrations, ses bases de données éditoriales (ingrédients, ustensiles, gestes techniques) et la marque « Cardamome » sont la propriété de l'éditeur ou font l'objet d'une autorisation d'usage. Toute reproduction, représentation, adaptation ou extraction, totale ou partielle, sans autorisation écrite préalable, est interdite et peut constituer une contrefaçon (articles L. 335-2 et suivants du Code de la propriété intellectuelle) ou une atteinte aux droits du producteur de bases de données (articles L. 341-1 et suivants du même code).
 
-Les recettes et contenus créés par les utilisateurs restent leur propriété, dans les conditions prévues par les [Conditions générales](/legal/terms).
+Les recettes et contenus créés par les utilisateurs restent leur propriété, dans les conditions prévues par les [Conditions générales d'utilisation](/legal/terms).
 
 Les noms de chefs, d'auteurs, de sites ou de marques cités dans les recettes le sont à seule fin d'identifier une source ou une inspiration ; ils n'impliquent aucun partenariat ni aucune approbation de leur part.
 

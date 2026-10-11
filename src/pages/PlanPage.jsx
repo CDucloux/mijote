@@ -276,7 +276,7 @@ export function PlanPage() {
                 <p className="plus-reassure">
                   <Icon name="lock" size={13} />
                   {paymentReady
-                    ? "Paiement sécurisé via Stripe · résiliable à tout moment."
+                    ? <span>Paiement sécurisé via Stripe · résiliable à tout moment · <a href="/legal/sales" onClick={e => { e.preventDefault(); navigate("/legal/sales"); }} className="plus-reassure-link">CGV</a></span>
                     : "L'abonnement Cardamome+ arrive bientôt. Les imports intelligents restent en accès limité en attendant."}
                 </p>
               </section>
