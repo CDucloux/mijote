@@ -2005,8 +2005,8 @@ html.light .sheet-sticky-head::after {
 .stk-bracket {
   position: absolute;
   top: 100%;
-  width: 26px;
-  height: 32px;
+  width: 10px;
+  height: 30px;
   filter: drop-shadow(0 4px 4px rgba(30, 20, 10, 0.28));
 }
 .stk-bracket.l { left: 13%; }
@@ -2227,7 +2227,7 @@ html.light .sheet-sticky-head::after {
   .stk-jars { gap: 14px; padding: 0 8px; }
   .stk-jar { --w: 96px; --h: 126px; --photo: 46px; }
   .stk-lid { height: 16px; }
-  .stk-bracket { width: 22px; height: 27px; }
+  .stk-bracket { width: 9px; height: 26px; }
   .stk-shelf { margin-bottom: 46px; }
   .stk-group { margin-bottom: 56px; }
 }

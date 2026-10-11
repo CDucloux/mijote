@@ -71,16 +71,15 @@ const Jar = memo(function Jar({ ing, state, onCycle }) {
   );
 }, (a, b) => a.state === b.state && a.ing === b.ing && a.onCycle === b.onCycle);
 
-/** Équerre en fonte (support de planche) : platine sous la planche, jambe contre
- *  le mur, gousset ajouré d'une volute, deux vis. Décalée du bord (cf. .stk-bracket). */
+/** Équerre vue de FACE (comme l'étagère) : on n'en voit que la tranche, une barre
+ *  étroite qui descend sous la planche et s'affine vers le mur, avec sa vis de
+ *  fixation. Décalée du bord (cf. .stk-bracket). */
 function ShelfBracket({ side }) {
   return (
-    <svg className={`stk-bracket ${side}`} viewBox="0 0 26 32" fill="none" aria-hidden="true">
-      <path fillRule="evenodd" d="M1.5 0H24a1.5 1.5 0 0 1 1.2 2.4L4.3 30.6A1.5 1.5 0 0 1 1.5 29.8V1.5A1.5 1.5 0 0 1 1.5 0Z M8.5 6.2a4.3 4.3 0 1 0 0 8.6a4.3 4.3 0 1 0 0-8.6Z" fill="var(--iron)" />
-      <path d="M1.5 0H24a1.5 1.5 0 0 1 1.2 2.4L24 4H3.6V27.6L1.5 29.8V1.5Z" fill="rgba(255,255,255,.08)" />
-      <path d="M12.8 10.5C15 9 17.5 7.6 19.6 6.4" stroke="rgba(255,255,255,.1)" strokeWidth="1" strokeLinecap="round" />
-      <circle cx="18" cy="2" r="0.9" fill="var(--iron-hi)" />
-      <circle cx="2.6" cy="21" r="0.9" fill="var(--iron-hi)" />
+    <svg className={`stk-bracket ${side}`} viewBox="0 0 10 30" fill="none" aria-hidden="true">
+      <path d="M0.5 0H9.5L7.6 27.2C7.4 29 6.4 30 5 30C3.6 30 2.6 29 2.4 27.2Z" fill="var(--iron)" />
+      <path d="M0.5 0H3L3.8 26.5C3.2 26.5 2.6 26.9 2.4 27.2Z" fill="rgba(255,255,255,.09)" />
+      <circle cx="5" cy="21" r="1.3" fill="var(--iron-hi)" />
     </svg>
   );
 }
