@@ -58,6 +58,13 @@ document.documentElement.classList.toggle('is-capacitor', Capacitor.isNativePlat
 
 registerSW({ immediate: true })
 
+// Police manuscrite des étiquettes du Stock : sans préchargement, elle n'est
+// téléchargée qu'à la première visite de la page, puis permute (relayout et
+// repeinture de tout le mur en pleine transition). On la chauffe au repos.
+const warmHandFont = () => document.fonts?.load?.('700 15px Caveat')?.catch(() => {})
+if ('requestIdleCallback' in window) window.requestIdleCallback(warmHandFont, { timeout: 4000 })
+else setTimeout(warmHandFont, 2000)
+
 // Deux zones d'URL (cf. lib/ui/appZone.ts) : la vitrine PUBLIQUE à la racine (/,
 // /legal, /discover) et l'APPLICATION sous /app. On décide au boot, avant de monter
 // le routeur. En zone app, on garantit le préfixe /app (Capacitor démarre à la
