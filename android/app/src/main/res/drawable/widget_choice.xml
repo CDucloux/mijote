@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Action secondaire d'un widget : pastille sur la teinte d'accent diluee. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/widget_chip" />
+    <corners android:radius="999dp" />
+</shape>
