@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
@@ -34,6 +34,13 @@ function MatchThumb({ image, name, known }: { image?: string; name: string; know
   );
 }
 
+/** Panneau d'un mode : empilé dans la cellule commune, effacé quand inactif. */
+const panelStyle = (visible: boolean): CSSProperties => ({
+  gridArea: "1 / 1", display: "flex", flexDirection: "column",
+  visibility: visible ? "visible" : "hidden", opacity: visible ? 1 : 0,
+  transition: visible ? "opacity 0.2s ease, visibility 0s" : "opacity 0.2s ease, visibility 0s 0.2s",
+});
+
 /** Props de la feuille d'ajout à une liste de courses libre. */
 interface AddItemSheetProps {
   activeList: ShoppingList;
@@ -53,6 +60,14 @@ export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onA
   const [newItemName, setNewItemName] = useState("");
   const [pasteText, setPasteText] = useState("");
   const [listMode, setListMode] = useState(false);
+  const pasteCount = splitBulletLines(pasteText).length;
+  const over = pasteCount > MAX_LIST_ITEMS;
+  const preview = (() => {
+    if (!newItemName.trim()) return null;
+    const parsed = parseIngredientInput(newItemName);
+    const name = parsed.name || newItemName.trim();
+    return { parsed, name, match: findIngredientMatch(name, ingredientDB) };
+  })();
 
   return (
     <SwipeableSheet onClose={onClose}>
@@ -84,28 +99,29 @@ export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onA
         ))}
       </div>
 
-      {listMode ? (() => {
-        const count = splitBulletLines(pasteText).length;
-        const over = count > MAX_LIST_ITEMS;
-        return (
-          <>
-            <textarea className="field-input field-bare" value={pasteText} maxLength={MAX_LIST_CHARS}
-              onChange={e => setPasteText(e.target.value.slice(0, MAX_LIST_CHARS))}
-              placeholder={"Un article par ligne :\n500g farine\n2 oeufs\n1 sachet de levure"}
-              style={{ minHeight: 140, resize: "vertical", lineHeight: 1.5, fontFamily: "inherit", marginBottom: 8 }} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.3 }}>Une ligne = un article (tirets, puces et numéros acceptés).</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: over ? "var(--red)" : "var(--text3)", flexShrink: 0 }}>{count}/{MAX_LIST_ITEMS}</span>
-            </div>
-            {over && <div style={{ fontSize: 11, color: "var(--red)", marginBottom: 8 }}>Maximum {MAX_LIST_ITEMS} articles à la fois – retire {count - MAX_LIST_ITEMS} ligne(s).</div>}
-            <button className="btn btn-primary" style={{ width: "100%" }} disabled={count === 0 || over}
-              onClick={() => onAddMany(pasteText)}>
-              <Icon name="plusCircle" size={17} /> Ajouter {count > 0 ? `${count} article${count > 1 ? "s" : ""}` : "la liste"}
-            </button>
-          </>
-        );
-      })() : (
-        <>
+      {/* Les deux modes partagent la même cellule de grille : la feuille prend la
+          hauteur du plus grand et n'en change plus en basculant (le bouton
+          d'action reste sous le pouce, au même endroit). Le mode masqué sort du
+          focus et de l'arbre d'accessibilité via `visibility`. */}
+      <div style={{ display: "grid" }}>
+        <div style={panelStyle(listMode)} aria-hidden={!listMode}>
+          <textarea className="field-input field-bare" value={pasteText} maxLength={MAX_LIST_CHARS}
+            onChange={e => setPasteText(e.target.value.slice(0, MAX_LIST_CHARS))}
+            placeholder={"Un article par ligne :\n500g farine\n2 oeufs\n1 sachet de levure"}
+            style={{ height: 140, resize: "none", lineHeight: 1.5, fontFamily: "inherit", marginBottom: 8 }} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 11, color: over ? "var(--red)" : "var(--text3)", lineHeight: 1.3 }}>
+              {over ? `${MAX_LIST_ITEMS} articles maximum à la fois : retire ${pasteCount - MAX_LIST_ITEMS} ligne${pasteCount - MAX_LIST_ITEMS > 1 ? "s" : ""}.` : "Une ligne = un article (tirets, puces et numéros acceptés)."}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: over ? "var(--red)" : "var(--text3)", flexShrink: 0 }}>{pasteCount}/{MAX_LIST_ITEMS}</span>
+          </div>
+          <button className="btn btn-primary" style={{ width: "100%", marginTop: "auto" }} disabled={pasteCount === 0 || over}
+            onClick={() => onAddMany(pasteText)}>
+            <Icon name="plusCircle" size={17} /> Ajouter {pasteCount > 0 ? `${pasteCount} article${pasteCount > 1 ? "s" : ""}` : "la liste"}
+          </button>
+        </div>
+
+        <div style={panelStyle(!listMode)} aria-hidden={listMode}>
           <input className="field-input field-bare" placeholder="ex: 500g farine, 2 oeufs…" maxLength={MAX_ITEM_CHARS}
             value={newItemName} onChange={e => setNewItemName(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") onAddItem(newItemName); }}
@@ -114,27 +130,27 @@ export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onA
               const t = (e.clipboardData || legacyClipboard)?.getData("text") || "";
               if (/\r?\n/.test(t)) { e.preventDefault(); setPasteText(p => (p ? p + "\n" : "") + t); setListMode(true); }
             }}
-            style={{ marginBottom: 10 }} />
-          {newItemName.trim() && (() => {
-            const p = parseIngredientInput(newItemName);
-            const name = p.name || newItemName.trim();
-            const match = findIngredientMatch(name, ingredientDB);
-            return (
-              <div style={{ display: "flex", gap: 10, marginBottom: 12, alignItems: "center" }}>
-                <MatchThumb image={match?.image} name={match?.name || name} known={!!match} />
+            style={{ marginBottom: 12 }} />
+          {/* Emplacement réservé à l'aperçu : il se remplit à la frappe sans rien pousser. */}
+          <div style={{ minHeight: 44, display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
+            {preview ? (
+              <>
+                <MatchThumb image={preview.match?.image} name={preview.match?.name || preview.name} known={!!preview.match} />
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", minWidth: 0 }}>
-                  {p.amount && <ParsedPill label="Quantité" value={String(p.amount)} />}
-                  {p.unit && <ParsedPill label="Unité" value={p.unit} />}
-                  {p.name && <ParsedPill value={p.name} />}
+                  {preview.parsed.amount && <ParsedPill label="Quantité" value={String(preview.parsed.amount)} />}
+                  {preview.parsed.unit && <ParsedPill label="Unité" value={preview.parsed.unit} />}
+                  {preview.parsed.name && <ParsedPill value={preview.parsed.name} />}
                 </div>
-              </div>
-            );
-          })()}
-          <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => onAddItem(newItemName)} disabled={!newItemName.trim()}>
+              </>
+            ) : (
+              <span style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.4 }}>Quantité et unité sont reconnues toutes seules, l'article est rangé dans son rayon.</span>
+            )}
+          </div>
+          <button className="btn btn-primary" style={{ width: "100%", marginTop: "auto" }} onClick={() => onAddItem(newItemName)} disabled={!newItemName.trim()}>
             <Icon name="plusCircle" size={17} /> Ajouter
           </button>
-        </>
-      )}
+        </div>
+      </div>
     </SwipeableSheet>
   );
 }
