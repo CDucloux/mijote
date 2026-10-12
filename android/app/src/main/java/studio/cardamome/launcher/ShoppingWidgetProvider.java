@@ -1,62 +1,81 @@
 package studio.cardamome.launcher;
 
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.view.View;
 import android.widget.RemoteViews;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import studio.cardamome.R;
 
 /**
- * Widget « Courses » : le nombre d'articles restant à acheter en gros, les
- * premiers articles en dessous. Tout le widget ouvre la liste de courses.
+ * Widget « Courses » : la liste à acheter, qui défile, chaque article se cochant
+ * d'un tap sans ouvrir l'app (cf. {@link WidgetStore#toggleShopping}). L'en-tête
+ * ouvre la liste de courses.
  */
 public class ShoppingWidgetProvider extends AppWidgetProvider {
 
-    private static final int[] ROWS = { R.id.shop_row_0, R.id.shop_row_1, R.id.shop_row_2, R.id.shop_row_3 };
-    private static final int[] NAMES = { R.id.shop_name_0, R.id.shop_name_1, R.id.shop_name_2, R.id.shop_name_3 };
-    private static final int[] QTYS = { R.id.shop_qty_0, R.id.shop_qty_1, R.id.shop_qty_2, R.id.shop_qty_3 };
+    static final String ACTION_TOGGLE = "studio.cardamome.launcher.TOGGLE_SHOPPING_ITEM";
+    static final String EXTRA_KEY = "key";
 
     @Override
     public void onUpdate(Context ctx, AppWidgetManager mgr, int[] ids) {
         render(ctx, mgr, ids);
     }
 
-    static void render(Context ctx, AppWidgetManager mgr, int[] ids) {
-        if (ids == null || ids.length == 0) return;
-        mgr.updateAppWidget(ids, build(ctx));
+    @Override
+    public void onReceive(Context ctx, Intent intent) {
+        if (ACTION_TOGGLE.equals(intent.getAction())) {
+            String key = intent.getStringExtra(EXTRA_KEY);
+            if (key == null) return;
+            WidgetStore.toggleShopping(ctx, key);
+            AppWidgetManager mgr = AppWidgetManager.getInstance(ctx);
+            render(ctx, mgr, WidgetStore.ids(ctx, mgr, ShoppingWidgetProvider.class));
+            return;
+        }
+        super.onReceive(ctx, intent);
     }
 
-    private static RemoteViews build(Context ctx) {
+    static void render(Context ctx, AppWidgetManager mgr, int[] ids) {
+        if (ids == null || ids.length == 0) return;
+        for (int id : ids) mgr.updateAppWidget(id, build(ctx, id));
+        mgr.notifyAppWidgetViewDataChanged(ids, R.id.shop_list);
+    }
+
+    private static RemoteViews build(Context ctx, int widgetId) {
         RemoteViews views = new RemoteViews(ctx.getPackageName(), R.layout.widget_shopping);
-        views.setOnClickPendingIntent(android.R.id.background, LaunchLinks.pending(ctx, "/shopping-lists"));
+        PendingIntent open = LaunchLinks.pending(ctx, "/shopping-lists");
+        views.setOnClickPendingIntent(R.id.shop_header, open);
+        views.setOnClickPendingIntent(R.id.shop_empty, open);
 
-        JSONObject snapshot = WidgetStore.load(ctx);
-        JSONObject shopping = snapshot == null ? null : snapshot.optJSONObject("shopping");
-        int remaining = shopping == null ? 0 : shopping.optInt("remaining", 0);
-        JSONArray items = shopping == null ? null : shopping.optJSONArray("items");
-
+        int remaining = WidgetStore.shoppingRemaining(ctx);
         views.setViewVisibility(R.id.shop_count, remaining > 0 ? View.VISIBLE : View.GONE);
         views.setTextViewText(R.id.shop_count, String.valueOf(remaining));
-        views.setTextViewText(R.id.shop_count_label, shopping == null
-                ? "Ouvrez Cardamome une fois pour voir votre liste ici."
-                : remaining == 0 ? "Tout est acheté."
-                : remaining == 1 ? "article à acheter" : "articles à acheter");
+        views.setTextViewText(R.id.shop_subtitle, remaining < 0 ? "Votre liste, à portée de pouce"
+                : remaining == 0 ? "Tout est dans le panier"
+                : remaining == 1 ? "Plus qu'un article à acheter" : "Articles à acheter");
+        views.setTextViewText(R.id.shop_empty_text, remaining < 0
+                ? "Ouvrez Cardamome une fois pour retrouver votre liste ici."
+                : "Rien à acheter pour l'instant.\nTouchez pour ajouter un article.");
 
-        for (int i = 0; i < ROWS.length; i++) {
-            JSONObject item = items != null && i < items.length() ? items.optJSONObject(i) : null;
-            if (item == null) {
-                views.setViewVisibility(ROWS[i], View.GONE);
-                continue;
-            }
-            views.setViewVisibility(ROWS[i], View.VISIBLE);
-            views.setTextViewText(NAMES[i], item.optString("name"));
-            views.setTextViewText(QTYS[i], item.optString("qty"));
-        }
+        Intent adapter = new Intent(ctx, ShoppingWidgetService.class)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+        adapter.setData(Uri.parse(adapter.toUri(Intent.URI_INTENT_SCHEME)));
+        views.setRemoteAdapter(R.id.shop_list, adapter);
+        views.setEmptyView(R.id.shop_list, R.id.shop_empty);
+        views.setPendingIntentTemplate(R.id.shop_list, toggleTemplate(ctx));
         return views;
+    }
+
+    /** Gabarit des taps sur la liste ; chaque ligne y ajoute la clé de son article. */
+    private static PendingIntent toggleTemplate(Context ctx) {
+        Intent toggle = new Intent(ctx, ShoppingWidgetProvider.class).setAction(ACTION_TOGGLE);
+        // Mutable par nécessité : le lanceur y glisse la clé de la ligne touchée.
+        int mutable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_MUTABLE : 0;
+        return PendingIntent.getBroadcast(ctx, 0, toggle, PendingIntent.FLAG_UPDATE_CURRENT | mutable);
     }
 }

@@ -45,6 +45,8 @@ Un contenu publié sur l'espace public peut être signalé depuis l'Application 
 
 La structure de l'Application, son code, son design, ses textes, ses illustrations, ses bases de données éditoriales (ingrédients, ustensiles, gestes techniques) et la marque Cardamome sont la propriété de l'éditeur ou font l'objet d'une autorisation d'usage. Toute reproduction, représentation, adaptation ou extraction, totale ou partielle, sans autorisation écrite préalable, est interdite et peut constituer une contrefaçon (articles L. 335-2 et suivants du Code de la propriété intellectuelle) ou une atteinte aux droits du producteur de bases de données (articles L. 341-1 et suivants du même code).
 
+Les valeurs nutritionnelles issues de la table Ciqual restent soumises à leur licence d'origine (voir Crédits).
+
 Les recettes et contenus créés par les utilisateurs restent leur propriété, dans les conditions prévues par les [Conditions générales d'utilisation](/legal/terms).
 
 Les noms de chefs, d'auteurs, de sites ou de marques cités dans les recettes le sont à seule fin d'identifier une source ou une inspiration ; ils n'impliquent aucun partenariat ni aucune approbation de leur part.
@@ -52,6 +54,8 @@ Les noms de chefs, d'auteurs, de sites ou de marques cités dans les recettes le
 ## Crédits
 
 Icônes : [Phosphor Icons](https://phosphoricons.com) (licence MIT). Polices de caractères : [Google Fonts](https://fonts.google.com) (licence SIL Open Font License).
+
+Valeurs nutritionnelles : Anses. 2025. Table de composition nutritionnelle des aliments [Ciqual](https://ciqual.anses.fr/), version du 3 novembre 2025, réutilisée sous [Licence Ouverte Etalab 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence/). Les valeurs sont arrondies et parfois adaptées par l'éditeur, qui calcule seul les apports des recettes à partir d'elles ; cette réutilisation n'implique aucune approbation de l'Anses.
 
 ## Contact
 

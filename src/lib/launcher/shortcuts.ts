@@ -10,7 +10,7 @@ import { SLOT_BY_ID, slotOrder } from "@/constants/mealSlots.js";
 import { countShoppingTodo, getTodayMeals, todayKey, upcomingSlot, type DashRecipe, type TodayMeal } from "@/lib/planning/dashboard.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
-import type { MealPlan } from "@/lib/types.js";
+import type { MealPlan, Recipe } from "@/lib/types.js";
 
 /** Glyphe d'un raccourci. Miroir des drawables `ic_shortcut_<icon>` côté Android. */
 export type ShortcutIcon = "meal" | "cart" | "camera" | "calendar" | "book";
@@ -31,7 +31,8 @@ export interface LauncherShortcut {
 /** État du foyer dont les raccourcis se déduisent. */
 export interface LauncherInput {
   mealPlan?: MealPlan;
-  recipes?: DashRecipe[];
+  /** Recettes ; photo et temps nourrissent le widget « Au menu » quand ils sont là. */
+  recipes?: Array<DashRecipe & Pick<Recipe, "image" | "prepTime" | "cookTime">>;
   shoppingLists?: ShoppingList[];
   ingredientDB?: DbEntry[];
   date?: Date;

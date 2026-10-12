@@ -9,7 +9,7 @@ export interface DetailDismissInput {
 }
 
 /**
- * Sortie animée de la fiche recette (ressenti « app native » sur Capacitor mobile) :
+ * Sortie animée d'une fiche, recette ou ingrédient (ressenti « app native » sur Capacitor mobile) :
  * la fiche reste montée le temps du glissement et la navigation n'a lieu qu'à la fin.
  *
  * @param input - Signaux d'affichage courants.

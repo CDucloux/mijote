@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, memo } from "react";
+import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, useTransition, memo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { ClearSearchButton } from "../components/ui/ClearSearchButton.jsx";
@@ -88,11 +88,15 @@ const Jar = memo(function Jar({ ing, state, onCycle, catKey }) {
 
 /** Équerre vue de FACE (comme l'étagère) : on n'en voit que la tranche, une barre
  *  étroite qui descend sous la planche et s'affine vers le mur, avec sa vis de
- *  fixation. Décalée du bord (cf. .stk-bracket). */
+ *  fixation. Décalée du bord (cf. .stk-bracket). L'ombre portée est une silhouette
+ *  décalée dessinée dans le SVG : un `filter: drop-shadow` coûterait une passe hors
+ *  écran par équerre à chaque peinture. */
+const BRACKET_PATH = "M0.5 0H9.5L7.6 27.2C7.4 29 6.4 30 5 30C3.6 30 2.6 29 2.4 27.2Z";
 function ShelfBracket({ side }) {
   return (
     <svg className={`stk-bracket ${side}`} viewBox="0 0 10 30" fill="none" aria-hidden="true">
-      <path d="M0.5 0H9.5L7.6 27.2C7.4 29 6.4 30 5 30C3.6 30 2.6 29 2.4 27.2Z" fill="var(--iron)" />
+      <path d={BRACKET_PATH} transform="translate(0.8 2.6)" fill="rgba(30, 20, 10, 0.2)" />
+      <path d={BRACKET_PATH} fill="var(--iron)" />
       <path d="M0.5 0H3L3.8 26.5C3.2 26.5 2.6 26.9 2.4 27.2Z" fill="rgba(255,255,255,.09)" />
       <circle cx="5" cy="21" r="1.3" fill="var(--iron-hi)" />
     </svg>
@@ -310,6 +314,14 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
     return () => cancelAnimationFrame(r);
   }, []);
 
+  // Les badges ne s'animent qu'une fois l'entrée sur la page passée : à l'arrivée,
+  // des dizaines d'animations simultanées concurrenceraient la transition d'entrée.
+  const [live, setLive] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setLive(true), 600);
+    return () => clearTimeout(t);
+  }, []);
+
   const perRow = useMemo(() => {
     const vw = typeof window !== "undefined" ? window.innerWidth : 1000;
     const mobile = vw <= 620;
@@ -334,13 +346,12 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
     [grouped, perRow, stockSet, lowSet, visibleShelves]);
   const remainingShelves = Math.max(0, totalShelves - visibleShelves);
 
-  // Chargement du lot suivant : bref « spinner » avant de monter les planches
-  // (le rendu d'un lot de bocaux peut être perceptible sur mobile) → feedback immédiat.
-  const [loadingMore, setLoadingMore] = useState(false);
+  // Lot suivant monté en transition : le bouton répond tout de suite (spinner),
+  // le montage des bocaux passe derrière les interactions, sans délai artificiel.
+  const [loadingMore, startLoadMore] = useTransition();
   const loadMore = () => {
     if (loadingMore) return;
-    setLoadingMore(true);
-    setTimeout(() => { setVisibleShelves(c => c + SHELVES_PAGE); setLoadingMore(false); }, 320);
+    startLoadMore(() => setVisibleShelves(c => c + SHELVES_PAGE));
   };
 
   return (
@@ -403,7 +414,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
 
       {/* Corps scrollable : le fond chaud du mur est le fond de ce conteneur */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-        <div ref={contentRef} className="stk-wall" style={{ minHeight: "100%" }}>
+        <div ref={contentRef} className={`stk-wall${live ? " is-live" : ""}`} style={{ minHeight: "100%" }}>
         {loading ? (
           // Données pas encore hydratées : squelette d'étagères (forme immédiate,
           // pas d'écran vide) plutôt que « Base d'ingrédients vide » prématuré.

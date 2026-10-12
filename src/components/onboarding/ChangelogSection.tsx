@@ -23,7 +23,7 @@ export function ChangelogSection() {
             </div>
             {/* Card */}
             <div style={{ flex: 1, marginBottom: 16, marginLeft: 10 }}>
-              <button onClick={() => !isLatest && toggle(entry.version)}
+              <button onClick={() => !isLatest && toggle(entry.version)} className={isLatest ? undefined : "ripple"}
                 style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: isLatest ? "14px 16px 12px" : "12px 16px", background: isLatest ? "linear-gradient(135deg,rgba(var(--accent-rgb),0.10),rgba(var(--accent-rgb),0.03))" : "var(--surface)", border: isLatest ? "1px solid rgba(var(--accent-rgb),0.35)" : "1px solid var(--border)", borderRadius: isExpanded ? "14px 14px 0 0" : 14, cursor: isLatest ? "default" : "pointer", textAlign: "left", transition: "border-radius 0.2s" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>

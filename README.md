@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.64.1-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.65.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -132,8 +132,9 @@ toujours avec vous.
   (définition, résultat attendu, erreurs fréquentes, à ne pas confondre).
 - 📱 **Lanceur Android** : à l'appui long sur l'icône, des **raccourcis qui suivent
   le foyer** (prochain repas planifié, courses restantes, ajout en photo, planning),
-  et deux **widgets** d'écran d'accueil, « Au menu » (repas du jour) et « Courses »
-  (ce qu'il reste à acheter).
+  et trois **widgets** d'écran d'accueil : « Au menu » (repas du jour avec photos),
+  « Courses » (liste qui défile, articles à cocher sans ouvrir l'app) et
+  « Import intelligent » (photo, lien copié collé tout seul, texte ou PDF).
 - 🖨️ **Export** : impression PDF propre (texte sélectionnable, étapes non
   coupées, badges vegan / cuisine / difficulté, chef sous le titre) et JSON (import / export).
 - 👤 **Profil** : nom d'affichage, heatmap d'activité cuisine façon GitHub, et

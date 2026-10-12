@@ -1389,6 +1389,52 @@ html.light .sheet-sticky-head::after {
   }
 }
 
+/* ── Tirer pour actualiser ─────────────────────────────────────────────────
+   Disque net (aplat + filet, aucune ombre floue) dont l'arc se DESSINE au fil du
+   doigt, pointe de flèche au bout. Seuil atteint : le disque passe à l'accent
+   (« relâchez ») avec un petit rebond ; pendant l'actualisation, le même arc
+   tourne, sans changer d'objet. Géométrie : lib/ui/pullIndicator. */
+.ptr {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 5;
+  pointer-events: none;
+}
+.ptr-disc {
+  --ptr-scale: 1;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  transform: scale(var(--ptr-scale));
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.ptr-disc[data-state="armed"],
+.ptr-disc[data-state="refreshing"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.ptr-disc[data-state="armed"] { animation: ptrArm 0.26s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.ptr-svg { width: 22px; height: 22px; overflow: visible; }
+.ptr-arc { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+.ptr-head { fill: currentColor; stroke: currentColor; stroke-width: 0.8; stroke-linejoin: round; }
+.ptr-spin { animation: spin 0.85s linear infinite; }
+@keyframes ptrArm {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ptr-disc[data-state="armed"] { animation: none; }
+  .ptr-spin { animation-duration: 1.6s; }
+}
+
 @keyframes potPulse {
 
   0%,
@@ -1611,6 +1657,10 @@ html.light .sheet-sticky-head::after {
     transform: translateX(100%);
   }
 }
+
+/* Console admin au retour d'une fiche ingrédient : la liste est remontée mais déjà
+   vue, ses cartes ne rejouent pas leur entrée (cf. `quietList`, ConfigPage). */
+.config-quiet .slide-up { animation: none; }
 
 .page-dismiss-right {
   animation: detailDismissRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
@@ -1928,7 +1978,7 @@ html.light .sheet-sticky-head::after {
 
 /* Marge basse : les équerres (~32px) pendent sous la dernière planche, l'étiquette
    du rayon suivant garde un vrai blanc au-dessus d'elles. */
-.stk-group { position: relative; margin-bottom: 64px; }
+.stk-group { position: relative; margin-bottom: 32px; }
 .stk-group:last-child { margin-bottom: 0; }
 
 /* Étiquette de rayon, posée sur le mur. */
@@ -1962,7 +2012,14 @@ html.light .sheet-sticky-head::after {
 
 /* Une planche = une rangée. Marge basse généreuse : les équerres (~32px) pendent
    sous le chant sans jamais toucher les bocaux de la rangée suivante. */
-.stk-shelf { position: relative; margin-bottom: 54px; }
+.stk-shelf {
+  --shelf-pad: 32px;
+  position: relative;
+  padding-bottom: var(--shelf-pad);
+  margin-bottom: 22px;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+}
 .stk-shelf:last-child { margin-bottom: 0; }
 
 .stk-jars {
@@ -1985,10 +2042,7 @@ html.light .sheet-sticky-head::after {
   background: linear-gradient(180deg,
     var(--oak-hi) 0, var(--oak-top) 2px,
     var(--oak) 3px, var(--oak-edge) 60%, var(--oak-edge2) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 4px 7px rgba(60, 45, 25, 0.22),
-    0 16px 24px -12px rgba(40, 30, 15, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 5px 9px -2px rgba(50, 38, 20, 0.26);
 }
 /* Veinage discret du chant. */
 .stk-board::before {
@@ -1996,9 +2050,7 @@ html.light .sheet-sticky-head::after {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  opacity: 0.45;
-  background: repeating-linear-gradient(93deg, rgba(120, 80, 40, 0.1) 0 2px, transparent 2px 13px);
-  mix-blend-mode: multiply;
+  background: repeating-linear-gradient(93deg, rgba(90, 55, 25, 0.06) 0 2px, transparent 2px 13px);
 }
 
 /* Équerres fer (SVG net), décalées des bords, suspendues sous le chant. */
@@ -2007,7 +2059,7 @@ html.light .sheet-sticky-head::after {
   top: 100%;
   width: 10px;
   height: 30px;
-  filter: drop-shadow(0 4px 4px rgba(30, 20, 10, 0.28));
+  overflow: visible;
 }
 .stk-bracket.l { left: 13%; }
 .stk-bracket.r { right: 13%; }
@@ -2039,7 +2091,7 @@ html.light .sheet-sticky-head::after {
   height: 19px;
   border-radius: 7px 7px 4px 4px;
   background: linear-gradient(180deg, var(--oak-hi), var(--oak) 55%, var(--oak-edge2));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 5px rgba(60, 40, 15, 0.22), 0 2px 3px rgba(0, 0, 0, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 2px 3px rgba(0, 0, 0, 0.16);
   position: relative;
   z-index: 3;
   margin-bottom: -5px;
@@ -2064,13 +2116,13 @@ html.light .sheet-sticky-head::after {
   overflow: hidden;
   border-radius: 16px 16px 26px 26px / 12px 12px 34px 34px;
   border: 1px solid var(--glass-line);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 32%, rgba(255, 255, 255, 0.07));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    inset -9px 0 15px -9px rgba(70, 55, 30, 0.22),
-    inset 9px 0 15px -11px rgba(255, 255, 255, 0.5),
-    0 7px 16px -9px rgba(40, 35, 20, 0.3);
-  transition: box-shadow 0.3s ease;
+  /* Galbe du verre en dégradés (bord gauche éclairé, bord droit ombré) plutôt qu'en
+     ombres internes floutées : sur mobile, une ombre interne floue sur coins
+     elliptiques coûte une peinture complète par bocal. */
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.22), transparent 12%, transparent 86%, rgba(70, 55, 30, 0.16)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 32%, rgba(255, 255, 255, 0.07));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 7px 14px -9px rgba(40, 35, 20, 0.3);
 }
 
 /* Contenu (vu À TRAVERS le verre) : niveau de remplissage = état de stock. Teinte
@@ -2083,12 +2135,11 @@ html.light .sheet-sticky-head::after {
   height: var(--lvl);
   overflow: hidden;
   background-color: var(--fill);
+  /* Grain en tuile SVG (rastérisée une fois, puis répétée) plutôt qu'en trois
+     dégradés radiaux tuilés, recalculés à chaque peinture. */
   background-image:
-    radial-gradient(circle at 25% 30%, rgba(0, 0, 0, 0.16) 0 1.2px, transparent 1.6px),
-    radial-gradient(circle at 70% 55%, rgba(0, 0, 0, 0.13) 0 1.1px, transparent 1.5px),
-    radial-gradient(circle at 45% 80%, rgba(255, 255, 255, 0.18) 0 1.1px, transparent 1.5px);
-  background-size: 9px 9px, 11px 11px, 8px 8px;
-  box-shadow: inset 0 7px 11px -7px rgba(0, 0, 0, 0.4);
+    linear-gradient(180deg, rgba(0, 0, 0, 0.24), transparent 9px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18'%3E%3Ccircle cx='4.5' cy='5.4' r='1.3' fill='%23000' fill-opacity='.16'/%3E%3Ccircle cx='12.6' cy='9.9' r='1.2' fill='%23000' fill-opacity='.13'/%3E%3Ccircle cx='8.1' cy='14.4' r='1.2' fill='%23fff' fill-opacity='.18'/%3E%3C/svg%3E");
   border-radius: 0 0 24px 24px / 0 0 30px 30px;
   transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -2182,6 +2233,7 @@ html.light .sheet-sticky-head::after {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
   animation: popIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
+.stk-wall:not(.is-live) .stk-badge { animation: none; }
 .stk-badge[data-state="full"] { background: var(--ok); }
 .stk-badge[data-state="low"] { background: var(--spice); }
 
@@ -2191,7 +2243,7 @@ html.light .sheet-sticky-head::after {
 }
 .stk-jar[data-state="empty"] .stk-label { opacity: 0.9; }
 /* Bocal vide (à racheter) : la vignette se désature, appuyant l'état « manquant ». */
-.stk-jar[data-state="empty"] .stk-photo { opacity: 0.5; filter: grayscale(0.4); }
+.stk-jar[data-state="empty"] .stk-photo { opacity: 0.5; }
 
 /* Onde tactile (mobile) bornée au verre : l'ink, inséré en 1er enfant, remonte
    AU-DESSUS du contenu (fill/vignette/étiquette) pour rester lisible au toucher. */
@@ -2203,9 +2255,7 @@ html.light .sheet-sticky-head::after {
 .stk-jar:focus-visible .stk-glass {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset -9px 0 15px -9px rgba(70, 55, 30, 0.22),
-    inset 9px 0 15px -11px rgba(255, 255, 255, 0.6),
-    0 8px 20px -8px rgba(40, 35, 20, 0.34),
+    0 8px 18px -8px rgba(40, 35, 20, 0.34),
     0 0 0 2px rgba(var(--accent-rgb), 0.32);
 }
 
@@ -2240,8 +2290,8 @@ html.light .sheet-sticky-head::after {
 }
 .stk-jar[data-vessel="bottle"] .stk-fill {
   background-color: color-mix(in srgb, var(--fill) 82%, transparent);
-  background-image: none;
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -10px 16px -10px rgba(0, 0, 0, 0.25);
+  background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.2), transparent 12px);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35);
   border-radius: 0 0 17px 17px / 0 0 15px 15px;
 }
 .stk-jar[data-vessel="bottle"] .stk-photo { top: 22%; }
@@ -2263,7 +2313,7 @@ html.light .sheet-sticky-head::after {
   background:
     radial-gradient(circle, rgba(40, 40, 40, 0.55) 0 1.1px, transparent 1.5px) 50% 4px / 7px 6px repeat-x,
     linear-gradient(180deg, #f1f1ee, #c9c8c2 45%, #a8a7a0 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -2px 3px rgba(0, 0, 0, 0.18), 0 2px 3px rgba(0, 0, 0, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -2px 0 rgba(0, 0, 0, 0.12), 0 2px 3px rgba(0, 0, 0, 0.16);
 }
 .stk-jar[data-vessel="spice"] .stk-lid::after {
   left: 0;
@@ -2280,9 +2330,8 @@ html.light .sheet-sticky-head::after {
 }
 .stk-jar[data-vessel="spice"] .stk-fill {
   background-image:
-    radial-gradient(circle at 30% 40%, rgba(0, 0, 0, 0.18) 0 0.7px, transparent 1px),
-    radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.16) 0 0.7px, transparent 1px);
-  background-size: 4px 4px, 5px 5px;
+    linear-gradient(180deg, rgba(0, 0, 0, 0.24), transparent 9px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Ccircle cx='3' cy='4' r='.75' fill='%23000' fill-opacity='.18'/%3E%3Ccircle cx='7.5' cy='7.5' r='.75' fill='%23fff' fill-opacity='.16'/%3E%3C/svg%3E");
   border-radius: 0 0 13px 13px / 0 0 11px 11px;
 }
 .stk-jar[data-vessel="spice"] .stk-photo { --photo: 44px; top: 12%; }
@@ -2297,8 +2346,9 @@ html.light .sheet-sticky-head::after {
 .stk-sprig {
   position: absolute;
   right: 20px;
-  /* Posé sur le dessus de la planche (17px moins le contact d'1px), comme les bocaux. */
-  bottom: 16px;
+  /* Posé sur le dessus de la planche (17px moins le contact d'1px), comme les
+     bocaux, au-dessus du padding bas du rayon qui loge les équerres. */
+  bottom: calc(var(--shelf-pad) + 16px);
   width: 50px;
   height: 89px;
   z-index: 2;
@@ -2314,8 +2364,8 @@ html.light .sheet-sticky-head::after {
   .stk-jar[data-vessel="spice"] .stk-label span { font-size: 12.5px; }
   .stk-lid { height: 16px; }
   .stk-bracket { width: 9px; height: 26px; }
-  .stk-shelf { margin-bottom: 46px; }
-  .stk-group { margin-bottom: 56px; }
+  .stk-shelf { --shelf-pad: 28px; margin-bottom: 18px; contain-intrinsic-size: auto 190px; }
+  .stk-group { margin-bottom: 28px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

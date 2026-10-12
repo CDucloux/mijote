@@ -90,7 +90,7 @@ export function AboutModal({ onClose }: { onClose: () => void }) {
 
         {/* Nous contacter */}
         <Section icon="mail" title="Nous contacter">
-          <Row as="a" justify="space-between" gap={10} href={CONTACT_MAILTO}
+          <Row as="a" className="ripple ripple-accent" justify="space-between" gap={10} href={CONTACT_MAILTO}
             style={{ padding: "11px 14px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", textDecoration: "none", transition: "border-color 0.15s, background 0.15s" }}
             onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.13)"; }}
             onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.18)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.07)"; }}>

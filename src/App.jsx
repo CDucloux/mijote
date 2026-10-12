@@ -383,7 +383,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   const [pendingTab, setPendingTab] = useState(null); // tab requested while editing
 
   // Sortie animée de la fiche recette (Capacitor mobile), cf. useDetailDismiss.
-  const { dismissing, dismissDetail, finishDismiss } = useDetailDismiss({ onDetail: !!selectedRecipe && !!currentRecipe && !isEditing, isDesktop });
+  const { dismissing, dismissDetail, finishDismiss } = useDetailDismiss({ onDetail: (!!selectedRecipe && !!currentRecipe && !isEditing) || adminFiche, isDesktop });
 
   // Bouton retour Android (matériel / geste) : navigation interne plutôt que sortie
   // de l'app. En cours d'édition, on réutilise la garde d'abandon (comme la TabBar)
@@ -394,7 +394,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Lanceur Android : raccourcis de l'icône (appui long) et widgets, tenus à jour
   // depuis le planning et les courses ; leurs taps rouvrent l'écran visé.
   useLaunchLinks();
-  useLauncherSync({ ready: workspaceReady && !sharedHydrating, mealPlan, recipes, shoppingLists, ingredientDB });
+  useLauncherSync({ ready: workspaceReady && !sharedHydrating, mealPlan, recipes, shoppingLists, ingredientDB, setShoppingLists });
 
   // Navigate with guard: if editing, show confirm dialog first
   const requestTab = (newTab) => {
@@ -451,8 +451,9 @@ function AppInner({ user, isDark, toggleTheme }) {
       {visibleTab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={!workspaceReady || sharedHydrating} onSelect={setSelectedRecipe} onNewRecipe={startNewRecipe} onSearchCommunity={searchCommunity} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)} onDeleteRecipe={deleteRecipe} onDuplicate={duplicateRecipe} onAddToShopping={addToShopping} onToggleCollection={toggleRecipeCollection} onPlanRecipe={(r) => openRecipeWithIntent(r.id, "plan")} onShareRecipe={(r) => openRecipeWithIntent(r.id, "share")} setCollections={setCollections} setTab={setTab} />}
       {visibleTab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={setSelectedRecipe} ingredientDB={ingredientDB} recipeDerived={recipeDerived} preferences={preferences} stock={stock} loading={!workspaceReady || sharedHydrating} notify={notify} generate={generateMealPlan} undo={undoMealPlan} undoKey={mealPlanUndoKey} />}
       {visibleTab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} recipes={recipes} categories={categories} loading={!workspaceReady || sharedHydrating} stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} />}
-      {visibleTab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} components={recipes.filter(r => r.isComponent)} />}
-      {visibleTab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} sources={sources} setSources={setSources} />}
+      {visibleTab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} loading={!workspaceReady || sharedHydrating} />}
+      {visibleTab === "admin" && (isAdmin || adminFiche) && <ConfigPage ingredientDB={ingredientDB} setIngredientDB={setIngredientDB} utensilDB={utensilDB} setUtensilDB={setUtensilDB} collections={collections} setCollections={setCollections} recipes={recipes} isAdmin={isAdmin} categories={categories} setCategories={setCategories} techniques={techniques} setTechniques={setTechniques} sources={sources} setSources={setSources}
+        detailDismissing={dismissing && adminFiche} onDetailBack={() => dismissDetail(() => navigate(-1))} onDetailDismissEnd={finishDismiss} />}
       {visibleTab === "profile" && <ProfilePage user={user} preferences={preferences} setPreferences={setPreferences} recipes={recipes} onPurge={purgeData} onDeleteAccount={deleteAccount} ingredientDB={ingredientDB} categories={categories} onExportAll={() => exportTextFile("all_recipes.json", JSON.stringify(recipes.map(cleanRecipeForExport), null, 2), "application/json").then(o => { if (o === "downloaded") notify("Export complet téléchargé"); }).catch(e => { reportError(e, { action: "export", filename: "all_recipes.json" }); notify("Export impossible", "error"); })} onImport={importJSON} />}
       {visibleTab === "legal" && <LegalPage />}
       {visibleTab === "guide" && <GuidePage />}

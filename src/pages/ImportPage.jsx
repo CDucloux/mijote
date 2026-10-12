@@ -13,6 +13,7 @@ import { extractPdfText } from "@/lib/recipes/pdfImport.js";
 import { hasUsablePdfText } from "@/lib/recipes/pdfText.js";
 import { visibleSources, prettyHost } from "@/lib/sources/recommendedSources.js";
 import { importFailureFor } from "@/lib/recipes/importInterruption.js";
+import { readClipboardLink } from "@/lib/launcher/plugin.js";
 import { DEFAULT_SOURCES } from "@/constants/recommendedSources.js";
 import "../styles/import.css";
 
@@ -93,15 +94,19 @@ export function ImportPage({ mode = "lien" }) {
     navigate("/recipes/import-from-url", { replace: true });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Presse-papiers (lien) : proposer de coller un lien copié, best-effort.
+  // Presse-papiers (lien) : proposer de coller un lien copié, best-effort. Venu du
+  // widget d'import (« Un lien »), le geste vaut intention : on colle directement.
+  const fromLauncher = !!location.state?.launcher;
   useEffect(() => {
     if (mode !== "lien") return;
     let alive = true;
-    navigator.clipboard?.readText?.()
-      .then(t => { const v = (t || "").trim(); if (alive && URL_RE.test(v)) setClip(v); })
-      .catch(() => {});
+    readClipboardLink().then(link => {
+      if (!alive || !link) return;
+      if (fromLauncher) setUrl(prev => prev || link);
+      else setClip(link);
+    });
     return () => { alive = false; };
-  }, [mode]);
+  }, [mode, fromLauncher, location.key]);
 
   // Non-abonné qui n'a pas encore reçu son cadeau : la recette découverte offerte
   // s'ouvre DIRECTEMENT à l'arrivée sur l'écran, sans clic. Ouverture temporisée

@@ -1,5 +1,30 @@
 # Changelog – Cardamome
 
+## v4.65.0 – Cardamome · Sur l'écran d'accueil
+
+### Widgets Android
+- **Courses, une vraie liste à cocher** : la liste défile et chaque article se coche d'un tap, sans ouvrir l'app. Les cases cochées sont reportées dans les listes du foyer à la prochaine ouverture de Cardamome. Un même article venu de plusieurs listes se coche partout d'un coup.
+- **Au menu, illustré** : photo de chaque recette, créneau, durée et portions ; le widget passe aux repas de demain quand rien n'est prévu aujourd'hui.
+- **Nouveau widget « Import intelligent »** : « En photo » en action principale, puis lien, texte et PDF, chacun ouvrant directement sa page d'import.
+- **Logo Cardamome** en tête des widgets, états vides travaillés et aperçus remplis dans le sélecteur de widgets.
+
+### Import
+- **Le lien copié est collé tout seul** depuis le widget ; dans l'app, la suggestion « Coller le lien copié » fonctionne enfin sur Android. Seul le lien est repris d'un texte partagé.
+
+### Stock
+- **Arrivée sur la page beaucoup plus fluide** : bocaux et étagères allégés à dessiner, rayons hors écran ignorés jusqu'au défilement, police manuscrite préchargée, plus d'attente artificielle sur « Charger plus d'étagères ».
+
+### Interface
+- **Tirer pour actualiser redessiné** : l'arc se trace au fil du geste, le disque passe au vert quand on peut relâcher, sans halo gris.
+- **Courses** : la feuille d'ajout garde la même hauteur entre « Article » et « Coller une liste », le bouton (+) a l'onde tactile.
+- **Onde tactile généralisée** : console admin (sections, catégories, lignes, dépôt YAML), onglets, « Compléter » du planning, fiche ingrédient, page À propos.
+- **Fiche ingrédient** : même sortie glissée que la fiche recette, et la liste de la console ne rejoue plus son animation au retour.
+- **Icônes plutôt qu'emojis** dans l'en-tête des menus d'une recette sans photo.
+- **Onboarding** : « C'est parti ! » devient un vrai bouton pleine largeur.
+
+### Mentions légales
+- **Attribution Ciqual complétée** : citation de l'Anses, version du 3 novembre 2025 et Licence Ouverte, sur la fiche ingrédient et dans les crédits.
+
 ## v4.64.1 – Cardamome · Bon pour envoi
 
 ### Correctifs
