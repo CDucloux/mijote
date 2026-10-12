@@ -1658,6 +1658,10 @@ html.light .sheet-sticky-head::after {
   }
 }
 
+/* Console admin au retour d'une fiche ingrédient : la liste est remontée mais déjà
+   vue, ses cartes ne rejouent pas leur entrée (cf. `quietList`, ConfigPage). */
+.config-quiet .slide-up { animation: none; }
+
 .page-dismiss-right {
   animation: detailDismissRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
   will-change: transform, opacity;

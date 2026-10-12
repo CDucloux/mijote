@@ -192,7 +192,9 @@ function AdminCollapse({ open, children }) {
   );
 }
 
-export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, techniques = [], setTechniques, sources = [], setSources }) {
+// `detailDismissing` / `onDetailBack` / `onDetailDismissEnd` : sortie animée de la
+// fiche ingrédient, la même que celle de la fiche recette (cf. useDetailDismiss).
+export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, isAdmin, categories = DEFAULT_CATEGORIES, setCategories, techniques = [], setTechniques, sources = [], setSources, detailDismissing = false, onDetailBack, onDetailDismissEnd }) {
   const navigate = useNavigate();
   const location = useLocation();
   const configSectionParam = location.pathname.startsWith("/admin/")
@@ -206,6 +208,13 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   // la fiche d'un ingrédient (le conteneur scrollable est démonté pendant la fiche,
   // mais ConfigPage reste monté : un ref suffit, cf. même confort sur la page Recettes).
   const sectionScrollRef = useRef(null);
+  // Retour de fiche : la liste se remonte, mais ses cartes ne doivent pas rejouer
+  // leur entrée (on revient à un écran déjà vu). L'entrée ne rejoue qu'au
+  // changement de section. Ajustement d'état pendant le rendu (pattern React).
+  const [quietList, setQuietList] = useState(false);
+  const [listSection, setListSection] = useState(section);
+  if (ingDetailId && !quietList) setQuietList(true);
+  if (!ingDetailId && section !== listSection) { setListSection(section); setQuietList(false); }
   const savedScrollTop = useRef(0);
   useLayoutEffect(() => {
     if (!ingDetailId && sectionScrollRef.current) sectionScrollRef.current.scrollTop = savedScrollTop.current;
@@ -426,19 +435,22 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   const exportTechniquesYaml = () => downloadText("techniques.yaml", formatTechniquesYaml(techniques), "text/yaml");
 
   return (
-    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+    <div className={quietList && !ingDetailId ? "config-quiet" : undefined} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
       {ingDetailId ? (
+        <div className={detailDismissing ? "page-dismiss-right" : undefined} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+          onAnimationEnd={detailDismissing ? (e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") onDetailDismissEnd?.(); } : undefined}>
         <IngredientDetail
           ingredient={ingredientDB.find(d => d.id === ingDetailId)}
           ingredientDB={ingredientDB}
           categories={categories}
           isAdmin={isAdmin}
           autoEdit={ingDetailId != null && ingDetailId === newIngId}
-          onBack={() => navigate(-1)}
+          onBack={onDetailBack || (() => navigate(-1))}
           onSave={saveIng}
           onCancelNew={(ing) => { if (!ing?.name?.trim()) { delIng(ing.id); setNewIngId(null); navigate(-1); } }}
           onDelete={() => { const it = ingredientDB.find(d => d.id === ingDetailId); if (it) setConfirmDel({ type: "ing", item: it }); }}
         />
+        </div>
       ) : (
       <>
       <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
