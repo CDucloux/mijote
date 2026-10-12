@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Logo Cardamome en tete des widgets : l'icone de l'app (favicon.svg), gousse blanche sur le vert de marque. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="28dp"
+    android:height="28dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <path
+        android:fillColor="#6E9A3F"
+        android:pathData="M24 0 H76 A24 24 0 0 1 100 24 V76 A24 24 0 0 1 76 100 H24 A24 24 0 0 1 0 76 V24 A24 24 0 0 1 24 0 Z" />
+    <group android:pivotX="50" android:pivotY="50" android:rotation="45">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M50 15 C68 30 74 48 67 63 C62.5 74 55.5 80 50 85 C44.5 80 37.5 74 33 63 C26 48 32 30 50 15 Z" />
+        <path
+            android:strokeColor="#6E9A3F"
+            android:strokeLineCap="round"
+            android:strokeWidth="3.4"
+            android:pathData="M50 24 C50 40 50 62 50 77" />
+        <path
+            android:strokeColor="#6E9A3F"
+            android:strokeLineCap="round"
+            android:strokeWidth="3"
+            android:pathData="M42 30 C39.5 45 41 60 47 74" />
+        <path
+            android:strokeColor="#6E9A3F"
+            android:strokeLineCap="round"
+            android:strokeWidth="3"
+            android:pathData="M58 30 C60.5 45 59 60 53 74" />
+    </group>
+</vector>

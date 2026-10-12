@@ -11,7 +11,8 @@ import com.getcapacitor.annotation.CapacitorPlugin;
  * Pont natif du lanceur : reçoit du JS (façade {@code launcher/plugin}) les
  * raccourcis de l'icône et l'instantané des widgets, à chaque changement du
  * planning ou des courses. Les widgets relisent ensuite cet instantané seuls,
- * sans réseau ni app ouverte.
+ * sans réseau ni app ouverte ; en retour, l'app relève les articles cochés sur
+ * le widget « Courses ».
  */
 @CapacitorPlugin(name = "Launcher")
 public class LauncherPlugin extends Plugin {
@@ -26,5 +27,12 @@ public class LauncherPlugin extends Plugin {
         JSArray shortcuts = call.getArray("shortcuts");
         if (shortcuts != null) LauncherShortcuts.publish(getContext(), shortcuts);
         call.resolve();
+    }
+
+    @PluginMethod
+    public void takeChecks(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("checks", WidgetStore.takeChecks(getContext()));
+        call.resolve(result);
     }
 }

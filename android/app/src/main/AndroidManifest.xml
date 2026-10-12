@@ -53,6 +53,17 @@
                 android:resource="@xml/widget_shopping_info" />
         </receiver>
 
+        <!-- Lignes des widgets, qui defilent (liste RemoteViews). -->
+        <service
+            android:name="studio.cardamome.launcher.MenuWidgetService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
+        <service
+            android:name="studio.cardamome.launcher.ShoppingWidgetService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

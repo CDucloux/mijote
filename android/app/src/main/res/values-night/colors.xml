@@ -7,6 +7,7 @@
 
     <!-- Widgets, theme sombre : tokens web du theme sombre. -->
     <color name="widget_surface">#191d15</color>
+    <color name="widget_surface_clear">#00191d15</color>
     <color name="widget_text">#eef1e7</color>
     <color name="widget_text2">#a7ac9c</color>
     <color name="widget_text3">#6b7061</color>

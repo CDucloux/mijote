@@ -11,6 +11,7 @@
 
     <!-- Widgets, theme clair : memes valeurs que les tokens web du theme clair. -->
     <color name="widget_surface">#ffffff</color>
+    <color name="widget_surface_clear">#00ffffff</color>
     <color name="widget_text">#23281d</color>
     <color name="widget_text2">#565b4c</color>
     <color name="widget_text3">#838872</color>

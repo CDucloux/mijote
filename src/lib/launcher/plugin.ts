@@ -1,6 +1,6 @@
 /**
  * Façade du plugin natif `Launcher` : pousse les raccourcis de l'icône et
- * l'instantané des widgets vers Android. No-op hors coquille native (la PWA n'a
+ * l'instantané des widgets vers Android, et relève les cases cochées sur le widget. No-op hors coquille native (la PWA n'a
  * ni l'un ni l'autre), et les échecs sont avalés : c'est un confort de lanceur,
  * jamais un chemin critique.
  *
@@ -9,6 +9,7 @@
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import type { LauncherShortcut } from "./shortcuts";
 import type { WidgetSnapshot } from "./widgetSnapshot";
+import { parseWidgetChecks, type WidgetCheck } from "./widgetChecks";
 
 /** Charge utile d'une synchronisation du lanceur. */
 export interface LauncherSync {
@@ -20,6 +21,8 @@ export interface LauncherSync {
 interface LauncherPlugin {
   /** Remplace les raccourcis dynamiques et redessine les widgets posés. */
   sync(options: LauncherSync): Promise<void>;
+  /** Rend puis oublie les bascules faites sur le widget « Courses ». */
+  takeChecks(): Promise<unknown>;
 }
 
 const Launcher = registerPlugin<LauncherPlugin>("Launcher");
@@ -35,5 +38,21 @@ export async function syncLauncher(payload: LauncherSync): Promise<void> {
     await Launcher.sync(payload);
   } catch {
     /* lanceur indisponible : l'app reste pleinement utilisable */
+  }
+}
+
+/**
+ * Relève les articles cochés sur le widget depuis la dernière relève. Le natif
+ * les oublie aussitôt rendus : à appliquer tout de suite. `[]` hors natif ou en
+ * cas d'échec.
+ *
+ * @returns Les bascules validées, à passer à `applyWidgetChecks`.
+ */
+export async function takeWidgetChecks(): Promise<WidgetCheck[]> {
+  if (!Capacitor.isNativePlatform()) return [];
+  try {
+    return parseWidgetChecks(await Launcher.takeChecks());
+  } catch {
+    return [];
   }
 }

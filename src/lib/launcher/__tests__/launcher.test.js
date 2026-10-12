@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { launchPath } from "@/lib/launcher/deepLink.js";
 import { buildShortcuts, nextMeal } from "@/lib/launcher/shortcuts.js";
-import { buildWidgetSnapshot, WIDGET_DAYS, WIDGET_ITEMS } from "@/lib/launcher/widgetSnapshot.js";
+import { buildWidgetSnapshot, mealMeta, WIDGET_DAYS, WIDGET_ITEMS } from "@/lib/launcher/widgetSnapshot.js";
+import { applyWidgetChecks, parseWidgetChecks } from "@/lib/launcher/widgetChecks.js";
 
 const recipes = [{ id: "r1", name: "Risotto aux cèpes" }, { id: "r2", name: "Salade de lentilles" }, { id: "r3", name: "Porridge" }];
 // Midi UTC : la clé de jour (UTC) et l'heure locale restent sur la même journée.
@@ -78,20 +79,82 @@ describe("buildWidgetSnapshot", () => {
     expect(snap.days).toHaveLength(WIDGET_DAYS);
     expect(snap.days[0]).toEqual({ key: keyOf(date), meals: [] });
     expect(snap.days[1].meals).toEqual([
-      { slot: "Midi", color: "#e0a23e", title: "Salade de lentilles", path: "/recipes/r2" },
-      { slot: "Soir", color: "#c56b46", title: "Risotto aux cèpes", path: "/recipes/r1" },
+      { slot: "Midi", color: "#e0a23e", title: "Salade de lentilles", meta: "", image: "", path: "/recipes/r2" },
+      { slot: "Soir", color: "#c56b46", title: "Risotto aux cèpes", meta: "", image: "", path: "/recipes/r1" },
     ]);
   });
-  it("liste au plus quelques articles restants mais compte tout", () => {
-    const items = ["Riz", "Beurre", "Cèpes", "Parmesan", "Échalote", "Bouillon"].map((name, i) => ({ id: String(i), name, checked: i === 1 }));
+  it("liste les articles restants avec de quoi les cocher, et compte tout", () => {
+    const items = ["Riz", "Beurre", "Cèpes"].map((name, i) => ({ id: String(i), name, checked: i === 1 }));
     const snap = buildWidgetSnapshot({ shoppingLists: [{ id: "l1", items }], date: at(10) });
-    expect(snap.shopping.remaining).toBe(5);
+    expect(snap.shopping.remaining).toBe(2);
+    expect(snap.shopping.items.map(i => i.name)).toEqual(["Riz", "Cèpes"]);
+    expect(snap.shopping.items[0]).toMatchObject({ key: "n:riz", refs: [{ listId: "l1", itemId: "0" }] });
+  });
+  it("plafonne la liste sans plafonner le compteur", () => {
+    const items = Array.from({ length: WIDGET_ITEMS + 5 }, (_, i) => ({ id: String(i), name: `Article ${i}` }));
+    const snap = buildWidgetSnapshot({ shoppingLists: [{ id: "l1", items }], date: at(10) });
     expect(snap.shopping.items).toHaveLength(WIDGET_ITEMS);
-    expect(snap.shopping.items.map(i => i.name)).not.toContain("Beurre");
+    expect(snap.shopping.remaining).toBe(WIDGET_ITEMS + 5);
+  });
+  it("regroupe un même article de deux listes sous une seule case", () => {
+    const lists = [{ id: "a", items: [{ id: "x", name: "Riz" }] }, { id: "b", items: [{ id: "y", name: "riz" }] }];
+    const [item] = buildWidgetSnapshot({ shoppingLists: lists, date: at(10) }).shopping.items;
+    expect(item.refs).toEqual([{ listId: "a", itemId: "x" }, { listId: "b", itemId: "y" }]);
+  });
+  it("donne photo et durée du repas, sans photo inexploitable", () => {
+    const rich = [{ id: "r1", name: "Risotto", image: "https://img.test/r.jpg", prepTime: 20, cookTime: 25 }, { id: "r2", name: "Salade", image: "data:image/png;base64,xx" }];
+    const date = at(12);
+    const snap = buildWidgetSnapshot({ mealPlan: { [keyOf(date)]: [{ recipeId: "r1", slot: "soir", portions: 4 }, { recipeId: "r2", slot: "midi" }] }, recipes: rich, date });
+    expect(snap.days[0].meals.map(m => [m.image, m.meta])).toEqual([["", ""], ["https://img.test/r.jpg", "45m · 4 pers."]]);
   });
   it("reste valide sur un foyer vierge", () => {
     const snap = buildWidgetSnapshot({ date: at(10) });
     expect(snap.shopping).toEqual({ remaining: 0, items: [] });
     expect(snap.days.every(d => d.meals.length === 0)).toBe(true);
+  });
+});
+
+describe("mealMeta", () => {
+  it("additionne préparation et cuisson, et omet l'inconnu", () => {
+    expect(mealMeta({ prepTime: 30, cookTime: 60 }, 2)).toBe("1h30 · 2 pers.");
+    expect(mealMeta({ prepTime: 15 }, undefined)).toBe("15m");
+    expect(mealMeta(undefined, 3)).toBe("3 pers.");
+    expect(mealMeta({}, 0)).toBe("");
+  });
+});
+
+describe("parseWidgetChecks", () => {
+  it("garde les bascules valides", () => {
+    const raw = { checks: [{ checked: true, refs: [{ listId: "l1", itemId: "i1" }] }] };
+    expect(parseWidgetChecks(raw)).toEqual([{ checked: true, refs: [{ listId: "l1", itemId: "i1" }] }]);
+  });
+  it("écarte les entrées malformées sans faire échouer le lot", () => {
+    const raw = { checks: [null, { checked: "oui", refs: [] }, { checked: false, refs: [{ listId: 1 }, { listId: "l", itemId: "i" }] }, { checked: true, refs: [] }] };
+    expect(parseWidgetChecks(raw)).toEqual([{ checked: false, refs: [{ listId: "l", itemId: "i" }] }]);
+  });
+  it("tolère une charge utile absente ou étrangère", () => {
+    expect(parseWidgetChecks(undefined)).toEqual([]);
+    expect(parseWidgetChecks({ checks: "x" })).toEqual([]);
+  });
+});
+
+describe("applyWidgetChecks", () => {
+  const lists = [
+    { id: "l1", items: [{ id: "a", name: "Riz" }, { id: "b", name: "Beurre", checked: true }] },
+    { id: "l2", items: [{ id: "c", name: "Sel" }] },
+  ];
+  it("coche les articles visés et laisse les autres listes intactes", () => {
+    const next = applyWidgetChecks(lists, [{ checked: true, refs: [{ listId: "l1", itemId: "a" }] }]);
+    expect(next[0].items.map(i => !!i.checked)).toEqual([true, true]);
+    expect(next[1]).toBe(lists[1]);
+  });
+  it("fait gagner la dernière bascule d'un même article", () => {
+    const ref = { listId: "l1", itemId: "b" };
+    const next = applyWidgetChecks(lists, [{ checked: true, refs: [ref] }, { checked: false, refs: [ref] }]);
+    expect(next[0].items[1].checked).toBe(false);
+  });
+  it("rend les mêmes listes quand rien ne change (article supprimé, déjà coché)", () => {
+    expect(applyWidgetChecks(lists, [{ checked: true, refs: [{ listId: "l1", itemId: "b" }, { listId: "zz", itemId: "a" }] }])).toBe(lists);
+    expect(applyWidgetChecks(lists, [])).toBe(lists);
   });
 });

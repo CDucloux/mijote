@@ -394,7 +394,7 @@ function AppInner({ user, isDark, toggleTheme }) {
   // Lanceur Android : raccourcis de l'icône (appui long) et widgets, tenus à jour
   // depuis le planning et les courses ; leurs taps rouvrent l'écran visé.
   useLaunchLinks();
-  useLauncherSync({ ready: workspaceReady && !sharedHydrating, mealPlan, recipes, shoppingLists, ingredientDB });
+  useLauncherSync({ ready: workspaceReady && !sharedHydrating, mealPlan, recipes, shoppingLists, ingredientDB, setShoppingLists });
 
   // Navigate with guard: if editing, show confirm dialog first
   const requestTab = (newTab) => {
