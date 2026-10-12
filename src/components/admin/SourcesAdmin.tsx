@@ -138,7 +138,7 @@ export function SourcesAdmin({ sources = [], setSources, isAdmin }: SourcesAdmin
             {SOURCE_TINTS.map(t => {
               const on = (editing.tint || "accent") === t.key;
               return (
-                <button key={t.key} aria-label={t.key} onClick={() => setEditing({ ...editing, tint: t.key })}
+                <button key={t.key} className="ripple" aria-label={t.key} onClick={() => setEditing({ ...editing, tint: t.key })}
                   style={{ width: 34, height: 34, borderRadius: 10, cursor: "pointer", background: `rgba(${t.rgb},0.18)`, color: t.color,
                     border: `2px solid ${on ? t.color : "transparent"}`, display: "grid", placeItems: "center", fontFamily: "var(--ff-display)", fontWeight: 700 }}>
                   {monogramOf(editing) || "A"}
@@ -264,7 +264,7 @@ function Toggle({ label, hint, checked, onChange }: { label: string; hint?: stri
 /** Petit bouton d'action icône (réordo / masquer / éditer). */
 function IconBtn({ name, title, onClick, disabled, rotate = 0, active }: { name: IconName; title: string; onClick: () => void; disabled?: boolean; rotate?: number; active?: boolean }) {
   return (
-    <button title={title} onClick={onClick} disabled={disabled}
+    <button title={title} onClick={onClick} disabled={disabled} className="ripple"
       style={{ width: 30, height: 30, borderRadius: 8, border: "none", background: "none", cursor: disabled ? "default" : "pointer",
         display: "grid", placeItems: "center", color: active ? "var(--accent)" : "var(--text3)", opacity: disabled ? 0.35 : 1 }}>
       <span style={{ display: "grid", transform: rotate ? `rotate(${rotate}deg)` : "none" }}>

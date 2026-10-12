@@ -76,7 +76,7 @@ function YamlImport({ onText, warn }) {
         onChange={e => { read(e.target.files[0]); e.target.value = ""; }} />
       {/* Styles dans `.yaml-drop` (global.css) : survol desktop et glisser-déposer
           (`data-over`) y partagent la même teinte, impossible en style inline. */}
-      <div className="yaml-drop" data-over={over || undefined} role="button" tabIndex={0}
+      <div className="yaml-drop ripple ripple-accent" data-over={over || undefined} role="button" tabIndex={0}
         onDragOver={e => { e.preventDefault(); setOver(true); }}
         onDragLeave={() => setOver(false)}
         onDrop={e => { e.preventDefault(); setOver(false); read(Array.from(e.dataTransfer.files).find(f => /\.(ya?ml|txt)$/i.test(f.name))); }}
@@ -148,7 +148,7 @@ function PhraseListEditor({ items = [], onChange, placeholder, addLabel }) {
       {items.map((it, i) => (
         <div key={i} style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <input className="field-input" value={it} placeholder={placeholder} onChange={e => setAt(i, e.target.value)} style={{ flex: 1, marginBottom: 0 }} />
-          <button onClick={() => onChange(items.filter((_, k) => k !== i))} title="Retirer" style={{ color: "var(--text3)", padding: 8, flexShrink: 0 }}><Icon name="trash" size={14} /></button>
+          <button onClick={() => onChange(items.filter((_, k) => k !== i))} title="Retirer" className="ripple" style={{ color: "var(--text3)", padding: 8, flexShrink: 0, borderRadius: 10 }}><Icon name="trash" size={14} /></button>
         </div>
       ))}
       <button className="btn btn-ghost btn-sm" onClick={() => onChange([...items, ""])} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6 }}><Icon name="plus" size={13} /> {addLabel}</button>
@@ -169,7 +169,7 @@ function ConfusionListEditor({ items = [], onChange, options }) {
               <option value="">Choisir un geste…</option>
               {options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
-            <button onClick={() => onChange(items.filter((_, k) => k !== i))} title="Retirer" style={{ color: "var(--text3)", padding: 8, flexShrink: 0 }}><Icon name="trash" size={14} /></button>
+            <button onClick={() => onChange(items.filter((_, k) => k !== i))} title="Retirer" className="ripple" style={{ color: "var(--text3)", padding: 8, flexShrink: 0, borderRadius: 10 }}><Icon name="trash" size={14} /></button>
           </div>
           <input className="field-input" value={it.distinction || ""} placeholder="En quoi ce geste s'en distingue…" onChange={e => setAt(i, { distinction: e.target.value })} style={{ marginBottom: 0 }} />
         </div>
@@ -453,7 +453,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         </div>
         <OverscrollRow stretch style={{ gap: 6 }}>
           {[["dashboard", "Vue d'ensemble", "grid"], ["ingredients", "Ingrédients", "leaf"], ["ustensiles", "Ustensiles", "utensils"], ["techniques", "Techniques", "list2"], ["sources", "Sources", "star"], ["modération", "Modération", "warning"]].map(([s, label, ic]) => (
-            <button key={s} onClick={() => gotoSection(s)} className={section === s ? undefined : "hov-pill"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: section === s ? "var(--accent)" : "var(--surface)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
+            <button key={s} onClick={() => gotoSection(s)} className={section === s ? "ripple ripple-light" : "hov-pill ripple"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: section === s ? "var(--accent)" : "var(--surface)", color: section === s ? "#fff" : "var(--text2)", border: `1px solid ${section === s ? "transparent" : "var(--border)"}` }}>
               <Icon name={ic} size={13} color="currentColor" /> {label}
               {s === "modération" && reports.length > 0 && (
                 <span style={{ fontSize: 10, fontWeight: 600, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", background: section === s ? "rgba(255,255,255,0.28)" : "var(--red)", color: "#fff" }}>{reports.length}</span>
@@ -520,7 +520,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                         <Icon name="drag" size={16} color="var(--text3)" />
                       </span>
                     )}
-                    <button onClick={() => toggleCat(catKey)} style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
+                    <button onClick={() => toggleCat(catKey)} className="ripple" style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, textAlign: "left", padding: 6, margin: -6, borderRadius: 10 }}>
                       <span style={{ fontSize: 20 }}>{cat.icon}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 600 }}>{cat.label}</div>
@@ -550,7 +550,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                         </div>
                       )}
                       {catIngs.map((item, i) => (
-                        <button key={item.id} onClick={() => navigate(`/admin/ingredients/${encodeURIComponent(item.id)}`)} title="Voir la fiche" className="ing-row-btn" style={{
+                        <button key={item.id} onClick={() => navigate(`/admin/ingredients/${encodeURIComponent(item.id)}`)} title="Voir la fiche" className="ing-row-btn ripple" style={{
                           width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
                           borderTop: i > 0 ? "1px solid var(--border)" : "none",
                           background: "var(--surface)", textAlign: "left", cursor: "pointer", border: "none", transition: "background 0.15s",
@@ -612,8 +612,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                           {item._ro
                             ? <span style={{ fontSize: 10, color: "rgba(155,135,245,1)", fontWeight: 600, padding: "2px 8px", background: "rgba(155,135,245,0.14)", border: "1px solid rgba(155,135,245,0.35)", borderRadius: 8 }}>Master</span>
                             : <>
-                              <button className="icon-btn-soft" onClick={() => setEditUt({ ...item })} title="Modifier" style={ROUND_ICON_BTN}><Icon name="edit" size={14} /></button>
-                              <button className="icon-btn-danger" onClick={() => setConfirmDel({ type: "ut", item })} title="Supprimer" style={ROUND_ICON_BTN}><Icon name="trash" size={14} /></button>
+                              <button className="icon-btn-soft ripple" onClick={() => setEditUt({ ...item })} title="Modifier" style={ROUND_ICON_BTN}><Icon name="edit" size={14} /></button>
+                              <button className="icon-btn-danger ripple" onClick={() => setConfirmDel({ type: "ut", item })} title="Supprimer" style={ROUND_ICON_BTN}><Icon name="trash" size={14} /></button>
                             </>
                           }
                         </div>
@@ -653,7 +653,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                 return (
                 <div key={catKey} style={{ background: "var(--surface)", borderRadius: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px" }}>
-                    <button onClick={() => toggleTechCat(catKey)} style={{ flex: 1, display: "flex", alignItems: "center", gap: 11, textAlign: "left" }}>
+                    <button onClick={() => toggleTechCat(catKey)} className="ripple" style={{ flex: 1, display: "flex", alignItems: "center", gap: 11, textAlign: "left", padding: 6, margin: -6, borderRadius: 10 }}>
                       {/* Pastille d'icône colorée par catégorie, à gauche du nom du groupe. */}
                       <span style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${catVis.color} 16%, transparent)` }}>
                         <Icon name={catVis.icon} size={16} color={catVis.color} />
@@ -695,8 +695,8 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                           </div>
                           {isAdmin && (
                             <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                              <button className="icon-btn-soft" onClick={() => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })} title="Modifier" style={ROUND_ICON_BTN}><Icon name="edit" size={14} /></button>
-                              <button className="icon-btn-danger" onClick={() => setConfirmDel({ type: "tech", item: t })} title="Supprimer" style={ROUND_ICON_BTN}><Icon name="trash" size={14} /></button>
+                              <button className="icon-btn-soft ripple" onClick={() => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })} title="Modifier" style={ROUND_ICON_BTN}><Icon name="edit" size={14} /></button>
+                              <button className="icon-btn-danger ripple" onClick={() => setConfirmDel({ type: "tech", item: t })} title="Supprimer" style={ROUND_ICON_BTN}><Icon name="trash" size={14} /></button>
                             </div>
                           )}
                         </div>
@@ -842,7 +842,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             {[1, 2, 3, 4, 5].map(n => {
               const on = editTech.difficulty === n;
               return (
-                <button key={n} onClick={() => setEditTech(p => ({ ...p, difficulty: p.difficulty === n ? undefined : n }))}
+                <button key={n} className="ripple" onClick={() => setEditTech(p => ({ ...p, difficulty: p.difficulty === n ? undefined : n }))}
                   style={{ flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer",
                     background: on ? DIFFICULTY_COLOR(n) : "var(--surface2)", color: on ? "#fff" : "var(--text2)",
                     border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{n}</button>

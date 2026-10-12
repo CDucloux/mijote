@@ -117,7 +117,7 @@ export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTa
               );
             })}
             {slot !== "matin" && onComplete && !full && (
-              <button onClick={() => onComplete(date, slot, g)} title="Compléter le repas (entrée, accompagnement, dessert)"
+              <button onClick={() => onComplete(date, slot, g)} className="ripple" title="Compléter le repas (entrée, accompagnement, dessert)"
                 style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 4, marginTop: 2, padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: "transparent", color: MP_SLOT_TEXT[slot], border: `1px dashed ${MP_SLOT_TEXT[slot]}`, cursor: "pointer" }}>
                 <Icon name="plus" size={10} color={MP_SLOT_TEXT[slot]} /> Compléter
               </button>

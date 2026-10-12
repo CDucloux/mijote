@@ -269,7 +269,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                 </div>
               </div>
 
-              <button onClick={() => setDetailOpen(o => !o)} aria-expanded={detailOpen} className="ing-hover"
+              <button onClick={() => setDetailOpen(o => !o)} aria-expanded={detailOpen} className="ing-hover ripple"
                 style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "12px 16px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, cursor: "pointer", color: "var(--text2)", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, fontWeight: 600 }}>
                   <span style={{ width: 26, height: 26, borderRadius: 8, background: "var(--surface2)", display: "grid", placeItems: "center" }}><Icon name="fileText" size={14} color="var(--text3)" /></span> Détail par nutriment
@@ -356,14 +356,15 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
 
         {/* Source Ciqual (consultation uniquement) */}
         {!editing && (
-          <a className="slide-up ing-hover" href="https://ciqual.anses.fr/" target="_blank" rel="noopener noreferrer"
+          <a className="slide-up ing-hover ripple" href="https://ciqual.anses.fr/" target="_blank" rel="noopener noreferrer"
             style={{ ...CARD, display: "flex", alignItems: "center", gap: 12, marginTop: 28, padding: "12px 14px", textDecoration: "none", animationDelay: "0.32s" }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#1a8a3c,#4caf7d)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 6px rgba(26,138,60,0.35)" }}>
               <Icon name="leaf" size={16} color="#fff" />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text)", letterSpacing: "0.01em" }}>Ciqual 2025</div>
-              <div style={{ fontSize: 10, color: "var(--text3)", lineHeight: 1.4, marginTop: 1 }}>Table de composition nutritionnelle · Anses</div>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text)", letterSpacing: "0.01em" }}>Anses, table Ciqual 2025</div>
+              {/* Paternité exigée par la Licence Ouverte : source et date de mise à jour. */}
+              <div style={{ fontSize: 10, color: "var(--text3)", lineHeight: 1.4, marginTop: 1 }}>Version du 3 novembre 2025 · Licence Ouverte · valeurs arrondies par Cardamome</div>
             </div>
             <Icon name="externalLink" size={13} color="var(--text3)" />
           </a>

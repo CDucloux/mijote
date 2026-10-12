@@ -1,6 +1,9 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { OverscrollRow } from "./OverscrollRow.jsx";
 
+/** Marge tactile de chaque onglet : borne l'onde sans décaler les libellés (marge négative). */
+const TAB_PAD_X = 6;
+
 export interface UnderlineTab<T> {
   value: T;
   label: string;
@@ -26,7 +29,8 @@ export function UnderlineTabs<T>({ tabs, value, onChange, label }: UnderlineTabs
   useLayoutEffect(() => {
     const el = refs.current[activeIndex];
     if (!el) { setBar(null); return; }
-    setBar({ left: el.offsetLeft, width: el.offsetWidth });
+    // Le soulignement épouse le libellé, pas la zone tactile élargie de l'onde.
+    setBar({ left: el.offsetLeft + TAB_PAD_X, width: el.offsetWidth - 2 * TAB_PAD_X });
     el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
   }, [activeIndex, tabs]);
 
@@ -36,8 +40,8 @@ export function UnderlineTabs<T>({ tabs, value, onChange, label }: UnderlineTabs
         {tabs.map((tab, i) => {
           const on = i === activeIndex;
           return (
-            <button key={tab.label} ref={el => { refs.current[i] = el; }} role="tab" aria-selected={on} onClick={() => onChange(tab.value)}
-              style={{ flexShrink: 0, display: "flex", alignItems: "baseline", gap: 6, padding: "8px 0 11px", background: "none", border: "none", cursor: "pointer",
+            <button key={tab.label} ref={el => { refs.current[i] = el; }} role="tab" aria-selected={on} onClick={() => onChange(tab.value)} className="ripple"
+              style={{ flexShrink: 0, display: "flex", alignItems: "baseline", gap: 6, padding: `8px ${TAB_PAD_X}px 11px`, margin: `0 -${TAB_PAD_X}px`, borderRadius: "8px 8px 0 0", background: "none", border: "none", cursor: "pointer",
                 fontSize: 13.5, fontWeight: on ? 650 : 500, color: on ? "var(--text)" : "var(--text2)", transition: "color 0.18s ease" }}>
               {tab.label}
               {tab.count != null && (
