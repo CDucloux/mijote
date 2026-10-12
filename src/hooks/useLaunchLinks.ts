@@ -22,7 +22,9 @@ export function useLaunchLinks(): void {
     if (!Capacitor.isNativePlatform()) return;
     const open = (url: string | undefined) => {
       const path = launchPath(url);
-      if (path) navigate(path);
+      // `launcher` dit à l'écran visé qu'on arrive d'un geste explicite sur le
+      // lanceur (ex. « Un lien » du widget d'import colle aussitôt le lien copié).
+      if (path) navigate(path, { state: { launcher: true } });
     };
     if (!launchConsumed) {
       launchConsumed = true;

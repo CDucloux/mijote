@@ -3,6 +3,7 @@ import { launchPath } from "@/lib/launcher/deepLink.js";
 import { buildShortcuts, nextMeal } from "@/lib/launcher/shortcuts.js";
 import { buildWidgetSnapshot, mealMeta, WIDGET_DAYS, WIDGET_ITEMS } from "@/lib/launcher/widgetSnapshot.js";
 import { applyWidgetChecks, parseWidgetChecks } from "@/lib/launcher/widgetChecks.js";
+import { firstHttpUrl } from "@/lib/launcher/clipboardLink.js";
 
 const recipes = [{ id: "r1", name: "Risotto aux cèpes" }, { id: "r2", name: "Salade de lentilles" }, { id: "r3", name: "Porridge" }];
 // Midi UTC : la clé de jour (UTC) et l'heure locale restent sur la même journée.
@@ -156,5 +157,23 @@ describe("applyWidgetChecks", () => {
   it("rend les mêmes listes quand rien ne change (article supprimé, déjà coché)", () => {
     expect(applyWidgetChecks(lists, [{ checked: true, refs: [{ listId: "l1", itemId: "b" }, { listId: "zz", itemId: "a" }] }])).toBe(lists);
     expect(applyWidgetChecks(lists, [])).toBe(lists);
+  });
+});
+
+describe("firstHttpUrl", () => {
+  it("trouve le lien dans un texte partagé, sans la ponctuation qui le suit", () => {
+    expect(firstHttpUrl("Regarde ça : https://www.marmiton.org/recettes/risotto.aspx !")).toBe("https://www.marmiton.org/recettes/risotto.aspx");
+    expect(firstHttpUrl("(https://cuisine.fr/tarte).")).toBe("https://cuisine.fr/tarte");
+  });
+  it("garde un lien nu intact, requête comprise", () => {
+    expect(firstHttpUrl("  https://youtu.be/abc?si=x1  ")).toBe("https://youtu.be/abc?si=x1");
+  });
+  it("ignore ce qui n'est pas un lien web", () => {
+    expect(firstHttpUrl("200 g de farine")).toBeNull();
+    expect(firstHttpUrl("ftp://exemple.com/a")).toBeNull();
+    expect(firstHttpUrl("https://localhost")).toBeNull();
+    expect(firstHttpUrl("")).toBeNull();
+    expect(firstHttpUrl(null)).toBeNull();
+    expect(firstHttpUrl(42)).toBeNull();
   });
 });
