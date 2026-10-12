@@ -21,6 +21,7 @@ import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { OverscrollRow } from "../components/ui/OverscrollRow.jsx";
 import { busyFloor } from "@/lib/ui/busyFloor.js";
+import { RecipeSheetThumb } from "../components/recipe/RecipeSheetThumb.jsx";
 
 // ─── RECIPE TAB (Mes Recettes) ────────────────────────────────────────────────
 // Toutes les cartes s'animent à l'entrée ; le décalage est plafonné pour que les
@@ -593,9 +594,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
         return (
         <SwipeableSheet onClose={close}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", fontSize: 24 }}>
-              {rm.image ? <img src={rm.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (isComp ? "🧩" : "🍽️")}
-            </div>
+            <RecipeSheetThumb image={rm.image} isComponent={isComp} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rm.name}</div>
               <div style={{ fontSize: 13, color: "var(--text3)" }}>{isComp ? "Préparation de base" : "Recette"}</div>

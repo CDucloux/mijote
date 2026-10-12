@@ -3,6 +3,7 @@ import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { SLOT_BY_ID } from "../../constants/mealSlots.js";
+import { RecipeSheetThumb } from "../recipe/RecipeSheetThumb.jsx";
 
 /** Repas planifié tel que ce menu l'affiche : créneau et date suffisent. */
 interface PlannedItem {
@@ -31,9 +32,7 @@ export function MealItemMenu({ item, recipe, onOpen, onReschedule, onDuplicate, 
   return (
     <SwipeableSheet onClose={onClose}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-        <div style={{ width: 52, height: 52, borderRadius: 14, flexShrink: 0, overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", fontSize: 24 }}>
-          {recipe?.image ? <img src={recipe.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🍽️"}
-        </div>
+        <RecipeSheetThumb image={recipe?.image} />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{recipe?.name || "Recette supprimée"}</div>
           <div style={{ fontSize: 13, color: "var(--text3)" }}>{slotLabel} · {dateLabel}</div>
