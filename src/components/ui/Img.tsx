@@ -71,8 +71,8 @@ interface IngImageProps {
 
 // Image d'ingrédient (ronde, un peu plus grande, adaptée au transparent), pour un
 // rendu circulaire cohérent partout. `cover` remplit le cercle (vraies photos).
-// Pendant le chargement, un petit anneau tourne ; l'image arrive ensuite en fondu
-// léger (opacité + échelle) au lieu d'apparaître d'un coup. Servie depuis le cache,
+// Pendant le chargement, un petit anneau tourne ; l'image arrive ensuite en simple
+// fondu d'opacité, sans échelle (le zoom la faisait « gigoter » à l'arrivée). Servie depuis le cache,
 // elle est montrée d'emblée, sans anneau ni animation.
 export const IngImage = ({ src, alt, size = 48, cover = false }: IngImageProps) => {
   const { loaded, err, imgRef, onLoad, onError } = useImageState(src);
