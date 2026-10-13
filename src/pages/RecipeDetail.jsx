@@ -27,7 +27,7 @@ import { CollectionsSheet } from "../components/recipeDetail/CollectionsSheet.js
 import { RecipeAttribution } from "../components/recipeDetail/RecipeAttribution.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useHeroCollapse, TAB_ORDER } from "../hooks/useHeroCollapse.js";
-import { findIngredientMatch, createIngredientResolver } from "@/lib/food/nameMatcher.js";
+import { findIngredientMatch, createIngredientResolver, resolveLineEntry } from "@/lib/food/nameMatcher.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
@@ -215,16 +215,18 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   // une réouverture ultérieure de la recette depuis une liste.
   const handleBack = backTo ? () => { hero.forgetScroll(); backTo(); } : backTo;
 
-  const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
+  // Fiche de base d'une ligne : `dbId` figé, sinon nom (ingrédient ajouté après la recette).
+  const lineEntry = (dbId, name) => resolveLineEntry(dbId, name, ingredientDB, seasonResolver);
+  const getIngImage = (dbId, name) => lineEntry(dbId, name)?.image || "";
+  const getIngId = (ing) => lineEntry(ing.dbId, ing.name)?.id || "";
   const getUtImage = (dbId, name) => utensilDB.find(d => d.id === dbId)?.image || (name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
   // Résumé des réglages d'appareil posés sur l'étape (vide si l'ustensile n'en est pas un).
   const getUtDetail = (u, step) => formatParamSummary(utensilDB.find(d => d.id === u.dbId)?.appliance, step?.utensilParams?.[u.id]);
-  // Recommandation qualité d'une ligne d'ingrédient (dbId figé, sinon rapprochement par nom).
-  const getIngReco = (ing) => resolveQualityRecommendation(ingredientDB.find(d => d.id === ing.dbId) || (ing.name ? findIngredientMatch(ing.name, ingredientDB) : null));
+  const getIngReco = (ing) => resolveQualityRecommendation(lineEntry(ing.dbId, ing.name));
   // Précaution d'utilisation d'un ustensile de recette (résolu à la base par dbId, sinon nom).
   const getUtPrecaution = (u) => resolveUsagePrecaution(utensilDB.find(d => d.id === u.dbId) || (u.name ? utensilDB.find(d => normalizeStr(d.name) === normalizeStr(u.name)) : null));
   // Contexte de rendu partagé par les contenus mobile/desktop (helpers d'affichage).
-  const view = { mult, recipesById, getIngImage, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, isInStock, seasonResolver, ingredientDB, navigate };
+  const view = { mult, recipesById, getIngImage, getIngId, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, isInStock, seasonResolver, ingredientDB, navigate };
 
   // Actions du menu « … » du hero (identiques desktop/mobile).
   const menuItems = [

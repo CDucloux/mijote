@@ -153,6 +153,25 @@ export function findIngredientMatch(name: string | null | undefined, db: DbEntry
 }
 
 /**
+ * Entrée de base d'une ligne de recette : le `dbId` figé à l'enregistrement s'il
+ * pointe encore vers la base, sinon le rapprochement par nom. Rattache ainsi à sa
+ * fiche (photo, conseils, détail) un ingrédient ajouté à la base APRÈS la recette,
+ * sans réenregistrer celle-ci, et ignore un `dbId` orphelin (entrée supprimée).
+ *
+ * @param dbId - Identifiant figé sur la ligne (peut être vide).
+ * @param name - Nom saisi sur la ligne.
+ * @param db - La base à interroger.
+ * @param resolve - Résolveur déjà construit sur `db` (évite de le recréer à chaque ligne).
+ * @returns L'entrée correspondante, ou `null`.
+ */
+export function resolveLineEntry(dbId: string | null | undefined, name: string | null | undefined, db: DbEntry[] | null | undefined, resolve?: Resolver): DbEntry | null {
+  const pinned = dbId ? (db || []).find(d => d.id === dbId) : undefined;
+  if (pinned) return pinned;
+  if (!name) return null;
+  return (resolve || createIngredientResolver(db))(name);
+}
+
+/**
  * Construit un résolveur `(name) => id` (pour l'import).
  *
  * @param db - La base à interroger.
