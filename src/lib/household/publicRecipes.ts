@@ -8,6 +8,7 @@
  * @module household/publicRecipes
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { ANIMAL_CATEGORIES } from "@/lib/food/dietary.js";
 import { isComponentLine } from "@/lib/recipes/nutriscore.js";
 import type { Recipe, IngredientLine } from "@/lib/types.js";
 
@@ -139,8 +140,8 @@ function collectCategories(recipe: PubRecipe | null | undefined, ingredientDB: P
 /**
  * Régimes avec lesquels la recette est COMPATIBLE (heuristique sur les catégories).
  * Toujours omnivore/flexitarien ; pescatarien si pas de viande ; végétarien si ni
- * viande ni poisson ; végan si en plus pas de produit laitier. Approximation
- * volontaire (ignore œufs/miel/gélatine) – sert au filtre « selon mes préférences ».
+ * viande ni poisson ; végan si aucune catégorie animale (laitiers et œufs compris).
+ * Approximation volontaire (ignore miel/gélatine), sert au filtre « selon mes préférences ».
  *
  * @param recipe - La recette à classer.
  * @param ingredientDB - Base d'ingrédients (résolution des catégories).
@@ -151,11 +152,11 @@ export function deriveDietTags(recipe: PubRecipe, ingredientDB: PubDbItem[], rec
   const cats = collectCategories(recipe, ingredientDB, recipesById);
   const noMeat = !cats.has("meat");
   const noFish = !cats.has("fish_seafood");
-  const noDairy = !cats.has("dairy");
+  const noAnimal = ![...cats].some(c => ANIMAL_CATEGORIES.has(c));
   const tags = ["omnivore", "flexitarien"];
   if (noMeat) tags.push("pescatarien");
   if (noMeat && noFish) tags.push("vegetarien");
-  if (noMeat && noFish && noDairy) tags.push("vegan");
+  if (noAnimal) tags.push("vegan");
   return tags;
 }
 

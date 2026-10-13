@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.65.1 – Cardamome · Œufs à part
+
+### Base d'ingrédients
+- **Nouvelle catégorie « Œufs »** : l'œuf y rejoint le **jaune** et le **blanc d'œuf**, enfin distingués (pâtisserie, mayonnaise, meringue…). Valeurs Ciqual pour 100 g, crus.
+- **Bouillons de bœuf, de volaille et de légumes**, valeurs Ciqual du bouillon reconstitué ; « bouillon de poulet » est reconnu comme bouillon de volaille.
+
+### Correctifs
+- **Badge vegan** : une recette avec des œufs (entiers, jaunes ou blancs) n'est plus marquée vegan, ni proposée au régime vegan dans le planning et Découvrir ; elle reste végétarienne. L'allergène Œuf repère aussi la nouvelle catégorie.
+
 ## v4.65.0 – Cardamome · Sur l'écran d'accueil
 
 ### Widgets Android

@@ -1,7 +1,7 @@
 /**
  * Régime alimentaire (pur). Détection « vegan » d'une recette à partir des
- * catégories de ses ingrédients : viande, poisson/fruits de mer et produits
- * laitiers l'excluent. Les préparations de base (sous-recettes) sont inspectées
+ * catégories de ses ingrédients : viande, poisson/fruits de mer, produits
+ * laitiers et œufs l'excluent. Les préparations de base (sous-recettes) sont inspectées
  * récursivement, une béchamel rend non-vegan.
  *
  * Limite assumée (comme la saisonnalité) : un ingrédient introuvable n'apporte
@@ -15,7 +15,11 @@ interface VeganItem { id: string; category?: string }
 interface VeganRecipe { id?: string; ingredients?: { name?: string; recipeId?: string }[] }
 type VeganResolver = ((name: string | undefined) => VeganItem | null) | null | undefined;
 
-const ANIMAL_CATEGORIES = new Set(["meat", "fish_seafood", "dairy"]);
+/**
+ * Catégories d'ingrédient d'origine animale : une seule suffit à exclure le
+ * régime vegan. Source unique, partagée avec la dérivation des tags de régime.
+ */
+export const ANIMAL_CATEGORIES: ReadonlySet<string> = new Set(["meat", "fish_seafood", "dairy", "egg"]);
 
 interface ScanAcc { resolved: number; animal: boolean }
 

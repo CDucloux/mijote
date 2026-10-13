@@ -56,7 +56,7 @@ const FISH = "fish_seafood";
 export const ALLERGEN_SIGNALS: Record<string, { categories: string[]; keywords: string[] }> = {
   "Gluten": { categories: [], keywords: ["ble", "farine", "gluten", "seigle", "orge", "epeautre", "pain", "pate", "pates", "semoule", "boulgour", "chapelure", "biscuit"] },
   "Lactose": { categories: ["dairy"], keywords: ["lait", "creme", "beurre", "fromage", "yaourt", "mozzarella", "parmesan", "ricotta", "mascarpone"] },
-  "Œuf": { categories: [], keywords: ["oeuf", "jaune d", "blanc d", "meringue"] },
+  "Œuf": { categories: ["egg"], keywords: ["oeuf", "jaune d", "blanc d", "meringue"] },
   "Arachide": { categories: [], keywords: ["arachide", "cacahu"] },
   "Fruits à coque": { categories: ["nuts_seeds"], keywords: ["amande", "noisette", "noix", "cajou", "pistache", "pecan", "macadamia", "praline"] },
   "Soja": { categories: [], keywords: ["soja", "tofu", "edamame", "tamari", "miso"] },
