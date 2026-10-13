@@ -15,7 +15,7 @@ import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "..
  * via `view` (contexte de rendu partagé avec la version mobile).
  */
 export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
-  const { mult, recipesById, getIngImage, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, navigate } = view;
+  const { mult, recipesById, getIngImage, getIngId, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, navigate } = view;
   const [precSheet, setPrecSheet] = useState(null);
   return (
     <div className="detail-desktop-content" style={{ display: "none", flex: 1, overflow: "hidden", background: "var(--bg)", padding: "12px 16px 16px", gap: 16 }}>
@@ -46,8 +46,9 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                   </div>
                 </div>
               );
+              const effDbId = getIngId(ing);
               return (
-              <div key={ing.id} onClick={() => ing.dbId && navigate(`/admin/ingredients/${encodeURIComponent(ing.dbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: ing.dbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (ing.dbId) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
+              <div key={ing.id} onClick={() => effDbId && navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: effDbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (effDbId) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
                 <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
                   <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                 </span>

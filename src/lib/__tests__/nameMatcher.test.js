@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeName, findIngredientMatch, buildNameMatcher, createIngredientResolver } from "@/lib/food/nameMatcher.js";
+import { normalizeName, findIngredientMatch, buildNameMatcher, createIngredientResolver, resolveLineEntry } from "@/lib/food/nameMatcher.js";
 
 const db = [
   { id: "ail", name: "Ail" },
@@ -64,5 +64,32 @@ describe("createIngredientResolver", () => {
     const resolve = createIngredientResolver(db);
     expect(resolve("ail")).toMatchObject({ id: "ail" });
     expect(resolve("")).toBeNull();
+  });
+});
+
+describe("resolveLineEntry", () => {
+  const db = [
+    { id: "egg", name: "Oeuf", aliases: ["œuf"] },
+    { id: "yolk", name: "Jaune d'oeuf", aliases: ["jaune d'œuf", "jaunes d'œufs"], image: "yolk.png" },
+  ];
+
+  it("privilégie le dbId figé quand il existe dans la base", () => {
+    expect(resolveLineEntry("egg", "Jaune d'œuf", db)?.id).toBe("egg");
+  });
+  it("rattache par le nom une ligne enregistrée avant l'ajout de l'ingrédient (non-régression)", () => {
+    expect(resolveLineEntry("", "Jaunes d'œuf", db)?.image).toBe("yolk.png");
+    expect(resolveLineEntry(undefined, "Jaunes d'œuf", db)?.id).toBe("yolk");
+  });
+  it("ignore un dbId orphelin et retombe sur le nom", () => {
+    expect(resolveLineEntry("deleted", "jaune d'oeuf", db)?.id).toBe("yolk");
+  });
+  it("utilise le résolveur fourni", () => {
+    expect(resolveLineEntry("", "x", db, () => db[0])?.id).toBe("egg");
+  });
+  it("null sans nom ni dbId valide, ou base vide", () => {
+    expect(resolveLineEntry("", "", db)).toBeNull();
+    expect(resolveLineEntry("deleted", null, db)).toBeNull();
+    expect(resolveLineEntry("", "Oeuf", null)).toBeNull();
+    expect(resolveLineEntry("", "Inconnu", db)).toBeNull();
   });
 });

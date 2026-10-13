@@ -5563,10 +5563,9 @@ html.light .sheet-sticky-head::after {
 /* Image d'ingrédient (IngImage) : arrivée en fondu léger plutôt qu'en « pop ». */
 .ing-img-reveal {
   opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 0.28s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.28s ease;
 }
-.ing-img-reveal[data-loaded] { opacity: 1; transform: none; }
+.ing-img-reveal[data-loaded] { opacity: 1; }
 /* Anneau de chargement, centré par-dessus l'image encore invisible. Il n'apparaît
    qu'après un court délai : un chargement rapide passe sans clignotement. */
 .ing-img-spinner {
@@ -5583,5 +5582,5 @@ html.light .sheet-sticky-head::after {
 }
 @keyframes ing-spinner-in { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .ing-img-reveal { transform: none; transition: opacity 0.15s linear; }
+  .ing-img-reveal { transition: opacity 0.15s linear; }
 }

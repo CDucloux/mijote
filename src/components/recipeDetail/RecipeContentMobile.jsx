@@ -7,7 +7,6 @@ import { StepTip } from "../recipe/StepTip.jsx";
 import { GroupHeader } from "./GroupHeader.jsx";
 import { IngredientRecoHint, PrecautionInfoBadge, UtensilPrecautionSheet } from "../recipe/QualityHints.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
-import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { isIngredientInSeason } from "@/lib/food/seasonality.js";
 import { groupBy, sectionRuns, hasGroups, looseRunLabel } from "@/lib/recipes/recipeGroups.js";
 import { capitalize, fmtQty, pluralizeUnit, pluralizeName } from "../../lib/format.js";
@@ -18,7 +17,7 @@ import { capitalize, fmtQty, pluralizeUnit, pluralizeName } from "../../lib/form
  * portions/pas-à-pas. Le rendu suit strictement l'onglet actif.
  */
 export function RecipeContentMobile({ recipe, activeTab, view, servings, setServings, bump, setBump, panFactor, setShowCalc, baseSteps, setCookMode }) {
-  const { mult, recipesById, getIngImage, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, isInStock, seasonResolver, ingredientDB, navigate } = view;
+  const { mult, recipesById, getIngImage, getIngId, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, isInStock, seasonResolver, navigate } = view;
   const [precSheet, setPrecSheet] = useState(null);
   return (
     <>
@@ -63,11 +62,8 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               else if (inSeason) badge = { text: "de saison", color: "var(--green)", icon: "sun" };
 
               const name = isComp ? (rc.comp ? rc.comp.name : (ing.name || "Base")) : ing.name;
-              // `dbId` figé à l'enregistrement peut être vide pour un ingrédient
-              // reconnu après coup → on le résout par nom pour rendre la ligne
-              // cliquable (accès au détail sans passer par « Modifier »).
               const reco = isComp ? null : getIngReco?.(ing);
-              const effDbId = isComp ? "" : (ing.dbId || findIngredientMatch(ing.name, ingredientDB)?.id || "");
+              const effDbId = isComp ? "" : getIngId(ing);
               const clickable = isComp ? !!rc.comp : !!effDbId;
               const onClick = () => {
                 if (isComp && rc.comp) navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } });

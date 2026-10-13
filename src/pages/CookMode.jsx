@@ -6,7 +6,7 @@ import { BaseIcon } from "../components/ui/BaseIcon.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 import { buildPostesDecoupe, findDecoupeStepIndex, sortPostesByStep } from "@/lib/recipes/decoupe.js";
-import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
+import { createIngredientResolver, resolveLineEntry } from "@/lib/food/nameMatcher.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { resolveUsagePrecaution } from "@/lib/utensils/usagePrecaution.js";
 import { UtensilPrecautionSheet } from "../components/recipe/QualityHints.jsx";
@@ -38,6 +38,7 @@ import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEFAULT_CATEGORIES, onClose, onCooked, recipesById, stockSet, onUpdateRecipe, isNested = false }) {
   const { techniques, notify } = useAppShell();
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
+  const ingResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const [stepIdx, setStepIdx] = useState(0);
   const [done, setDone] = useState(false);
   // Chrono global : « depuis quand la recette est lancée » (recette principale
@@ -169,7 +170,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     if (pageIdx >= 0) goTo(pageIdx);
   };
 
-  const getIngImage = (dbId, name) => ingredientDB.find(d => d.id === dbId)?.image || (name ? findIngredientMatch(name, ingredientDB)?.image || "" : "");
+  const getIngImage = (dbId, name) => resolveLineEntry(dbId, name, ingredientDB, ingResolver)?.image || "";
   const getUtImage = (dbId, name) => (utensilDB || []).find(d => d.id === dbId)?.image || (name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
   // Précaution d'utilisation d'un ustensile (résolu à la base par dbId, sinon nom).
   const getUtPrecaution = (u) => resolveUsagePrecaution((utensilDB || []).find(d => d.id === u.dbId) || (u.name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(u.name)) : null));
