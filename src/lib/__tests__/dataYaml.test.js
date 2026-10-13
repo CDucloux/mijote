@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
+import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
 import {
   parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml,
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
@@ -555,9 +556,12 @@ describe("enveloppe des exports d'ingrédients et d'ustensiles", () => {
     expect(parseUtensilsYaml("schema_version: 9\nutensils: []\n").errors[0]).toMatch(/schéma v9/);
   });
   it("valide la base d'ingrédients versionnée dans data/", () => {
-    const { items, errors } = parseIngredientsYaml(readFileSync("data/ingredients.yaml", "utf8"));
+    const validCategories = new Set(Object.keys(DEFAULT_CATEGORIES));
+    const { items, errors } = parseIngredientsYaml(readFileSync("data/ingredients.yaml", "utf8"), { validCategories });
     expect(errors).toEqual([]);
     expect(items.length).toBeGreaterThan(300);
+    const byName = Object.fromEntries(items.map(i => [i.name, i]));
+    expect(["Oeuf", "Jaune d'oeuf", "Blanc d'oeuf"].map(n => byName[n]?.category)).toEqual(["egg", "egg", "egg"]);
   });
 });
 

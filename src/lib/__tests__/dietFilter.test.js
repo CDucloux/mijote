@@ -10,6 +10,7 @@ const DB = [
   { id: "farine", name: "Farine de blé", category: "grain" },
   { id: "amande", name: "Amande", category: "nuts_seeds" },
   { id: "riz", name: "Riz", category: "grain" },
+  { id: "jaune", name: "Jaune", category: "egg" },
 ];
 const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const resolver = (name) => DB.find(i => norm(i.name) === norm(name || "")) || null;
@@ -60,6 +61,17 @@ describe("isEligible – allergènes (heuristique)", () => {
   });
   it("lactose via catégorie dairy", () => {
     expect(isEligible(R("Gratin", ["Crème"]), { allergens: ["Lactose"] }, { resolver })).toBe(false);
+  });
+});
+
+describe("isEligible – œufs", () => {
+  it("compatible végétarien mais pas vegan", () => {
+    const flan = R("Flan", ["Jaune", "Farine de blé"]);
+    expect(isEligible(flan, { diet: "vegetarien" }, { resolver })).toBe(true);
+    expect(isEligible(flan, { diet: "vegan" }, { resolver })).toBe(false);
+  });
+  it("allergène œuf via la catégorie egg, même sans mot-clé dans le nom", () => {
+    expect(isEligible(R("Flan", ["Jaune"]), { allergens: ["Œuf"] }, { resolver })).toBe(false);
   });
 });
 

@@ -13,6 +13,7 @@ const ingredientDB = [
   { id: "i_tomato", name: "Tomate", category: "vegetable" },
   { id: "i_cod", name: "Cabillaud", category: "fish_seafood" },
   { id: "i_flour", name: "Farine", category: "grain" },
+  { id: "i_egg", name: "Oeuf", category: "egg" },
 ];
 
 const sauce = {
@@ -54,6 +55,11 @@ describe("deriveDietTags", () => {
   it("excludes vegan/vegetarien when dairy is present", () => {
     const dairy = { ingredients: [{ dbId: "i_milk" }] };
     const tags = deriveDietTags(dairy, ingredientDB, recipesById);
+    expect(tags).toContain("vegetarien");
+    expect(tags).not.toContain("vegan");
+  });
+  it("excludes vegan but keeps vegetarien when an egg is present", () => {
+    const tags = deriveDietTags({ ingredients: [{ dbId: "i_egg" }] }, ingredientDB, recipesById);
     expect(tags).toContain("vegetarien");
     expect(tags).not.toContain("vegan");
   });

@@ -9,6 +9,7 @@ const DB = {
   saumon: { id: "saumon", category: "fish_seafood" },
   parmesan: { id: "parmesan", category: "dairy" },
   farine: { id: "farine", category: "grain" },
+  oeuf: { id: "oeuf", category: "egg" },
 };
 const resolver = (name) => DB[(name || "").toLowerCase()] || null;
 const ing = (name, extra = {}) => ({ name, ...extra });
@@ -29,6 +30,10 @@ describe("isRecipeVegan", () => {
 
   it("non vegan avec un produit laitier (fromage)", () => {
     expect(isRecipeVegan({ ingredients: [ing("Tomate"), ing("Parmesan")] }, resolver)).toBe(false);
+  });
+
+  it("non vegan avec un œuf (non-régression : l'œuf était classé « Autres »)", () => {
+    expect(isRecipeVegan({ ingredients: [ing("Farine"), ing("Oeuf")] }, resolver)).toBe(false);
   });
 
   it("false si aucun ingrédient identifié (on n'affirme pas vegan à l'aveugle)", () => {
