@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.65.2 – Cardamome · Reconnu après coup
+
+### Correctifs
+- **Ingrédient ajouté à la base après la recette** : la ligne se rattache désormais à sa fiche par son nom, sans réenregistrer la recette. Photo, conseils qualité et accès au détail suivent, y compris sur desktop où la ligne restait inerte, et dans le mode cuisine.
+- **Images d'ingrédients** : arrivée en simple fondu après le chargement, sans le zoom qui les faisait gigoter.
+
 ## v4.65.1 – Cardamome · Œufs à part
 
 ### Base d'ingrédients
