@@ -75,7 +75,7 @@ const RAW_QUALIFIERS = [
   "grillé", "grillée", "torréfié", "torréfiée", "blanchi", "blanchie",
   "revenu", "revenue", "cuit", "cuite", "précuit", "précuite",
   "surgelé", "surgelée", "congelé", "congelée", "décongelé", "décongelée",
-  "frais", "fraîche", "mûr", "mûre", "bio", "extra", "fin", "fine",
+  "frais", "fraîche", "mûr", "mûre", "bio", "extra", "fin", "fine", "entier", "entière",
   "tiède", "froid", "froide", "chaud", "chaude",
 ];
 const MATCH_QUALIFIERS = new Set(RAW_QUALIFIERS.map(w => singularizeWord(normalizeName(w))));
