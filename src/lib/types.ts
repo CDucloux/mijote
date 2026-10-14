@@ -202,6 +202,14 @@ export interface MealItem {
 /** Planning hebdomadaire : items indexés par date ISO (`YYYY-MM-DD`). */
 export type MealPlan = Record<string, MealItem[]>;
 
+/** Aliment de la table Ciqual d'où proviennent les valeurs nutritionnelles d'un ingrédient. */
+export interface CiqualRef {
+  /** Code de l'aliment dans la table (`alim_code`). */
+  code: number;
+  /** Nom de l'aliment dans la table, tel que publié par l'Anses. */
+  name?: string;
+}
+
 /** Élément de la base d'ingrédients (forme large, champs additionnels tolérés). */
 export interface IngredientDbItem {
   id: string;
@@ -214,5 +222,7 @@ export interface IngredientDbItem {
   nutrition?: Record<string, number> & { isVegetable?: boolean };
   /** Recommandation de forme à privilégier (frais/surgelé…) ; absent = aucune. */
   qualityRecommendation?: QualityRecommendation;
+  /** Aliment Ciqual source des valeurs nutritionnelles ; absent = non tracé. */
+  ciqual?: CiqualRef;
   [k: string]: unknown;
 }

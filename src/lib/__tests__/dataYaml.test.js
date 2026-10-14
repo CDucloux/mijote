@@ -563,6 +563,16 @@ describe("enveloppe des exports d'ingrédients et d'ustensiles", () => {
     const byName = Object.fromEntries(items.map(i => [i.name, i]));
     expect(["Oeuf", "Jaune d'oeuf", "Blanc d'oeuf"].map(n => byName[n]?.category)).toEqual(["egg", "egg", "egg"]);
   });
+  it("chaque ingrédient versionné porte sa source Ciqual, sauf ceux absents de la table", () => {
+    const { items } = parseIngredientsYaml(readFileSync("data/ingredients.yaml", "utf8"));
+    expect(items.filter(i => !i.ciqual).map(i => i.name)).toEqual(["Baie de genièvre"]);
+    expect(items.find(i => i.name === "Cardamome en poudre").ciqual).toEqual({ code: 11075, name: "Cardamome, poudre" });
+  });
+  it("aucun ingrédient versionné n'a de valeurs nutritionnelles toutes nulles hors eau (non-régression)", () => {
+    const { items } = parseIngredientsYaml(readFileSync("data/ingredients.yaml", "utf8"));
+    const allZero = items.filter(i => i.nutrition && ["calories", "protein", "carbs", "fat", "salt"].every(k => !i.nutrition[k])).map(i => i.name);
+    expect(allZero).toEqual(["Glaçon"]);
+  });
   it("range les pâtes à étaler (fraîches) hors du stock placard, les pâtes sèches restent en céréales", () => {
     const { items } = parseIngredientsYaml(readFileSync("data/ingredients.yaml", "utf8"));
     const byName = Object.fromEntries(items.map(i => [i.name, i]));
@@ -606,5 +616,19 @@ describe("export des techniques : ordre de clés stable", () => {
     const now = new Date("2026-10-09T06:26:00.000Z");
     expect(formatTechniquesYaml([firestoreOrder], { now })).toBe(formatTechniquesYaml([canonicalOrder], { now }));
     expect(formatTechniquesYaml([firestoreOrder], { now })).toContain("hierarchy:\n    parent: tech_grp\n    level: 1");
+  });
+});
+
+describe("référence Ciqual des ingrédients", () => {
+  it("survit à un aller-retour export → import", () => {
+    const row = { id: "db_i1", name: "Cardamome en poudre", category: "condiment", ciqual: { code: 11075, name: "Cardamome, poudre" } };
+    const { items, errors } = parseIngredientsYaml(formatIngredientsYaml([row], { now: new Date("2026-10-14T00:00:00.000Z") }));
+    expect(errors).toEqual([]);
+    expect(items[0].ciqual).toEqual(row.ciqual);
+  });
+  it("annule l'import sur un code Ciqual invalide", () => {
+    const { items, errors } = parseIngredientsYaml("- name: Ail\n  ciqual:\n    code: abc\n");
+    expect(items).toEqual([]);
+    expect(errors[0]).toMatch(/« Ail » : code Ciqual invalide/);
   });
 });
