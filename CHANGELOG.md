@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.65.3 – Cardamome · Pâtes à étaler
+
+### Base d'ingrédients
+- **Nouvelle catégorie « Pâtes à étaler »** : pâtes feuilletée, brisée, sablée, phyllo, à pizza et feuilles de brick. Produits frais réfrigérés, elles ne tombent plus dans le stock placard à l'achat ; les pâtes sèches restent en céréales.
+
+### Correctifs
+- **Ingrédients mieux reconnus** : « fin/fine » et « entier/entière » sont ignorés au rapprochement, « Chapelure fine », « sel fin » ou « poulet entier » retrouvent leur fiche. « Lait entier » reste distinct du demi-écrémé.
+
 ## v4.65.2 – Cardamome · Reconnu après coup
 
 ### Correctifs
