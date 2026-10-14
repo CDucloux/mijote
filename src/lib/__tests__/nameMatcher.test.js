@@ -93,3 +93,15 @@ describe("resolveLineEntry", () => {
     expect(resolveLineEntry("", "Inconnu", db)).toBeNull();
   });
 });
+
+describe("qualificatif « fin/fine » ignoré", () => {
+  const db = [{ id: "chap", name: "Chapelure" }, { id: "sel", name: "Sel" }];
+  it("« Chapelure fine » se rattache à Chapelure (non-régression)", () => {
+    expect(findIngredientMatch("Chapelure fine", db)?.id).toBe("chap");
+    expect(findIngredientMatch("sel fin", db)?.id).toBe("sel");
+  });
+  it("une entrée nommée avec « fine » reste prioritaire au palier exact", () => {
+    const withFine = [...db, { id: "chapf", name: "Chapelure fine" }];
+    expect(findIngredientMatch("Chapelure fine", withFine)?.id).toBe("chapf");
+  });
+});
