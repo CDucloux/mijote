@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
-import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
+import { DEFAULT_CATEGORIES, STOCK_CATEGORIES } from "@/constants/categories.js";
 import {
   parseTechniquesYaml, parseIngredientsYaml, parseUtensilsYaml,
   formatTechniquesMarkdown, formatTechniquesYaml, formatIngredientsYaml, formatUtensilsYaml,
@@ -562,6 +562,13 @@ describe("enveloppe des exports d'ingrédients et d'ustensiles", () => {
     expect(items.length).toBeGreaterThan(300);
     const byName = Object.fromEntries(items.map(i => [i.name, i]));
     expect(["Oeuf", "Jaune d'oeuf", "Blanc d'oeuf"].map(n => byName[n]?.category)).toEqual(["egg", "egg", "egg"]);
+  });
+  it("range les pâtes à étaler (fraîches) hors du stock placard, les pâtes sèches restent en céréales", () => {
+    const { items } = parseIngredientsYaml(readFileSync("data/ingredients.yaml", "utf8"));
+    const byName = Object.fromEntries(items.map(i => [i.name, i]));
+    expect(["Pâte feuilletée", "Pâte brisée", "Feuille de brick"].map(n => byName[n]?.category)).toEqual(["dough", "dough", "dough"]);
+    expect(byName.Trofie?.category).toBe("grain");
+    expect(STOCK_CATEGORIES.has("dough")).toBe(false);
   });
 });
 

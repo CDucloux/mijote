@@ -93,3 +93,32 @@ describe("resolveLineEntry", () => {
     expect(resolveLineEntry("", "Inconnu", db)).toBeNull();
   });
 });
+
+describe("qualificatif « fin/fine » ignoré", () => {
+  const db = [{ id: "chap", name: "Chapelure" }, { id: "sel", name: "Sel" }];
+  it("« Chapelure fine » se rattache à Chapelure (non-régression)", () => {
+    expect(findIngredientMatch("Chapelure fine", db)?.id).toBe("chap");
+    expect(findIngredientMatch("sel fin", db)?.id).toBe("sel");
+  });
+  it("une entrée nommée avec « fine » reste prioritaire au palier exact", () => {
+    const withFine = [...db, { id: "chapf", name: "Chapelure fine" }];
+    expect(findIngredientMatch("Chapelure fine", withFine)?.id).toBe("chapf");
+  });
+});
+
+describe("qualificatif « entier/entière » ignoré", () => {
+  const db = [
+    { id: "lait", name: "Lait entier", aliases: ["lait"] },
+    { id: "laitde", name: "Lait demi-écrémé" },
+    { id: "poulet", name: "Poulet" },
+    { id: "noisette", name: "Noisette" },
+  ];
+  it("« poulet entier », « noisettes entières » se rattachent à l'ingrédient de base", () => {
+    expect(findIngredientMatch("poulet entier", db)?.id).toBe("poulet");
+    expect(findIngredientMatch("noisettes entières", db)?.id).toBe("noisette");
+  });
+  it("« Lait entier » reste distinct du demi-écrémé", () => {
+    expect(findIngredientMatch("lait entier", db)?.id).toBe("lait");
+    expect(findIngredientMatch("lait demi-écrémé", db)?.id).toBe("laitde");
+  });
+});
