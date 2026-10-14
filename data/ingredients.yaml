@@ -1,9 +1,9 @@
-# Base d'ingrédients Cardamome (331) – généré, réimportable. Valeurs pour 100 g.
+# Base d'ingrédients Cardamome (346) – généré, réimportable. Valeurs pour 100 g.
 # Valeurs nutritionnelles de référence : table Ciqual (data/ciqual/).
 
 schema_version: 1
-exported_at: 2026-10-13T14:22:50.518Z
-count: 331
+exported_at: 2026-10-14T09:40:36.241Z
+count: 346
 ingredients:
 
 - id: db_i1781044604989
@@ -2851,6 +2851,63 @@ ingredients:
     fiber: 0
     salt: 0.1
 
+- id: db_i1792000000002
+  name: Blanc d'oeuf
+  aliases:
+    - blanc d'œuf
+    - blancs d'œufs
+  category: egg
+  gramsPerPiece: 35
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmv7wun3af0a1ta.jpg?alt=media&token=9f58accf-a086-4eb0-bbf1-c1297afd18c3
+  nutrition:
+    calories: 48.1
+    protein: 10.9
+    carbs: 0.73
+    sugar: 0.71
+    fat: 0.17
+    saturatedFat: 0
+    omega3: 0
+    fiber: 0
+    salt: 0.42
+
+- id: db_i1792000000001
+  name: Jaune d'oeuf
+  aliases:
+    - jaune d'œuf
+    - jaunes d'œufs
+  category: egg
+  gramsPerPiece: 20
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmv7wsqnh90qjus.jpg?alt=media&token=303a6ebc-1897-4447-b2c0-8197667bea71
+  nutrition:
+    calories: 307
+    protein: 15.5
+    carbs: 1.09
+    sugar: 0.56
+    fat: 26.7
+    saturatedFat: 9.55
+    omega3: 0.28
+    fiber: 0
+    salt: 0.048
+
+- id: db_i1781270935951
+  name: Oeuf
+  aliases:
+    - œuf
+    - œufs
+  category: egg
+  gramsPerPiece: 60
+  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaypzgzf3qpt2.png?alt=media&token=86b33b8c-1836-4007-aed7-e5edc63a563e
+  nutrition:
+    calories: 140
+    protein: 12.8
+    carbs: 0.06
+    sugar: 0.06
+    fat: 9.83
+    saturatedFat: 2.64
+    omega3: 0.11
+    fiber: 0
+    salt: 0.31
+
 - id: db_i1781261933133
   name: Aneth
   category: herbs
@@ -3344,6 +3401,38 @@ ingredients:
     omega3: 0.22
     fiber: 1.42
     salt: 1.29
+
+- id: db_i1792000000003
+  name: Bouillon de boeuf
+  aliases:
+    - bouillon de bœuf
+  category: meat
+  nutrition:
+    calories: 6.14
+    protein: 0.85
+    carbs: 0.36
+    sugar: 0
+    fat: 0.15
+    saturatedFat: 0.057
+    omega3: 0
+    fiber: 0
+    salt: 0.33
+
+- id: db_i1792000000004
+  name: Bouillon de volaille
+  aliases:
+    - bouillon de poulet
+  category: meat
+  nutrition:
+    calories: 7.19
+    protein: 1.23
+    carbs: 0.28
+    sugar: 0
+    fat: 0.13
+    saturatedFat: 0.13
+    omega3: 0
+    fiber: 0
+    salt: 0.51
 
 - id: db_i1784941283091383
   name: Chorizo
@@ -5538,6 +5627,23 @@ ingredients:
     fiber: 0
     salt: 0.01
 
+- id: db_i1792000000005
+  name: Bouillon de légumes
+  aliases:
+    - bouillon de légume
+    - bouillon végétal
+  category: sauce
+  nutrition:
+    calories: 4.78
+    protein: 0.34
+    carbs: 0.51
+    sugar: 0.19
+    fat: 0.16
+    saturatedFat: 0.14
+    omega3: 0
+    fiber: 0
+    salt: 0.61
+
 - id: db_i1781288589279
   name: Concentré de tomate
   category: sauce
@@ -5968,6 +6074,8 @@ ingredients:
 
 - id: db_i17849415222739590
   name: Piment de Cayenne
+  aliases:
+    - piment en poudre
   category: condiment
   months:
     - 1
@@ -6397,6 +6505,8 @@ ingredients:
 
 - id: db_i1781280876573
   name: Noix
+  aliases:
+    - cerneaux de noix
   category: nuts_seeds
   image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqb4mzmurpe7bw.png?alt=media&token=d95ba929-8950-41ac-8e7e-2a854c16a7fb
   nutrition:
@@ -6900,25 +7010,6 @@ ingredients:
     fiber: 0.75
     salt: 0.068
 
-- id: db_i1781270935951
-  name: Oeuf
-  aliases:
-    - œuf
-    - œufs
-  category: egg
-  gramsPerPiece: 60
-  image: https://firebasestorage.googleapis.com/v0/b/mijote-b8a6d.firebasestorage.app/o/master%2Fingredients%2Fmqaypzgzf3qpt2.png?alt=media&token=86b33b8c-1836-4007-aed7-e5edc63a563e
-  nutrition:
-    calories: 140
-    protein: 12.8
-    carbs: 0.06
-    sugar: 0.06
-    fat: 9.83
-    saturatedFat: 2.64
-    omega3: 0.11
-    fiber: 0
-    salt: 0.31
-
 - id: db_i17849415222907214
   name: Tofu
   category: other
@@ -6947,87 +7038,238 @@ ingredients:
     fiber: 0
     salt: 0.025
 
-- id: db_i1792000000001
-  name: "Jaune d'oeuf"
+- id: db_i1792000000006
+  name: Ail en poudre
   aliases:
-    - "jaune d'œuf"
-    - "jaunes d'œufs"
-  category: egg
-  gramsPerPiece: 20
+    - ail séché
+  category: condiment
   nutrition:
-    calories: 307
-    protein: 15.5
-    carbs: 1.09
-    sugar: 0.56
-    fat: 26.7
-    saturatedFat: 9.55
-    omega3: 0.28
-    fiber: 0
-    salt: 0.048
+    calories: 346
+    protein: 16.6
+    carbs: 63.7
+    sugar: 2.43
+    fat: 0.73
+    saturatedFat: 0.25
+    omega3: 0.01
+    fiber: 9
+    salt: 0.15
 
-- id: db_i1792000000002
-  name: "Blanc d'oeuf"
+- id: db_i1792000000007
+  name: Baie de genièvre
   aliases:
-    - "blanc d'œuf"
-    - "blancs d'œufs"
-  category: egg
-  gramsPerPiece: 35
+    - baies de genièvre
+    - genièvre
+  category: condiment
+
+- id: db_i1792000000008
+  name: Extrait de vanille
+  aliases:
+    - arôme de vanille
+    - vanille liquide
+  category: condiment
   nutrition:
-    calories: 48.1
-    protein: 10.9
-    carbs: 0.73
-    sugar: 0.71
-    fat: 0.17
+    calories: 57.7
+    protein: 0.03
+    carbs: 14.4
+    sugar: 14.4
+    fat: 0
     saturatedFat: 0
     omega3: 0
     fiber: 0
-    salt: 0.42
+    salt: 0.01
 
-- id: db_i1792000000003
-  name: Bouillon de boeuf
+- id: db_i1792000000009
+  name: Oignon grelot
   aliases:
-    - bouillon de bœuf
+    - oignons grelots
+  category: vegetable
+  months:
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+  gramsPerPiece: 15
+  nutrition:
+    calories: 39
+    protein: 1.1
+    carbs: 6.25
+    sugar: 4.8
+    fat: 0.62
+    saturatedFat: 0.2
+    omega3: 0
+    fiber: 1.7
+    salt: 0.1
+
+- id: db_i1792000000010
+  name: Lard
+  aliases:
+    - lard fumé
   category: meat
   nutrition:
-    calories: 6.14
-    protein: 0.85
-    carbs: 0.36
-    sugar: 0
-    fat: 0.15
-    saturatedFat: 0.057
-    omega3: 0
-    fiber: 0
-    salt: 0.33
+    calories: 272
+    protein: 16.7
+    carbs: 0.35
+    sugar: 0.35
+    fat: 22.6
+    saturatedFat: 8
+    omega3: 0.19
+    fiber: 0.34
+    salt: 2.63
 
-- id: db_i1792000000004
-  name: Bouillon de volaille
+- id: db_i1792000000011
+  name: Tomme
   aliases:
-    - bouillon de poulet
-  category: meat
+    - tome
+  category: dairy
   nutrition:
-    calories: 7.19
-    protein: 1.23
-    carbs: 0.28
+    calories: 364
+    protein: 21.6
+    carbs: 3.37
     sugar: 0
-    fat: 0.13
-    saturatedFat: 0.13
-    omega3: 0
+    fat: 29.4
+    saturatedFat: 19.4
+    omega3: 0.16
     fiber: 0
-    salt: 0.51
+    salt: 1.28
 
-- id: db_i1792000000005
-  name: Bouillon de légumes
+- id: db_i1792000000012
+  name: Miso
   aliases:
-    - bouillon de légume
-    - bouillon végétal
+    - pâte de miso
   category: sauce
   nutrition:
-    calories: 4.78
-    protein: 0.34
-    carbs: 0.51
-    sugar: 0.19
-    fat: 0.16
-    saturatedFat: 0.14
+    calories: 188
+    protein: 11.7
+    carbs: 18.1
+    sugar: 6.2
+    fat: 6.01
+    saturatedFat: 1.14
     omega3: 0
-    fiber: 0
-    salt: 0.61
+    fiber: 5.4
+    salt: 9.32
+
+- id: db_i1792000000013
+  name: Trofie
+  category: grain
+  nutrition:
+    calories: 364
+    protein: 12
+    carbs: 72.7
+    sugar: 2.58
+    fat: 1.6
+    saturatedFat: 0.33
+    omega3: 0.02
+    fiber: 2.91
+    salt: 0.02
+
+- id: db_i1792000000014
+  name: Margarine
+  category: oil
+  nutrition:
+    calories: 557
+    protein: 0.31
+    carbs: 0.43
+    sugar: 0.26
+    fat: 61.7
+    saturatedFat: 21.8
+    omega3: 2.39
+    fiber: 0.04
+    salt: 0.45
+
+- id: db_i1792000000015
+  name: Pâte feuilletée
+  category: grain
+  gramsPerPiece: 230
+  nutrition:
+    calories: 370
+    protein: 5.47
+    carbs: 40
+    sugar: 3
+    fat: 20
+    saturatedFat: 14
+    omega3: 0.1
+    fiber: 3
+    salt: 1.68
+
+- id: db_i1792000000016
+  name: Pâte brisée
+  category: grain
+  gramsPerPiece: 230
+  nutrition:
+    calories: 390
+    protein: 5.93
+    carbs: 45
+    sugar: 2.5
+    fat: 20
+    saturatedFat: 13
+    omega3: 0.1
+    fiber: 2
+    salt: 1.69
+
+- id: db_i1792000000017
+  name: Pâte sablée
+  category: grain
+  gramsPerPiece: 230
+  nutrition:
+    calories: 383
+    protein: 5.95
+    carbs: 53.6
+    sugar: 13.4
+    fat: 15.8
+    saturatedFat: 10.6
+    omega3: 0.09
+    fiber: 1.65
+    salt: 0.04
+
+- id: db_i1792000000018
+  name: Pâte phyllo
+  aliases:
+    - pâte filo
+    - feuille de filo
+    - feuille de phyllo
+  category: grain
+  gramsPerPiece: 20
+  nutrition:
+    calories: 289
+    protein: 7.1
+    carbs: 50.7
+    sugar: 0.18
+    fat: 6
+    saturatedFat: 1.47
+    omega3: 0
+    fiber: 1.9
+    salt: 1.21
+
+- id: db_i1792000000019
+  name: Pâte à pizza
+  category: grain
+  gramsPerPiece: 260
+  nutrition:
+    calories: 240
+    protein: 7.05
+    carbs: 44.2
+    sugar: 1.4
+    fat: 3.45
+    saturatedFat: 0.25
+    omega3: 0
+    fiber: 2.2
+    salt: 1.31
+
+- id: db_i1792000000020
+  name: Feuille de brick
+  aliases:
+    - brick
+    - pâte à brick
+  category: grain
+  gramsPerPiece: 17
+  nutrition:
+    calories: 283
+    protein: 7
+    carbs: 59
+    sugar: 2
+    fat: 1.5
+    saturatedFat: 0.1
+    omega3: 0
+    fiber: 2.5
+    salt: 3.25
