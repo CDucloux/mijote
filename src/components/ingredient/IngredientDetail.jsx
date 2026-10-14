@@ -12,6 +12,7 @@ import { uploadImage, compressImage } from "@/lib/firebase/storage.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, isFruitVeg } from "../../constants/categories.js";
 import { ingredientMonths, isIngredientInSeason, SEASONAL_CATEGORIES, formatMonths } from "@/lib/food/seasonality.js";
+import { ciqualUrl } from "@/lib/food/ciqual.js";
 import { NUTRI_RI, MACRO_COLORS } from "../../constants/nutritionDisplay.js";
 import { TIP_TYPES, TIP_ORDER } from "../../constants/tipTypes.js";
 
@@ -354,15 +355,18 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
           </div>
         )}
 
-        {/* Source Ciqual (consultation uniquement) */}
+        {/* Source Ciqual : fiche exacte de l'aliment source quand il est tracé. */}
         {!editing && (
-          <a className="slide-up ing-hover ripple" href="https://ciqual.anses.fr/" target="_blank" rel="noopener noreferrer"
+          <a className="slide-up ing-hover ripple" href={ciqualUrl(ingredient.ciqual)} target="_blank" rel="noopener noreferrer"
             style={{ ...CARD, display: "flex", alignItems: "center", gap: 12, marginTop: 28, padding: "12px 14px", textDecoration: "none", animationDelay: "0.32s" }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#1a8a3c,#4caf7d)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 6px rgba(26,138,60,0.35)" }}>
               <Icon name="leaf" size={16} color="#fff" />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text)", letterSpacing: "0.01em" }}>Anses, table Ciqual 2025</div>
+              {ingredient.ciqual?.name && (
+                <div style={{ fontSize: 11, color: "var(--text2)", lineHeight: 1.35, marginTop: 2 }}>{ingredient.ciqual.name}</div>
+              )}
               {/* Paternité exigée par la Licence Ouverte : source et date de mise à jour. */}
               <div style={{ fontSize: 10, color: "var(--text3)", lineHeight: 1.4, marginTop: 1 }}>Version du 3 novembre 2025 · Licence Ouverte · valeurs arrondies par Cardamome</div>
             </div>

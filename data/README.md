@@ -48,7 +48,10 @@ le fichier tel quel : le diff Git montre alors exactement ce qui a changé.
 `ciqual/Table_Ciqual_2025_FR_2025_11_03.xlsx` est la table de composition
 nutritionnelle **Ciqual 2025** de l'ANSES (version du 3 novembre 2025). C'est la
 référence à consulter pour renseigner `nutrition` (valeurs pour 100 g) quand on
-ajoute ou corrige un ingrédient. À chaque nouvelle édition de la table, ajouter
+ajoute ou corrige un ingrédient. Chaque ingrédient trace l'aliment source dans
+`ciqual` (`code` = `alim_code` de la table, `name` = `alim_nom_fr`) : la fiche
+ingrédient de l'app ouvre alors directement la page de cet aliment sur
+ciqual.anses.fr. Un ingrédient absent de la table n'a pas de `ciqual`. À chaque nouvelle édition de la table, ajouter
 le fichier daté à côté plutôt que d'écraser l'ancien.
 
 Source : ANSES, Table de composition nutritionnelle des aliments Ciqual,

@@ -16,6 +16,8 @@ import { TIP_TYPES } from "@/constants/tipTypes.js";
 import { isFruitVeg } from "@/constants/categories.js";
 import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 import { INGREDIENT_FORMS, normalizePreferredForms } from "@/lib/food/qualityRecommendation.js";
+import { parseCiqualRef } from "@/lib/food/ciqual.js";
+import type { CiqualRef } from "@/lib/types.js";
 import { PRECAUTION_TONES, PRECAUTION_LIMITS, isPrecautionTone } from "@/lib/utensils/usagePrecaution.js";
 import { buildEnvelope, readEnvelope, INGREDIENTS_SCHEMA_VERSION, UTENSILS_SCHEMA_VERSION, TECHNIQUES_SCHEMA_VERSION } from "@/lib/household/dataEnvelope.js";
 
@@ -384,6 +386,7 @@ interface IngredientRow {
   tips?: { type: string; text: string }[];
   nutrition?: Record<string, number>;
   qualityRecommendation?: { preferredForms?: unknown[]; message?: string };
+  ciqual?: CiqualRef;
 }
 
 // ─── EXPORTS YAML (réimportables, pour versionner dans data/) ──────────────────
@@ -424,6 +427,7 @@ export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [
         if (msg) qr.message = msg;
         o.qualityRecommendation = qr;
       }
+      if (d.ciqual) o.ciqual = d.ciqual.name ? { code: d.ciqual.code, name: d.ciqual.name } : { code: d.ciqual.code };
       if (d.nutrition) {
         const n: Record<string, number> = {};
         for (const k of NUT_KEYS) if (d.nutrition[k] != null) n[k] = d.nutrition[k];
@@ -555,6 +559,11 @@ export function parseIngredientsYaml(text: string, { validCategories }: { validC
           row.qualityRecommendation = out;
         }
       }
+    }
+    if (raw.ciqual != null) {
+      const { ref, error } = parseCiqualRef(raw.ciqual);
+      if (error) errors.push(`${where} : ${error}`);
+      else row.ciqual = ref;
     }
     if (raw.nutrition != null) {
       if (!isObj(raw.nutrition)) errors.push(`${where} : « nutrition » doit être un objet.`);

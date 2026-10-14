@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.66.0 – Cardamome · Source tracée
+
+### Fiche ingrédient
+- **Badge Ciqual relié à l'aliment source** : il ouvre directement la page de l'aliment sur ciqual.anses.fr et affiche son nom, pour savoir exactement d'où viennent les valeurs nutritionnelles.
+
+### Base d'ingrédients
+- **Traçabilité Ciqual** : 344 ingrédients sur 345 portent le code et le nom de leur aliment Ciqual (seule la baie de genièvre est absente de la table).
+- **Valeurs corrigées** : crabe, sucre glace, chips, cacao, chocolat noir, tomate, prune, pain de mie, noix de pécan, crevette grise et gnocchi reprenaient les valeurs d'un autre aliment ; couscous et polenta sont désormais comptés secs, comme les pâtes.
+- **Valeurs ajoutées** : jus d'orange, jus de citron, fleur de sel, graines de cumin, bicarbonate, sucre vanillé. La vanille n'affiche plus de zéros fictifs.
+
 ## v4.65.3 – Cardamome · Pâtes à étaler
 
 ### Base d'ingrédients
