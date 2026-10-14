@@ -1,9 +1,9 @@
-# Base d'ingrédients Cardamome (346) – généré, réimportable. Valeurs pour 100 g.
+# Base d'ingrédients Cardamome (345) – généré, réimportable. Valeurs pour 100 g.
 # Valeurs nutritionnelles de référence : table Ciqual (data/ciqual/).
 
 schema_version: 1
 exported_at: 2026-10-14T09:40:36.241Z
-count: 346
+count: 345
 ingredients:
 
 - id: db_i1781044604989
@@ -7163,23 +7163,10 @@ ingredients:
     fiber: 2.91
     salt: 0.02
 
-- id: db_i1792000000014
-  name: Margarine
-  category: oil
-  nutrition:
-    calories: 557
-    protein: 0.31
-    carbs: 0.43
-    sugar: 0.26
-    fat: 61.7
-    saturatedFat: 21.8
-    omega3: 2.39
-    fiber: 0.04
-    salt: 0.45
 
 - id: db_i1792000000015
   name: Pâte feuilletée
-  category: grain
+  category: dough
   gramsPerPiece: 230
   nutrition:
     calories: 370
@@ -7194,7 +7181,7 @@ ingredients:
 
 - id: db_i1792000000016
   name: Pâte brisée
-  category: grain
+  category: dough
   gramsPerPiece: 230
   nutrition:
     calories: 390
@@ -7209,7 +7196,7 @@ ingredients:
 
 - id: db_i1792000000017
   name: Pâte sablée
-  category: grain
+  category: dough
   gramsPerPiece: 230
   nutrition:
     calories: 383
@@ -7228,7 +7215,7 @@ ingredients:
     - pâte filo
     - feuille de filo
     - feuille de phyllo
-  category: grain
+  category: dough
   gramsPerPiece: 20
   nutrition:
     calories: 289
@@ -7243,7 +7230,7 @@ ingredients:
 
 - id: db_i1792000000019
   name: Pâte à pizza
-  category: grain
+  category: dough
   gramsPerPiece: 260
   nutrition:
     calories: 240
@@ -7261,7 +7248,7 @@ ingredients:
   aliases:
     - brick
     - pâte à brick
-  category: grain
+  category: dough
   gramsPerPiece: 17
   nutrition:
     calories: 283

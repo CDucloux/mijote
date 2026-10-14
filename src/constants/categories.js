@@ -18,8 +18,8 @@ export function sortedCategoryEntries(categories) {
 }
 
 // Catégories non-périssables stockables en placard (clés techniques). Les produits
-// frais (légumes, fruits, laitiers, herbes, champignons, viandes, poissons) sont
-// volontairement exclus : ils ne « tombent » pas dans le stock à l'achat.
+// frais (légumes, fruits, laitiers, œufs, herbes, champignons, viandes, poissons,
+// pâtes à étaler réfrigérées) sont volontairement exclus : ils ne « tombent » pas dans le stock à l'achat.
 export const STOCK_CATEGORIES = new Set([
   "legume", "grain", "oil", "acid", "sauce", "condiment",
   "nuts_seeds", "sugar", "baking", "alcohol", "other",
