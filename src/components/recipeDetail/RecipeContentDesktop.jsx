@@ -147,7 +147,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
           )}
           {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
-          const hdr = looseRunLabel(run, ri === runs.length - 1, hs);
+          const hdr = looseRunLabel(run, ri, runs.length, hs);
           return (
           <div key={run.start}>
           {hdr && <GroupHeader label={hdr} showIcon={!!run.group} style={{ marginBottom: 18 }} />}

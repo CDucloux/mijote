@@ -85,18 +85,23 @@ export function hasGroups(items: readonly { group?: string }[] | undefined): boo
 /**
  * Libellé d'en-tête pour un run d'ÉTAPES hors-section (`group` absent) au sein d'une
  * recette qui possède par ailleurs des sections nommées. Un run nommé garde son propre
- * libellé ; un run hors-section devient « Montage » s'il termine la recette (assemblage
- * final) et « Préparation » sinon. Retourne `null` quand la recette n'a aucune section
- * (aucun en-tête à afficher, iso-rendu de l'ancien comportement inline).
+ * libellé. Un run hors-section reçoit un intitulé NEUTRE qui ne dit que sa place dans
+ * le déroulé (« Pour commencer », « Ensuite », « Pour finir ») : deviner sa nature
+ * (« Montage », « Préparation ») depuis sa seule position produisait des contresens
+ * (une cuisson finale titrée « Montage »). Le vrai nom d'une phase est une donnée,
+ * portée par `group`. Retourne `null` quand la recette n'a aucune section (aucun
+ * en-tête à afficher).
  *
  * @param run - Le run considéré (seul son `group` est lu).
- * @param isLast - `true` si c'est le dernier run de la liste.
+ * @param index - Position (0-based) du run dans la liste des runs.
+ * @param count - Nombre total de runs.
  * @param hasSections - `true` si la recette comporte au moins une section nommée.
  */
-export function looseRunLabel(run: { group?: string | null }, isLast: boolean, hasSections: boolean): string | null {
+export function looseRunLabel(run: { group?: string | null }, index: number, count: number, hasSections: boolean): string | null {
   if (run.group) return run.group;
   if (!hasSections) return null;
-  return isLast ? "Montage" : "Préparation";
+  if (index === 0) return "Pour commencer";
+  return index === count - 1 ? "Pour finir" : "Ensuite";
 }
 
 /**

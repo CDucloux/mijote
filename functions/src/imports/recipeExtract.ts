@@ -5,6 +5,8 @@
 // (ids stables + liaisons ingrédients/ustensiles ↔ étapes). L'extraction elle-même
 // est faite par le LLM (voir index.ts) ; ce module met en forme son résultat.
 
+import { fillStepGroupGaps } from "./stepGroups.js";
+
 // ── Types (les payloads LLM sont volontairement lâches : JSON externe non fiable)
 
 /** Découpe brute portée par un ingrédient (forme + calibre grossiers). Le narrowing
@@ -491,9 +493,10 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
   }
   const isAmbiguous = (name: string): boolean => (groupsByName.get(norm(name))?.size ?? 0) > 1;
 
+  const stepGroups = fillStepGroupGaps((d.steps || []).map((s) => (s.group || "").toString()));
   const steps: RecipeStep[] = (d.steps || []).map((s, k) => {
     const text = norm(s.text);
-    const stepGroup = (s.group || "").toString().trim();
+    const stepGroup = stepGroups[k];
     const explicitIng = new Set((s.ingredients || []).map(norm));
     const explicitUt = new Set((s.utensils || []).map((x) => norm(typeof x === "string" ? x : x?.name)));
     // Étape hors-section : libre. Nom unique : le groupe ne restreint pas. Homonyme

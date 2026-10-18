@@ -95,6 +95,18 @@ describe("assignIdsAndLink", () => {
     expect(r.steps[1].utensils).toContain("u0");    // saladier (texte)
     expect(r.cuisine).toBe("Grecque");
   });
+  it("rattache à sa section une étape dont le LLM a oublié le groupe (non-régression)", () => {
+    const r = assignIdsAndLink({
+      name: "Tarte", ingredients: [], utensils: [],
+      steps: [
+        { text: "Sabler la farine.", group: "La pâte" },
+        { text: "Fraiser la pâte.", group: "" },
+        { text: "Foncer le moule.", group: "La pâte" },
+        { text: "Enfourner 30 min.", group: "" },
+      ],
+    });
+    expect(r.steps.map((s) => s.group)).toEqual(["La pâte", "La pâte", "La pâte", undefined]);
+  });
   it("cloisonne le linkage par section : une étape d'un groupe ne lie pas l'homonyme d'un autre groupe", () => {
     // « huile d'olive » et « sel » existent dans DEUX sous-préparations. Une étape du
     // groupe « Croûtons » ne doit relier QUE l'huile/sel de sa propre section.

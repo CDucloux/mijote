@@ -9,7 +9,7 @@
  *
  * @module recipes/recipePdf
  */
-import { groupBy, sectionRuns } from "@/lib/recipes/recipeGroups.js";
+import { groupBy, sectionRuns, looseRunLabel } from "@/lib/recipes/recipeGroups.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { categoryLabel, categoryEmoji } from "@/constants/recipeCategories.js";
@@ -200,11 +200,10 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     }).join("");
     // Sous-préparation nommée : encadrée dans un bloc distinct, avec en-tête fort.
     if (run.group) return `<section class="step-group"><div class="step-group-title">${layersIco}<span>${run.group}</span></div>${inner}</section>`;
-    // Étapes hors section : à plat, mais avec un intitulé neutre (« Préparation » /
-    // « Montage ») dès que la recette a des sections, pour marquer la transition.
-    if (!stepsHaveSections) return inner;
-    const looseTitle = ri === stepRuns.length - 1 ? "Montage" : "Préparation";
-    return `<div class="step-loose-title">${looseTitle}</div>${inner}`;
+    // Étapes hors section : à plat, avec un intitulé neutre dès que la recette a des
+    // sections, pour marquer la transition.
+    const looseTitle = looseRunLabel(run, ri, stepRuns.length, stepsHaveSections);
+    return looseTitle ? `<div class="step-loose-title">${looseTitle}</div>${inner}` : inner;
   }).join("");
 
   const utPills = (recipe.utensils || []).map(u => pill(utImg(u.dbId), u.name, "")).join("");
@@ -319,7 +318,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Source Serif 4', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(110, 154, 63, 0.28); }
     .step-group-ico { flex-shrink: 0; }
     .step-group .step:last-child { margin-bottom: 16px; }
-    /* Intitulé des étapes hors section (« Préparation », « Montage »), même accent que
+    /* Intitulé des étapes hors section (« Pour commencer », « Pour finir »), même accent que
        les sections (l'encadré distingue déjà les vraies sous-préparations) */
     .step-loose-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; font-weight: 700; color: var(--accent); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     /* Pills */

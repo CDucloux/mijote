@@ -79,16 +79,16 @@ describe("recipeGroups", () => {
     expect(out[0].group || "").toBe("");
   });
 
-  it("looseRunLabel: named run keeps its label, ungrouped runs become Préparation/Montage", () => {
+  it("looseRunLabel: named run keeps its label, ungrouped runs get a neutral positional label", () => {
     // Recette sans section → aucun en-tête.
-    expect(looseRunLabel({ group: null }, false, false)).toBeNull();
-    expect(looseRunLabel({ group: null }, true, false)).toBeNull();
-    // Recette sectionnée : un run nommé garde son libellé.
-    expect(looseRunLabel({ group: "Caramel" }, false, true)).toBe("Caramel");
-    // Un run hors-section : « Montage » si dernier, « Préparation » sinon.
-    expect(looseRunLabel({ group: null }, true, true)).toBe("Montage");
-    expect(looseRunLabel({ group: null }, false, true)).toBe("Préparation");
-    // Un run nommé garde son libellé même quand il est le dernier.
-    expect(looseRunLabel({ group: "Pâte" }, true, true)).toBe("Pâte");
+    expect(looseRunLabel({ group: null }, 0, 1, false)).toBeNull();
+    expect(looseRunLabel({ group: null }, 2, 3, false)).toBeNull();
+    // Recette sectionnée : un run nommé garde son libellé, où qu'il soit.
+    expect(looseRunLabel({ group: "Caramel" }, 1, 3, true)).toBe("Caramel");
+    expect(looseRunLabel({ group: "Pâte" }, 2, 3, true)).toBe("Pâte");
+    // Un run hors-section : intitulé neutre selon sa place, jamais « Montage »/« Préparation ».
+    expect(looseRunLabel({ group: null }, 0, 3, true)).toBe("Pour commencer");
+    expect(looseRunLabel({ group: null }, 1, 3, true)).toBe("Ensuite");
+    expect(looseRunLabel({ group: null }, 2, 3, true)).toBe("Pour finir");
   });
 });
