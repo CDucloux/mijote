@@ -6,14 +6,34 @@ function Contact({ cx, y, rx }) {
   return <ellipse cx={cx} cy={y + 0.6} rx={rx} ry={1.8} className="lpfr-contact" />;
 }
 
-/** Bac de contre-porte, dessiné en repère local puis cisaillé pour suivre la
- *  perspective de la porte ouverte (pente du joint : -8 px sur 42). */
-function DoorBin({ y, children }) {
+// Porte grande ouverte, charnière sur le montant droit : son bord libre RECULE,
+// donc il paraît plus court. Toute ligne horizontale de la porte converge vers le
+// point de fuite de la cavité (hauteur d'œil EYE_Y) : au-dessus de l'œil elle
+// descend vers le bord libre, en dessous elle remonte. t = 0 (charnière) → 1.
+const EYE_Y = 210;
+const HINGE_X = 194;
+const DOOR_W = 112;
+const RECEDE = 0.14;
+
+/** Projette un point de la porte (position `t` sur sa largeur, hauteur `y` côté
+ *  charnière) dans le repère du dessin. */
+function doorPt(t, y) {
+  return [HINGE_X + DOOR_W * t, EYE_Y + (y - EYE_Y) * (1 - RECEDE * t)];
+}
+const pts = (list) => list.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+
+/** Bac de contre-porte : façade en trapèze fuyant, et ses produits posés au fond,
+ *  chacun à sa position `t` et à l'échelle de sa profondeur. Chaque produit est
+ *  dessiné en repère local, centré, base en y = 0. */
+function DoorBin({ y, items }) {
   return (
-    <g transform={`translate(201 ${y}) skewY(-10.8)`}>
-      {children}
-      <rect x="0" y="-10" width="42" height="14" rx="2" className="lpfr-bin" />
-      <rect x="0" y="-10" width="42" height="1.2" className="lpfr-sheen" />
+    <g>
+      {items.map(({ t, node }, i) => {
+        const [x, base] = doorPt(t, y + 9);
+        return <g key={i} transform={`translate(${x.toFixed(1)} ${base.toFixed(1)}) scale(${(1 - RECEDE * t).toFixed(3)})`}>{node}</g>;
+      })}
+      <polygon points={pts([doorPt(0.07, y), doorPt(0.93, y), doorPt(0.93, y + 15), doorPt(0.07, y + 15)])} className="lpfr-bin" />
+      <polyline points={pts([doorPt(0.07, y), doorPt(0.93, y)])} className="lpfr-binlip" />
     </g>
   );
 }
@@ -41,9 +61,10 @@ export function FridgeScene() {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const light = `lpfr-light-${uid}`;
   const tomato = `lpfr-tomato-${uid}`;
+  const carrot = `lpfr-carrot-${uid}`;
   return (
     <div className="lp-fridge" aria-hidden="true">
-      <svg className="lp-fridge__svg" viewBox="0 0 256 422" role="presentation">
+      <svg className="lp-fridge__svg" viewBox="0 0 316 422" role="presentation">
         <defs>
           <linearGradient id={light} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#fff8e6" stopOpacity="0.5" />
@@ -53,10 +74,14 @@ export function FridgeScene() {
             <stop offset="0" stopColor="#e2704f" />
             <stop offset="1" stopColor="#a5361e" />
           </radialGradient>
+          <linearGradient id={carrot} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#f0954a" />
+            <stop offset="1" stopColor="#c8621d" />
+          </linearGradient>
         </defs>
 
         {/* Ombre au sol, pieds, carrosserie */}
-        <ellipse cx="128" cy="418" rx="118" ry="3.6" className="lpfr-floor" />
+        <ellipse cx="160" cy="418" rx="150" ry="3.6" className="lpfr-floor" />
         <rect x="24" y="410" width="16" height="7" rx="2" className="lpfr-foot" />
         <rect x="160" y="410" width="16" height="7" rx="2" className="lpfr-foot" />
         <rect x="6" y="6" width="188" height="408" rx="20" className="lpfr-shell" />
@@ -104,12 +129,12 @@ export function FridgeScene() {
         </g>
         <g>
           <Contact cx={154} y={126} rx={9} />
-          <path d="M146 126V86c0-8 4.5-11 6-16V52h4v18c1.5 5 6 8 6 16v40z" fill="#5a7a32" />
-          <rect x="151.2" y="45" width="5.6" height="8" rx="1" fill="#b8862e" />
-          <rect x="148.5" y="86" width="1.8" height="36" rx="0.9" fill="#fff" opacity="0.28" />
-          <rect x="146" y="96" width="16" height="18" fill="#efe5cc" />
-          <ellipse cx="154" cy="102.5" rx="3" ry="2" fill="#5a7a32" />
-          <rect x="149" y="108" width="10" height="1.4" fill="#9a8f74" />
+          <path d="M146 126V101c0-6 4.5-9 6-13V77h4v11c1.5 4 6 7 6 13v25z" fill="#9aa65a" />
+          <rect x="151.2" y="70" width="5.6" height="8" rx="1" fill="#b8862e" />
+          <rect x="148.5" y="101" width="1.8" height="21" rx="0.9" fill="#fff" opacity="0.3" />
+          <rect x="146" y="105" width="16" height="14" fill="#efe5cc" />
+          <rect x="149.5" y="109" width="9" height="1.6" fill="#8a7d5a" />
+          <rect x="151" y="112.6" width="6" height="1.2" fill="#b9ad92" />
         </g>
 
         {/* Clayette du milieu : œufs (couvercle relevé), beurre entamé, demi-citron, tomate */}
@@ -181,43 +206,52 @@ export function FridgeScene() {
           <rect x="150.5" y="307.4" width="9" height="1.3" fill="#a57f1f" />
         </g>
 
-        {/* Bac à légumes : salade et carottes entrevues derrière la façade givrée */}
-        <circle cx="50" cy="350" r="13" fill="#86ab4e" />
-        <circle cx="66" cy="346" r="12" fill="#9fc066" />
-        <circle cx="57" cy="340" r="9" fill="#b6d17c" />
-        <g transform="rotate(-18 134 356)">
-          <rect x="114" y="349" width="40" height="8" rx="4" fill="#e3833a" />
-          <rect x="116" y="360" width="34" height="7" rx="3.5" fill="#d47431" />
-          <path d="M154 353l7-5M154 353l8 1M150 363l7-4" stroke="#6f9a3e" strokeWidth="1.6" strokeLinecap="round" />
+        {/* Bac à légumes : fond du tiroir, salade et carottes posées dessus, façade
+            givrée plus basse que le dos (on voit le haut des légumes dépasser). */}
+        <rect x="24" y="336" width="152" height="58" rx="8" className="lpfr-drawer" />
+        <rect x="28" y="386" width="144" height="6" rx="3" className="lpfr-ceil" />
+        <g>
+          <ellipse cx="58" cy="390" rx="24" ry="2.2" className="lpfr-contact" />
+          <ellipse cx="58" cy="371" rx="25" ry="19" fill="#86ab4e" />
+          <ellipse cx="49" cy="359" rx="14" ry="12" fill="#9cbf62" />
+          <ellipse cx="67" cy="357" rx="13" ry="11" fill="#a9c972" />
+          <ellipse cx="58" cy="350" rx="10" ry="8" fill="#bcd684" />
+          <path d="M58 389c-1-13-3-22-8-30M58 389c2-12 5-20 9-28M58 389c0-14 0-24 0-33" stroke="#e8f1cf" strokeOpacity="0.55" strokeWidth="1" fill="none" />
         </g>
-        <rect x="24" y="338" width="152" height="56" rx="8" className="lpfr-crisper" />
-        <rect x="24" y="336" width="152" height="3" rx="1.5" className="lpfr-edge" />
-        <rect x="80" y="346" width="40" height="4.5" rx="2.25" className="lpfr-edge" />
+        <g>
+          <ellipse cx="128" cy="391" rx="32" ry="1.9" className="lpfr-contact" />
+          <g transform="rotate(-9 124 383) translate(6 -10)">
+            <path d="M98 380.5Q125 381.5 156 388Q125 391.5 98 390.5Q93.5 385.5 98 380.5z" fill={`url(#${carrot})`} />
+            <path d="M107 382v7.6M117 382.6v7.2M127 383.6v6.2M137 384.8v4.8M146 386.2v3" stroke="#b35416" strokeOpacity="0.45" strokeWidth="0.8" />
+            <path d="M98 384c-6-3-9-9-11-16M98 385c-8-1-13-5-17-11M98 386c-3-6-3-12 0-18" stroke="#5f8a34" strokeWidth="1.7" strokeLinecap="round" fill="none" />
+          </g>
+          <path d="M98 380.5Q125 381.5 156 388Q125 391.5 98 390.5Q93.5 385.5 98 380.5z" fill={`url(#${carrot})`} />
+          <path d="M107 382v7.6M117 382.6v7.2M127 383.6v6.2M137 384.8v4.8M146 386.2v3" stroke="#b35416" strokeOpacity="0.45" strokeWidth="0.8" />
+          <path d="M98 384c-6-3-9-9-11-16M98 385c-8-1-13-5-17-11M98 386c-3-6-3-12 0-18" stroke="#6f9a3e" strokeWidth="1.7" strokeLinecap="round" fill="none" />
+        </g>
+        <rect x="24" y="352" width="152" height="42" rx="8" className="lpfr-crisper" />
+        <rect x="24" y="350" width="152" height="3" rx="1.5" className="lpfr-edge" />
+        <rect x="80" y="359" width="40" height="4.5" rx="2.25" className="lpfr-edge" />
 
-        {/* Porte ouverte (charnière à droite) et ses bacs de contre-porte */}
-        <polygon points="196,12 248,2 248,418 196,408" className="lpfr-door" />
-        <polygon points="201,24 243,16 243,404 201,396" className="lpfr-doorin" />
-        <DoorBin y={118}>
-          <rect x="6" y="-27" width="9" height="27" rx="2" fill="#a7392a" />
-          <rect x="8" y="-32" width="5" height="6" rx="1" fill="#2f3b2b" />
-          <rect x="21" y="-22" width="13" height="22" rx="3" fill="#ece0b4" />
-          <rect x="23.5" y="-26" width="8" height="5" rx="1" fill="var(--accent)" />
-        </DoorBin>
-        <DoorBin y={228}>
-          <rect x="5" y="-40" width="15" height="40" fill="#e58e3c" />
-          <polygon points="5,-40 20,-40 17,-47 8,-47" fill="#d9802f" />
-          <circle cx="12.5" cy="-24" r="4" fill="#f4cf63" />
-          <rect x="25" y="-46" width="12" height="46" rx="3" fill="#cfe0e4" opacity="0.8" />
-          <rect x="27.5" y="-50" width="7" height="5" rx="1" fill="#4f86b0" />
-        </DoorBin>
-        <DoorBin y={340}>
-          <rect x="10" y="-70" width="15" height="70" rx="4" fill="#4a2230" />
-          <rect x="14.5" y="-88" width="6" height="20" fill="#4a2230" />
-          <rect x="14" y="-93" width="7" height="12" rx="1" fill="#8f2a3a" />
-          <rect x="10" y="-42" width="15" height="17" fill="#ece3cc" />
-          <rect x="29" y="-30" width="9" height="30" rx="2" fill="#efe9dc" />
-          <rect x="30" y="-34" width="7" height="5" rx="1" fill="#b8862e" />
-        </DoorBin>
+        {/* Porte grande ouverte (charnière à droite) et ses bacs de contre-porte */}
+        <polygon points={pts([doorPt(0, 8), doorPt(1, 8), doorPt(1, 412), doorPt(0, 412)])} className="lpfr-door" />
+        <polygon points={pts([doorPt(0.05, 22), doorPt(0.95, 22), doorPt(0.95, 398), doorPt(0.05, 398)])} className="lpfr-doorin" />
+        <rect x="190" y="30" width="6" height="14" rx="2" className="lpfr-edge" />
+        <rect x="190" y="376" width="6" height="14" rx="2" className="lpfr-edge" />
+        <DoorBin y={112} items={[
+          { t: 0.24, node: <><rect x="-4.5" y="-27" width="9" height="27" rx="2" fill="#a7392a" /><rect x="-2.5" y="-32" width="5" height="6" rx="1" fill="#2f3b2b" /></> },
+          { t: 0.48, node: <><rect x="-6.5" y="-22" width="13" height="22" rx="3" fill="#ece0b4" /><rect x="-4" y="-26" width="8" height="5" rx="1" fill="var(--accent)" /></> },
+          { t: 0.74, node: <><rect x="-6" y="-17" width="12" height="17" rx="3" fill="#d99a2b" /><rect x="-6.5" y="-21" width="13" height="4.5" rx="1.2" fill="#3c3a33" /></> },
+        ]} />
+        <DoorBin y={222} items={[
+          { t: 0.26, node: <><rect x="-7.5" y="-40" width="15" height="40" fill="#e58e3c" /><polygon points="-7.5,-40 7.5,-40 4.5,-47 -4.5,-47" fill="#d9802f" /><circle cx="0" cy="-24" r="4" fill="#f4cf63" /></> },
+          { t: 0.52, node: <><rect x="-6" y="-46" width="12" height="46" rx="3" fill="#cfe0e4" opacity="0.85" /><rect x="-3.5" y="-50" width="7" height="5" rx="1" fill="#4f86b0" /></> },
+          { t: 0.76, node: <><rect x="-5" y="-19" width="10" height="19" rx="2" fill="#b9bdb5" /><rect x="-5" y="-13" width="10" height="7" fill="#c0392b" opacity="0.8" /></> },
+        ]} />
+        <DoorBin y={332} items={[
+          { t: 0.3, node: <><rect x="-7.5" y="-66" width="15" height="66" rx="4" fill="#4a2230" /><rect x="-3" y="-82" width="6" height="18" fill="#4a2230" /><rect x="-3.5" y="-86" width="7" height="11" rx="1" fill="#8f2a3a" /><rect x="-7.5" y="-40" width="15" height="16" fill="#ece3cc" /></> },
+          { t: 0.62, node: <><rect x="-4.5" y="-30" width="9" height="30" rx="2" fill="#efe9dc" /><rect x="-3.5" y="-34" width="7" height="5" rx="1" fill="#b8862e" /></> },
+        ]} />
       </svg>
 
       <svg className="lp-fridge__q" viewBox="0 0 48 74" aria-hidden="true">
