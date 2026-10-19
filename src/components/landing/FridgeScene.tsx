@@ -1,8 +1,8 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import "../../styles/landing-fridge.css";
 
 /** Ombre de contact sous un aliment : il repose sur la clayette au lieu de flotter. */
-function Contact({ cx, y, rx }) {
+function Contact({ cx, y, rx }: { cx: number; y: number; rx: number }) {
   return <ellipse cx={cx} cy={y + 0.6} rx={rx} ry={1.8} className="lpfr-contact" />;
 }
 
@@ -16,17 +16,25 @@ const HINGE_X = 194;
 const DOOR_W = 70;
 const SPREAD = 0.06;
 
+type Point = [x: number, y: number];
+
 /** Projette un point de la porte (position `t` sur sa largeur, hauteur `y` côté
  *  charnière) dans le repère du dessin. */
-function doorPt(t, y) {
+function doorPt(t: number, y: number): Point {
   return [HINGE_X + DOOR_W * t, EYE_Y + (y - EYE_Y) * (1 + SPREAD * t)];
 }
-const pts = (list) => list.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+const pts = (list: Point[]): string => list.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
 
 /** Bac de contre-porte : façade en trapèze fuyant, et ses produits posés au fond,
  *  chacun à sa position `t` et à l'échelle de sa profondeur. Chaque produit est
  *  dessiné en repère local, centré, base en y = 0. */
-function DoorBin({ y, items }) {
+/** Produit d'un bac : position `t` sur la largeur de la porte et son dessin. */
+interface BinItem {
+  t: number;
+  node: ReactNode;
+}
+
+function DoorBin({ y, items }: { y: number; items: BinItem[] }) {
   return (
     <g>
       {items.map(({ t, node }, i) => {
@@ -41,7 +49,7 @@ function DoorBin({ y, items }) {
 
 /** Clayette en verre vue de face : fine plaque en trapèze (profondeur), chant
  *  avant opaque et liseré de lumière. `y` = chant avant. */
-function Shelf({ y }) {
+function Shelf({ y }: { y: number }) {
   return (
     <g>
       <polygon points={`18,${y} 182,${y} 170,${y - 10} 30,${y - 10}`} className="lpfr-glass" />

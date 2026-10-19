@@ -7,6 +7,9 @@ import { StepTip } from "../recipe/StepTip.jsx";
 import { GroupHeader } from "./GroupHeader.jsx";
 import { IngredientRecoHint, PrecautionInfoBadge, UtensilPrecautionSheet } from "../recipe/QualityHints.jsx";
 import { groupBy, sectionRuns, hasGroups, looseRunLabel } from "@/lib/recipes/recipeGroups.js";
+import { stepLinked } from "@/lib/recipes/stepLinks.js";
+import type { Recipe } from "@/lib/types.js";
+import type { PrecautionSheetTarget, RecipeView } from "./recipeView.js";
 import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "../../lib/format.js";
 
 /**
@@ -14,9 +17,17 @@ import { capitalize, fmtQty, fmtQtyUnit, pluralizeUnit, pluralizeName } from "..
  * étapes en timeline à droite). Masqué en mobile via CSS. Reçoit les helpers d'affichage
  * via `view` (contexte de rendu partagé avec la version mobile).
  */
-export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
+interface RecipeContentDesktopProps {
+  recipe: Recipe;
+  view: RecipeView;
+  /** Préparations de base à étapes, affichées avant celles de la recette. */
+  baseSteps: Recipe[];
+  setCookMode: (on: boolean) => void;
+}
+
+export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }: RecipeContentDesktopProps) {
   const { mult, recipesById, getIngImage, getIngId, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, navigate } = view;
-  const [precSheet, setPrecSheet] = useState(null);
+  const [precSheet, setPrecSheet] = useState<PrecautionSheetTarget | null>(null);
   return (
     <div className="detail-desktop-content" style={{ display: "none", flex: 1, overflow: "hidden", background: "var(--bg)", padding: "12px 16px 16px", gap: 16 }}>
       {/* Left col: ingrédients + ustensiles (card) */}
@@ -26,7 +37,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
             <span style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)" }}>Ingrédients</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {groupBy(recipe.ingredients).map(section => (
+            {groupBy(recipe.ingredients || []).map(section => (
             <div key={section.group ?? "__main"} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {section.group ? <GroupHeader label={section.group} showIcon /> : (hasGroups(recipe.ingredients) && <GroupHeader label="Autres" />)}
             {section.items.map(ing => {
@@ -37,8 +48,8 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                     ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={48} cover />
                     : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
                   <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
-                    <span style={{ fontSize: 16, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
-                    <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
+                    <span style={{ fontSize: 16, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(Number(ing.amount) * mult, ing.unit)}</span>
+                    <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(Number(ing.amount) * mult, ing.unit)}</span>
                   </div>
                   <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "var(--text)" }}>
                     {capitalize(rc.comp ? rc.comp.name : (ing.name || "Base"))}
@@ -53,11 +64,11 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                   <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                 </span>
                 <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
-                  <span style={{ fontSize: 16, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
-                  <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
+                  <span style={{ fontSize: 16, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(Number(ing.amount) * mult, ing.unit)}</span>
+                  <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(Number(ing.amount) * mult, ing.unit)}</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.unit ? ing.name : pluralizeName(ing.amount * mult, ing.name))}</div>
+                  <div style={{ fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{capitalize(ing.unit ? ing.name : pluralizeName(Number(ing.amount) * mult, ing.name))}</div>
                   {(() => { const reco = getIngReco?.(ing); return reco && <IngredientRecoHint label={reco.label} style={{ marginTop: 2 }} />; })()}
                 </div>
               </div>
@@ -106,9 +117,9 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                 <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                {comp.steps.map((cstep, ci) => {
-                  const cIngs = (comp.ingredients || []).filter(ing => cstep.ingredients?.includes(ing.id));
-                  const cUts = (comp.utensils || []).filter(u => cstep.utensils?.includes(u.id));
+                {(comp.steps || []).map((cstep, ci) => {
+                  const cIngs = stepLinked(comp.ingredients, cstep.ingredients);
+                  const cUts = stepLinked(comp.utensils, cstep.utensils);
                   return (
                   <div key={cstep.id}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)", marginBottom: 4 }}>Étape {ci + 1}</div>
@@ -143,7 +154,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
               </div>
             </div>
           ))}
-          {baseSteps.length > 0 && recipe.steps?.length > 0 && (
+          {baseSteps.length > 0 && !!recipe.steps?.length && (
             <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
           )}
           {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
@@ -154,8 +165,8 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
           {run.items.map((step, j) => {
             const num = run.start + j + 1;
             const lastInRun = j === run.items.length - 1;
-            const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
-            const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
+            const linkedIngs = stepLinked(recipe.ingredients, step.ingredients);
+            const linkedUts = stepLinked(recipe.utensils, step.utensils);
             const hasPills = linkedIngs.length > 0 || linkedUts.length > 0;
             return (
               // Timeline : nœud numéroté (dégradé) relié par un rail vertical, contenu à droite.
@@ -175,7 +186,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }) {
                         <span key={ing.id} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)" }}>
                           <IngImage src={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)} alt={displayName} size={24} cover={!!ing.recipeId} />
                           {displayName}
-                          <span style={{ color: "var(--text3)", fontWeight: 500 }}>{fmtQtyUnit(ing.amount * mult, ing.unit)}</span>
+                          <span style={{ color: "var(--text3)", fontWeight: 500 }}>{fmtQtyUnit(Number(ing.amount) * mult, ing.unit)}</span>
                         </span>
                         );
                       })}

@@ -1,5 +1,5 @@
-import { Fragment, useState } from "react";
-import { Icon } from "../ui/Icon.jsx";
+import { Fragment, useState, type Dispatch, type SetStateAction } from "react";
+import { Icon, type IconName } from "../ui/Icon.jsx";
 import { Img, IngImage } from "../ui/Img.jsx";
 import { IngredientPill, UtensilPill, UtImage } from "../recipe/StepPills.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
@@ -9,6 +9,9 @@ import { IngredientRecoHint, PrecautionInfoBadge, UtensilPrecautionSheet } from 
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import { isIngredientInSeason } from "@/lib/food/seasonality.js";
 import { groupBy, sectionRuns, hasGroups, looseRunLabel } from "@/lib/recipes/recipeGroups.js";
+import { stepLinked } from "@/lib/recipes/stepLinks.js";
+import type { Recipe } from "@/lib/types.js";
+import type { PrecautionSheetTarget, RecipeView } from "./recipeView.js";
 import { capitalize, fmtQty, pluralizeUnit, pluralizeName } from "../../lib/format.js";
 
 /**
@@ -16,9 +19,33 @@ import { capitalize, fmtQty, pluralizeUnit, pluralizeName } from "../../lib/form
  * les helpers d'affichage via `view` (contexte de rendu), la recette et les contrôles de
  * portions/pas-à-pas. Le rendu suit strictement l'onglet actif.
  */
-export function RecipeContentMobile({ recipe, activeTab, view, servings, setServings, bump, setBump, panFactor, setShowCalc, baseSteps, setCookMode }) {
+interface RecipeContentMobileProps {
+  recipe: Recipe;
+  activeTab: string;
+  view: RecipeView;
+  servings: number;
+  setServings: Dispatch<SetStateAction<number>>;
+  /** Clé de l'animation de rebond du compteur de portions. */
+  bump: number;
+  setBump: Dispatch<SetStateAction<number>>;
+  /** Facteur de conversion de moule (1 = moule d'origine). */
+  panFactor: number;
+  setShowCalc: (open: boolean) => void;
+  /** Préparations de base à étapes, affichées avant celles de la recette. */
+  baseSteps: Recipe[];
+  setCookMode: (on: boolean) => void;
+}
+
+/** Statut affiché sous le nom d'un ingrédient (en stock ou de saison). */
+interface IngredientBadge {
+  text: string;
+  color: string;
+  icon: IconName;
+}
+
+export function RecipeContentMobile({ recipe, activeTab, view, servings, setServings, bump, setBump, panFactor, setShowCalc, baseSteps, setCookMode }: RecipeContentMobileProps) {
   const { mult, recipesById, getIngImage, getIngId, getUtImage, getUtDetail, getIngReco, getUtPrecaution, resolveComp, isInStock, seasonResolver, navigate } = view;
-  const [precSheet, setPrecSheet] = useState(null);
+  const [precSheet, setPrecSheet] = useState<PrecautionSheetTarget | null>(null);
   return (
     <>
       {activeTab === "Ingrédients" && (
@@ -44,7 +71,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
           {/* Liste ingrédients – une carte par section (« Pour la pâte »…), lignes
               séparées par un filet. Sans groupe : une seule carte, aucun en-tête. */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {groupBy(recipe.ingredients).map(section => (
+          {groupBy(recipe.ingredients || []).map(section => (
           <div key={section.group ?? "__main"}>
             {section.group ? <GroupHeader label={section.group} showIcon style={{ marginBottom: 10 }} /> : (hasGroups(recipe.ingredients) && <GroupHeader label="Autres" style={{ marginBottom: 10 }} />)}
             <div style={{ background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", overflow: "hidden" }}>
@@ -54,10 +81,10 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               const last = idx === section.items.length - 1;
               // Sous-titre statut : stock prioritaire, sinon saison.
               const inStock = isInStock(ing);
-              const inSeason = !isComp && (() => { const it = seasonResolver(ing.name); return it ? isIngredientInSeason(it) === true : false; })();
+              const inSeason = !isComp && (() => { const it = seasonResolver(ing.name); return it ? isIngredientInSeason({ months: it.months }) === true : false; })();
               // Statut : « en stock » (BRUN, garde-manger, inclut le bientôt vide,
               // qui reste théoriquement en stock) ou, à défaut, « de saison » (vert).
-              let badge = null;
+              let badge: IngredientBadge | null = null;
               if (inStock) badge = { text: "en stock", color: "var(--stock)", icon: "box" };
               else if (inSeason) badge = { text: "de saison", color: "var(--green)", icon: "sun" };
 
@@ -74,19 +101,19 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
                   <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
                     {isComp && !rc.comp?.image
                       ? <span style={{ width: 46, height: 46, borderRadius: "50%", background: "#fff", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
-                      : <IngImage src={isComp ? rc.comp.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
+                      : <IngImage src={isComp ? rc.comp?.image : getIngImage(ing.dbId, ing.name)} alt={name} size={46} cover={isComp} />}
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(!isComp && !ing.unit ? pluralizeName(ing.amount * mult, name) : name)}</span>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{capitalize(!isComp && !ing.unit ? pluralizeName(Number(ing.amount) * mult, name) : name)}</span>
                       {isComp && <span style={{ fontSize: 9.5, fontWeight: 600, color: rc.missing ? "var(--red)" : "var(--accent)", letterSpacing: "0.04em", flexShrink: 0 }}>{rc.missing ? "⚠ SUPPRIMÉE" : "BASE"}</span>}
                     </div>
                     {badge && <div style={{ fontSize: 12, fontWeight: 600, color: badge.color, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><Icon name={badge.icon} size={12} color={badge.color} />{badge.text}</div>}
                     {reco && <IngredientRecoHint label={reco.label} style={{ marginTop: 3 }} />}
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0, display: "flex", alignItems: "baseline", gap: 3 }}>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(ing.amount * mult, ing.unit)}</span>
-                    <span style={{ fontSize: 12, color: "var(--text2)" }}>{pluralizeUnit(ing.amount * mult, ing.unit)}</span>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(Number(ing.amount) * mult, ing.unit)}</span>
+                    <span style={{ fontSize: 12, color: "var(--text2)" }}>{pluralizeUnit(Number(ing.amount) * mult, ing.unit)}</span>
                   </div>
                   {clickable && <span className="tap-chevron" style={{ display: "flex", flexShrink: 0 }}><Icon name="forward" size={14} color="var(--text3)" /></span>}
                 </div>
@@ -132,9 +159,9 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
                   <span style={{ fontSize: 10, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" }}>BASE</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {comp.steps.map((cstep, ci) => {
-                    const cIngs = (comp.ingredients || []).filter(ing => cstep.ingredients?.includes(ing.id));
-                    const cUts = (comp.utensils || []).filter(u => cstep.utensils?.includes(u.id));
+                  {(comp.steps || []).map((cstep, ci) => {
+                    const cIngs = stepLinked(comp.ingredients, cstep.ingredients);
+                    const cUts = stepLinked(comp.utensils, cstep.utensils);
                     return (
                     <div key={cstep.id}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>Étape {ci + 1}</span>
@@ -158,7 +185,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
                 </div>
               </div>
             ))}
-            {baseSteps.length > 0 && recipe.steps?.length > 0 && (
+            {baseSteps.length > 0 && !!recipe.steps?.length && (
               <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", marginTop: 4 }}>Montage de la recette</div>
             )}
             {(() => { const runs = sectionRuns(recipe.steps || []); const hs = hasGroups(recipe.steps); return runs.map((run, ri) => {
@@ -168,8 +195,8 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
             {hdr && <GroupHeader label={hdr} showIcon={!!run.group} />}
             {run.items.map((step, j) => {
               const num = run.start + j + 1;
-              const linkedIngs = recipe.ingredients.filter(ing => step.ingredients?.includes(ing.id));
-              const linkedUts = (recipe.utensils || []).filter(u => step.utensils?.includes(u.id));
+              const linkedIngs = stepLinked(recipe.ingredients, step.ingredients);
+              const linkedUts = stepLinked(recipe.utensils, step.utensils);
               const hasPills = linkedIngs.length > 0 || linkedUts.length > 0;
               return (
                 <div key={step.id} className="tap tap-soft" style={{ background: "var(--surface)", borderRadius: 14, padding: 14, border: "1px solid var(--border)", overflow: "hidden" }}>
@@ -187,7 +214,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
                         <IngredientPill key={ing.id}
                           image={ing.recipeId ? (recipesById.get(ing.recipeId)?.image || "") : getIngImage(ing.dbId, ing.name)}
                           name={ing.recipeId ? (recipesById.get(ing.recipeId)?.name || ing.name) : ing.name}
-                          amount={ing.amount * mult} unit={ing.unit} cover={!!ing.recipeId} />
+                          amount={Number(ing.amount) * mult} unit={ing.unit} cover={!!ing.recipeId} />
                       ))}
                       {linkedUts.map(u => (
                         <UtensilPill key={u.id} image={getUtImage(u.dbId, u.name)} name={u.name} detail={getUtDetail(u, step)} />
