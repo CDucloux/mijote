@@ -54,6 +54,7 @@
   width: clamp(44px, 8vw, 62px);
   overflow: visible;
   transform-origin: 50% 90%;
+  transform: rotate(8deg);
   animation: lpQSway 5s ease-in-out 1.6s infinite;
 }
 .lp-fridge__qstroke {
