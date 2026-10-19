@@ -109,24 +109,24 @@ export function FridgeScene() {
           <text x="49" y="101.6" className="lpfr-label">LAIT</text>
         </g>
         <g>
-          <Contact cx={76} y={126} rx={8} />
-          <polygon points="68,108 84,108 82.5,126 69.5,126" fill="#f5f0e6" stroke="#d9cfbc" strokeWidth="0.6" />
-          <rect x="68.7" y="113" width="14.6" height="5" fill="#a9bd78" />
-          <rect x="67" y="105.5" width="18" height="3.5" rx="1" fill="#cdc1a2" />
-          <Contact cx={94} y={126} rx={8} />
-          <polygon points="86,108 102,108 100.5,126 87.5,126" fill="#f5f0e6" stroke="#d9cfbc" strokeWidth="0.6" />
-          <rect x="86.7" y="113" width="14.6" height="5" fill="#d99c96" />
-          <rect x="85" y="105.5" width="18" height="3.5" rx="1" fill="#cdc1a2" />
+          <Contact cx={74} y={126} rx={8} />
+          <polygon points="66,108 82,108 80.5,126 67.5,126" fill="#f5f0e6" stroke="#d9cfbc" strokeWidth="0.6" />
+          <rect x="66.7" y="113" width="14.6" height="5" fill="#a9bd78" />
+          <rect x="65" y="105.5" width="18" height="3.5" rx="1" fill="#cdc1a2" />
+          <Contact cx={97} y={126} rx={8} />
+          <polygon points="89,108 105,108 103.5,126 90.5,126" fill="#f5f0e6" stroke="#d9cfbc" strokeWidth="0.6" />
+          <rect x="89.7" y="113" width="14.6" height="5" fill="#d99c96" />
+          <rect x="88" y="105.5" width="18" height="3.5" rx="1" fill="#cdc1a2" />
         </g>
         <g>
-          <Contact cx={120} y={126} rx={12} />
-          <rect x="109" y="96" width="22" height="30" rx="4" fill="#8a2e3b" />
-          <rect x="111.5" y="99" width="2.5" height="22" rx="1.2" fill="#fff" opacity="0.3" />
-          <rect x="107" y="88" width="26" height="9" rx="2" fill="#c47c34" />
-          <path d="M111 88v9M115 88v9M119 88v9M123 88v9M127 88v9M131 88v9" stroke="#000" strokeOpacity="0.16" strokeWidth="0.8" />
-          <rect x="112" y="105" width="16" height="11" rx="1" fill="#f1e8d4" />
-          <rect x="114.5" y="108.5" width="11" height="1.4" fill="#8a2e3b" opacity="0.6" />
-          <rect x="116" y="111.6" width="8" height="1.2" fill="#b9ad92" />
+          <Contact cx={122} y={126} rx={12} />
+          <rect x="111" y="96" width="22" height="30" rx="4" fill="#8a2e3b" />
+          <rect x="113.5" y="99" width="2.5" height="22" rx="1.2" fill="#fff" opacity="0.3" />
+          <rect x="109" y="88" width="26" height="9" rx="2" fill="#c47c34" />
+          <path d="M113 88v9M117 88v9M121 88v9M125 88v9M129 88v9M133 88v9" stroke="#000" strokeOpacity="0.16" strokeWidth="0.8" />
+          <rect x="114" y="105" width="16" height="11" rx="1" fill="#f1e8d4" />
+          <rect x="116.5" y="108.5" width="11" height="1.4" fill="#8a2e3b" opacity="0.6" />
+          <rect x="118" y="111.6" width="8" height="1.2" fill="#b9ad92" />
         </g>
         <g>
           <Contact cx={154} y={126} rx={9} />
@@ -142,24 +142,17 @@ export function FridgeScene() {
         <Shelf y={230} />
         <g>
           <Contact cx={59} y={226} rx={26} />
-          <polygon points="35,207 83,207 79,184 39,184" fill="#c4b898" />
-          <rect x="39" y="184" width="40" height="1.6" fill="#fff" opacity="0.3" />
-          <ellipse cx="47" cy="197" rx="4.6" ry="2.4" fill="#000" opacity="0.07" />
-          <ellipse cx="71" cy="197" rx="4.6" ry="2.4" fill="#000" opacity="0.07" />
-          <rect x="50" y="188.5" width="18" height="8" rx="1" fill="#f3ead2" />
-          <text x="59" y="194.2" className="lpfr-tiny">6 ŒUFS</text>
-          <ellipse cx="46" cy="204" rx="6.2" ry="7.6" fill="#e6cfae" />
-          <ellipse cx="62.5" cy="203.5" rx="6.2" ry="7.6" fill="#f1e7d4" />
-          <ellipse cx="79" cy="204" rx="6.2" ry="7.6" fill="#dcbd96" />
-          <ellipse cx="42.5" cy="208" rx="7" ry="8.6" fill="#f2e9d8" />
-          <ellipse cx="59" cy="208" rx="7" ry="8.6" fill="#ddbe98" />
-          <ellipse cx="40" cy="204.5" rx="2" ry="2.8" fill="#fff" opacity="0.6" />
-          <ellipse cx="56.5" cy="204.5" rx="2" ry="2.8" fill="#fff" opacity="0.4" />
-          <rect x="55.5" y="209" width="7" height="1.1" rx="0.5" fill="#b84a3a" opacity="0.55" />
-          <rect x="33" y="211" width="52" height="4" rx="1.5" fill="#d3c8ab" />
-          <ellipse cx="75.5" cy="212.6" rx="6.4" ry="1.7" fill="#000" opacity="0.2" />
-          <path d="M34 215h16.7v4.5a8.35 6.5 0 0 1-16.7 0zM50.7 215h16.6v4.5a8.3 6.5 0 0 1-16.6 0zM67.3 215H84v4.5a8.35 6.5 0 0 1-16.7 0z" fill="#c8bc9f" />
-          <path d="M50.7 215v8M67.3 215v8" stroke="#000" strokeOpacity="0.12" strokeWidth="0.8" />
+          <rect x="36" y="187" width="46" height="25" rx="4" fill="#cdc2a3" />
+          <rect x="39" y="190" width="40" height="19" rx="2.5" fill="#000" opacity="0.06" />
+          <text x="59" y="196" className="lpfr-tiny">6 ŒUFS FRAIS</text>
+          <ellipse cx="42.5" cy="207" rx="7" ry="8.6" fill="#f2e9d8" />
+          <ellipse cx="59" cy="207" rx="7" ry="8.6" fill="#ddbe98" />
+          <ellipse cx="40" cy="203.5" rx="2" ry="2.8" fill="#fff" opacity="0.6" />
+          <ellipse cx="56.5" cy="203.5" rx="2" ry="2.8" fill="#fff" opacity="0.4" />
+          <rect x="33" y="211" width="52" height="4" rx="1.5" fill="#d6cbae" />
+          <ellipse cx="75.5" cy="212.4" rx="6.2" ry="1.6" fill="#000" opacity="0.18" />
+          <path d="M34 215h16.7v3.5a8.35 7.5 0 0 1-16.7 0zM50.7 215h16.6v3.5a8.3 7.5 0 0 1-16.6 0zM67.3 215H84v3.5a8.35 7.5 0 0 1-16.7 0z" fill="#c8bc9f" />
+          <path d="M50.7 215v7M67.3 215v7" stroke="#000" strokeOpacity="0.12" strokeWidth="0.8" />
         </g>
         <g>
           <Contact cx={108} y={226} rx={17} />
