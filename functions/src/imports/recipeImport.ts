@@ -48,10 +48,12 @@ const MAX_REDIRECTS = 4;
 /** Modèle d'extraction pour l'URL, le texte et le PDF (texte déjà propre). */
 const MODEL = "claude-haiku-5-5";
 /**
- * Effort de Haiku 5.5 : l'extraction est mécanique (relire, normaliser, relier),
- * elle n'a pas besoin d'une réflexion profonde. `low` limite les tokens de
- * réflexion facturés et la latence ; le modèle saute même la réflexion sur les
- * pages simples. Le défaut du modèle serait `medium`.
+ * Effort d'extraction, partagé par Haiku 5.5 et le modèle vision : l'extraction
+ * est mécanique (relire, normaliser, relier), elle n'a pas besoin d'une réflexion
+ * profonde. `low` limite les tokens de réflexion facturés (au tarif de sortie) et
+ * la latence ; le modèle saute même la réflexion sur les pages simples. Sans lui,
+ * Haiku 5.5 tournerait en `medium` et Sonnet 5 en `high`, l'essentiel du coût d'un
+ * import photo. La qualité de lecture dépend de la vision du modèle, pas de l'effort.
  */
 const EXTRACTION_EFFORT = "low";
 /**
@@ -324,7 +326,7 @@ async function extractFromImages(images: InputImage[], knownUtensils: string[], 
   let response: Anthropic.Message;
   try {
     response = await client.messages.create({
-      model: VISION_MODEL, max_tokens: MAX_OUTPUT_TOKENS, system,
+      model: VISION_MODEL, max_tokens: MAX_OUTPUT_TOKENS, output_config: { effort: EXTRACTION_EFFORT }, system,
       messages: [{ role: "user", content }],
     });
   } catch (e) {
