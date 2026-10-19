@@ -1,31 +1,6 @@
-import { useState, useLayoutEffect, useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Icon } from "./Icon.jsx";
-import { imgAlreadyLoaded } from "../../lib/ui/imageLoad.js";
-
-// État de chargement d'une image, rattaché à SA source : `loaded`/`err` valent pour
-// la `src` qui les a produits, un changement de source les invalide de lui-même.
-// Pas d'effet de remise à zéro au montage : il s'exécutait APRÈS la détection du
-// cache (useLayoutEffect) et rebasculait en « chargement » une image déjà affichée,
-// dont l'évènement `load` ne revient jamais (spinner infini après un réordonnancement).
-function useImageState(src: string | undefined) {
-  const [loadedSrc, setLoadedSrc] = useState<string | undefined>();
-  const [errSrc, setErrSrc] = useState<string | undefined>();
-  const imgRef = useRef<HTMLImageElement>(null);
-  // Image servie depuis le cache : son évènement `load` a pu partir avant que le
-  // handler onLoad ne soit attaché. On la révèle dès le montage si elle est déjà
-  // complète (avant peinture, sans clignotement).
-  useLayoutEffect(() => {
-    if (imgAlreadyLoaded(imgRef.current)) setLoadedSrc(src);
-  }, [src]);
-  return {
-    loaded: !!src && loadedSrc === src,
-    err: !!src && errSrc === src,
-    imgRef,
-    onLoad: () => setLoadedSrc(src),
-    onError: () => setErrSrc(src),
-  };
-}
+import { useImageState } from "../../hooks/useImageState.js";
 
 interface ImgProps {
   src?: string;

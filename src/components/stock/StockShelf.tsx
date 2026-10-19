@@ -1,9 +1,10 @@
-import { useState, memo, type CSSProperties, type ReactNode } from "react";
+import { memo, type CSSProperties, type ReactNode } from "react";
 import { Icon, type IconName } from "../ui/Icon.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { jarFillColor, jarVessel } from "@/lib/food/jarLook.js";
 import type { StockLevel } from "@/lib/food/stockLevel.js";
 import { useLongPress } from "../../hooks/useLongPress.js";
+import { useImageState } from "../../hooks/useImageState.js";
 
 /** État d'un bocal : plein (en stock), bientôt vide, ou vide (à racheter). */
 export type JarState = StockLevel;
@@ -34,7 +35,7 @@ interface JarProps {
  * Tap : niveau suivant du cycle ; appui long : menu du bocal (`onHold`).
  */
 export const Jar = memo(function Jar({ ing, state, onCycle, onHold, catKey }: JarProps) {
-  const [imgErr, setImgErr] = useState(false);
+  const { loaded, err, imgRef, onLoad, onError } = useImageState(ing.image);
   const { startLongPress, cancelLongPress, moveLongPress, wasLongPress } = useLongPress();
   const vessel = jarVessel(catKey);
   return (
@@ -56,9 +57,10 @@ export const Jar = memo(function Jar({ ing, state, onCycle, onHold, catKey }: Ja
       <span className="stk-glass ripple ripple-accent">
         <span className="stk-fill" />
         <span className="stk-photo" aria-hidden="true">
-          {ing.image && !imgErr
-            ? <img src={ing.image} alt="" loading="lazy" decoding="async"
-                referrerPolicy="no-referrer" onError={() => setImgErr(true)} />
+          {ing.image && !err && !loaded && <span className="ing-img-spinner" role="status" aria-label="Chargement" />}
+          {ing.image && !err
+            ? <img ref={imgRef} src={ing.image} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer"
+                className="ing-img-reveal" data-loaded={loaded ? "1" : undefined} onLoad={onLoad} onError={onError} />
             : <Icon name="photo" size={22} color="#b3afaa" />}
         </span>
         <span className="stk-gloss" aria-hidden="true" />
