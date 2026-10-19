@@ -632,3 +632,16 @@ describe("référence Ciqual des ingrédients", () => {
     expect(errors[0]).toMatch(/« Ail » : code Ciqual invalide/);
   });
 });
+
+describe("formatIngredientsYaml – nutrition", () => {
+  it("n'exporte rien pour une fiche sans nutrition (null) et retire isVegetable", () => {
+    const yaml = formatIngredientsYaml([
+      { id: "a", name: "Ail", category: "vegetable", nutrition: null },
+      { id: "b", name: "Riz", category: "grain", nutrition: { calories: 350, protein: 0, isVegetable: false } },
+    ]);
+    const [ail, riz] = parseIngredientsYaml(yaml).items;
+    expect(ail).not.toHaveProperty("nutrition");
+    expect(riz.nutrition).toEqual({ calories: 350, protein: 0, isVegetable: false });
+    expect(yaml).not.toMatch(/isVegetable/);
+  });
+});

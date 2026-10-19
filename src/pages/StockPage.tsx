@@ -1,9 +1,8 @@
-import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, useTransition, memo } from "react";
+import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, useTransition, type Dispatch, type SetStateAction } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { LoadMoreButton } from "../components/ui/LoadMoreButton.jsx";
 import { ClearSearchButton } from "../components/ui/ClearSearchButton.jsx";
-import { EmptyArt } from "../components/ui/EmptyArt.jsx";
 import { UserAvatar } from "../components/user/UserAvatar.jsx";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { paginateStockShelves, compareIngredientName } from "@/lib/food/stockShelves.js";
@@ -11,7 +10,9 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
-import { vesselColor } from "@/lib/food/vesselColor.js";
+import { Jar, ShelfBoard, ShelfSprig, StockEmpty, StockWallSkeleton, type JarState } from "../components/stock/StockShelf.jsx";
+import type { IngredientDbItem } from "@/lib/types.js";
+import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
 // Gestion binaire du stock présentée en « mur d'étagères » : chaque ingrédient est
@@ -19,195 +20,27 @@ import { vesselColor } from "@/lib/food/vesselColor.js";
 // du bocal EST l'état (vide = à racheter, quart = bientôt vide, plein = en stock).
 // Le modèle de données reste un simple tableau d'IDs ; seul le rendu change.
 
-// Palette de contenus (fond du bocal quand l'image est absente/transparente) :
-// tons chauds « garde-manger », choisis déterministiquement par ingrédient.
-const STK_FILL = ["#cdb98a", "#c9a15c", "#b98c4a", "#a6743a", "#8f6b3f", "#7d5a34", "#c7b552", "#9aa15a", "#b5773f", "#d3a86a"];
-
-// Contenant selon le rayon : huiles, vinaigres et alcools en BOUTEILLE (liquides
-// dorés, du vinaigre blanc au balsamique, vins et spiritueux), condiments et
-// épices en POT À ÉPICES (poudres : paprika, curcuma, poivre, herbes séchées…).
-// Le reste en bocal. La couleur vient d'abord du nom (`vesselColor` : vin rouge,
-// balsamique, paprika…), la palette du rayon ne sert qu'à défaut.
-const VESSELS = {
-  oil: { kind: "bottle", fill: ["#d8b44a", "#c9a23a", "#b9a646", "#e0c46a"] },
-  acid: { kind: "bottle", fill: ["#a8483a", "#d6c38a", "#7a3b2a", "#c58a4a"] },
-  alcohol: { kind: "bottle", fill: ["#6e1f2a", "#e3cf86", "#e8a3a0", "#b8742a", "#8a2b3a"] },
-  condiment: { kind: "spice", fill: ["#b8432c", "#d9a42a", "#4a3a2c", "#7c8a45", "#a0522d", "#c9b48a"] },
-};
-
-/** Couleur de contenu stable pour un ingrédient (hash simple -> palette). */
-function stkFillColor(seed, palette = STK_FILL) {
-  const s = String(seed || "");
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return palette[h % palette.length];
-}
-
-const STATE_LABEL = { full: "en stock", low: "bientôt vide", empty: "à racheter" };
-
 // Pagination « à la demande » : le mur peut compter des dizaines de bocaux (images,
 // verrerie, ombres) très coûteux à monter d'un coup au 1er paint. On n'affiche
 // qu'un lot de planches, puis l'utilisateur charge la suite (cf. loadMore).
 const SHELVES_PAGE = 4; // planches (rangées) montées par lot
 
-/**
- * Un bocal. Mémoïsé sur `(ing, state, onCycle)` : toggler un bocal ne re-rend que
- * lui, pas les 139. Le niveau de remplissage est piloté en CSS par `data-state`.
- */
-const Jar = memo(function Jar({ ing, state, onCycle, catKey }) {
-  const [imgErr, setImgErr] = useState(false);
-  const vessel = VESSELS[catKey];
-  return (
-    <button
-      className="stk-jar"
-      data-state={state}
-      data-vessel={vessel?.kind}
-      onClick={() => onCycle(ing.id)}
-      style={{ "--fill": (vessel && vesselColor(ing.name, catKey)) || stkFillColor(ing.dbId || ing.id, vessel?.fill) }}
-      aria-label={`${ing.name} : ${STATE_LABEL[state]}`}
-    >
-      <span className="stk-lid" aria-hidden="true" />
-      <span className="stk-glass ripple ripple-accent">
-        <span className="stk-fill" />
-        <span className="stk-photo" aria-hidden="true">
-          {ing.image && !imgErr
-            ? <img src={ing.image} alt="" loading="lazy" decoding="async"
-                referrerPolicy="no-referrer" onError={() => setImgErr(true)} />
-            : <Icon name="photo" size={22} color="#b3afaa" />}
-        </span>
-        <span className="stk-gloss" aria-hidden="true" />
-        <span className="stk-label"><span>{ing.name}</span></span>
-      </span>
-      {state !== "empty" && (
-        <span className="stk-badge" data-state={state}>
-          <Icon name={state === "low" ? "warning" : "check"} size={state === "low" ? 12 : 11} color="#fff" />
-        </span>
-      )}
-    </button>
-  );
-}, (a, b) => a.state === b.state && a.ing === b.ing && a.onCycle === b.onCycle && a.catKey === b.catKey);
+/** Filtre du mur : ce que j'ai, ce qui est à racheter, ou tout le catalogue. */
+type StockView = "stock" | "low" | "all";
 
-/** Équerre vue de FACE (comme l'étagère) : on n'en voit que la tranche, une barre
- *  étroite qui descend sous la planche et s'affine vers le mur, avec sa vis de
- *  fixation. Décalée du bord (cf. .stk-bracket). L'ombre portée est une silhouette
- *  décalée dessinée dans le SVG : un `filter: drop-shadow` coûterait une passe hors
- *  écran par équerre à chaque peinture. */
-const BRACKET_PATH = "M0.5 0H9.5L7.6 27.2C7.4 29 6.4 30 5 30C3.6 30 2.6 29 2.4 27.2Z";
-function ShelfBracket({ side }) {
-  return (
-    <svg className={`stk-bracket ${side}`} viewBox="0 0 10 30" fill="none" aria-hidden="true">
-      <path d={BRACKET_PATH} transform="translate(0.8 2.6)" fill="rgba(30, 20, 10, 0.2)" />
-      <path d={BRACKET_PATH} fill="var(--iron)" />
-      <path d="M0.5 0H3L3.8 26.5C3.2 26.5 2.6 26.9 2.4 27.2Z" fill="rgba(255,255,255,.09)" />
-      <circle cx="5" cy="21" r="1.3" fill="var(--iron-hi)" />
-    </svg>
-  );
+interface StockPageProps {
+  /** IDs d'ingrédients en stock. */
+  stock?: string[];
+  setStock: Dispatch<SetStateAction<string[]>>;
+  /** IDs marqués « bientôt vide » (sous-ensemble du stock). */
+  lowStock?: string[];
+  setLowStock: Dispatch<SetStateAction<string[]>>;
+  ingredientDB?: IngredientDbItem[];
+  categories?: CategoryMap;
+  loading?: boolean;
 }
 
-// Feuilles du brin : position (base sur la tige), angle, longueur, largeur, teinte.
-// Tailles et teintes irrégulières : un vrai brin n'est jamais symétrique.
-const SPRIG_LEAVES = [
-  { x: 27.4, y: 60, r: -58, l: 13, w: 7.5, c: "#6d9447" },
-  { x: 27.6, y: 56, r: 62, l: 12, w: 7, c: "#7fa155" },
-  { x: 26.6, y: 48, r: -48, l: 14, w: 8, c: "#7fa155" },
-  { x: 27, y: 44, r: 52, l: 12.5, w: 7, c: "#8cae60" },
-  { x: 26.2, y: 36, r: -40, l: 12, w: 6.8, c: "#8cae60" },
-  { x: 26.6, y: 32, r: 44, l: 11, w: 6.2, c: "#9cbb73" },
-  { x: 26.4, y: 25, r: -22, l: 9, w: 5.4, c: "#a6c47f" },
-  { x: 26.8, y: 23, r: 26, l: 8, w: 5, c: "#a6c47f" },
-  { x: 33.5, y: 47, r: 70, l: 9.5, w: 5.6, c: "#9cbb73" },
-  { x: 37, y: 41.5, r: 30, l: 8.5, w: 5, c: "#a6c47f" },
-];
-const leafPath = (l, w) => `M0 0C${w / 2} ${-l * 0.28} ${w / 2} ${-l * 0.72} 0 ${-l}C${-w / 2} ${-l * 0.72} ${-w / 2} ${-l * 0.28} 0 0Z`;
-
-/** Fioriture unique : un brin dans son pot de terre cuite, posé en bout de rayon (décoratif). */
-function ShelfSprig() {
-  return (
-    <svg className="stk-sprig" viewBox="0 0 54 96" aria-hidden="true">
-      {/* tige principale et rameau */}
-      <path d="M28 68C27.4 56 26 44 26.5 21" stroke="#56773a" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <path d="M27.2 52C31 49 34.5 45 37.5 40" stroke="#56773a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-      {SPRIG_LEAVES.map((leaf, i) => (
-        <g key={i} transform={`translate(${leaf.x} ${leaf.y}) rotate(${leaf.r})`}>
-          <path d={leafPath(leaf.l, leaf.w)} fill={leaf.c} />
-          <path d={`M0 -1.5V${-leaf.l * 0.8}`} stroke="rgba(40,60,25,.28)" strokeWidth="0.7" strokeLinecap="round" />
-        </g>
-      ))}
-      {/* pot : corps évasé, rebord, ombre du côté droit */}
-      <path d="M14 72H42L39 93C38.8 94.7 37.6 96 35.9 96H20.1C18.4 96 17.2 94.7 17 93Z" fill="#c8693f" />
-      <path d="M33 72H42L39 93C38.8 94.7 37.6 96 35.9 96H32Z" fill="#a9532f" />
-      <rect x="11" y="66" width="34" height="8" rx="2.5" fill="#d9804f" />
-      <rect x="11" y="66" width="34" height="2.4" rx="1.2" fill="#e89a6b" />
-    </svg>
-  );
-}
-
-/**
- * État vide centré et soigné (titre + texte + action), calqué sur l'état
- * « aucune recette » de la bibliothèque pour l'homogénéité. En tête, soit un
- * croquis animé « à l'encre » (`art`, prioritaire, comme les autres écrans),
- * soit à défaut une pastille d'icône.
- */
-function StockEmpty({ icon, art, title, body, action }) {
-  return (
-    <div style={{ minHeight: "48vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24, maxWidth: 380, margin: "0 auto" }}>
-      {art ? (
-        <EmptyArt name={art} size={116} style={{ marginBottom: 6 }} />
-      ) : (
-        <div style={{ width: 76, height: 76, borderRadius: 22, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, boxShadow: "0 8px 24px -16px rgba(0,0,0,0.35)" }}>
-          <Icon name={icon} size={30} color="var(--accent)" />
-        </div>
-      )}
-      <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 7 }}>{title}</h3>
-      <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.5, marginBottom: action ? 22 : 0 }}>{body}</p>
-      {action}
-    </div>
-  );
-}
-
-/** Une planche « fantôme » : `n` bocaux squelette posés sur un vrai rayon. */
-function SkelShelf({ n }) {
-  return (
-    <div className="stk-shelf">
-      <div className="stk-jars">
-        {Array.from({ length: n }).map((_, i) => (
-          <div key={i} className="stk-jar" aria-hidden="true">
-            <span className="stk-skel-lid skeleton" />
-            <span className="stk-skel-glass skeleton" />
-          </div>
-        ))}
-      </div>
-      <div className="stk-board">
-        <ShelfBracket side="l" />
-        <ShelfBracket side="r" />
-      </div>
-    </div>
-  );
-}
-
-/**
- * Squelette du mur affiché pendant l'hydratation : deux rayons peuplés, un dernier
- * partiel, pour donner d'emblée la forme de l'étagère plutôt qu'un écran vide.
- */
-function StockWallSkeleton({ perRow }) {
-  const p = Math.max(1, perRow);
-  const partial = Math.max(2, Math.min(p, Math.round(p * 0.6)));
-  return (
-    <div aria-hidden="true" aria-busy="true">
-      <div className="stk-group">
-        <div className="skeleton" style={{ width: 150, height: 28, borderRadius: 8, margin: "0 0 12px 4px" }} />
-        <SkelShelf n={p} />
-        <SkelShelf n={p} />
-      </div>
-      <div className="stk-group">
-        <div className="skeleton" style={{ width: 104, height: 28, borderRadius: 8, margin: "0 0 12px 4px" }} />
-        <SkelShelf n={partial} />
-      </div>
-    </div>
-  );
-}
-
-export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES, loading = false }) {
+export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES, loading = false }: StockPageProps) {
   const [search, setSearch] = useState("");
   // Vue par défaut : « ce que j'ai en stock » (l'objet de la page), pas le catalogue
   // complet des ingrédients gérables. "stock" = ce que j'ai | "low" = à racheter |
@@ -217,9 +50,9 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   // vue, pas une étape d'historique.
   const [searchParams, setSearchParams] = useSearchParams();
   const rawView = searchParams.get("view");
-  const view = rawView === "low" || rawView === "all" ? rawView : "stock";
+  const view: StockView = rawView === "low" || rawView === "all" ? rawView : "stock";
   const setView = useCallback(
-    (v) => setSearchParams(v === "stock" ? {} : { view: v }, { replace: true }),
+    (v: StockView) => setSearchParams(v === "stock" ? {} : { view: v }, { replace: true }),
     [setSearchParams]
   );
 
@@ -234,7 +67,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   const stockRef = useRef(stock);
   const lowRef = useRef(lowStock);
   useEffect(() => { stockRef.current = stock; lowRef.current = lowStock; }, [stock, lowStock]);
-  const cycle = useCallback((id) => {
+  const cycle = useCallback((id: string) => {
     const inStock = stockRef.current.includes(id);
     const isLow = lowRef.current.includes(id);
     const target = nameById.get(id) || "";
@@ -259,7 +92,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   // Ingrédients filtrés par recherche + vue active (tous / en stock / à racheter)
   const filtered = useMemo(() => {
     const q = normalizeStr(search);
-    const matchView = (i) =>
+    const matchView = (i: IngredientDbItem) =>
       view === "all" ? true : view === "stock" ? stockSet.has(i.id) : lowSet.has(i.id);
     return stockable
       .filter(i => matchView(i)
@@ -270,11 +103,11 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   // Regroupement par catégorie
   const grouped = useMemo(() => {
     const catOrder = sortedCategoryEntries(categories).map(([k]) => k);
-    const map = new Map();
+    const map = new Map<string, IngredientDbItem[]>();
     for (const ing of filtered) {
       const key = ing.category || "other";
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(ing);
+      const bucket = map.get(key);
+      if (bucket) bucket.push(ing); else map.set(key, [ing]);
     }
     return [...map.entries()].sort((a, b) => {
       const ia = catOrder.indexOf(a[0]), ib = catOrder.indexOf(b[0]);
@@ -284,7 +117,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
 
   const inStockCount = stock.length;
   const isDesktop = useIsDesktop();
-  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop });
+  const { scrollRef, contentRef } = useElasticScroll<HTMLDivElement>({ disabled: isDesktop });
 
   // Largeur utile du mur -> nombre de bocaux par planche (une planche = une rangée).
   // Mesure AVANT peinture (useLayoutEffect + lecture synchrone de la largeur de
@@ -385,11 +218,11 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
 
         {/* Pills de filtre : tout ce qu'on peut chercher / ce que j'ai en stock */}
         <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-          {[
+          {([
             { key: "stock", label: "En stock", count: inStockCount },
             { key: "low", label: "Bientôt vide", count: lowStock.length },
             { key: "all", label: "Catalogue", count: stockable.length },
-          ].map(p => {
+          ] satisfies { key: StockView; label: string; count: number }[]).map(p => {
             const active = view === p.key;
             return (
               <button key={p.key} onClick={() => setView(p.key)} className={`ripple${active ? "" : " hov-pill"}`}
@@ -470,15 +303,12 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                     <div key={ri} className="stk-shelf">
                       <div className="stk-jars">
                         {row.map(ing => {
-                          const state = lowSet.has(ing.id) ? "low" : stockSet.has(ing.id) ? "full" : "empty";
+                          const state: JarState = lowSet.has(ing.id) ? "low" : stockSet.has(ing.id) ? "full" : "empty";
                           return <Jar key={ing.id} ing={ing} state={state} onCycle={cycle} catKey={catKey} />;
                         })}
                       </div>
                       {roomForSprig && <ShelfSprig />}
-                      <div className="stk-board">
-                        <ShelfBracket side="l" />
-                        <ShelfBracket side="r" />
-                      </div>
+                      <ShelfBoard />
                     </div>
                   );
                 })}

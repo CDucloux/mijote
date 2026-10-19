@@ -41,8 +41,11 @@ export function tabForPath(pathname: string | null | undefined): string {
   return "home";
 }
 
+/** Section de la console admin. */
+export type ConsoleSection = "dashboard" | "ingredients" | "ustensiles" | "techniques" | "sources" | "modération";
+
 // Console admin : sous-sections mappées sur l'URL.
-export const CONFIG_SECTION_BY_PATH: Record<string, string> = {
+export const CONFIG_SECTION_BY_PATH: Record<string, ConsoleSection> = {
   "dashboard": "dashboard",
   "ingredients": "ingredients",
   "ustensils": "ustensiles",
@@ -50,6 +53,6 @@ export const CONFIG_SECTION_BY_PATH: Record<string, string> = {
   "sources": "sources",
   "moderation": "modération",
 };
-export const CONFIG_PATH_BY_SECTION: Record<string, string> = Object.fromEntries(
+export const CONFIG_PATH_BY_SECTION: Partial<Record<ConsoleSection, string>> = Object.fromEntries(
   Object.entries(CONFIG_SECTION_BY_PATH).map(([path, section]) => [section, path])
 );

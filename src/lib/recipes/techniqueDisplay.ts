@@ -7,9 +7,12 @@
  * @module recipes/techniqueDisplay
  */
 
+/** Icônes du set maison utilisées par les catégories de geste. */
+export type TechniqueIcon = "knife" | "fire" | "spoon" | "utensils" | "dish";
+
 /** Icône (nom du set maison) et couleur d'accent d'une catégorie de geste. */
 export interface TechniqueVisual {
-  icon: string;
+  icon: TechniqueIcon;
   color: string;
 }
 
