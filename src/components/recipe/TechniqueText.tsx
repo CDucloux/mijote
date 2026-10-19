@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../ui/Icon.jsx";
-import type { IconName } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { StickySheetHeader } from "../ui/StickySheetHeader.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
@@ -109,7 +108,7 @@ function TechniqueDetailSheet({ tech, techById, onOpen, onClose }: { tech: Techn
           {/* En-tête collant : le nom du geste et la fermeture restent à portée pendant la lecture. */}
           <StickySheetHeader>
             <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 14 }}>
-              <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon as IconName} size={27} color={c.color} /></span>
+              <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon} size={27} color={c.color} /></span>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <h2 style={{ margin: 0, fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.1, color: "var(--text)" }}>{tech.name}</h2>
                 {diff > 0 && (
@@ -277,7 +276,7 @@ export function TechniqueText({ text, index: indexProp }: { text: string; index?
                 {/* barre d'accent colorée en tête, selon la catégorie */}
                 <span style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, borderRadius: "14px 14px 0 0", background: c.color }} />
                 <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
-                  <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon as IconName} size={20} color={c.color} /></span>
+                  <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${c.color} 16%, transparent)` }}><Icon name={c.icon} size={20} color={c.color} /></span>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--text)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>{pop.tech.name}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 4 }}>

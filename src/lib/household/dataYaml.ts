@@ -11,13 +11,13 @@
  * @module household/dataYaml
  */
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { ING_MD_BOUNDS } from "@/lib/food/ingredientsMarkdown.js";
+import { ING_MD_BOUNDS, escapeMdCell } from "@/lib/food/ingredientsMarkdown.js";
 import { TIP_TYPES } from "@/constants/tipTypes.js";
 import { isFruitVeg } from "@/constants/categories.js";
 import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 import { INGREDIENT_FORMS, normalizePreferredForms } from "@/lib/food/qualityRecommendation.js";
 import { parseCiqualRef } from "@/lib/food/ciqual.js";
-import type { CiqualRef } from "@/lib/types.js";
+import type { CiqualRef, IngredientNutrition } from "@/lib/types.js";
 import { PRECAUTION_TONES, PRECAUTION_LIMITS, isPrecautionTone } from "@/lib/utensils/usagePrecaution.js";
 import { buildEnvelope, readEnvelope, INGREDIENTS_SCHEMA_VERSION, UTENSILS_SCHEMA_VERSION, TECHNIQUES_SCHEMA_VERSION } from "@/lib/household/dataEnvelope.js";
 
@@ -26,6 +26,19 @@ export interface ParseResult<T = Record<string, unknown>> {
   items: T[];
   errors: string[];
 }
+
+/**
+ * Ligne validée par un parseur : le nom est garanti, le reste a été vérifié champ
+ * par champ (formes de la base master) avant d'être porté sur la ligne.
+ */
+export interface ParsedRow {
+  id?: string;
+  name: string;
+  [key: string]: unknown;
+}
+
+/** Ligne validée dont l'id est garanti (fourni ou dérivé du nom). */
+export type IdentifiedRow = ParsedRow & { id: string };
 
 /** Clés nutritionnelles exportées (ordre stable), hors `isVegetable` qui est recalculé. */
 const NUT_KEYS = ["calories", "protein", "carbs", "sugar", "fat", "saturatedFat", "omega3", "fiber", "salt"];
@@ -204,12 +217,12 @@ function cleanTechniqueDimensions(raw: Record<string, unknown>, where = "", erro
  * @param text - Source YAML brute.
  * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide.
  */
-export function parseTechniquesYaml(text: string): ParseResult {
+export function parseTechniquesYaml(text: string): ParseResult<IdentifiedRow> {
   const { list, error } = loadTechniquesList(text);
   if (error) return { items: [], errors: [error] };
 
   const errors: string[] = [];
-  const items: Record<string, unknown>[] = [];
+  const items: IdentifiedRow[] = [];
   const seenIds = new Set<string>();
   (list || []).forEach((rawEntry, i) => {
     const raw = rawEntry as Record<string, unknown>;
@@ -236,7 +249,7 @@ export function parseTechniquesYaml(text: string): ParseResult {
       ? [...new Set(raw.aliases.map(a => str(a).toLowerCase()).filter(Boolean))]
       : [];
     // N'inclure que des clés définies : Firestore rejette les valeurs `undefined`.
-    const item: Record<string, unknown> = { id, name, category, definition };
+    const item: IdentifiedRow = { id, name, category, definition };
     if (aliases.length) item.aliases = aliases;
     if (Number.isInteger(difficulty) && (difficulty as number) >= 1 && (difficulty as number) <= 5) item.difficulty = difficulty;
     const source = str(raw.source);
@@ -252,8 +265,11 @@ export function parseTechniquesYaml(text: string): ParseResult {
 /** Une relation « ne pas confondre avec ». */
 interface TechniqueConfusion { technique_id: string; distinction?: string }
 
-/** Technique (forme minimale utilisée par les exports). */
-interface TechniqueRow {
+/**
+ * Technique (forme minimale utilisée par les exports). Alias de type et non
+ * interface : il reste assignable aux entrées de glossaire à clés libres.
+ */
+type TechniqueRow = {
   id?: string;
   name?: string;
   category?: string;
@@ -265,7 +281,7 @@ interface TechniqueRow {
   expected_result?: { summary?: string; observable_indicators?: string[] };
   common_errors?: string[];
   not_to_be_confused_with?: TechniqueConfusion[];
-}
+};
 
 /** Brouillon d'édition d'un geste (console admin) : mêmes formes que le schema v2,
  *  telles que les produit le formulaire, avant nettoyage pour Firestore. */
@@ -294,11 +310,11 @@ export interface TechniqueDraft {
  * @param draft - Le brouillon saisi dans l'éditeur de geste.
  * @returns L'enregistrement prêt à écrire dans la base master.
  */
-export function buildTechniqueFromDraft(draft: TechniqueDraft): TechniqueRow {
+export function buildTechniqueFromDraft(draft: TechniqueDraft): TechniqueRow & { id: string } {
   const name = str(draft.name);
   const definition = str(draft.definition);
   const id = str(draft.id) || slugifyId("tech_", name);
-  const item: TechniqueRow = { id, name, category: draft.category || "preparation", definition };
+  const item: TechniqueRow & { id: string } = { id, name, category: draft.category || "preparation", definition };
   const aliases = [...new Set((draft.aliases || []).map((a) => str(a).toLowerCase()).filter(Boolean))];
   if (aliases.length) item.aliases = aliases;
   const difficulty = draft.difficulty;
@@ -323,7 +339,6 @@ export function buildTechniqueFromDraft(draft: TechniqueDraft): TechniqueRow {
  * @returns Le document Markdown (titre + tableau).
  */
 export function formatTechniquesMarkdown(list: TechniqueRow[]): string {
-  const esc = (s: unknown): string => String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ").trim();
   const cats = Object.keys(TECHNIQUE_CATEGORIES);
   const rows = [...(list || [])].sort((a, b) => {
     const ca = cats.indexOf(a.category || ""), cb = cats.indexOf(b.category || "");
@@ -331,7 +346,7 @@ export function formatTechniquesMarkdown(list: TechniqueRow[]): string {
   });
   const header = "| Technique | Catégorie | Difficulté | Définition | Aliases | Source |\n|---|---|---|---|---|---|";
   const body = rows.map(r =>
-    `| ${esc(r.name)} | ${esc(TECHNIQUE_CATEGORIES[r.category || ""] || r.category)} | ${r.difficulty ? `${r.difficulty}/5` : "–"} | ${esc(r.definition)} | ${esc((r.aliases || []).join(", "))} | ${esc(r.source)} |`
+    `| ${escapeMdCell(r.name)} | ${escapeMdCell(TECHNIQUE_CATEGORIES[r.category || ""] || r.category)} | ${r.difficulty ? `${r.difficulty}/5` : "–"} | ${escapeMdCell(r.definition)} | ${escapeMdCell((r.aliases || []).join(", "))} | ${escapeMdCell(r.source)} |`
   ).join("\n");
   return `# Glossaire des techniques Cardamome (${rows.length})\n\n${header}\n${body}\n`;
 }
@@ -384,7 +399,8 @@ interface IngredientRow {
   gramsPerPiece?: number;
   image?: string;
   tips?: { type: string; text: string }[];
-  nutrition?: Record<string, number>;
+  /** `null` = fiche créée sans données nutritionnelles (rien n'est exporté). */
+  nutrition?: IngredientNutrition | null;
   qualityRecommendation?: { preferredForms?: unknown[]; message?: string };
   ciqual?: CiqualRef;
 }
@@ -430,7 +446,10 @@ export function formatIngredientsYaml(list: IngredientRow[], { categoryOrder = [
       if (d.ciqual) o.ciqual = d.ciqual.name ? { code: d.ciqual.code, name: d.ciqual.name } : { code: d.ciqual.code };
       if (d.nutrition) {
         const n: Record<string, number> = {};
-        for (const k of NUT_KEYS) if (d.nutrition[k] != null) n[k] = d.nutrition[k];
+        for (const k of NUT_KEYS) {
+          const v = d.nutrition[k];
+          if (v != null && typeof v !== "boolean") n[k] = v;
+        }
         if (Object.keys(n).length) o.nutrition = n;
       }
       return o;
@@ -490,13 +509,13 @@ export function formatUtensilsYaml(list: UtensilRow[], { now = new Date() }: { n
  * @param options.validCategories - Set ou tableau des clés de catégories acceptées.
  * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide.
  */
-export function parseIngredientsYaml(text: string, { validCategories }: { validCategories?: Set<string> | string[] } = {}): ParseResult {
+export function parseIngredientsYaml(text: string, { validCategories }: { validCategories?: Set<string> | string[] } = {}): ParseResult<ParsedRow> {
   const { list, error } = loadYamlList(text, "ingredients", INGREDIENTS_SCHEMA_VERSION);
   if (error) return { items: [], errors: [error] };
 
   const valid = validCategories instanceof Set ? validCategories : new Set(validCategories || []);
   const errors: string[] = [];
-  const items: Record<string, unknown>[] = [];
+  const items: ParsedRow[] = [];
   (list || []).forEach((rawEntry, i) => {
     const raw = rawEntry as Record<string, unknown>;
     const where = `Entrée #${i + 1}${raw && raw.name ? ` « ${raw.name} »` : ""}`;
@@ -506,7 +525,7 @@ export function parseIngredientsYaml(text: string, { validCategories }: { validC
     if (raw.category != null && valid.size && !valid.has(str(raw.category)))
       errors.push(`${where} : catégorie inconnue « ${raw.category} ».`);
 
-    const row: Record<string, unknown> = { name };
+    const row: ParsedRow = { name };
     if (raw.id != null) row.id = str(raw.id);
     if (raw.category != null) row.category = str(raw.category);
     if (raw.image != null) row.image = str(raw.image);
@@ -597,12 +616,12 @@ export function parseIngredientsYaml(text: string, { validCategories }: { validC
  * @param text - Source YAML brute.
  * @returns `{ items, errors }` : `items` est vide si `errors` n'est pas vide.
  */
-export function parseUtensilsYaml(text: string): ParseResult {
+export function parseUtensilsYaml(text: string): ParseResult<IdentifiedRow> {
   const { list, error } = loadYamlList(text, "utensils", UTENSILS_SCHEMA_VERSION);
   if (error) return { items: [], errors: [error] };
 
   const errors: string[] = [];
-  const items: Record<string, unknown>[] = [];
+  const items: IdentifiedRow[] = [];
   const seenIds = new Set<string>();
   (list || []).forEach((rawEntry, i) => {
     const raw = rawEntry as Record<string, unknown>;
@@ -631,7 +650,7 @@ export function parseUtensilsYaml(text: string): ParseResult {
     if (appliance && !(appliance in APPLIANCE_LABELS))
       errors.push(`${where} : appareil inconnu « ${appliance} » (${Object.keys(APPLIANCE_LABELS).join(", ")}).`);
 
-    const row: Record<string, unknown> = { id, name, category: category || "divers" };
+    const row: IdentifiedRow = { id, name, category: category || "divers" };
     if (appliance && appliance in APPLIANCE_LABELS) row.appliance = appliance;
     if (raw.image != null) row.image = str(raw.image);
     if (raw.usagePrecaution != null) {

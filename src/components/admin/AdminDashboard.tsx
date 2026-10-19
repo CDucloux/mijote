@@ -2,6 +2,8 @@ import { Icon } from "../ui/Icon.jsx";
 import type { ReactNode } from "react";
 import type { IconName } from "../ui/Icon.jsx";
 import { countTrackingFilters } from "@/lib/food/ingredientTracking.js";
+import type { IngredientTrackingFilter } from "@/lib/food/ingredientTracking.js";
+import type { ConsoleSection } from "../../constants/tabs.js";
 import type { IngredientDbItem, UtensilDbItem } from "@/lib/types.js";
 import type { TechniqueEntry } from "@/lib/recipes/techniques.js";
 
@@ -69,7 +71,7 @@ interface AdminDashboardProps {
   ingredientDB?: IngredientDbItem[];
   utensilDB?: UtensilDbItem[];
   techniques?: TechniqueEntry[];
-  onGoto?: (section: string, filter?: string) => void;
+  onGoto?: (section: ConsoleSection, filter?: IngredientTrackingFilter) => void;
 }
 
 export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques = [], onGoto }: AdminDashboardProps) {

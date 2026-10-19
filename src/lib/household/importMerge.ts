@@ -17,14 +17,26 @@ export interface MasterEntry {
   name?: string;
 }
 
-/** Règles de fusion propres à chaque base. */
-export interface MergeOptions<T extends MasterEntry> {
+/**
+ * Entrée de la base fusionnée : une entrée existante (`T`) ou une ligne importée
+ * (`R`) créée avec son id.
+ */
+export type MergedEntry<T, R> = T | (R & { id: string });
+
+/**
+ * Règles de fusion propres à chaque base. `T` est la forme des entrées de la base,
+ * `R` celle des lignes importées (validées par un parseur, l'id peut y manquer).
+ */
+export interface MergeOptions<T extends MasterEntry, R extends MasterEntry = T> {
   /** Apparier aussi par nom normalisé quand l'id est absent ou inconnu. */
   matchByName: boolean;
-  /** Entrée résultante pour une ligne qui en retrouve une existante. */
-  combine: (current: T, row: T) => T;
+  /**
+   * Entrée résultante pour une ligne qui en retrouve une existante. L'entrée
+   * retrouvée peut être une ligne créée plus haut dans le même fichier.
+   */
+  combine: (current: MergedEntry<T, R>, row: R) => MergedEntry<T, R>;
   /** Id d'une entrée créée (la ligne n'en porte pas, ou un id inconnu). */
-  newId: (row: T, index: number) => string;
+  newId: (row: R, index: number) => string;
 }
 
 /** Bilan d'un import : noms créés et réellement modifiés, nombre d'inchangés. */
@@ -80,12 +92,13 @@ export function sameData(a: unknown, b: unknown): boolean {
  * @param rows - Les lignes validées du fichier.
  * @param options - Appariement et fusion propres à la base.
  * @returns La base fusionnée et le bilan (créés, réellement modifiés, inchangés).
+ *   Une entrée créée est la ligne importée munie de son id.
  */
-export function mergeImport<T extends MasterEntry>(current: T[], rows: T[], options: MergeOptions<T>): { next: T[]; report: ImportReport } {
-  const next = [...current];
+export function mergeImport<T extends MasterEntry, R extends MasterEntry = T>(current: T[], rows: R[], options: MergeOptions<T, R>): { next: MergedEntry<T, R>[]; report: ImportReport } {
+  const next: MergedEntry<T, R>[] = [...current];
   const byId = new Map<string, number>();
   const byName = new Map<string, number>();
-  const index = (entry: T, i: number): void => {
+  const index = (entry: MasterEntry, i: number): void => {
     if (entry.id != null) byId.set(entry.id, i);
     if (options.matchByName && entry.name) byName.set(normalizeStr(entry.name), i);
   };
