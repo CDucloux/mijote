@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.69.0 – Cardamome · Démarrage éclair
+
+### Hors ligne
+- **Démarrage beaucoup plus rapide sans réseau** : l'app affiche tes données depuis l'appareil au lieu d'attendre le serveur (une dizaine de secondes auparavant). Avec un réseau qui répond, rien ne change : les données restent fraîches et se mettent à jour en direct.
+- **Session reprise tout de suite** : plus de délai fixe avant de retrouver ton compte hors ligne.
+- **Polices intégrées à l'app** : même rendu hors ligne, et plus d'écran blanc sur un réseau faible.
+
 ## v4.68.0 – Cardamome · Le lien d'abord
 
 ### Nouvelle recette

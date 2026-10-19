@@ -1,5 +1,5 @@
-/* Polices Source Serif 4 + Hanken Grotesk : chargées via <link> dans index.html (plus
-   fiable que @import, notamment sur mobile/iOS). Ne pas remettre d'@import ici. */
+/* Polices Source Serif 4, Hanken Grotesk et Caveat : auto-hébergées, déclarées dans
+   fonts.css (importé avant ce fichier). Ne pas les recharger depuis Google Fonts. */
 
 /* Drapeaux : Windows/Chrome n'embarque aucune police d'emoji drapeaux, les paires
    d'indicateurs régionaux (🇫🇷…) y tombent alors en deux lettres (« FR »). Cette

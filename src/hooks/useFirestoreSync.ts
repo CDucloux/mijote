@@ -2,17 +2,18 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { getRedirectResult, onAuthStateChanged, type User } from "firebase/auth";
 import { doc, setDoc, onSnapshot, type DocumentData, type Unsubscribe } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase/firebase.js";
-import { reportError, setObservabilityUser } from "@/lib/observability/observability.js";
+import { reportError, logEvent, setObservabilityUser } from "@/lib/observability/observability.js";
 import { metaDoc, recipesCol, type WorkspaceRef } from "@/lib/firebase/paths.js";
 import { upsertOwnDirectoryEntry } from "@/lib/firebase/userDirectory.js";
 import { loadMasterDB, subscribeMasterDB, type MasterDB } from "@/lib/firebase/masterDb.js";
 import {
-  loadUserData, migrateLegacyDoc, syncRecipes,
-  loadSharedData, writeSharedData, deleteSharedRecipe,
+  migrateLegacyDoc, syncRecipes,
+  loadSharedData, loadUserDataFast, loadSharedDataFast, writeSharedData, deleteSharedRecipe,
 } from "@/lib/firebase/workspaceData.js";
 import { setHouseholdPointer } from "@/lib/firebase/households.js";
 import { setSharedWritesLocked } from "@/lib/firebase/writeLock.js";
-import { loadAppConfig } from "@/lib/firebase/appConfig.js";
+import { loadAppConfig, loadAppConfigFast } from "@/lib/firebase/appConfig.js";
+import { bootReadBudget } from "@/lib/sync/preferWithin.js";
 import { evaluateAppGuard } from "@/lib/appGuard.js";
 import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
 import { normalizePreferences } from "@/constants/preferences.js";
@@ -214,9 +215,17 @@ export function useFirestoreSync({
       setSyncStatus("syncing");
       try {
         const masterPromise = loadMasterDB();
+        // Démarrage rapide : chaque lecture laisse au serveur un court budget, puis
+        // sert le cache Firestore local (hors ligne déclaré : tout de suite). Les
+        // abonnements temps réel rafraîchissent ensuite. Sans ça, le SDK attend ~10 s
+        // avant de conclure « hors ligne » (Wi-Fi sans internet, signal faible).
+        const budget = bootReadBudget(navigator.onLine);
+        const bootStart = performance.now();
         // Garde-fou anti-client périmé : lu en parallèle du reste, appliqué AVANT
-        // toute écriture partagée (cf. verrou plus bas). Non bloquant pour le skeleton.
-        const appConfigPromise = loadAppConfig();
+        // toute écriture partagée (cf. verrou plus bas). Réévalué quand le serveur
+        // répond si la valeur de démarrage venait du cache.
+        const appConfigServer = loadAppConfig();
+        const appConfigPromise = loadAppConfigFast(appConfigServer, budget);
         const ws = soloWorkspace(u.uid); // espace perso (préférences/base + partagé solo)
         // Foyer connu du dernier passage → on charge DIRECTEMENT ses données partagées
         // (pas de flash solo→foyer au reload). Le coordinateur confirmera/corrigera.
@@ -227,12 +236,13 @@ export function useFirestoreSync({
         // skeleton se lève d'autant plus tôt. On capture ok/échec sur la promesse pour
         // qu'un rejet éventuel ne file jamais sans gestionnaire pendant l'attente du solo.
         const sharedProbe = bootHid
-          ? loadSharedData(householdWorkspace(bootHid)).then(
-              d => ({ ok: true as const, data: d as BootData }),
+          ? loadSharedDataFast(householdWorkspace(bootHid), budget).then(
+              d => ({ ok: true as const, data: d.value as BootData }),
               (e: unknown) => ({ ok: false as const, err: e }))
           : null;
 
-        let data: BootData = await loadUserData(ws);
+        const userRead = await loadUserDataFast(ws, budget);
+        let data: BootData = userRead.value;
         const isEmpty = !bootHid && data.recipes.length === 0 && !data.collections && !data.userDB
           && !data.mealPlan && !data.shoppingLists && !data.stock;
         if (isEmpty) {
@@ -329,9 +339,22 @@ export function useFirestoreSync({
         const guard = evaluateAppGuard({
           currentVersion: __APP_VERSION__,
           host: window.location.hostname,
-          config: await appConfigPromise,
+          config: (await appConfigPromise).value,
         });
         setSharedWritesLocked(!guard.ok);
+        // Config de démarrage lue en cache : la version serveur peut déclasser ce
+        // client après coup. On verrouille alors les écritures dès qu'elle arrive.
+        let lateBlocked = false;
+        void appConfigServer.then(config => {
+          if (!guard.ok || bootstrappedUid !== u.uid) return;
+          const late = evaluateAppGuard({ currentVersion: __APP_VERSION__, host: window.location.hostname, config });
+          if (late.ok) return;
+          lateBlocked = true;
+          setSharedWritesLocked(true);
+          cloudLoaded.current = false;
+          setSyncStatus("blocked");
+          reportError(new Error(`client déclassé: ${late.reason}`), { where: "sync:guard:late", host: window.location.hostname });
+        });
         if (!guard.ok) {
           setSyncStatus("blocked");
           reportError(new Error(`client déclassé: ${guard.reason}`), { where: "sync:guard", host: window.location.hostname });
@@ -358,7 +381,12 @@ export function useFirestoreSync({
         // "blocked". Client sain : bascule normale en écriture.
         setTimeout(() => {
           setBootstrapped(true);
-          if (guard.ok) { cloudLoaded.current = true; setSyncStatus("synced"); }
+          if (guard.ok && !lateBlocked) { cloudLoaded.current = true; setSyncStatus("synced"); }
+          // Mesure du démarrage (fil d'Ariane Sentry + logcat Android) : où partent
+          // les secondes, et si le cache a servi.
+          const timing = { authMs: Math.round(bootStart), readyMs: Math.round(performance.now()), dataMs: Math.round(performance.now() - bootStart), source: userRead.source, online: navigator.onLine };
+          logEvent("boot:ready", timing);
+          console.info("[boot]", timing);
         }, 0);
       } catch (e) { setSyncStatus("error"); reportError(e, { where: "sync:bootstrap" }); }
     };
@@ -370,14 +398,17 @@ export function useFirestoreSync({
     // n'aboutira pas). Dès que l'utilisateur persisté est disponible (`auth.currentUser`,
     // restauré depuis IndexedDB), on démarre nous-mêmes depuis le cache Firestore sans
     // attendre le réseau. Court-circuité si le listener a déjà démarré (garde par uid).
+    // `authStateReady` se résout dès la restauration locale de la session (sans
+    // réseau) : c'est le déclencheur principal. Le sondage reste un filet si elle tarde.
     let tries = 0;
     let offlineTimer: ReturnType<typeof setTimeout>;
     const tryOfflineBoot = (): void => {
       if (bootstrappedUid !== undefined) return;                 // le listener a déjà démarré
       if (auth.currentUser) { void handle(auth.currentUser); return; }
-      if (++tries < 10) offlineTimer = setTimeout(tryOfflineBoot, navigator.onLine ? 900 : 350);
+      if (++tries < 20) offlineTimer = setTimeout(tryOfflineBoot, 250);
     };
-    offlineTimer = setTimeout(tryOfflineBoot, navigator.onLine ? 3500 : 400);
+    auth.authStateReady().then(() => { if (bootstrappedUid === undefined && auth.currentUser) void handle(auth.currentUser); }, () => { });
+    offlineTimer = setTimeout(tryOfflineBoot, navigator.onLine ? 1200 : 150);
     return () => { clearTimeout(offlineTimer); unsub(); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
