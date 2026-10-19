@@ -99,43 +99,43 @@ export function FridgeScene() {
         {/* Clayette haute : brique de lait, yaourts, confiture, huile d'olive */}
         <Shelf y={130} />
         <g>
-          <Contact cx={49} y={126} rx={14} />
-          <rect x="36" y="76" width="26" height="50" rx="1.5" fill="#ece6d6" />
-          <rect x="55" y="76" width="7" height="50" fill="#000" opacity="0.07" />
-          <polygon points="36,76 62,76 57,66 41,66" fill="#e0d8c4" />
-          <rect x="40" y="62" width="18" height="4" rx="1" fill="#d6cdb7" />
-          <rect x="51" y="67.5" width="5" height="4" rx="1" fill="#5d7fa6" />
-          <rect x="36" y="90" width="26" height="17" fill="#6f8db0" />
-          <text x="49" y="101.6" className="lpfr-label">LAIT</text>
+          <Contact cx={47} y={126} rx={14} />
+          <rect x="34" y="76" width="26" height="50" rx="1.5" fill="#ece6d6" />
+          <rect x="53" y="76" width="7" height="50" fill="#000" opacity="0.07" />
+          <polygon points="34,76 60,76 55,66 39,66" fill="#e0d8c4" />
+          <rect x="38" y="62" width="18" height="4" rx="1" fill="#d6cdb7" />
+          <rect x="49" y="67.5" width="5" height="4" rx="1" fill="#5d7fa6" />
+          <rect x="34" y="90" width="26" height="17" fill="#6f8db0" />
+          <text x="47" y="101.6" className="lpfr-label">LAIT</text>
         </g>
         <g>
-          <Contact cx={74} y={126} rx={8} />
-          <polygon points="66,108 82,108 80.5,126 67.5,126" fill="#f5f0e6" stroke="#d9cfbc" strokeWidth="0.6" />
-          <rect x="66.7" y="113" width="14.6" height="5" fill="#a9bd78" />
-          <rect x="65" y="105.5" width="18" height="3.5" rx="1" fill="#cdc1a2" />
-          <Contact cx={97} y={126} rx={8} />
-          <polygon points="89,108 105,108 103.5,126 90.5,126" fill="#f5f0e6" stroke="#d9cfbc" strokeWidth="0.6" />
-          <rect x="89.7" y="113" width="14.6" height="5" fill="#d99c96" />
-          <rect x="88" y="105.5" width="18" height="3.5" rx="1" fill="#cdc1a2" />
+          <Contact cx={75} y={126} rx={8} />
+          <polygon points="67,108 83,108 81.5,126 68.5,126" fill="#f5f0e6" stroke="#d9cfbc" strokeWidth="0.6" />
+          <rect x="67.7" y="113" width="14.6" height="5" fill="#a9bd78" />
+          <rect x="66" y="105.5" width="18" height="3.5" rx="1" fill="#cdc1a2" />
+          <Contact cx={94} y={126} rx={8} />
+          <polygon points="86,108 102,108 100.5,126 87.5,126" fill="#f5f0e6" stroke="#d9cfbc" strokeWidth="0.6" />
+          <rect x="86.7" y="113" width="14.6" height="5" fill="#d99c96" />
+          <rect x="85" y="105.5" width="18" height="3.5" rx="1" fill="#cdc1a2" />
         </g>
         <g>
-          <Contact cx={122} y={126} rx={12} />
-          <rect x="111" y="96" width="22" height="30" rx="4" fill="#8a2e3b" />
-          <rect x="113.5" y="99" width="2.5" height="22" rx="1.2" fill="#fff" opacity="0.3" />
-          <rect x="109" y="88" width="26" height="9" rx="2" fill="#c47c34" />
-          <path d="M113 88v9M117 88v9M121 88v9M125 88v9M129 88v9M133 88v9" stroke="#000" strokeOpacity="0.16" strokeWidth="0.8" />
-          <rect x="114" y="105" width="16" height="11" rx="1" fill="#f1e8d4" />
-          <rect x="116.5" y="108.5" width="11" height="1.4" fill="#8a2e3b" opacity="0.6" />
-          <rect x="118" y="111.6" width="8" height="1.2" fill="#b9ad92" />
+          <Contact cx={125} y={126} rx={12} />
+          <rect x="114" y="96" width="22" height="30" rx="4" fill="#8a2e3b" />
+          <rect x="116.5" y="99" width="2.5" height="22" rx="1.2" fill="#fff" opacity="0.3" />
+          <rect x="112" y="88" width="26" height="9" rx="2" fill="#c47c34" />
+          <path d="M116 88v9M120 88v9M124 88v9M128 88v9M132 88v9M136 88v9" stroke="#000" strokeOpacity="0.16" strokeWidth="0.8" />
+          <rect x="117" y="105" width="16" height="11" rx="1" fill="#f1e8d4" />
+          <rect x="119.5" y="108.5" width="11" height="1.4" fill="#8a2e3b" opacity="0.6" />
+          <rect x="121" y="111.6" width="8" height="1.2" fill="#b9ad92" />
         </g>
         <g>
-          <Contact cx={154} y={126} rx={9} />
-          <path d="M146 126V101c0-6 4.5-9 6-13V77h4v11c1.5 4 6 7 6 13v25z" fill="#9aa65a" />
-          <rect x="151.2" y="70" width="5.6" height="8" rx="1" fill="#b8862e" />
-          <rect x="148.5" y="101" width="1.8" height="21" rx="0.9" fill="#fff" opacity="0.3" />
-          <rect x="146" y="105" width="16" height="14" fill="#efe5cc" />
-          <rect x="149.5" y="109" width="9" height="1.6" fill="#8a7d5a" />
-          <rect x="151" y="112.6" width="6" height="1.2" fill="#b9ad92" />
+          <Contact cx={156} y={126} rx={9} />
+          <path d="M148 126V101c0-6 4.5-9 6-13V77h4v11c1.5 4 6 7 6 13v25z" fill="#9aa65a" />
+          <rect x="153.2" y="70" width="5.6" height="8" rx="1" fill="#b8862e" />
+          <rect x="150.5" y="101" width="1.8" height="21" rx="0.9" fill="#fff" opacity="0.3" />
+          <rect x="148" y="105" width="16" height="14" fill="#efe5cc" />
+          <rect x="151.5" y="109" width="9" height="1.6" fill="#8a7d5a" />
+          <rect x="153" y="112.6" width="6" height="1.2" fill="#b9ad92" />
         </g>
 
         {/* Clayette du milieu : boîte d'œufs entamée, beurre, demi-citron */}
@@ -155,18 +155,18 @@ export function FridgeScene() {
           <path d="M50.7 215v7M67.3 215v7" stroke="#000" strokeOpacity="0.12" strokeWidth="0.8" />
         </g>
         <g>
-          <Contact cx={108} y={226} rx={17} />
-          <rect x="92" y="208" width="32" height="18" rx="2" fill="#f4ecc9" />
-          <polygon points="92,208 104,208 92,217" fill="#e4d9ad" />
-          <rect x="100" y="213" width="13" height="7" rx="1" fill="var(--accent)" opacity="0.75" />
-          <rect x="118" y="208" width="6" height="18" rx="1" fill="#f3d978" />
+          <Contact cx={111} y={226} rx={17} />
+          <rect x="95" y="208" width="32" height="18" rx="2" fill="#f4ecc9" />
+          <polygon points="95,208 107,208 95,217" fill="#e4d9ad" />
+          <rect x="103" y="213" width="13" height="7" rx="1" fill="var(--accent)" opacity="0.75" />
+          <rect x="121" y="208" width="6" height="18" rx="1" fill="#f3d978" />
         </g>
         <g>
-          <Contact cx={140} y={226} rx={10} />
-          <circle cx="140" cy="215" r="11" fill="#f5df84" stroke="#dfae2a" strokeWidth="2.6" />
-          <circle cx="140" cy="215" r="8.2" fill="none" stroke="#fbf1c4" strokeWidth="1.1" />
-          <path d="M140 215V207.6M140 215l5.2-5.2M140 215h7.4M140 215l5.2 5.2M140 215v7.4M140 215l-5.2 5.2M140 215h-7.4M140 215l-5.2-5.2" stroke="#e6c24e" strokeWidth="0.9" />
-          <circle cx="140" cy="215" r="1.2" fill="#fbf1c4" />
+          <Contact cx={150} y={226} rx={10} />
+          <circle cx="150" cy="215" r="11" fill="#f5df84" stroke="#dfae2a" strokeWidth="2.6" />
+          <circle cx="150" cy="215" r="8.2" fill="none" stroke="#fbf1c4" strokeWidth="1.1" />
+          <path d="M150 215V207.6M150 215l5.2-5.2M150 215h7.4M150 215l5.2 5.2M150 215v7.4M150 215l-5.2 5.2M150 215h-7.4M150 215l-5.2-5.2" stroke="#e6c24e" strokeWidth="0.9" />
+          <circle cx="150" cy="215" r="1.2" fill="#fbf1c4" />
         </g>
 
         {/* Clayette basse : fromage, reste de la veille (étiqueté à la main), moutarde */}
