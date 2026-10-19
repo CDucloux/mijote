@@ -6,8 +6,19 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { startCheckout, openBillingPortal, PLAY_SUBS_URL } from "@/lib/firebase/subscription.js";
 import "../styles/plus.css";
 
+type Billing = "monthly" | "yearly";
+
+interface PriceOption {
+  amount: string;
+  per: string;
+  cta: string;
+  note?: string;
+  /** ID de prix Stripe ; absent tant que l'env ne le fournit pas. */
+  price: string | undefined;
+}
+
 // Tarifs Cardamome+. `price` = ID Stripe (extension), fourni par l'env.
-const PRICES = {
+const PRICES: Record<Billing, PriceOption> = {
   monthly: { amount: "4,99 €", per: "/ mois", cta: "4,99 €/mois", price: import.meta.env.VITE_STRIPE_PRICE_MONTHLY },
   yearly: { amount: "49,99 €", per: "/ an", cta: "49,99 €/an", note: "soit 4,17 €/mois · économise 10 €/an", price: import.meta.env.VITE_STRIPE_PRICE_YEARLY },
 };
@@ -34,7 +45,7 @@ const FEATURES = [
   { label: "Mode hors-ligne", free: true, plus: true },
 ];
 
-function Cell({ value, accent }) {
+function Cell({ value, accent }: { value: string | boolean; accent?: boolean }) {
   if (typeof value === "string") {
     return <span style={{ fontSize: 12.5, fontWeight: 600, color: accent ? "var(--accent)" : "var(--text2)" }}>{value}</span>;
   }
@@ -47,7 +58,7 @@ export function PlanPage() {
   const navigate = useNavigate();
   const { isPlus, isAdmin, notify, user, subscription } = useAppShell();
   const location = useLocation();
-  const [billing, setBilling] = useState("monthly"); // mensuel mis en avant : 4,99 € accroche mieux que 49,99 €
+  const [billing, setBilling] = useState<Billing>("monthly"); // mensuel mis en avant : 4,99 € accroche mieux que 49,99 €
   const [busy, setBusy] = useState(false);
   const price = PRICES[billing];
   // Le paiement est prêt dès que les deux tarifs Stripe sont fournis par l'env.
@@ -80,13 +91,13 @@ export function PlanPage() {
   // On mesure le bouton actif et on positionne le `.plus-thumb` par-dessus. La
   // glisse ne doit répondre qu'à l'action de l'utilisateur : au montage, au
   // resize et après le chargement des polices, on repositionne SANS transition.
-  const toggleRef = useRef(null);
-  const monthlyRef = useRef(null);
-  const yearlyRef = useRef(null);
-  const thumbRef = useRef(null);
+  const toggleRef = useRef<HTMLDivElement>(null);
+  const monthlyRef = useRef<HTMLButtonElement>(null);
+  const yearlyRef = useRef<HTMLButtonElement>(null);
+  const thumbRef = useRef<HTMLSpanElement>(null);
   const animatedRef = useRef(false);
 
-  const placeThumb = useCallback((animate) => {
+  const placeThumb = useCallback((animate: boolean) => {
     const active = billing === "monthly" ? monthlyRef.current : yearlyRef.current;
     const thumb = thumbRef.current;
     if (!active || !thumb) return;
@@ -133,8 +144,8 @@ export function PlanPage() {
 
   // Récap de l'abonnement : chaque ligne n'apparaît que si sa donnée est présente
   // (dégradation propre sur le booléen seul, tant que la Phase 2 data n'a rien écrit).
-  const fmtDay = (d) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-  const fmtMonth = (d) => d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  const fmtDay = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const fmtMonth = (d: Date) => d.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
   const planLabel = subscription.plan === "yearly" ? "Annuel" : subscription.plan === "monthly" ? "Mensuel" : null;
   const planPrice = subscription.plan ? PRICES[subscription.plan] : null;
 

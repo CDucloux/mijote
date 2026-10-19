@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
-import { Icon } from "../components/ui/Icon.jsx";
+import type { User } from "firebase/auth";
+import { Icon, type IconName } from "../components/ui/Icon.jsx";
 import { SwipeableSheet } from "../components/ui/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog.jsx";
 import { CookingHeatmap } from "../components/user/CookingHeatmap.jsx";
@@ -10,10 +11,14 @@ import { Row } from "../components/ui/primitives.jsx";
 import { TagInput } from "../components/ui/TagInput.jsx";
 import { buildHeatmap } from "@/lib/planning/cookingActivity.js";
 import { recipeQuotaCount, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
-import { DEFAULT_PREFERENCES, DIETS, COMMON_ALLERGENS } from "../constants/preferences.js";
+import { DEFAULT_PREFERENCES, DIETS, COMMON_ALLERGENS, type Preferences } from "../constants/preferences.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categories.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
+import type { PurgeScope } from "../hooks/useAccount.js";
+import type { CategoriesConfig } from "@/lib/food/shoppingList.js";
+import type { DbEntry } from "@/lib/food/nameMatcher.js";
+import type { Recipe } from "@/lib/types.js";
 
 // ─── PROFIL ───────────────────────────────────────────────────────────────────
 // Page dédiée (accès depuis le menu avatar) : identité, plan, activité cuisine
@@ -22,7 +27,14 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 const CARD = { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18 };
 
 // En-tête de section : petite pastille d'icône teintée + titre.
-function SectionTitle({ icon, children, color = "var(--accent)", tint = "rgba(var(--accent-rgb),0.12)" }) {
+interface SectionTitleProps {
+  icon: IconName;
+  children: ReactNode;
+  color?: string;
+  tint?: string;
+}
+
+function SectionTitle({ icon, children, color = "var(--accent)", tint = "rgba(var(--accent-rgb),0.12)" }: SectionTitleProps) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
       <span style={{ width: 26, height: 26, borderRadius: 8, background: tint, display: "grid", placeItems: "center", flexShrink: 0 }}>
@@ -33,33 +45,70 @@ function SectionTitle({ icon, children, color = "var(--accent)", tint = "rgba(va
   );
 }
 
-export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, recipes = [], onPurge, onDeleteAccount, ingredientDB = [], categories = DEFAULT_CATEGORIES, onExportAll, onImport }) {
+/** Préférences stockées sous forme de liste, basculées élément par élément. */
+type ListPrefKey = "allergens" | "excludedCategories" | "dislikes";
+
+/** Une action de purge proposée dans la zone de danger. */
+interface PurgeOption {
+  scope: PurgeScope;
+  label: string;
+  danger?: boolean;
+}
+
+const PURGE_OPTIONS: PurgeOption[] = [
+  { scope: "planning", label: "Vider le planning" },
+  { scope: "shopping", label: "Vider les courses" },
+  { scope: "stock", label: "Vider le stock" },
+  { scope: "all", label: "Tout effacer", danger: true },
+];
+
+interface ProfilePageProps {
+  user: User | null | undefined;
+  preferences?: Preferences | null;
+  setPreferences?: Dispatch<SetStateAction<Preferences>>;
+  recipes?: Recipe[];
+  onPurge?: (scope: PurgeScope) => void;
+  /** Résout `true` si le compte a bien été supprimé. */
+  onDeleteAccount?: () => Promise<boolean>;
+  ingredientDB?: DbEntry[];
+  categories?: CategoriesConfig;
+  onExportAll?: () => void;
+  /** Importe le contenu texte d'un fichier JSON ; lève si le fichier est invalide. */
+  onImport?: (json: string) => void;
+}
+
+export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPreferences, recipes = [], onPurge, onDeleteAccount, ingredientDB = [], categories = DEFAULT_CATEGORIES, onExportAll, onImport }: ProfilePageProps) {
   const navigate = useNavigate();
   const isDesktop = useIsDesktop();
   const { isPlus, isAdmin } = useAppShell();
   const recipeCount = recipeQuotaCount(recipes);
   const prefs = preferences || DEFAULT_PREFERENCES;
   const currentName = prefs.displayName || user?.displayName || "";
-  const importInputRef = useRef(null);
-  const [importError, setImportError] = useState(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = useState<string | null>(null);
   // Préférences : setter mutateur + bascule d'appartenance à une liste (allergènes…).
-  const setPref = (patch) => setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), ...patch }));
-  const togglePref = (key, value) => setPref({
+  const setPref = (patch: Partial<Preferences>) => setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), ...patch }));
+  const togglePref = (key: ListPrefKey, value: string) => setPref({
     [key]: (prefs[key] || []).includes(value) ? prefs[key].filter(v => v !== value) : [...(prefs[key] || []), value],
   });
-  const [nameInput, setNameInput] = useState(null);
-  const [purgeScope, setPurgeScope] = useState(null);
+  const [nameInput, setNameInput] = useState<string | null>(null);
+  const [purgeScope, setPurgeScope] = useState<PurgeOption | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const editing = nameInput !== null;
-  const nameDirty = editing && nameInput.trim() !== currentName.trim();
-  const saveName = () => { setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), displayName: nameInput.trim() })); setNameInput(null); };
+  const nameDirty = nameInput !== null && nameInput.trim() !== currentName.trim();
+  const saveName = () => {
+    if (nameInput === null) return;
+    const displayName = nameInput.trim();
+    setPreferences?.(p => ({ ...DEFAULT_PREFERENCES, ...(p || {}), displayName }));
+    setNameInput(null);
+  };
 
   // Activité cuisine = plats RÉELLEMENT cuisinés (mode pas à pas mené au bout),
   // consignés dans le journal de cuisine, et non les repas simplement planifiés.
   const cookLog = prefs.cookLog || {};
   const stats = buildHeatmap(cookLog, { weeks: 26 });
-  const STAT = [
+  const STAT: { label: string; value: number | string; icon: IconName }[] = [
     { label: "Plats cuisinés", value: stats.total, icon: "fire" },
     { label: "Jours actifs", value: stats.activeDays, icon: "calendar" },
     { label: "Série en cours", value: `${stats.streak} j`, icon: "history" },
@@ -104,7 +153,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
               <div className="field-label" style={{ marginBottom: 8 }}>Nom d'affichage</div>
               <div style={{ display: "flex", gap: 8 }}>
                 <input className="field-input" style={{ flex: 1, background: "var(--surface2)" }} placeholder={user?.displayName || "Ton prénom"}
-                  value={editing ? nameInput : currentName}
+                  value={nameInput ?? currentName}
                   onChange={e => setNameInput(e.target.value)}
                   onFocus={() => { if (!editing) setNameInput(currentName); }}
                   onKeyDown={e => { if (e.key === "Enter" && nameDirty) saveName(); }} />
@@ -250,9 +299,9 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                     </button>
                     <input ref={importInputRef} type="file" accept="application/json,.json" multiple style={{ display: "none" }}
                       onChange={e => {
-                        Array.from(e.target.files).forEach(f => {
+                        Array.from(e.target.files ?? []).forEach(f => {
                           const r = new FileReader();
-                          r.onload = ev => { try { onImport(ev.target.result); setImportError(null); } catch { setImportError("Fichier invalide : " + f.name); } };
+                          r.onload = () => { try { if (typeof r.result !== "string") throw new Error("lecture vide"); onImport(r.result); setImportError(null); } catch { setImportError("Fichier invalide : " + f.name); } };
                           r.readAsText(f);
                         });
                         e.target.value = "";
@@ -269,12 +318,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
             <SectionTitle icon="warning" color="var(--red)" tint="rgba(224,82,82,0.12)">Zone de danger</SectionTitle>
             <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 14px" }}>Efface définitivement des données de ton espace. Ces actions sont irréversibles.</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {[
-                { scope: "planning", label: "Vider le planning" },
-                { scope: "shopping", label: "Vider les courses" },
-                { scope: "stock", label: "Vider le stock" },
-                { scope: "all", label: "Tout effacer", danger: true },
-              ].map(o => (
+              {PURGE_OPTIONS.map(o => (
                 <button key={o.scope} onClick={() => setPurgeScope(o)} className="pressable"
                   style={{ flex: isDesktop ? "0 1 auto" : "1 1 calc(50% - 4px)", padding: "9px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
                     background: o.danger ? "rgba(224,82,82,0.12)" : "var(--surface)", color: o.danger ? "var(--red)" : "var(--text2)",

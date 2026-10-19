@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { Img, IngImage } from "../ui/Img.jsx";
@@ -9,6 +10,60 @@ import { ToggleSwitch } from "./ToggleSwitch.jsx";
 import { capitalize, fmtQtyUnit } from "@/lib/format.js";
 import { posteLabel } from "@/lib/recipes/decoupe.js";
 import { formatParamSummary } from "@/lib/utensils/appliances.js";
+import type { IngredientLine, Recipe, Step, UsagePrecaution, Utensil, UtensilDbItem } from "@/lib/types.js";
+import type { IngredientGroup, PendingComponent } from "@/lib/cookSession/misEnPlace.js";
+import type { PosteDecoupe } from "@/lib/recipes/decoupe.js";
+import type { TechniqueIndex } from "@/lib/recipes/techniques.js";
+import type { StepDuration } from "@/lib/planning/stepTimers.js";
+import type { SpoonConversion } from "@/lib/food/calculators.js";
+import type { UseCookTimersResult } from "../../hooks/useCookTimers.js";
+import type { PrecautionSheetTarget } from "../recipeDetail/recipeView.js";
+
+interface CookContentProps {
+  isOverview: boolean;
+  isBases: boolean;
+  /** Étape réelle affichée ; `null` sur les pages « mise en place » et « bases ». */
+  step: Step | null;
+  /** Index de l'étape réelle (-1 hors étape). */
+  realIdx: number;
+  /** Index de la page courante du pas à pas. */
+  stepIdx: number;
+  overviewIngs: IngredientLine[];
+  overviewUts: Utensil[];
+  overviewIngGroups: IngredientGroup[];
+  postesDecoupe: PosteDecoupe[];
+  groupByCategory: boolean;
+  setGroupByCategory: Dispatch<SetStateAction<boolean>>;
+  checkedIngIds: ReadonlySet<string | undefined>;
+  checkedUtIds: ReadonlySet<string | undefined>;
+  checkedCutKeys: ReadonlySet<string>;
+  toggleIngChecked: (id: string | undefined) => void;
+  toggleUtChecked: (id: string | undefined) => void;
+  toggleCutChecked: (key: string) => void;
+  getIngImage: (dbId: string | undefined, name: string | undefined) => string;
+  getUtImage: (dbId: string | undefined, name: string | undefined) => string;
+  getUtPrecaution: (utensil: Utensil) => UsagePrecaution | null;
+  convOf: (ing: IngredientLine, amount: number) => SpoonConversion[] | null;
+  openConvert: (ing: IngredientLine, amount: number) => void;
+  /** Quantité affichée, dans l'unité de cuillère choisie le cas échéant. */
+  displayQty: (ing: IngredientLine, amount: number) => string;
+  recipesById: ReadonlyMap<string | undefined, Recipe> | undefined;
+  recipe: Recipe;
+  mult: number;
+  pendingComponents: PendingComponent[];
+  doneComponents: ReadonlySet<string | undefined>;
+  setSubCook: (sub: { recipe: Recipe; mult: number }) => void;
+  stepDurations: StepDuration[];
+  addTimer: UseCookTimersResult["addTimer"];
+  techIndex: TechniqueIndex;
+  linkedIngs: IngredientLine[];
+  linkedUts: Utensil[];
+  utensilDB: UtensilDbItem[] | undefined;
+  setPrecSheet: (target: PrecautionSheetTarget) => void;
+  /** Clé de poste de découpe → index de l'étape qui la décrit (-1 si aucune). */
+  posteStepByKey: ReadonlyMap<string, number>;
+  goToStep: (realStepIdx: number) => void;
+}
 
 /**
  * Corps du pas à pas : rend la page courante du cook mode selon son type,
@@ -17,7 +72,7 @@ import { formatParamSummary } from "@/lib/utensils/appliances.js";
  * (consigne, minuteurs, ingrédients/ustensiles liés). Purement présentationnel :
  * tout l'état et les actions sont fournis par le parent.
  */
-export function CookContent(props) {
+export function CookContent(props: CookContentProps) {
   const {
     isOverview, isBases, step, realIdx, stepIdx,
     overviewIngs, overviewUts, overviewIngGroups, postesDecoupe,
@@ -32,7 +87,7 @@ export function CookContent(props) {
   } = props;
 
   // Rendu d'une ligne ingrédient : brute ou composant
-  const renderIngLine = (ing) => {
+  const renderIngLine = (ing: IngredientLine) => {
     const isComp = !!ing.recipeId && !ing.dbId;
     const comp = isComp && recipesById ? recipesById.get(ing.recipeId) : null;
     const displayName = isComp ? (comp?.name || ing.name || "Préparation introuvable") : ing.name;
@@ -45,7 +100,7 @@ export function CookContent(props) {
         }
         <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400 }}>{capitalize(displayName)}</span>
         <span style={{ fontSize: 14, fontWeight: 600, color: isComp ? "var(--accent)" : "var(--accent)" }}>
-          {displayQty(ing, ing.amount * (mult || 1))}
+          {displayQty(ing, Number(ing.amount) * (mult || 1))}
         </span>
       </div>
     );
@@ -53,13 +108,13 @@ export function CookContent(props) {
 
   // Rendu d'une ligne ingrédient COCHABLE (mise en place) : même contenu que
   // `renderIngLine`, dans une rangée cliquable qui bascule son état « rassemblé ».
-  const renderOverviewIngRow = (ing) => {
+  const renderOverviewIngRow = (ing: IngredientLine) => {
     const isComp = !!ing.recipeId && !ing.dbId;
     const comp = isComp && recipesById ? recipesById.get(ing.recipeId) : null;
     const displayName = isComp ? (comp?.name || ing.name || "Préparation introuvable") : ing.name;
     const imgSrc = isComp ? (comp?.image || "") : getIngImage(ing.dbId, ing.name);
     const gathered = checkedIngIds.has(ing.id);
-    const amount = ing.amount * (mult || 1);
+    const amount = Number(ing.amount) * (mult || 1);
     // Rangée = <div role="button"> (et non <button>) car elle contient le badge de
     // conversion, lui-même bouton : deux boutons imbriqués seraient du HTML invalide.
     const toggle = () => toggleIngChecked(ing.id);
@@ -98,7 +153,7 @@ export function CookContent(props) {
 
   // Rendu d'un poste de découpe COCHABLE : geste impératif + quantité (« Émincer :
   // 3 oignons »), même rangée cliquable que les ingrédients.
-  const renderPosteRow = (poste) => {
+  const renderPosteRow = (poste: PosteDecoupe) => {
     const done = checkedCutKeys.has(poste.key);
     const toggle = () => toggleCutChecked(poste.key);
     // Image de l'ingrédient concerné, comme dans la mise en place « Ingrédients » :
@@ -256,11 +311,11 @@ export function CookContent(props) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 3 }}>{comp.name}</div>
                 <div style={{ fontSize: 13, color: "var(--text3)" }}>
-                  {fmtQtyUnit(line.amount * (mult || 1), line.unit)}
+                  {fmtQtyUnit(Number(line.amount) * (mult || 1), line.unit)}
                   {comp.steps?.length ? ` · ${comp.steps.length} étape${comp.steps.length > 1 ? "s" : ""}` : ""}
                 </div>
               </div>
-              {comp.steps?.length > 0 && (
+              {!!comp.steps?.length && (
                 doneComponents.has(comp.id)
                   ? <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10, background: "rgba(52,199,89,0.12)", border: "1px solid rgba(52,199,89,0.35)", color: "var(--ok)", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
                       <Icon name="check" size={13} color="var(--ok)" /> Terminé
@@ -281,6 +336,7 @@ export function CookContent(props) {
   }
 
   /* ── Étape normale ── */
+  if (!step) return null;
   return (
     <>
       {step.group && (
@@ -292,7 +348,7 @@ export function CookContent(props) {
         <div key="head-step" style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, color: "#fff", flexShrink: 0 }}>{realIdx + 1}</div>
         <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600 }}>Étape {realIdx + 1}</h2>
       </div>
-      <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: stepDurations.length ? 14 : 24 }}><TechniqueText key={realIdx} text={step.text} index={techIndex} /></p>
+      <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: stepDurations.length ? 14 : 24 }}><TechniqueText key={realIdx} text={step.text ?? ""} index={techIndex} /></p>
 
       {stepDurations.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
@@ -321,7 +377,7 @@ export function CookContent(props) {
           <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ustensiles</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {linkedUts.map(u => {
-              const detail = formatParamSummary((utensilDB || []).find(d => d.id === u.dbId)?.appliance, step.utensilParams?.[u.id]);
+              const detail = formatParamSummary((utensilDB || []).find(d => d.id === u.dbId)?.appliance, u.id ? step.utensilParams?.[u.id] : undefined);
               const prec = getUtPrecaution(u);
               return (
               <span key={u.id} onClick={prec ? () => setPrecSheet({ name: u.name, prec }) : undefined} className={prec ? "pressable" : undefined} style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: prec ? "5px 30px 5px 5px" : "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)", cursor: prec ? "pointer" : "default" }}>
