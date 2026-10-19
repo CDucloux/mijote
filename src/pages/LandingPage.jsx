@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { ThemeToggle } from "../components/ui/ThemeToggle.jsx";
 import { LogoPod } from "../components/ui/LogoPod.jsx";
+import { FridgeScene } from "../components/landing/FridgeScene.jsx";
+import { ImportScene } from "../components/landing/ImportScene.jsx";
 import { landingPrimaryCta } from "@/lib/landing/cta.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
@@ -65,46 +67,6 @@ function PhoneFrame({ children, label }) {
     <div className="lp-device" role="img" aria-label={label}>
       <span className="lp-device__notch" aria-hidden="true" />
       <div className="lp-device__screen">{children}</div>
-    </div>
-  );
-}
-
-/** Scène du hero : un frigo ouvert, presque vide, et un « ? » qui flotte. Écho
- *  direct au visiteur « planté devant son frigo à se demander quoi faire à
- *  manger » : ce n'est pas l'app, c'est le PROBLÈME que l'app résout. 100% CSS
- *  (formes + tokens), aucun asset, theme-aware, le « ? » respire (coupé si
- *  mouvement réduit). */
-function SceneFridge() {
-  return (
-    <div className="lp-fridge" aria-hidden="true">
-      <div className="lp-fridge__body">
-        <span className="lp-fridge__light" />
-        <div className="lp-fridge__inside">
-          <div className="lp-fridge__shelf">
-            <span className="lp-fr lp-fr--milk" />
-            <span className="lp-fr lp-fr--jar" />
-            <span className="lp-fr lp-fr--can" />
-            <span className="lp-fr lp-fr--bottle lp-fr--push" />
-          </div>
-          <div className="lp-fridge__shelf">
-            <span className="lp-fr lp-fr--eggbox" />
-            <span className="lp-fr lp-fr--butter" />
-            <span className="lp-fr lp-fr--lemon lp-fr--push" />
-            <span className="lp-fr lp-fr--tomato" />
-          </div>
-          <div className="lp-fridge__shelf">
-            <span className="lp-fr lp-fr--cheese" />
-            <span className="lp-fr lp-fr--juice" />
-            <span className="lp-fr lp-fr--bowl lp-fr--push" />
-            <span className="lp-fr lp-fr--bottle2" />
-          </div>
-          <div className="lp-fridge__crisper">
-            <span className="lp-fridge__cripanel" />
-          </div>
-        </div>
-      </div>
-      <span className="lp-fridge__handle" />
-      <span className="lp-fridge__q">?</span>
     </div>
   );
 }
@@ -270,43 +232,6 @@ function SceneEditor() {
   );
 }
 
-/** Démo animée de l'import intelligent : une source (lien / photo) que Cardamome lit et
- *  transforme en recette structurée. Un faisceau balaie la source en continu ;
- *  la sortie s'assemble par petites touches. 100% CSS, coupé si mouvement réduit. */
-function SceneImport() {
-  return (
-    <div className="lp-scene lp-scene--import" aria-hidden="true">
-      <div className="lp-imp__src">
-        <span className="lp-imp__tabs">
-          <span className="lp-imp__tab lp-imp__tab--on"><Icon name="link" size={13} /> Lien</span>
-          <span className="lp-imp__tab"><Icon name="camera" size={13} /> Photo</span>
-        </span>
-        <div className="lp-imp__url">
-          <Icon name="link" size={13} color="var(--text3)" />
-          <span>marmiton.org/tarte-citron</span>
-        </div>
-        <span className="lp-imp__beam" />
-      </div>
-      <div className="lp-imp__arrow">
-        <span className="lp-imp__pill"><Icon name="sparkle" size={13} color="var(--accent)" /> Cardamome lit</span>
-      </div>
-      <div className="lp-imp__out">
-        <div className="lp-imp__title">Tarte au citron meringuée</div>
-        <div className="lp-imp__chips">
-          {["Citron", "Œufs", "Sucre", "Beurre"].map((c, i) => (
-            <span className="lp-imp__chip" style={{ "--i": i }} key={c}>{c}</span>
-          ))}
-          <span className="lp-imp__chip lp-imp__chip--base" style={{ "--i": 4 }}><Icon name="utensils" size={10} /> Pâte sablée</span>
-        </div>
-        <div className="lp-imp__lines">
-          <span className="lp-imp__line" style={{ "--i": 5, width: "90%" }} />
-          <span className="lp-imp__line" style={{ "--i": 6, width: "72%" }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /** Logo officiel Google Play (triangle multicolore, SVG inline, sans asset externe). */
 function GooglePlayMark({ size = 22 }) {
   return (
@@ -407,9 +332,13 @@ export function LandingPage({ user, isDark, toggleTheme }) {
     e?.preventDefault?.();
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+  // Le conteneur qui défile dépend du gabarit : .lp-root lui-même sur mobile, un
+  // ancêtre sur desktop (body en overflow:auto, pas la fenêtre). scrollTo couvre le
+  // premier, scrollIntoView remonte n'importe quel ancêtre défilant pour le second.
   const scrollTop = (e) => {
     e?.preventDefault?.();
     rootRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   // Chevron « suivant » : un SEUL bouton flottant (position fixe), toujours au même
   // endroit à l'écran (les slides n'ont pas exactement la même hauteur, un bouton
@@ -500,7 +429,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </div>
           </div>
           <div className="lp-hero__art">
-            <SceneFridge />
+            <FridgeScene />
           </div>
         </div>
       </section>
@@ -588,7 +517,7 @@ export function LandingPage({ user, isDark, toggleTheme }) {
             </p>
           </div>
           <div className="lp-split__media">
-            <SceneImport />
+            <ImportScene />
           </div>
         </div>
       </section>
