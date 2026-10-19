@@ -1,6 +1,13 @@
 // Types de conseils d'un ingrédient (source unique : affichage + éditeur + markdown).
 // L'ordre des clés sert d'ordre d'affichage par défaut dans la fiche.
-export const TIP_TYPES = {
+/** Présentation d'un type de conseil. */
+export interface TipType {
+  label: string;
+  icon: string;
+  color: string;
+}
+
+export const TIP_TYPES: Record<string, TipType> = {
   prep: { label: "Préparation", icon: "🔪", color: "#e8703a" },
   conservation: { label: "Choix & conservation", icon: "🛒", color: "#f0b429" },
   usage: { label: "Utilisation", icon: "🍳", color: "#ef8b4a" },
@@ -11,4 +18,4 @@ export const TIP_TYPES = {
 };
 
 // Ordre d'affichage des tips dans la fiche ingrédient.
-export const TIP_ORDER = Object.keys(TIP_TYPES);
+export const TIP_ORDER: string[] = Object.keys(TIP_TYPES);

@@ -9,12 +9,26 @@
 //
 import raw from "../../CHANGELOG.md?raw";
 
+/** Une version du changelog, telle qu'affichée dans l'app. */
+export interface ChangelogEntry {
+  version: string;
+  label: string;
+  items: string[];
+  /** Vrai pour l'entrée la plus récente (mise en avant). */
+  accent: boolean;
+  /** Deux premières lignes, pour le bandeau d'annonce. */
+  highlights: string[];
+  codename: string | null;
+}
+
+type RawEntry = Pick<ChangelogEntry, "version" | "label" | "items">;
+
 const HEADER = /^##\s+v([\d.]+)\s*[\u2014\u2013-]?\s*(.*)$/;
 const BULLET = /^[-*]\s+(.+)$/;
 
-function parseChangelog(md) {
-  const entries = [];
-  let current = null;
+function parseChangelog(md: string): ChangelogEntry[] {
+  const entries: RawEntry[] = [];
+  let current: RawEntry | null = null;
   for (const line of md.split(/\r?\n/)) {
     const header = line.match(HEADER);
     if (header) {
@@ -41,7 +55,7 @@ export const CHANGELOG = parseChangelog(raw);
 
 // Nom de code associé à une version (pour le badge de l'app). Retombe sur la
 // version la plus récente si la version exacte n'est pas trouvée.
-export function codenameFor(version) {
+export function codenameFor(version: string): string | null {
   const entry = CHANGELOG.find(e => e.version === version) || CHANGELOG[0];
   return entry?.codename || null;
 }

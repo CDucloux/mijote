@@ -1,4 +1,5 @@
-import { Icon } from "../ui/Icon.jsx";
+import type { CSSProperties } from "react";
+import { Icon, type IconName } from "../ui/Icon.jsx";
 import "../../styles/landing-import.css";
 
 /** Glyphe « texte » de l'onglet Texte, identique à celui de l'écran d'import. */
@@ -10,9 +11,28 @@ function TextGlyph() {
   );
 }
 
+type SourceKind = "lien" | "photo" | "texte" | "pdf";
+
+/** Recette affichée en sortie de la démo. */
+interface DemoRecipe {
+  title: string;
+  time: string;
+  serves: string;
+  ings: string[];
+  sub: string;
+}
+
+interface DemoSource {
+  key: SourceKind;
+  label: string;
+  /** `null` : glyphe maison {@link TextGlyph}. */
+  icon: IconName | null;
+  recipe: DemoRecipe;
+}
+
 // Les quatre sources de l'écran d'import réel, chacune avec la recette qu'elle
 // produit. La scène les parcourt en boucle (même ordre que le contrôle segmenté).
-const SOURCES = [
+const SOURCES: DemoSource[] = [
   {
     key: "lien", label: "Lien", icon: "link",
     recipe: { title: "Tarte au citron meringuée", time: "1 h 15", serves: "8 pers.", ings: ["3 citrons", "150 g sucre", "4 œufs", "90 g beurre"], sub: "Pâte sablée" },
@@ -33,7 +53,7 @@ const SOURCES = [
 
 /** Ce que l'utilisateur fournit, par source : un lien saisi, deux pages de livre
  *  photographiées, un texte collé, un PDF déposé. */
-function SourceInput({ kind }) {
+function SourceInput({ kind }: { kind: SourceKind }) {
   if (kind === "lien") {
     return (
       <div className="lp-imx__field">
@@ -76,7 +96,7 @@ function SourceInput({ kind }) {
 
 /** La recette structurée qui sort de l'import : titre, temps et portions,
  *  ingrédients quantifiés, sous-recette détectée, étapes. */
-function RecipeOut({ recipe }) {
+function RecipeOut({ recipe }: { recipe: DemoRecipe }) {
   return (
     <div className="lp-imx__recipe">
       <div className="lp-imx__title">{recipe.title}</div>
@@ -86,15 +106,15 @@ function RecipeOut({ recipe }) {
       </div>
       <div className="lp-imx__chips">
         {recipe.ings.map((ing, i) => (
-          <span key={ing} className="lp-imx__chip" style={{ "--i": i }}>{ing}</span>
+          <span key={ing} className="lp-imx__chip" style={{ "--i": i } as CSSProperties}>{ing}</span>
         ))}
-        <span className="lp-imx__chip lp-imx__chip--sub" style={{ "--i": recipe.ings.length }}>
+        <span className="lp-imx__chip lp-imx__chip--sub" style={{ "--i": recipe.ings.length } as CSSProperties}>
           <Icon name="layers" size={10} color="currentColor" /> {recipe.sub}
         </span>
       </div>
       <div className="lp-imx__steps">
         {[88, 74, 81].map((w, i) => (
-          <span key={i} className="lp-imx__step" style={{ "--i": i }}>
+          <span key={i} className="lp-imx__step" style={{ "--i": i } as CSSProperties}>
             <b>{i + 1}</b><i style={{ width: `${w}%` }} />
           </span>
         ))}
@@ -119,7 +139,7 @@ export function ImportScene() {
       <div className="lp-imx__seg">
         <span className="lp-imx__thumb" />
         {SOURCES.map((s, k) => (
-          <span key={s.key} className="lp-imx__tab" style={{ "--k": k }}>
+          <span key={s.key} className="lp-imx__tab" style={{ "--k": k } as CSSProperties}>
             {s.icon ? <Icon name={s.icon} size={14} color="currentColor" /> : <TextGlyph />}
             {s.label}
           </span>
@@ -127,7 +147,7 @@ export function ImportScene() {
       </div>
       <div className="lp-imx__stage">
         {SOURCES.map((s, k) => (
-          <div key={s.key} className="lp-imx__pane" style={{ "--k": k }}><SourceInput kind={s.key} /></div>
+          <div key={s.key} className="lp-imx__pane" style={{ "--k": k } as CSSProperties}><SourceInput kind={s.key} /></div>
         ))}
       </div>
       <div className="lp-imx__run">
@@ -136,7 +156,7 @@ export function ImportScene() {
       </div>
       <div className="lp-imx__out">
         {SOURCES.map((s, k) => (
-          <div key={s.key} className="lp-imx__result" style={{ "--k": k }}><RecipeOut recipe={s.recipe} /></div>
+          <div key={s.key} className="lp-imx__result" style={{ "--k": k } as CSSProperties}><RecipeOut recipe={s.recipe} /></div>
         ))}
       </div>
     </div>

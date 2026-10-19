@@ -1,15 +1,16 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { Icon } from "../components/ui/Icon.jsx";
+import type { CSSProperties } from "react";
+import { useLocation, useNavigate, type NavigateFunction } from "react-router-dom";
+import { Icon, type IconName } from "../components/ui/Icon.jsx";
 import { ElasticScroll } from "../components/ui/ElasticScroll.jsx";
 import { useInternalNav } from "../hooks/useInternalNav.js";
-import { GUIDE_DOCS, GUIDE_BY_ID } from "../constants/guideDocs.js";
+import { GUIDE_DOCS, GUIDE_BY_ID, type GuideDoc } from "../constants/guideDocs.js";
 
 // ─── GUIDE D'UTILISATION ────────────────────────────────────────────────────────
 // Page dédiée /guide : le « comment qu'on fait » de Cardamome. /guide → index des
 // thèmes ; /guide/<id> → lecture d'un thème. Chaque thème porte sa couleur (voir
 // front-matter) reprise sur la carte d'index, le hero et la prose (.guide-md), à la
 // manière des slides d'onboarding : la page respire au lieu d'aligner du Markdown brut.
-const softTile = (color) => color.startsWith("#") ? `color-mix(in srgb, ${color} 18%, transparent)` : "rgba(var(--accent-rgb),0.18)";
+const softTile = (color: string): string => color.startsWith("#") ? `color-mix(in srgb, ${color} 18%, transparent)` : "rgba(var(--accent-rgb),0.18)";
 
 export function GuidePage() {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export function GuidePage() {
   );
 }
 
-function Index({ navigate }) {
+function Index({ navigate }: { navigate: NavigateFunction }) {
   return (
     <>
       <p style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.55, margin: "0 0 20px" }}>
@@ -50,7 +51,7 @@ function Index({ navigate }) {
           <button key={d.id} onClick={() => navigate(`/guide/${d.id}`)} className="guide-row ripple"
             style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
             <span style={{ flexShrink: 0, width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", background: softTile(d.color) }}>
-              <Icon name={d.icon} size={19} color={d.color} />
+              <Icon name={d.icon as IconName} size={19} color={d.color} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 14.5, fontWeight: 600 }}>{d.title}</span>
@@ -64,14 +65,14 @@ function Index({ navigate }) {
   );
 }
 
-function Document({ doc, navigate }) {
+function Document({ doc, navigate }: { doc: GuideDoc; navigate: NavigateFunction }) {
   const idx = GUIDE_DOCS.findIndex(d => d.id === doc.id);
   const next = idx >= 0 ? GUIDE_DOCS[idx + 1] : null;
   return (
-    <div className="guide-doc" style={{ "--guide-accent": doc.color }}>
+    <div className="guide-doc" style={{ "--guide-accent": doc.color } as CSSProperties}>
       {doc.lead && (
         <div className="guide-hero">
-          <span className="guide-hero-icon"><Icon name={doc.icon} size={26} color="#fff" /></span>
+          <span className="guide-hero-icon"><Icon name={doc.icon as IconName} size={26} color="#fff" /></span>
           <p className="guide-hero-lead">{doc.lead}</p>
         </div>
       )}
@@ -80,9 +81,9 @@ function Document({ doc, navigate }) {
       </article>
       {next && (
         <button className="guide-next ripple" onClick={() => navigate(`/guide/${next.id}`)}
-          style={{ "--guide-accent": next.color }}>
+          style={{ "--guide-accent": next.color } as CSSProperties}>
           <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: softTile(next.color) }}>
-            <Icon name={next.icon} size={17} color={next.color} />
+            <Icon name={next.icon as IconName} size={17} color={next.color} />
           </span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "block", fontSize: 11, color: "var(--text3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Sujet suivant</span>

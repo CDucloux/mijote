@@ -14,9 +14,9 @@ export const RECIPE_CATEGORIES = meal;
 export const BASE_CATEGORIES = base;
 
 /** Ids de catégories réservés aux préparations de base. */
-export const BASE_CATEGORY_IDS = new Set(BASE_CATEGORIES.map(c => c.id));
+export const BASE_CATEGORY_IDS: ReadonlySet<string> = new Set(BASE_CATEGORIES.map(c => c.id));
 
 const BY_ID = new Map([...RECIPE_CATEGORIES, ...BASE_CATEGORIES].map(c => [c.id, c]));
-export function categoryLabel(id) { return BY_ID.get(id)?.label || ""; }
-export function categoryEmoji(id) { return BY_ID.get(id)?.emoji || "🍴"; }
-export function isRecipeCategory(id) { return BY_ID.has(id); }
+export function categoryLabel(id: string | null | undefined): string { return (id ? BY_ID.get(id)?.label : undefined) || ""; }
+export function categoryEmoji(id: string | null | undefined): string { return (id ? BY_ID.get(id)?.emoji : undefined) || "🍴"; }
+export function isRecipeCategory(id: string | null | undefined): boolean { return !!id && BY_ID.has(id); }

@@ -3,11 +3,9 @@ import type { Dispatch, SetStateAction } from "react";
 import { recomputeCollectionCounts } from "@/lib/recipes/recipeActions.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
-import { DEFAULT_PREFERENCES } from "../constants/preferences.js";
+import { DEFAULT_PREFERENCES, type Preferences } from "../constants/preferences.js";
 import type { Recipe, Collection, MealPlan } from "@/lib/types.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
-
-type Preferences = typeof DEFAULT_PREFERENCES;
 
 /** Dépendances injectées (état de l'app + setters + notify/navigate). */
 export interface RecipeActionsDeps {
