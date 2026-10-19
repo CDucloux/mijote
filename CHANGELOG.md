@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.67.0 – Cardamome · Frigo ouvert
+
+### Vitrine
+- **Frigo du hero redessiné** : illustration détaillée, porte entrouverte et ses balconnets, clayettes en verre, bac à légumes garni, reste de la veille étiqueté à la main. Le « ? » se trace d'un trait d'encre au chargement.
+- **Démo de l'import intelligent** fidèle à l'écran réel : contrôle Lien / Photo / Texte / PDF, chaque source produisant sa recette structurée.
+- **Plus de halos décoratifs** : case choisie, pastille « Recommandé » et bouton d'enregistrement passent à des ombres neutres.
+- **Logo** : un clic remonte bien en haut de la page sur desktop.
+
+### Import intelligent
+- **Sections d'étapes nommées par la source** (Cuisson, Montage, Dressage…) au lieu d'être déduites de leur position ; une étape oubliée au milieu d'une section ne la coupe plus en deux. Les recettes déjà importées affichent un intitulé neutre.
+- **Import photo plus économe** : l'extraction par la vision réfléchit moins longtemps, pour la même lecture de la page.
+
 ## v4.66.0 – Cardamome · Source tracée
 
 ### Fiche ingrédient

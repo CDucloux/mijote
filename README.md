@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.66.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.67.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -143,7 +143,8 @@ toujours avec vous.
   (abonnement Cardamome+) et cookies (Markdown), présentées en sommaire avec
   temps de lecture, consultables même déconnecté.
 - 🪧 **Vitrine publique** : la racine du site présente Cardamome avant toute
-  connexion (manifeste, scènes vivantes en CSS, import intelligent, offre) en
+  connexion (manifeste, scènes vivantes en CSS et SVG dont un frigo illustré,
+  démo de l'import intelligent sur ses quatre sources, offre) en
   slides plein écran sur desktop et défilement naturel sur mobile, barre de
   navigation à ancres, thème clair / sombre. Elle se prolonge par un écran de
   connexion assorti (deux panneaux sur desktop, colonne épurée sur mobile,
@@ -169,7 +170,7 @@ toujours avec vous.
 | Build | Vite 8 (Rolldown), `vite-plugin-pwa` |
 | Backend | Firebase 12 (Auth, Firestore, Storage) |
 | Serveur | Cloud Functions v2 (Node 22, `europe-west1`) |
-| IA | Claude (Anthropic) pour l'import de recettes : Haiku 5.5 pour le texte (lien, texte collé, PDF), Sonnet 5 pour la vision (photos) |
+| IA | Claude (Anthropic) pour l'import de recettes : Haiku 5.5 pour le texte (lien, texte collé, PDF), Sonnet 5 pour la vision (photos), effort bas sur toutes les extractions |
 | Tests | Vitest 4 (1282 tests unitaires sur les libs et hooks critiques) |
 | Observabilité | Sentry (erreurs de prod uniquement, région UE, source maps au build) |
 | CI | GitHub Actions (test + build sur chaque push) |
