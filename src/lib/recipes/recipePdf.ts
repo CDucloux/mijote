@@ -57,7 +57,14 @@ export interface PdfDbs {
   utensilDB?: PdfDbItem[];
   recipesById?: Map<string, PdfRecipe>;
   techniques?: unknown[];
+  /** Source de la police des drapeaux (URL ou data URI). Sans elle, les paires
+   *  d'indicateurs régionaux (🇫🇷) retombent en deux lettres (« FR ») là où le
+   *  système n'a pas de police d'emoji drapeaux (Windows/Chrome, impression). */
+  flagFontSrc?: string;
 }
+
+// Gousse de la marque (même tracé que LogoPod), en hex : le PDF n'a pas les tokens.
+const LOGO_POD_SVG = `<svg viewBox="15 15 70 70" fill="none" aria-hidden="true"><path d="M50 15 C68 30 74 48 67 63 C62.5 74 55.5 80 50 85 C44.5 80 37.5 74 33 63 C26 48 32 30 50 15 Z" fill="#8bb257"/><g stroke="#5c8235" stroke-linecap="round"><path d="M50 24 C50 40 50 62 50 77" stroke-width="4"/><path d="M42 30 C39.5 45 41 60 47 74" stroke-width="3.4"/><path d="M58 30 C60.5 45 59 60 53 74" stroke-width="3.4"/></g></svg>`;
 
 /** Couleur de difficulté en hex (le PDF n'a pas les variables CSS `--green`/`--red`). */
 const diffColorPdf = (lvl: number): string => (lvl <= 2 ? "#3f9a54" : lvl === 3 ? "#e8920a" : "#e05252");
@@ -83,7 +90,7 @@ function escapeHtml(text: string): string {
  * @param dbs.techniques - Glossaire des techniques (calcul de difficulté).
  * @returns Le document HTML complet (chaîne), prêt à imprimer.
  */
-export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utensilDB = [], recipesById, techniques = [] }: PdfDbs = {}): string {
+export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utensilDB = [], recipesById, techniques = [], flagFontSrc }: PdfDbs = {}): string {
   const ingImg = (dbId: string | undefined): string => ingredientDB.find(d => d.id === dbId)?.image || "";
   const utImg = (dbId: string | undefined): string => utensilDB.find(d => d.id === dbId)?.image || "";
 
@@ -278,9 +285,10 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
+    ${flagFontSrc ? `@font-face { font-family: 'Twemoji Country Flags'; src: url('${flagFontSrc}') format('woff2'); unicode-range: U+1F1E6-1F1FF; }` : ""}
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --accent: #6e9a3f; --green-rgb: 63, 154, 84; --text: #23281d; --text2: #565b4c; --text3: #838872; --border: #e3e5d9; --surface: #f7f8f1; }
-    body { font-family: 'Hanken Grotesk', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { font-family: 'Twemoji Country Flags', 'Hanken Grotesk', sans-serif; color: var(--text); background: #fff; max-width: 720px; margin: 0 auto; padding: 40px 22px 56px; font-size: 14px; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .hero-wrap { position: relative; margin-bottom: 24px; }
     .hero { width: 100%; height: 230px; object-fit: cover; border-radius: 14px; display: block; }
     .hero-badges { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
@@ -311,16 +319,16 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .diff-dots { display: inline-flex; align-items: center; gap: 4px; }
     .dd { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .nl { display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; line-height: 1; }
-    .section-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-    .group-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 14px; font-weight: 700; color: var(--accent); margin: 4px 0 10px; }
+    .section-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .group-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 14px; font-weight: 500; color: var(--accent); margin: 4px 0 10px; }
     /* Sous-préparation d'étapes : bloc encadré, nettement séparé des autres */
     .step-group { border: 1px solid rgba(var(--accent-rgb), 0.35); border-radius: 14px; padding: 16px 18px 2px; margin-bottom: 20px; background: rgba(var(--accent-rgb), 0.035); }
-    .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Source Serif 4', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(110, 154, 63, 0.28); }
+    .step-group-title { display: flex; align-items: center; gap: 9px; font-family: 'Source Serif 4', Georgia, serif; font-size: 16px; font-weight: 500; color: var(--accent); margin: 0 0 16px; padding-bottom: 11px; border-bottom: 1px solid rgba(110, 154, 63, 0.28); }
     .step-group-ico { flex-shrink: 0; }
     .step-group .step:last-child { margin-bottom: 16px; }
     /* Intitulé des étapes hors section (« Pour commencer », « Pour finir »), même accent que
        les sections (l'encadré distingue déjà les vraies sous-préparations) */
-    .step-loose-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; font-weight: 700; color: var(--accent); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .step-loose-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; font-weight: 500; color: var(--accent); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     /* Pills */
     .pill { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 13px 4px 4px; font-size: 13px; vertical-align: middle; }
     .pill-comp { border-color: rgba(var(--accent-rgb),0.4); background: rgba(var(--accent-rgb),0.06); }
@@ -335,7 +343,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .step { margin-bottom: 22px; }
     .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 2px; }
     .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .step-title { font-weight: 700; font-size: 14px; color: var(--accent); }
+    .step-title { font-weight: 600; font-size: 14px; color: var(--accent); }
     .step-text { color: var(--text2); line-height: 1.65; padding-left: 40px; }
     .step-tip { display: flex; gap: 9px; align-items: center; margin: 9px 0 0 40px; padding: 8px 12px; background: rgba(91,156,246,0.10); border: 1px solid rgba(91,156,246,0.30); border-left: 3px solid #5b9cf6; border-radius: 9px; font-size: 12.5px; line-height: 1.5; }
     .step-tip-ico { flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px; background: #5b9cf6; display: inline-flex; align-items: center; justify-content: center; }
@@ -345,11 +353,12 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
     .comp-block { margin-bottom: 28px; padding: 16px; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }
     .comp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .comp-icon { display: inline-flex; align-items: center; }
-    .comp-name { font-family: 'Source Serif 4', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--text); flex: 1; }
+    .comp-name { font-family: 'Source Serif 4', Georgia, serif; font-size: 16px; font-weight: 600; color: var(--text); flex: 1; }
     .comp-yield { font-size: 12px; color: var(--text3); background: rgba(var(--accent-rgb),0.1); border-radius: 20px; padding: 3px 10px; }
     /* Footer */
     .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text3); }
-    .footer-brand { font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+    .footer-brand { display: inline-flex; align-items: center; gap: 7px; font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+    .footer-brand svg { width: 18px; height: 18px; flex-shrink: 0; }
     .footer-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; text-align: right; }
     .footer-brand .dot { color: var(--accent); }
     .footer-gen { display: inline-flex; align-items: center; gap: 8px; }
@@ -405,7 +414,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
   ${stepLines}` : ""}
 
   <div class="footer">
-    <span class="footer-brand">Cardamome<span class="dot">·</span></span>
+    <span class="footer-brand">${LOGO_POD_SVG}<span>Cardam<span class="dot">o</span>me<span class="dot">·</span></span></span>
     <span class="footer-meta">
       <span class="footer-gen">Généré le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}${recipe.history?.length ? `<span class="version-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="15" y2="14"/></svg>${recipe.history[recipe.history.length - 1].label}</span>` : ""}</span>
     </span>
@@ -435,12 +444,31 @@ export function choosePrintStrategy(isNative: boolean): PrintStrategy {
 // Attend le chargement de l'image de tête (ou son échec) avant d'imprimer, pour
 // éviter un aperçu tronqué ; sans image, court délai fixe le temps du layout.
 function printWhenReady(doc: Document, print: () => void): void {
+  const afterFonts = () => { void doc.fonts.ready.then(print, print); };
   const heroImg = doc.querySelector(".hero") as HTMLImageElement | null;
   if (heroImg && !heroImg.complete) {
-    heroImg.onload = heroImg.onerror = () => setTimeout(print, 300);
+    heroImg.onload = heroImg.onerror = () => setTimeout(afterFonts, 300);
   } else {
-    setTimeout(print, heroImg ? 400 : 200);
+    setTimeout(afterFonts, heroImg ? 400 : 200);
   }
+}
+
+const FLAG_FONT_PATH = "/fonts/TwemojiCountryFlags.woff2";
+let flagFontDataUri: Promise<string | undefined> | null = null;
+
+// Natif : la WebView d'impression ne résout pas les chemins de l'app, la police
+// est donc embarquée en data URI (lue une fois, servie par le cache PWA hors ligne).
+function loadFlagFontDataUri(): Promise<string | undefined> {
+  flagFontDataUri ??= fetch(FLAG_FONT_PATH)
+    .then(r => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+    .then(blob => new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    }))
+    .catch(() => { flagFontDataUri = null; return undefined; });
+  return flagFontDataUri;
 }
 
 // Web : nouvel onglet + impression du navigateur. Sans effet si la popup est bloquée.
@@ -471,11 +499,12 @@ function printViaNative(html: string, name?: string): Promise<void> {
  * popup ouverte (web). Rejette si le service d'impression natif échoue ; sur le
  * web, sans effet si la popup est bloquée par le navigateur.
  */
-export function printRecipe(recipe: PdfRecipe, dbs: PdfDbs = {}): Promise<void> {
-  const html = buildRecipePdfHtml(recipe, dbs);
+export async function printRecipe(recipe: PdfRecipe, dbs: PdfDbs = {}): Promise<void> {
   if (choosePrintStrategy(Capacitor.isNativePlatform()) === "native") {
-    return printViaNative(html, recipe.name);
+    const flagFontSrc = await loadFlagFontDataUri();
+    return printViaNative(buildRecipePdfHtml(recipe, { ...dbs, flagFontSrc }), recipe.name);
   }
-  printViaPopup(html);
-  return Promise.resolve();
+  // Web : la popup (about:blank) hérite de l'origine de l'app, l'URL absolue suffit,
+  // et l'ouverture reste synchrone (sinon le bloqueur de popups l'intercepte).
+  printViaPopup(buildRecipePdfHtml(recipe, { ...dbs, flagFontSrc: new URL(FLAG_FONT_PATH, window.location.href).href }));
 }

@@ -118,3 +118,20 @@ describe("buildRecipePdfHtml – chef", () => {
     expect(html).not.toContain("<img src=x");
   });
 });
+
+describe("buildRecipePdfHtml – marque et drapeaux", () => {
+  it("embarque la police des drapeaux quand une source est fournie", () => {
+    const html = buildRecipePdfHtml({ name: "Soupe", cuisine: "Française", ingredients: [] }, { ingredientDB: DB, flagFontSrc: "https://app.test/fonts/TwemojiCountryFlags.woff2" });
+    expect(html).toContain("@font-face { font-family: 'Twemoji Country Flags'; src: url('https://app.test/fonts/TwemojiCountryFlags.woff2')");
+    expect(html).toContain("unicode-range: U+1F1E6-1F1FF");
+  });
+  it("n'émet aucune @font-face sans source", () => {
+    expect(buildRecipePdfHtml({ name: "Soupe", ingredients: [] }, { ingredientDB: DB })).not.toContain("@font-face");
+  });
+  it("signe le pied de page avec la gousse et le mot-symbole", () => {
+    const html = buildRecipePdfHtml({ name: "Soupe", ingredients: [] }, { ingredientDB: DB });
+    const footer = html.slice(html.indexOf('<div class="footer">'));
+    expect(footer).toContain('<svg viewBox="15 15 70 70"');
+    expect(footer).toContain('Cardam<span class="dot">o</span>me<span class="dot">·</span>');
+  });
+});
