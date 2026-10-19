@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.71.1 – Cardamome · Bocaux posés
+
+### Stock
+- **Bocal immobile** : un appui sur un bocal ne le fait plus se soulever, l'étagère reste calme.
+- **Chargement des images** : les vignettes des bocaux affichent le même anneau de chargement que le reste de l'appli, puis apparaissent en fondu.
+
 ## v4.71.0 – Cardamome · Le bocal en main
 
 ### Stock
