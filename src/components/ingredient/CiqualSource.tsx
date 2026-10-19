@@ -4,6 +4,8 @@ import { ciqualUrl, CIQUAL_HOME } from "@/lib/food/ciqual.js";
 import type { CiqualRef } from "@/lib/types";
 import "../../styles/ciqual-source.css";
 
+const ANSES_EMBLEM = "/brands/anses-emblem.png";
+
 interface CiqualSourceProps {
   name: string;
   image?: string;
@@ -31,7 +33,7 @@ export function CiqualSource({ name, image, ciqual }: CiqualSourceProps) {
             <i /><span className="ciq-link__eq">{traced ? <Icon name="check" size={12} weight="bold" color="currentColor" /> : "?"}</span><i />
           </span>
           <div className="ciq-node ciq-node--end">
-            <span className={`ciq-mark${traced ? "" : " ciq-mark--empty"}`}>{traced && <Icon name="leaf" size={16} color="#fff" />}</span>
+            <span className={`ciq-mark${traced ? "" : " ciq-mark--empty"}`}>{traced && <img src={ANSES_EMBLEM} alt="" />}</span>
             <span className="ciq-node__txt">
               <small>{traced ? `Table Ciqual · n° ${ciqual.code}` : "Table Ciqual"}</small>
               <b>{traced ? ciqual.name || `Aliment n° ${ciqual.code}` : "Pas d'équivalent"}</b>
@@ -47,7 +49,16 @@ export function CiqualSource({ name, image, ciqual }: CiqualSourceProps) {
           <a className="ciq-open pressable" href={traced ? ciqualUrl(ciqual) : CIQUAL_HOME} target="_blank" rel="noopener noreferrer">
             {traced ? "Voir sur Ciqual" : "Parcourir la table"} <Icon name="externalLink" size={13} color="var(--text3)" />
           </a>
-          {traced && <span className="ciq-legal">Anses, Ciqual 2025 · Licence Ouverte</span>}
+          {traced && (
+            <span className="ciq-legal">
+              {/* Logo en deux pièces : emblème en couleur, mot « anses » en masque teinté par le thème. */}
+              <span className="ciq-anses" role="img" aria-label="Anses">
+                <img src={ANSES_EMBLEM} alt="" />
+                <i />
+              </span>
+              Ciqual 2025 · Licence Ouverte
+            </span>
+          )}
         </div>
       </div>
     </section>
