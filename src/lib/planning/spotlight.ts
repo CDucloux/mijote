@@ -39,10 +39,10 @@ export function weekIndex(date: Date = new Date()): number {
  * @param date - Date de référence (mois + rotation hebdomadaire).
  * @returns L'ingrédient vedette de la semaine, ou `null` si aucun candidat de saison.
  */
-export function pickSpotlightIngredient(
-  ingredientDB: SpotlightIngredient[] | null | undefined,
+export function pickSpotlightIngredient<T extends SpotlightIngredient>(
+  ingredientDB: T[] | null | undefined,
   date: Date = new Date(),
-): SpotlightIngredient | null {
+): T | null {
   const month = date.getMonth() + 1;
   const candidates = (ingredientDB || []).filter(i => {
     if (!SPOTLIGHT_CATEGORIES.has(i.category || "")) return false;

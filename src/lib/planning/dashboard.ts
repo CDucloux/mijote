@@ -8,16 +8,14 @@
 import { slotOrder } from "@/constants/mealSlots.js";
 import { aggregateShopping, type ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
-import type { MealItem } from "@/lib/types.js";
+import { itemRole, roleOrder } from "@/lib/planning/composedMeal.js";
+import type { MealItem, Recipe } from "@/lib/types.js";
 
 /** Item de planning (alias de domaine). */
 export type PlanEntry = MealItem;
 
-/** Recette résolue (forme minimale). */
-export interface DashRecipe {
-  id?: string;
-  name?: string;
-}
+/** Recette résolue (vignette, nom, temps et catégorie servent à la carte du jour). */
+export type DashRecipe = Recipe;
 
 export type { ShoppingList };
 
@@ -29,7 +27,16 @@ export interface DashIngredient {
 
 /** Repas planifié enrichi de sa recette résolue. */
 export interface TodayMeal extends PlanEntry {
-  recipe: DashRecipe | undefined;
+  recipe: DashRecipe;
+}
+
+/** Carte « repas du jour » : un repas composé (même créneau et groupe) ou un item seul. */
+export interface TodayMealCard {
+  slot: string | undefined;
+  /** Le plat (ou à défaut le premier service), mis en avant sur la carte. */
+  primary: TodayMeal;
+  /** Les autres services du repas, dans l'ordre entrée → dessert. */
+  others: TodayMeal[];
 }
 
 /**
@@ -59,7 +66,7 @@ export function getTodayMeals(
   const entries = (mealPlan && mealPlan[key]) || [];
   const byId = new Map(recipes.map(r => [r.id, r]));
   return entries
-    .map(m => ({ ...m, recipe: byId.get(m.recipeId) }))
+    .map(m => ({ ...m, recipe: m.recipeId ? byId.get(m.recipeId) : undefined }))
     .filter((m): m is TodayMeal => !!m.recipe)
     .sort((a, b) => slotOrder(a.slot) - slotOrder(b.slot));
 }
@@ -141,4 +148,27 @@ export function buildDashboardSummary({ mealPlan, recipes, shoppingLists, lowSto
     isCalm,
     isEmpty: isCalm && (recipes?.length ?? 0) === 0,
   };
+}
+
+/**
+ * Regroupe les repas du jour en cartes : les items d'un repas composé (même
+ * créneau et même `groupId`) forment UNE carte, le plat en tête et les autres
+ * services résumés ; un item sans groupe reste une carte à lui seul. L'ordre
+ * des cartes suit celui des repas (déjà triés par créneau).
+ *
+ * @param meals - Repas du jour, tels que rendus par {@link getTodayMeals}.
+ * @returns Les cartes à afficher, dans l'ordre d'apparition.
+ */
+export function groupTodayMeals(meals: readonly TodayMeal[]): TodayMealCard[] {
+  const groups = new Map<string, TodayMeal[]>();
+  meals.forEach((meal, i) => {
+    const key = `${meal.slot}|${meal.groupId || `solo-${i}`}`;
+    const items = groups.get(key);
+    if (items) items.push(meal); else groups.set(key, [meal]);
+  });
+  return [...groups.values()].map(items => {
+    const sorted = [...items].sort((a, b) => roleOrder(itemRole(a, a.recipe)) - roleOrder(itemRole(b, b.recipe)));
+    const primary = sorted.find(m => itemRole(m, m.recipe) === "plat") || sorted[0];
+    return { slot: primary.slot, primary, others: sorted.filter(m => m !== primary) };
+  });
 }

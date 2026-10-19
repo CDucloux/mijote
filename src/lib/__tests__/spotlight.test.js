@@ -34,3 +34,10 @@ describe("pickSpotlightIngredient", () => {
     expect(picks.size).toBeGreaterThan(1); // figue ET courgette apparaissent sur le mois
   });
 });
+
+describe("pickSpotlightIngredient renvoie la fiche d'origine", () => {
+  it("conserve les champs propres à la fiche (image, description…)", () => {
+    const pick = pickSpotlightIngredient([{ id: "figue", name: "Figue", category: "fruit", months: [8], image: "figue.png", description: "Fragile." }], AUG);
+    expect(pick).toMatchObject({ id: "figue", image: "figue.png", description: "Fragile." });
+  });
+});

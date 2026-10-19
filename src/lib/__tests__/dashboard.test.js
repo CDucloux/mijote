@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   todayKey, getTodayMeals, upcomingSlot, countShoppingTodo,
-  getLowStockNames, buildDashboardSummary,
+  getLowStockNames, buildDashboardSummary, groupTodayMeals,
 } from "@/lib/planning/dashboard.js";
 
 const recipes = [
@@ -133,5 +133,42 @@ describe("buildDashboardSummary", () => {
       lowStock: [], ingredientDB, date,
     });
     expect(s.isEmpty).toBe(false); // des courses à faire → inviter à démarrer n'a pas de sens
+  });
+});
+
+describe("groupTodayMeals", () => {
+  const meal = (recipeId, slot, extra = {}) => ({ recipeId, slot, recipe: { id: recipeId, name: recipeId, category: extra.category }, ...extra });
+
+  it("renvoie une liste vide sans repas", () => {
+    expect(groupTodayMeals([])).toEqual([]);
+  });
+
+  it("garde un item sans groupe comme une carte seule", () => {
+    const cards = groupTodayMeals([meal("a", "midi"), meal("b", "midi")]);
+    expect(cards).toHaveLength(2);
+    expect(cards[0].primary.recipeId).toBe("a");
+    expect(cards[0].others).toEqual([]);
+  });
+
+  it("réunit un repas composé en une carte, le plat en tête et les autres services triés", () => {
+    const cards = groupTodayMeals([
+      meal("tarte", "soir", { groupId: "g1", role: "dessert" }),
+      meal("roti", "soir", { groupId: "g1", role: "plat" }),
+      meal("veloute", "soir", { groupId: "g1", role: "entree" }),
+    ]);
+    expect(cards).toHaveLength(1);
+    expect(cards[0].primary.recipeId).toBe("roti");
+    expect(cards[0].others.map(m => m.recipeId)).toEqual(["veloute", "tarte"]);
+    expect(cards[0].slot).toBe("soir");
+  });
+
+  it("sépare deux groupes de même identifiant sur des créneaux différents", () => {
+    const cards = groupTodayMeals([meal("a", "midi", { groupId: "g" }), meal("b", "soir", { groupId: "g" })]);
+    expect(cards).toHaveLength(2);
+  });
+
+  it("retombe sur le premier service quand le repas n'a pas de plat", () => {
+    const cards = groupTodayMeals([meal("x", "midi", { groupId: "g", role: "entree" }), meal("y", "midi", { groupId: "g", role: "dessert" })]);
+    expect(cards[0].primary.recipeId).toBe("x");
   });
 });
