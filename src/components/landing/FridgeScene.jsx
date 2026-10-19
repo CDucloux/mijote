@@ -138,19 +138,28 @@ export function FridgeScene() {
           <rect x="151" y="112.6" width="6" height="1.2" fill="#b9ad92" />
         </g>
 
-        {/* Clayette du milieu : œufs (couvercle relevé), beurre entamé, demi-citron, tomate */}
+        {/* Clayette du milieu : boîte d'œufs entamée, beurre, demi-citron */}
         <Shelf y={230} />
         <g>
           <Contact cx={59} y={226} rx={26} />
-          <polygon points="37,206 81,206 77,186 41,186" fill="#bcb091" />
-          <ellipse cx="42.5" cy="207" rx="7" ry="8.6" fill="#efe3cc" />
-          <ellipse cx="59" cy="207" rx="7" ry="8.6" fill="#dfc29d" />
-          <ellipse cx="75.5" cy="207" rx="7" ry="8.6" fill="#f2e8d6" />
-          <ellipse cx="40" cy="203.5" rx="2" ry="2.8" fill="#fff" opacity="0.55" />
-          <ellipse cx="56.5" cy="203.5" rx="2" ry="2.8" fill="#fff" opacity="0.45" />
-          <ellipse cx="73" cy="203.5" rx="2" ry="2.8" fill="#fff" opacity="0.55" />
-          <path d="M34 214q8.3-5 16.7 0q8.3-5 16.6 0q8.4-5 16.7 0V226H34z" fill="#c8bc9f" />
-          <path d="M50.7 214v12M67.3 214v12" stroke="#000" strokeOpacity="0.1" strokeWidth="0.8" />
+          <polygon points="35,207 83,207 79,184 39,184" fill="#c4b898" />
+          <rect x="39" y="184" width="40" height="1.6" fill="#fff" opacity="0.3" />
+          <ellipse cx="47" cy="197" rx="4.6" ry="2.4" fill="#000" opacity="0.07" />
+          <ellipse cx="71" cy="197" rx="4.6" ry="2.4" fill="#000" opacity="0.07" />
+          <rect x="50" y="188.5" width="18" height="8" rx="1" fill="#f3ead2" />
+          <text x="59" y="194.2" className="lpfr-tiny">6 ŒUFS</text>
+          <ellipse cx="46" cy="204" rx="6.2" ry="7.6" fill="#e6cfae" />
+          <ellipse cx="62.5" cy="203.5" rx="6.2" ry="7.6" fill="#f1e7d4" />
+          <ellipse cx="79" cy="204" rx="6.2" ry="7.6" fill="#dcbd96" />
+          <ellipse cx="42.5" cy="208" rx="7" ry="8.6" fill="#f2e9d8" />
+          <ellipse cx="59" cy="208" rx="7" ry="8.6" fill="#ddbe98" />
+          <ellipse cx="40" cy="204.5" rx="2" ry="2.8" fill="#fff" opacity="0.6" />
+          <ellipse cx="56.5" cy="204.5" rx="2" ry="2.8" fill="#fff" opacity="0.4" />
+          <rect x="55.5" y="209" width="7" height="1.1" rx="0.5" fill="#b84a3a" opacity="0.55" />
+          <rect x="33" y="211" width="52" height="4" rx="1.5" fill="#d3c8ab" />
+          <ellipse cx="75.5" cy="212.6" rx="6.4" ry="1.7" fill="#000" opacity="0.2" />
+          <path d="M34 215h16.7v4.5a8.35 6.5 0 0 1-16.7 0zM50.7 215h16.6v4.5a8.3 6.5 0 0 1-16.6 0zM67.3 215H84v4.5a8.35 6.5 0 0 1-16.7 0z" fill="#c8bc9f" />
+          <path d="M50.7 215v8M67.3 215v8" stroke="#000" strokeOpacity="0.12" strokeWidth="0.8" />
         </g>
         <g>
           <Contact cx={108} y={226} rx={17} />
@@ -165,12 +174,6 @@ export function FridgeScene() {
           <circle cx="140" cy="215" r="8.2" fill="none" stroke="#fbf1c4" strokeWidth="1.1" />
           <path d="M140 215V207.6M140 215l5.2-5.2M140 215h7.4M140 215l5.2 5.2M140 215v7.4M140 215l-5.2 5.2M140 215h-7.4M140 215l-5.2-5.2" stroke="#e6c24e" strokeWidth="0.9" />
           <circle cx="140" cy="215" r="1.2" fill="#fbf1c4" />
-        </g>
-        <g>
-          <Contact cx={165} y={226} rx={9} />
-          <circle cx="165" cy="216" r="10" fill={`url(#${tomato})`} />
-          <ellipse cx="161.5" cy="212" rx="2.6" ry="1.7" fill="#fff" opacity="0.4" />
-          <path d="M165 206.5l2.2 2.6 3.2-.6-2 2.4 1.4 2.8-3-.9-1.8 2.3-1.8-2.3-3 .9 1.4-2.8-2-2.4 3.2.6z" fill="#5f7f36" />
         </g>
 
         {/* Clayette basse : fromage, reste de la veille (étiqueté à la main), moutarde */}
@@ -207,28 +210,36 @@ export function FridgeScene() {
           <rect x="150.5" y="307.4" width="9" height="1.3" fill="#a57f1f" />
         </g>
 
-        {/* Bac à légumes : fond du tiroir, salade et carottes posées dessus, façade
+        {/* Bac à légumes : fond du tiroir, salade, carottes et tomate posées dessus, façade
             givrée plus basse que le dos (on voit le haut des légumes dépasser). */}
         <rect x="24" y="336" width="152" height="58" rx="8" className="lpfr-drawer" />
         <rect x="28" y="386" width="144" height="6" rx="3" className="lpfr-ceil" />
         <g>
-          <ellipse cx="58" cy="390" rx="24" ry="2.2" className="lpfr-contact" />
-          <ellipse cx="58" cy="371" rx="25" ry="19" fill="#86ab4e" />
-          <ellipse cx="49" cy="359" rx="14" ry="12" fill="#9cbf62" />
-          <ellipse cx="67" cy="357" rx="13" ry="11" fill="#a9c972" />
-          <ellipse cx="58" cy="350" rx="10" ry="8" fill="#bcd684" />
-          <path d="M58 389c-1-13-3-22-8-30M58 389c2-12 5-20 9-28M58 389c0-14 0-24 0-33" stroke="#e8f1cf" strokeOpacity="0.55" strokeWidth="1" fill="none" />
+          <ellipse cx="58" cy="390" rx="23" ry="2.2" className="lpfr-contact" />
+          <ellipse cx="58" cy="376" rx="24" ry="14.5" fill="#86ab4e" />
+          <ellipse cx="49" cy="367" rx="13" ry="10" fill="#9cbf62" />
+          <ellipse cx="67" cy="366" rx="12" ry="9.5" fill="#a9c972" />
+          <ellipse cx="58" cy="361" rx="9" ry="6.5" fill="#bcd684" />
+          <path d="M58 389c-1-10-3-17-8-24M58 389c2-9 5-16 9-22M58 389c0-11 0-19 0-26" stroke="#e8f1cf" strokeOpacity="0.55" strokeWidth="1" fill="none" />
         </g>
-        <g>
-          <ellipse cx="128" cy="391" rx="32" ry="1.9" className="lpfr-contact" />
-          <g transform="rotate(-9 124 383) translate(6 -10)">
-            <path d="M98 380.5Q125 381.5 156 388Q125 391.5 98 390.5Q93.5 385.5 98 380.5z" fill={`url(#${carrot})`} />
+        {/* Deux carottes posées au fond, la seconde un peu plus loin (donc plus haut) */}
+        <g transform="translate(-4 -4)">
+          <ellipse cx="127" cy="390.6" rx="30" ry="1.7" className="lpfr-contact" />
+          <path d="M98 380.5Q125 381.5 156 388Q125 391.5 98 390.5Q93.5 385.5 98 380.5z" fill={`url(#${carrot})`} />
             <path d="M107 382v7.6M117 382.6v7.2M127 383.6v6.2M137 384.8v4.8M146 386.2v3" stroke="#b35416" strokeOpacity="0.45" strokeWidth="0.8" />
             <path d="M98 384c-6-3-9-9-11-16M98 385c-8-1-13-5-17-11M98 386c-3-6-3-12 0-18" stroke="#5f8a34" strokeWidth="1.7" strokeLinecap="round" fill="none" />
-          </g>
+        </g>
+        <g transform="translate(-8 0)">
+          <ellipse cx="127" cy="390.8" rx="31" ry="1.9" className="lpfr-contact" />
           <path d="M98 380.5Q125 381.5 156 388Q125 391.5 98 390.5Q93.5 385.5 98 380.5z" fill={`url(#${carrot})`} />
-          <path d="M107 382v7.6M117 382.6v7.2M127 383.6v6.2M137 384.8v4.8M146 386.2v3" stroke="#b35416" strokeOpacity="0.45" strokeWidth="0.8" />
-          <path d="M98 384c-6-3-9-9-11-16M98 385c-8-1-13-5-17-11M98 386c-3-6-3-12 0-18" stroke="#6f9a3e" strokeWidth="1.7" strokeLinecap="round" fill="none" />
+            <path d="M107 382v7.6M117 382.6v7.2M127 383.6v6.2M137 384.8v4.8M146 386.2v3" stroke="#b35416" strokeOpacity="0.45" strokeWidth="0.8" />
+            <path d="M98 384c-6-3-9-9-11-16M98 385c-8-1-13-5-17-11M98 386c-3-6-3-12 0-18" stroke="#6f9a3e" strokeWidth="1.7" strokeLinecap="round" fill="none" />
+        </g>
+        <g>
+          <ellipse cx="163" cy="390.4" rx="9" ry="1.8" className="lpfr-contact" />
+          <circle cx="163" cy="381" r="9.4" fill={`url(#${tomato})`} />
+          <ellipse cx="159.8" cy="377.2" rx="2.4" ry="1.6" fill="#fff" opacity="0.4" />
+          <path d="M163 371.8l2.1 2.4 3-.6-1.9 2.3 1.3 2.6-2.8-.8-1.7 2.1-1.7-2.1-2.8.8 1.3-2.6-1.9-2.3 3 .6z" fill="#5f7f36" />
         </g>
         <rect x="24" y="352" width="152" height="42" rx="8" className="lpfr-crisper" />
         <rect x="24" y="350" width="152" height="3" rx="1.5" className="lpfr-edge" />
@@ -242,18 +253,18 @@ export function FridgeScene() {
         <rect x="190" y="30" width="6" height="14" rx="2" className="lpfr-edge" />
         <rect x="190" y="376" width="6" height="14" rx="2" className="lpfr-edge" />
         <DoorBin y={112} items={[
-          { t: 0.24, node: <><rect x="-4.5" y="-27" width="9" height="27" rx="2" fill="#a7392a" /><rect x="-2.5" y="-32" width="5" height="6" rx="1" fill="#2f3b2b" /></> },
-          { t: 0.48, node: <><rect x="-6.5" y="-22" width="13" height="22" rx="3" fill="#ece0b4" /><rect x="-4" y="-26" width="8" height="5" rx="1" fill="var(--accent)" /></> },
-          { t: 0.74, node: <><rect x="-6" y="-17" width="12" height="17" rx="3" fill="#d99a2b" /><rect x="-6.5" y="-21" width="13" height="4.5" rx="1.2" fill="#3c3a33" /></> },
+          { t: 0.24, node: <><path d="M-4 0v-16c0-3 2-4 2.6-7v-5h2.8v5c.6 3 2.6 4 2.6 7V0z" fill="#b23a26" /><rect x="-1.6" y="-33" width="3.2" height="5.5" rx="1" fill="#2f3b2b" /><rect x="-4" y="-13" width="8" height="7" fill="#f1e3c2" /><rect x="-2.5" y="-10.4" width="5" height="1.1" fill="#b23a26" /></> },
+          { t: 0.5, node: <><rect x="-6" y="-24" width="12" height="20" rx="4" fill="#c9372a" /><rect x="-4" y="-4" width="8" height="4" rx="1" fill="#f3ead2" /><rect x="-6" y="-18" width="12" height="7" fill="#f6e7c8" /><circle cx="0" cy="-14.5" r="1.7" fill="#c9372a" /><rect x="-4.2" y="-22" width="1.4" height="14" rx="0.7" fill="#fff" opacity="0.3" /></> },
+          { t: 0.76, node: <><rect x="-6" y="-16" width="12" height="16" rx="3" fill="#e2a23a" /><rect x="-6.5" y="-19.5" width="13" height="4" rx="1" fill="#3c3a33" /><polygon points="0,-11.2 2.8,-9.6 2.8,-6.4 0,-4.8 -2.8,-6.4 -2.8,-9.6" fill="#f6e6b8" /><rect x="-4.3" y="-14" width="1.3" height="12" rx="0.6" fill="#fff" opacity="0.3" /></> },
         ]} />
         <DoorBin y={222} items={[
-          { t: 0.26, node: <><rect x="-7.5" y="-40" width="15" height="40" fill="#e58e3c" /><polygon points="-7.5,-40 7.5,-40 4.5,-47 -4.5,-47" fill="#d9802f" /><circle cx="0" cy="-24" r="4" fill="#f4cf63" /></> },
-          { t: 0.52, node: <><rect x="-6" y="-46" width="12" height="46" rx="3" fill="#cfe0e4" opacity="0.85" /><rect x="-3.5" y="-50" width="7" height="5" rx="1" fill="#4f86b0" /></> },
-          { t: 0.76, node: <><rect x="-5" y="-19" width="10" height="19" rx="2" fill="#b9bdb5" /><rect x="-5" y="-13" width="10" height="7" fill="#c0392b" opacity="0.8" /></> },
+          { t: 0.26, node: <><rect x="-7.5" y="-40" width="15" height="40" fill="#ef9a3e" /><rect x="3" y="-40" width="4.5" height="40" fill="#000" opacity="0.08" /><polygon points="-7.5,-40 7.5,-40 4.5,-47 -4.5,-47" fill="#e2872f" /><rect x="0.5" y="-46" width="4" height="3" rx="0.8" fill="#2f7d4a" /><circle cx="0" cy="-23" r="5" fill="#f6c25a" stroke="#e7882a" strokeWidth="1" /><path d="M0-23v-4M0-23l3.4-2M0-23l3.4 2M0-23v4M0-23l-3.4 2M0-23l-3.4-2" stroke="#e7882a" strokeWidth="0.6" /><rect x="-7.5" y="-12" width="15" height="4" fill="#2f7d4a" opacity="0.85" /></> },
+          { t: 0.52, node: <><rect x="-2.8" y="-49" width="5.6" height="6" fill="#d6e7ec" /><rect x="-3.2" y="-53" width="6.4" height="4.5" rx="1" fill="#4f86b0" /><rect x="-6" y="-44" width="12" height="44" rx="3.5" fill="#d6e7ec" opacity="0.9" /><path d="M-6-35h12M-6-31h12M-6-8h12M-6-4h12" stroke="#fff" strokeOpacity="0.7" strokeWidth="0.7" /><rect x="-6" y="-24" width="12" height="8" fill="#4f86b0" opacity="0.85" /></> },
+          { t: 0.77, node: <><rect x="-5" y="-19" width="10" height="19" rx="2" fill="#c9ccc7" /><ellipse cx="0" cy="-19" rx="5" ry="1.2" fill="#e4e6e2" /><rect x="-5" y="-14" width="10" height="8" fill="#c0392b" /><rect x="-3.6" y="-17" width="1.2" height="15" rx="0.6" fill="#fff" opacity="0.35" /></> },
         ]} />
         <DoorBin y={332} items={[
-          { t: 0.3, node: <><rect x="-7.5" y="-66" width="15" height="66" rx="4" fill="#4a2230" /><rect x="-3" y="-82" width="6" height="18" fill="#4a2230" /><rect x="-3.5" y="-86" width="7" height="11" rx="1" fill="#8f2a3a" /><rect x="-7.5" y="-40" width="15" height="16" fill="#ece3cc" /></> },
-          { t: 0.62, node: <><rect x="-4.5" y="-30" width="9" height="30" rx="2" fill="#efe9dc" /><rect x="-3.5" y="-34" width="7" height="5" rx="1" fill="#b8862e" /></> },
+          { t: 0.3, node: <><path d="M-7.5 0v-48c0-6 4.5-8 4.5-14v-20h6v20c0 6 4.5 8 4.5 14V0z" fill="#3d1c27" /><rect x="-3.4" y="-88" width="6.8" height="12" rx="1" fill="#8f2a3a" /><rect x="-5.2" y="-46" width="1.6" height="40" rx="0.8" fill="#fff" opacity="0.18" /><rect x="-7.5" y="-34" width="15" height="17" fill="#ece3cc" /><circle cx="0" cy="-28.5" r="2.4" fill="none" stroke="#8f2a3a" strokeWidth="0.8" /><rect x="-4.5" y="-23" width="9" height="1.2" fill="#8a7d5a" /></> },
+          { t: 0.64, node: <><path d="M-5.5 0v-20c0-3 2-4 2.2-7v-6h6.6v6c.2 3 2.2 4 2.2 7V0z" fill="#f4f1ea" stroke="#d9d3c4" strokeWidth="0.6" /><rect x="-3.6" y="-36.5" width="7.2" height="4" rx="1" fill="#4f86b0" /><rect x="-5.5" y="-14" width="11" height="6" fill="#4f86b0" opacity="0.8" /></> },
         ]} />
       </svg>
 

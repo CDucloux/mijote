@@ -38,6 +38,14 @@
   fill: #fff;
   text-anchor: middle;
 }
+.lpfr-tiny {
+  font-family: var(--ff-body);
+  font-size: 4.6px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  fill: #7a6a4c;
+  text-anchor: middle;
+}
 /* L'étiquette de scotch écrite à la main sur le reste de la veille : le détail
    qui raconte l'hésitation devant le frigo. */
 .lpfr-hand {
