@@ -13,7 +13,8 @@ vi.mock("firebase/firestore", () => ({
   setDoc: vi.fn(() => Promise.resolve()),
   onSnapshot: vi.fn(() => () => {}),
 }));
-vi.mock("@/lib/firebase/firebase.js", () => ({ auth: {}, db: {} }));
+// Session non restaurée localement : le démarrage passe par `authCb` (pilotage des tests).
+vi.mock("@/lib/firebase/firebase.js", () => ({ auth: { currentUser: null, authStateReady: () => Promise.resolve() }, db: {} }));
 // La couche d'accès Firestore est éclatée par domaine : on mocke chaque module et on
 // réagrège en un seul alias `fs` pour garder le corps des tests inchangé.
 vi.mock("@/lib/firebase/paths.js", () => ({
@@ -27,21 +28,32 @@ vi.mock("@/lib/firebase/masterDb.js", () => ({
   loadMasterDB: vi.fn(),
   subscribeMasterDB: vi.fn(() => () => {}),
 }));
-vi.mock("@/lib/firebase/workspaceData.js", () => ({
-  loadUserData: vi.fn(),
-  migrateLegacyDoc: vi.fn(() => Promise.resolve(null)),
-  syncRecipes: vi.fn(() => Promise.resolve(new Map())),
-  loadSharedData: vi.fn(),
-  writeSharedData: vi.fn(() => Promise.resolve(new Map())),
-  deleteSharedRecipe: vi.fn(() => Promise.resolve()),
-}));
+// Les lectures de démarrage (« Fast ») délèguent aux mocks serveur : les tests
+// pilotent `loadUserData` / `loadSharedData`, la course cache/serveur est testée à part.
+vi.mock("@/lib/firebase/workspaceData.js", () => {
+  const loadUserData = vi.fn();
+  const loadSharedData = vi.fn();
+  return {
+    loadUserData,
+    loadSharedData,
+    loadUserDataFast: vi.fn(async ws => ({ value: await loadUserData(ws), source: "primary" })),
+    loadSharedDataFast: vi.fn(async ws => ({ value: await loadSharedData(ws), source: "primary" })),
+    migrateLegacyDoc: vi.fn(() => Promise.resolve(null)),
+    syncRecipes: vi.fn(() => Promise.resolve(new Map())),
+    writeSharedData: vi.fn(() => Promise.resolve(new Map())),
+    deleteSharedRecipe: vi.fn(() => Promise.resolve()),
+  };
+});
 vi.mock("@/lib/firebase/households.js", () => ({
   setHouseholdPointer: vi.fn(() => Promise.resolve()),
 }));
 vi.mock("@/lib/firebase/writeLock.js", () => ({
   setSharedWritesLocked: vi.fn(),
 }));
-vi.mock("@/lib/firebase/appConfig.js", () => ({ loadAppConfig: vi.fn(() => Promise.resolve(null)) }));
+vi.mock("@/lib/firebase/appConfig.js", () => ({
+  loadAppConfig: vi.fn(() => Promise.resolve(null)),
+  loadAppConfigFast: vi.fn(async server => ({ value: await server, source: "primary" })),
+}));
 vi.mock("@/lib/household/householdMigration.js", () => ({ mergeShared: (_local, remote) => ({ ...remote }) }));
 
 import * as paths from "@/lib/firebase/paths.js";
@@ -50,7 +62,7 @@ import * as masterDb from "@/lib/firebase/masterDb.js";
 import * as workspaceData from "@/lib/firebase/workspaceData.js";
 import * as households from "@/lib/firebase/households.js";
 import * as writeLock from "@/lib/firebase/writeLock.js";
-import { loadAppConfig } from "@/lib/firebase/appConfig.js";
+import { loadAppConfig, loadAppConfigFast } from "@/lib/firebase/appConfig.js";
 
 // Alias agrégé : les mocks ci-dessus exposent des références de fonctions stables,
 // donc `fs.X` reste la même instance mockée que celle vue par le hook.
@@ -139,6 +151,22 @@ describe("useFirestoreSync", () => {
     expect(props.setSyncStatus).not.toHaveBeenCalledWith("synced");
     expect(fs.syncRecipes).not.toHaveBeenCalled(); // push initial sauté
     expect(props.setRecipes).toHaveBeenCalledWith([{ id: "r1" }]); // lecture seule : données visibles
+  });
+
+  it("garde-fou tardif : config de démarrage en cache, la version serveur déclasse ensuite le client", async () => {
+    let serveServer;
+    loadAppConfig.mockReturnValueOnce(new Promise(r => { serveServer = r; }));
+    loadAppConfigFast.mockResolvedValueOnce({ value: null, source: "fallback" }); // cache : aucune contrainte
+    fs.loadMasterDB.mockResolvedValue(MASTER);
+    fs.loadUserData.mockResolvedValue({ recipes: [{ id: "r1" }], userDB: { ingredients: [], utensils: [] } });
+    const props = makeProps();
+    renderHook(p => useFirestoreSync(p), { initialProps: props });
+    await act(async () => { await authCb({ uid: "me", email: "a@b.c" }); });
+    expect(fs.setSharedWritesLocked).toHaveBeenLastCalledWith(false); // démarrage en écriture
+
+    await act(async () => { serveServer({ minimumVersion: "999.0.0" }); });
+    await waitFor(() => expect(fs.setSharedWritesLocked).toHaveBeenLastCalledWith(true));
+    expect(props.setSyncStatus).toHaveBeenCalledWith("blocked");
   });
 
   it("membre d'un foyer (déjà migré) : le coordinateur charge et applique les données du foyer", async () => {

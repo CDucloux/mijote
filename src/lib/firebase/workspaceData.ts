@@ -12,7 +12,7 @@
  * @module firebase/workspaceData
  */
 import {
-  doc, getDoc, getDocs, writeBatch, deleteDoc,
+  doc, getDoc, getDocs, getDocFromCache, getDocsFromCache, writeBatch, deleteDoc,
   type DocumentData,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase.js";
@@ -22,6 +22,7 @@ import { isSharedWritesLocked } from "@/lib/firebase/writeLock.js";
 import type { SharedData } from "@/lib/household/householdMigration.js";
 import type { Recipe } from "@/lib/types.js";
 import { planRecipeUpserts } from "@/lib/recipes/recipeSync.js";
+import { preferWithin, type PreferResult } from "@/lib/sync/preferWithin.js";
 
 /** Données complètes d'un workspace, telles que lues depuis la structure éclatée. */
 export interface UserData {
@@ -35,14 +36,8 @@ export interface UserData {
   preferences: DocumentData | null;
 }
 
-/**
- * Charge uniquement les slices PARTAGÉS d'un workspace (pour la migration/sync foyer).
- *
- * @param ws - Le workspace source.
- * @returns Les slices partageables (recettes, carnets, planning, listes, stock).
- */
-export async function loadSharedData(ws: WorkspaceRef): Promise<Required<SharedData>> {
-  const d = await loadUserData(ws);
+/** Ne garde que les slices partageables d'un workspace (absents = vides). */
+function toShared(d: UserData): Required<SharedData> {
   return {
     recipes: (d.recipes || []) as Required<SharedData>["recipes"],
     collections: (d.collections || []) as Required<SharedData>["collections"],
@@ -51,6 +46,29 @@ export async function loadSharedData(ws: WorkspaceRef): Promise<Required<SharedD
     stock: (d.stock || []) as Required<SharedData>["stock"],
     lowStock: (d.lowStock || []) as Required<SharedData>["lowStock"],
   };
+}
+
+/**
+ * Charge uniquement les slices PARTAGÉS d'un workspace (pour la migration/sync foyer).
+ *
+ * @param ws - Le workspace source.
+ * @returns Les slices partageables (recettes, carnets, planning, listes, stock).
+ */
+export async function loadSharedData(ws: WorkspaceRef): Promise<Required<SharedData>> {
+  return toShared(await loadUserData(ws));
+}
+
+/**
+ * Variante de démarrage de {@link loadSharedData} : le serveur s'il répond dans
+ * `budgetMs`, sinon le cache local (cf. {@link loadUserDataFast}).
+ *
+ * @param ws - Le workspace source.
+ * @param budgetMs - Temps accordé au serveur avant de servir le cache.
+ * @returns Les slices partageables et leur provenance.
+ */
+export async function loadSharedDataFast(ws: WorkspaceRef, budgetMs: number): Promise<PreferResult<Required<SharedData>>> {
+  const { value, source } = await loadUserDataFast(ws, budgetMs);
+  return { value: toShared(value), source };
 }
 
 /**
@@ -100,21 +118,21 @@ export async function deleteAllUserData(uid: string): Promise<void> {
   await batch.commit();
 }
 
-/**
- * Charge toutes les données d'un workspace depuis la structure éclatée.
- *
- * @param ws - Le workspace source.
- * @returns Les données du workspace (les slices absents valent `null`).
- */
-export async function loadUserData(ws: WorkspaceRef): Promise<UserData> {
+/** Lecteurs Firestore : serveur d'abord (défaut) ou cache local seul. */
+interface Readers {
+  getDoc: typeof getDoc;
+  getDocs: typeof getDocs;
+}
+
+async function readUserData(ws: WorkspaceRef, r: Readers): Promise<UserData> {
   const [recipesSnap, collectionsSnap, mealPlanSnap, shoppingSnap, stockSnap, userDBSnap, prefsSnap] = await Promise.all([
-    getDocs(recipesCol(ws)),
-    getDoc(metaDoc(ws, "collections")),
-    getDoc(metaDoc(ws, "mealPlan")),
-    getDoc(metaDoc(ws, "shoppingLists")),
-    getDoc(metaDoc(ws, "stock")),
-    getDoc(metaDoc(ws, "userDB")),
-    getDoc(metaDoc(ws, "preferences")),
+    r.getDocs(recipesCol(ws)),
+    r.getDoc(metaDoc(ws, "collections")),
+    r.getDoc(metaDoc(ws, "mealPlan")),
+    r.getDoc(metaDoc(ws, "shoppingLists")),
+    r.getDoc(metaDoc(ws, "stock")),
+    r.getDoc(metaDoc(ws, "userDB")),
+    r.getDoc(metaDoc(ws, "preferences")),
   ]);
   return {
     recipes: recipesSnap.docs.map(d => d.data()),
@@ -126,6 +144,46 @@ export async function loadUserData(ws: WorkspaceRef): Promise<UserData> {
     userDB: userDBSnap.exists() ? userDBSnap.data() : null,
     preferences: prefsSnap.exists() ? prefsSnap.data() : null,
   };
+}
+
+/**
+ * Charge toutes les données d'un workspace depuis la structure éclatée.
+ *
+ * @param ws - Le workspace source.
+ * @returns Les données du workspace (les slices absents valent `null`).
+ */
+export async function loadUserData(ws: WorkspaceRef): Promise<UserData> {
+  return readUserData(ws, { getDoc, getDocs });
+}
+
+/**
+ * Lit un workspace dans le seul cache local Firestore (IndexedDB), sans réseau.
+ * Tout ou rien : si un document méta n'a jamais été mis en cache, on renvoie
+ * `null` plutôt qu'un état partiel qui ferait croire à un slice vide.
+ *
+ * @param ws - Le workspace source.
+ * @returns Les données en cache, ou `null` si le cache est incomplet.
+ */
+export async function loadUserDataFromCache(ws: WorkspaceRef): Promise<UserData | null> {
+  try {
+    return await readUserData(ws, { getDoc: getDocFromCache, getDocs: getDocsFromCache });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Lecture de démarrage : le serveur s'il répond dans `budgetMs`, sinon le cache
+ * local, que les abonnements temps réel rafraîchissent ensuite. Évite l'attente
+ * du délai du SDK (~10 s) quand le réseau est absent ou ne répond pas. Cache
+ * incomplet (premier lancement) : on attend le serveur, comme avant.
+ *
+ * @param ws - Le workspace source.
+ * @param budgetMs - Temps accordé au serveur (0 = cache tout de suite).
+ * @returns Les données et leur provenance (`primary` = serveur, `fallback` = cache).
+ */
+export async function loadUserDataFast(ws: WorkspaceRef, budgetMs: number): Promise<PreferResult<UserData>> {
+  return preferWithin(loadUserData(ws), () => loadUserDataFromCache(ws), budgetMs);
 }
 
 /**
