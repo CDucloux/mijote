@@ -22,7 +22,16 @@ export function CiqualSource({ name, image, ciqual }: CiqualSourceProps) {
   const traced = !!ciqual?.code;
   return (
     <section className="ciq slide-up" style={{ animationDelay: "0.32s" }}>
-      <h2 className="ciq-h">D'où viennent ces valeurs</h2>
+      <div className="ciq-top">
+        <h2 className="ciq-h">D'où viennent ces valeurs</h2>
+        {traced && (
+          // Logo en deux pièces : emblème en couleur, mot « anses » en masque teinté par le thème.
+          <span className="ciq-anses" role="img" aria-label="Anses">
+            <img src={ANSES_EMBLEM} alt="" />
+            <i />
+          </span>
+        )}
+      </div>
       <div className={`ciq-card${traced ? "" : " ciq-card--none"}`}>
         <div className="ciq-match">
           <div className="ciq-node">
@@ -33,7 +42,7 @@ export function CiqualSource({ name, image, ciqual }: CiqualSourceProps) {
             <i /><span className="ciq-link__eq">{traced ? <Icon name="check" size={12} weight="bold" color="currentColor" /> : "?"}</span><i />
           </span>
           <div className="ciq-node ciq-node--end">
-            <span className={`ciq-mark${traced ? "" : " ciq-mark--empty"}`}>{traced && <img src={ANSES_EMBLEM} alt="" />}</span>
+            <span className={`ciq-mark${traced ? "" : " ciq-mark--empty"}`}>{traced && <Icon name="leaf" size={16} color="#fff" />}</span>
             <span className="ciq-node__txt">
               <small>{traced ? `Table Ciqual · n° ${ciqual.code}` : "Table Ciqual"}</small>
               <b>{traced ? ciqual.name || `Aliment n° ${ciqual.code}` : "Pas d'équivalent"}</b>
@@ -49,16 +58,7 @@ export function CiqualSource({ name, image, ciqual }: CiqualSourceProps) {
           <a className="ciq-open pressable" href={traced ? ciqualUrl(ciqual) : CIQUAL_HOME} target="_blank" rel="noopener noreferrer">
             {traced ? "Voir sur Ciqual" : "Parcourir la table"} <Icon name="externalLink" size={13} color="var(--text3)" />
           </a>
-          {traced && (
-            <span className="ciq-legal">
-              {/* Logo en deux pièces : emblème en couleur, mot « anses » en masque teinté par le thème. */}
-              <span className="ciq-anses" role="img" aria-label="Anses">
-                <img src={ANSES_EMBLEM} alt="" />
-                <i />
-              </span>
-              Ciqual 2025 · Licence Ouverte
-            </span>
-          )}
+          {traced && <span className="ciq-legal">Anses, Ciqual 2025 · Licence Ouverte</span>}
         </div>
       </div>
     </section>
