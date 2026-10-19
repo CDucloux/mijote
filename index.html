@@ -86,7 +86,7 @@
          chargement du bundle React et donc avant la page de connexion / chargement.
          Styles inline (le global.css n'est pas encore là), fonds calés sur le thème
          déjà résolu par le script plus haut (classe .light sur <html>), retrait par
-         main.jsx une fois l'app montée. C'est cette couche web qui porte l'onde :
+         main.tsx une fois l'app montée. C'est cette couche web qui porte l'onde :
          les splashs OS (PWA, natif Capacitor) ne sont pas animables.
          Réservé au contexte « app » (PWA installée / Capacitor, classe app-shell
          posée par le script d'en-tête) : dans un onglet de navigateur (desktop / web),
@@ -203,7 +203,7 @@
       </div>
     </div>
     <script>
-      // Retrait du splash : appelé par main.jsx une fois l'app montée ; filet de
+      // Retrait du splash : appelé par main.tsx une fois l'app montée ; filet de
       // sécurité pour ne jamais rester bloqué dessus si le bundle échoue à charger.
       window.__hideBootSplash = function () {
         var s = document.getElementById("boot-splash");
@@ -214,6 +214,6 @@
       setTimeout(function () { window.__hideBootSplash(); }, 8000);
     </script>
     <div id="app"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -4,7 +4,8 @@ import { EmptyArt } from "../components/ui/EmptyArt.jsx";
 import { ThemeToggle } from "../components/ui/ThemeToggle.jsx";
 import { LogoPod } from "../components/ui/LogoPod.jsx";
 import { getRuntimeContext, showsDiscoverLink } from "../lib/ui/runtimeContext.js";
-import { signInFeedback, SIGN_IN_LOADING_MESSAGE } from "../lib/firebase/signInFeedback.js";
+import { signInFeedback, SIGN_IN_LOADING_MESSAGE, type SignInFeedback } from "../lib/firebase/signInFeedback.js";
+import type { SignInOutcome } from "../lib/firebase/authErrors.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 
 // Logo Google multicolore (SVG inline, pas d'asset externe).
@@ -26,10 +27,10 @@ function useLoginDocumentHead() {
     const prevTitle = document.title;
     document.title = "Connexion à Cardamome";
 
-    let robots = document.querySelector('meta[name="robots"]');
-    const robotsCreated = !robots;
-    if (!robots) {
-      robots = document.createElement("meta");
+    const existingRobots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    const robotsCreated = !existingRobots;
+    const robots = existingRobots ?? document.createElement("meta");
+    if (robotsCreated) {
       robots.setAttribute("name", "robots");
       document.head.appendChild(robots);
     }
@@ -58,9 +59,16 @@ function useLoginDocumentHead() {
  * prop `onSignIn` (service commun) qui renvoie une issue discriminée, traduite en
  * message par `signInFeedback`.
  */
-export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
-  const [status, setStatus] = useState("idle"); // idle | loading
-  const [feedback, setFeedback] = useState(null); // { tone, message } | null
+interface LoginPageProps {
+  isDark: boolean;
+  onToggleTheme: () => void;
+  /** Service de connexion commun ; une issue absente vaut une erreur générique. */
+  onSignIn?: () => Promise<SignInOutcome | null | undefined>;
+}
+
+export function LoginPage({ isDark, onToggleTheme, onSignIn }: LoginPageProps) {
+  const [status, setStatus] = useState<"idle" | "loading">("idle");
+  const [feedback, setFeedback] = useState<SignInFeedback | null>(null);
   const busyRef = useRef(false);
   const ctx = useMemo(() => getRuntimeContext(), []);
   const loading = status === "loading";
@@ -69,7 +77,7 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
   const isDesktop = useMemo(() => typeof matchMedia === "function" && matchMedia("(min-width: 860px)").matches, []);
   // L'écran de connexion tient à l'écran (rien à défiler) : on arme quand même
   // l'élastique sur un swipe vers le haut, sinon le geste ne produirait aucun ressenti.
-  const { scrollRef, contentRef } = useElasticScroll({ disabled: isDesktop, armWhenUnscrollable: true });
+  const { scrollRef, contentRef } = useElasticScroll<HTMLDivElement>({ disabled: isDesktop, armWhenUnscrollable: true });
 
   useLoginDocumentHead();
 
@@ -79,9 +87,9 @@ export function LoginPage({ isDark, onToggleTheme, onSignIn }) {
     setStatus("loading");
     setFeedback(null);
 
-    let outcome;
+    let outcome: SignInOutcome | null | undefined;
     try { outcome = await onSignIn?.(); }
-    catch { outcome = { status: "error", reason: "generic" }; }
+    catch { outcome = null; }
     if (!outcome) outcome = { status: "error", reason: "generic" };
 
     const fb = signInFeedback(outcome);

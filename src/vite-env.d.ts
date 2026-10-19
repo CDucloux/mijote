@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/client" />
 
 /**
  * Variables d'environnement Vite exposées à l'app (préfixe `VITE_`). Typé ici pour
@@ -29,3 +30,16 @@ interface ImportMeta {
 
 /** Version de l'app, injectée au build par Vite (`define`). */
 declare const __APP_VERSION__: string;
+
+/** Relais du splash d'ouverture entre `index.html` et l'app (cf. main.tsx). */
+interface Window {
+  /** Défini par main.tsx : masque le splash une fois le premier écran prêt. */
+  __releaseBootSplash?: () => void;
+  /** Défini par index.html : retire effectivement le splash. */
+  __hideBootSplash?: () => void;
+}
+
+/** Propriété non standard de Safari iOS : app lancée depuis l'écran d'accueil. */
+interface Navigator {
+  readonly standalone?: boolean;
+}

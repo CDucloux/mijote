@@ -1,4 +1,4 @@
-import type { Dispatch, RefCallback, SetStateAction } from "react";
+import type { RefCallback } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 
@@ -12,7 +12,7 @@ export interface ConfigListDraft {
 
 interface ListConfigSheetProps {
   configList: ConfigListDraft;
-  setConfigList: Dispatch<SetStateAction<ConfigListDraft>>;
+  setConfigList: (update: (draft: ConfigListDraft) => ConfigListDraft) => void;
   focusNoScroll: RefCallback<HTMLInputElement>;
   onClose: () => void;
   onSave: () => void;

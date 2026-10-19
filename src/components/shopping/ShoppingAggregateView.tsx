@@ -1,19 +1,10 @@
-import type { Sectionable, CategoriesConfig } from "@/lib/food/shoppingList.js";
+import type { CategoriesConfig } from "@/lib/food/shoppingList.js";
+import type { AggregatedItem } from "@/lib/food/shoppingAggregate.js";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { ShoppingItemRow } from "./ShoppingItemRow.jsx";
 import { buildShoppingSections } from "@/lib/food/shoppingList.js";
 import { ShoppingSectionList, ShoppingClearButton } from "./ShoppingSectionList.jsx";
 import { useElasticScroll } from "../../hooks/useElasticScroll.js";
-
-/** Article agrégé (dédupliqué toutes listes) tel que cette vue le rend. */
-interface AggregatedItem extends Sectionable {
-  key: string;
-  category: string;
-  qtyDisplay?: string;
-  image?: string;
-  sources: string[];
-  partial?: boolean;
-}
 
 interface ShoppingAggregateViewProps {
   aggregated: AggregatedItem[];

@@ -1,15 +1,7 @@
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
-
-/** Liste de courses telle que ce menu la manipule (forme minimale utilisée ici). */
-interface ShoppingList {
-  id?: string;
-  name?: string;
-  type?: string;
-  items: unknown[];
-  [k: string]: unknown;
-}
+import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 
 interface ListMenuSheetProps {
   list: ShoppingList;
@@ -31,6 +23,7 @@ interface ListMenuSheetProps {
  *
  */
 export function ListMenuSheet({ list, onClose, onSettings, onPlan, onDelete }: ListMenuSheetProps) {
+  const itemCount = list.items?.length ?? 0;
   return (
     <SwipeableSheet onClose={onClose}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
@@ -39,7 +32,7 @@ export function ListMenuSheet({ list, onClose, onSettings, onPlan, onDelete }: L
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{list.name}</div>
-          <div style={{ fontSize: 13, color: "var(--text3)" }}>{list.type === "recipe" ? "Depuis une recette" : "Liste libre"} · {list.items.length} article{list.items.length > 1 ? "s" : ""}</div>
+          <div style={{ fontSize: 13, color: "var(--text3)" }}>{list.type === "recipe" ? "Depuis une recette" : "Liste libre"} · {itemCount} article{itemCount > 1 ? "s" : ""}</div>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column" }}>

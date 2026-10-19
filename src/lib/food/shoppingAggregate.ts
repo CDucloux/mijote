@@ -29,6 +29,8 @@ export interface ShoppingList {
   items?: ShoppingItem[];
   /** Origine de la liste : « free » (libre) ou « recipe » (clonée d'une recette). */
   type?: "free" | "recipe";
+  /** Recette source d'une liste « recipe ». */
+  recipeId?: string;
   /** Masque le bouton « Valider l'achat » pour éviter les validations par mégarde. */
   hideClear?: boolean;
 }

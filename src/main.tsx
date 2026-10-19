@@ -17,7 +17,8 @@ import { registerSW } from 'virtual:pwa-register'
 
 // Sentry, en prod seulement et si le DSN est fourni (variable Vercel) : le dev
 // local et les builds sans DSN restent muets. Erreurs uniquement (ni tracing ni
-// replay), aucune donnée personnelle par défaut (`sendDefaultPii` off), utilisateur
+// replay), aucune donnée personnelle collectée d'office (`dataCollection`, qui remplace
+// `sendDefaultPii` depuis Sentry v11 et collecte TOUT par défaut), utilisateur
 // réduit à son uid par le sink. Les filets globaux de Sentry sont retirés : les
 // nôtres (ci-dessous) passent déjà par la couture, sans double remontée.
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
@@ -26,7 +27,7 @@ if (import.meta.env.PROD && SENTRY_DSN) {
     dsn: SENTRY_DSN,
     release: `cardamome@${__APP_VERSION__}`,
     environment: 'production',
-    sendDefaultPii: false,
+    dataCollection: { userInfo: false, cookies: false, httpHeaders: false, httpBodies: [], urlQueryParams: false },
     // Envois relayés par notre domaine (réécriture /monitoring dans vercel.json) :
     // même origine, donc ni CORS ni bloqueurs de pub/pistage (Firefox, uBlock)
     // qui coupent les appels directs à sentry.io. L'app Android (origine
@@ -80,7 +81,10 @@ if (appZone) {
     }
 }
 
-ReactDOM.createRoot(document.getElementById('app')).render(
+const root = document.getElementById('app')
+if (!root) throw new Error('Élément #app introuvable dans index.html')
+
+ReactDOM.createRoot(root).render(
     <React.StrictMode>
         <ErrorBoundary>
             <BrowserRouter basename={appZone ? APP_BASE : undefined}>
@@ -110,4 +114,4 @@ window.__releaseBootSplash = function () {
 }
 // Vitrine publique : pas de phase d'auth ni de relais de gousse, on relâche dès le
 // montage (le splash n'existe de toute façon que sur la coquille app).
-if (!appZone) requestAnimationFrame(() => window.__releaseBootSplash())
+if (!appZone) requestAnimationFrame(() => window.__releaseBootSplash?.())

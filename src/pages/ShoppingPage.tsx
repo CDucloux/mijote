@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, type Dispatch, type SetStateAction } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner.jsx";
@@ -7,8 +7,11 @@ import { ConfirmDialog } from "../components/ui/ConfirmDialog.jsx";
 import { useLongPress } from "../hooks/useLongPress.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-import { useShopping, ALL_ID } from "../hooks/useShopping.js";
-import { stockMatchesFromChecked } from "@/lib/food/shoppingList.js";
+import { useShopping, ALL_ID, type StockSinks } from "../hooks/useShopping.js";
+import { stockMatchesFromChecked, type CategoriesConfig } from "@/lib/food/shoppingList.js";
+import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
+import type { DbEntry } from "@/lib/food/nameMatcher.js";
+import type { Recipe } from "@/lib/types.js";
 import { ShoppingListTabs } from "../components/shopping/ShoppingListTabs.jsx";
 import { ShoppingEmptyState } from "../components/shopping/ShoppingEmptyState.jsx";
 import { ShoppingAggregateView } from "../components/shopping/ShoppingAggregateView.jsx";
@@ -16,21 +19,31 @@ import { ShoppingListView } from "../components/shopping/ShoppingListView.jsx";
 import { ListMenuSheet } from "../components/shopping/ListMenuSheet.jsx";
 import { ConfirmClearSheet } from "../components/shopping/ConfirmClearSheet.jsx";
 import { AddItemSheet } from "../components/shopping/AddItemSheet.jsx";
-import { ListConfigSheet } from "../components/shopping/ListConfigSheet.jsx";
+import { ListConfigSheet, type ConfigListDraft } from "../components/shopping/ListConfigSheet.jsx";
 import { busyFloor } from "@/lib/ui/busyFloor.js";
 
-export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, recipes = [], categories = DEFAULT_CATEGORIES, loading = false, setStock, setLowStock }) {
+interface ShoppingPageProps extends StockSinks {
+  shoppingLists: ShoppingList[];
+  setShoppingLists: Dispatch<SetStateAction<ShoppingList[]>>;
+  ingredientDB: DbEntry[];
+  recipes?: Recipe[];
+  categories?: CategoriesConfig;
+  /** Données partagées encore en hydratation : spinner plutôt qu'état vide. */
+  loading?: boolean;
+}
+
+export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, recipes = [], categories = DEFAULT_CATEGORIES, loading = false, setStock, setLowStock }: ShoppingPageProps) {
   const navigate = useNavigate();
   const { notify, logActivity } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
-  const focusNoScroll = useCallback(el => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
+  const focusNoScroll = useCallback((el: HTMLInputElement | null) => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
 
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingList, setDeletingList] = useState(false); // spinner du dialogue de suppression
-  const [confirmClearId, setConfirmClearId] = useState(null);
+  const [confirmClearId, setConfirmClearId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [listMenu, setListMenu] = useState(null);      // liste dont le menu (⋯ / appui long) est ouvert
-  const [configList, setConfigList] = useState(null);  // brouillon d'édition des réglages de liste
+  const [listMenu, setListMenu] = useState<ShoppingList | null>(null);      // liste dont le menu (⋯ / appui long) est ouvert
+  const [configList, setConfigList] = useState<ConfigListDraft | null>(null);  // brouillon d'édition des réglages de liste
   const longPress = useLongPress();
 
   const shop = useShopping(shoppingLists, setShoppingLists, ingredientDB, { setStock, setLowStock });
@@ -47,10 +60,10 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, re
     else if (!loading) setSearchParams({}, { replace: true }); // liste absente (supprimée) : nettoie l'URL
   }, [listParam, shoppingLists, loading, setActiveListId, setSearchParams]);
 
-  const openNewList = () => setConfigList({ isNew: true, name: "", type: "free", hideClear: false });
+  const openNewList = () => setConfigList({ isNew: true, name: "", hideClear: false });
 
   // Supprime une liste en journalisant l'évènement (nom résolu avant suppression).
-  const deleteList = (id) => {
+  const deleteList = (id: string) => {
     logActivity?.({ type: "shopping.delete", target: shoppingLists.find(l => l.id === id)?.name || "" });
     shop.deleteList(id);
   };
@@ -63,19 +76,22 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, re
   const clearStockMatches = stockMatchesFromChecked(clearItems, ingredientDB);
 
   const confirmClear = () => {
-    const isAll = confirmClearId === ALL_ID;
+    const clearId = confirmClearId;
+    if (!clearId) return;
     setConfirmClearId(null); // sinon le sheet reste monté (close(cb) shunte onClose)
-    if (isAll) shop.clearAllChecked(); else shop.clearChecked(confirmClearId);
+    if (clearId === ALL_ID) shop.clearAllChecked(); else shop.clearChecked(clearId);
     // Un toast de succès par produit ajouté au stock, en cascade (dédupliqués).
-    const seen = new Set();
+    const seen = new Set<string>();
     clearStockMatches.filter(m => !seen.has(m.id) && seen.add(m.id))
       .forEach((m, idx) => setTimeout(() => notify?.(`${m.name} ajouté à ton stock`), idx * 900));
   };
 
   const saveConfig = () => {
+    if (!configList) return;
     const name = configList.name.trim();
-    if (configList.isNew) { const id = shop.createList(name, !!configList.hideClear); logActivity?.({ type: "shopping.create", target: name, targetId: id }); }
-    else shop.updateList(configList.id, l => ({ ...l, name, hideClear: !!configList.hideClear }));
+    const hideClear = !!configList.hideClear;
+    if (configList.isNew) { const id = shop.createList(name, hideClear); logActivity?.({ type: "shopping.create", target: name, targetId: id }); }
+    else if (configList.id) shop.updateList(configList.id, l => ({ ...l, name, hideClear }));
     // `close(cb)` exécute cb À LA PLACE de `onClose` → on ferme nous-mêmes.
     setConfigList(null);
   };
@@ -127,7 +143,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, re
       {/* Menu d'une liste (⋯ de la pastille active / appui long) */}
       {listMenu && (
         <ListMenuSheet list={listMenu} onClose={() => setListMenu(null)}
-          onSettings={list => setConfigList({ ...list })}
+          onSettings={list => setConfigList({ id: list.id, name: list.name ?? "", hideClear: list.hideClear })}
           onPlan={listMenu.type === "recipe" && listMenu.recipeId && recipes.some(r => r.id === listMenu.recipeId)
             ? list => navigate(`/recipes/${list.recipeId}`, { state: { intent: "plan" } })
             : undefined}
@@ -165,7 +181,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, re
 
       {/* Configuration de la liste */}
       {configList && (
-        <ListConfigSheet configList={configList} setConfigList={setConfigList}
+        <ListConfigSheet configList={configList} setConfigList={update => setConfigList(prev => prev && update(prev))}
           focusNoScroll={focusNoScroll} onClose={() => setConfigList(null)} onSave={saveConfig} />
       )}
     </div>
