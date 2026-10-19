@@ -6,19 +6,20 @@ function Contact({ cx, y, rx }) {
   return <ellipse cx={cx} cy={y + 0.6} rx={rx} ry={1.8} className="lpfr-contact" />;
 }
 
-// Porte grande ouverte, charnière sur le montant droit : son bord libre RECULE,
-// donc il paraît plus court. Toute ligne horizontale de la porte converge vers le
-// point de fuite de la cavité (hauteur d'œil EYE_Y) : au-dessus de l'œil elle
-// descend vers le bord libre, en dessous elle remonte. t = 0 (charnière) → 1.
+// Porte entrouverte d'environ 90° vers le spectateur, charnière sur le montant
+// droit : vue presque de profil, étroite, son bord libre est PLUS PROCHE donc plus
+// haut que la charnière. Toute ligne horizontale de la porte fuit vers la hauteur
+// d'œil de la cavité (EYE_Y) : au-dessus de l'œil elle monte vers le bord libre,
+// en dessous elle descend. t = 0 (charnière) → 1 (bord libre).
 const EYE_Y = 210;
 const HINGE_X = 194;
-const DOOR_W = 112;
-const RECEDE = 0.14;
+const DOOR_W = 70;
+const SPREAD = 0.06;
 
 /** Projette un point de la porte (position `t` sur sa largeur, hauteur `y` côté
  *  charnière) dans le repère du dessin. */
 function doorPt(t, y) {
-  return [HINGE_X + DOOR_W * t, EYE_Y + (y - EYE_Y) * (1 - RECEDE * t)];
+  return [HINGE_X + DOOR_W * t, EYE_Y + (y - EYE_Y) * (1 + SPREAD * t)];
 }
 const pts = (list) => list.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
 
@@ -30,7 +31,7 @@ function DoorBin({ y, items }) {
     <g>
       {items.map(({ t, node }, i) => {
         const [x, base] = doorPt(t, y + 9);
-        return <g key={i} transform={`translate(${x.toFixed(1)} ${base.toFixed(1)}) scale(${(1 - RECEDE * t).toFixed(3)})`}>{node}</g>;
+        return <g key={i} transform={`translate(${x.toFixed(1)} ${base.toFixed(1)}) scale(${(1 + SPREAD * t).toFixed(3)})`}>{node}</g>;
       })}
       <polygon points={pts([doorPt(0.07, y), doorPt(0.93, y), doorPt(0.93, y + 15), doorPt(0.07, y + 15)])} className="lpfr-bin" />
       <polyline points={pts([doorPt(0.07, y), doorPt(0.93, y)])} className="lpfr-binlip" />
@@ -64,7 +65,7 @@ export function FridgeScene() {
   const carrot = `lpfr-carrot-${uid}`;
   return (
     <div className="lp-fridge" aria-hidden="true">
-      <svg className="lp-fridge__svg" viewBox="0 0 316 422" role="presentation">
+      <svg className="lp-fridge__svg" viewBox="0 -10 276 446" role="presentation">
         <defs>
           <linearGradient id={light} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#fff8e6" stopOpacity="0.5" />
@@ -81,7 +82,7 @@ export function FridgeScene() {
         </defs>
 
         {/* Ombre au sol, pieds, carrosserie */}
-        <ellipse cx="160" cy="418" rx="150" ry="3.6" className="lpfr-floor" />
+        <ellipse cx="138" cy="428" rx="132" ry="3.6" className="lpfr-floor" />
         <rect x="24" y="410" width="16" height="7" rx="2" className="lpfr-foot" />
         <rect x="160" y="410" width="16" height="7" rx="2" className="lpfr-foot" />
         <rect x="6" y="6" width="188" height="408" rx="20" className="lpfr-shell" />
@@ -233,9 +234,11 @@ export function FridgeScene() {
         <rect x="24" y="350" width="152" height="3" rx="1.5" className="lpfr-edge" />
         <rect x="80" y="359" width="40" height="4.5" rx="2.25" className="lpfr-edge" />
 
-        {/* Porte grande ouverte (charnière à droite) et ses bacs de contre-porte */}
+        {/* Porte entrouverte (charnière à droite) : face intérieure, tranche du
+            bord libre, charnières, puis ses balconnets */}
         <polygon points={pts([doorPt(0, 8), doorPt(1, 8), doorPt(1, 412), doorPt(0, 412)])} className="lpfr-door" />
-        <polygon points={pts([doorPt(0.05, 22), doorPt(0.95, 22), doorPt(0.95, 398), doorPt(0.05, 398)])} className="lpfr-doorin" />
+        <polygon points={pts([doorPt(0.08, 22), doorPt(0.92, 22), doorPt(0.92, 398), doorPt(0.08, 398)])} className="lpfr-doorin" />
+        <polygon points={pts([doorPt(1, 8), [doorPt(1, 8)[0] + 6, doorPt(1, 8)[1] + 3], [doorPt(1, 412)[0] + 6, doorPt(1, 412)[1] - 3], doorPt(1, 412)])} className="lpfr-doorside" />
         <rect x="190" y="30" width="6" height="14" rx="2" className="lpfr-edge" />
         <rect x="190" y="376" width="6" height="14" rx="2" className="lpfr-edge" />
         <DoorBin y={112} items={[

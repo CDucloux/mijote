@@ -4,7 +4,7 @@
    le relief vient des ombres de contact et des niveaux de surface. */
 .lp-fridge {
   position: relative;
-  width: min(300px, 84%);
+  width: min(270px, 78%);
   margin-right: clamp(40px, 7vw, 64px);
 }
 .lp-fridge__svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -25,6 +25,7 @@
 .lpfr-crisper { fill: var(--surface); fill-opacity: 0.58; stroke: var(--border); stroke-width: 1; }
 .lpfr-boxglass { fill: #e9ece4; fill-opacity: 0.5; stroke: #c9cfc2; stroke-width: 0.8; }
 .lpfr-door { fill: var(--surface2); stroke: var(--border); stroke-width: 1; }
+.lpfr-doorside { fill: var(--surface3); stroke: var(--border); stroke-width: 1; }
 .lpfr-doorin { fill: var(--surface); stroke: var(--surface3); stroke-width: 1.5; }
 .lpfr-bin { fill: var(--surface2); fill-opacity: 0.9; stroke: var(--border); stroke-width: 0.8; }
 .lpfr-binlip { fill: none; stroke: #fff; stroke-opacity: 0.35; stroke-width: 1; }
@@ -52,7 +53,7 @@
 .lp-fridge__q {
   position: absolute;
   top: -9%;
-  right: -18%;
+  right: -22%;
   width: clamp(44px, 8vw, 62px);
   overflow: visible;
   transform-origin: 50% 90%;
