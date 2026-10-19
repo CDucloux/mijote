@@ -4,6 +4,8 @@ import { ciqualUrl, CIQUAL_HOME } from "@/lib/food/ciqual.js";
 import type { CiqualRef } from "@/lib/types";
 import "../../styles/ciqual-source.css";
 
+const ANSES_EMBLEM = "/brands/anses-emblem.png";
+
 interface CiqualSourceProps {
   name: string;
   image?: string;
@@ -20,7 +22,16 @@ export function CiqualSource({ name, image, ciqual }: CiqualSourceProps) {
   const traced = !!ciqual?.code;
   return (
     <section className="ciq slide-up" style={{ animationDelay: "0.32s" }}>
-      <h2 className="ciq-h">D'où viennent ces valeurs</h2>
+      <div className="ciq-top">
+        <h2 className="ciq-h">D'où viennent ces valeurs</h2>
+        {traced && (
+          // Logo en deux pièces : emblème en couleur, mot « anses » en masque teinté par le thème.
+          <span className="ciq-anses" role="img" aria-label="Anses">
+            <img src={ANSES_EMBLEM} alt="" />
+            <i />
+          </span>
+        )}
+      </div>
       <div className={`ciq-card${traced ? "" : " ciq-card--none"}`}>
         <div className="ciq-match">
           <div className="ciq-node">

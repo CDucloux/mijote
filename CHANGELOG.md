@@ -1,5 +1,21 @@
 # Changelog – Cardamome
 
+## v4.71.0 – Cardamome · Le bocal en main
+
+### Stock
+- **Menu du bocal** : un appui long sur un bocal ouvre son menu. Tu y poses le niveau en un geste (plein, bientôt vide, à racheter), tu vois les recettes de ta bibliothèque qui l'utilisent, celles où il ne manque rien en premier, et tu accèdes à sa fiche. Un simple tap garde son cycle habituel.
+- **Recettes avec cet ingrédient** : « Voir les recettes » ouvre la bibliothèque filtrée sur l'ingrédient.
+
+### Fiche ingrédient
+- **Source Ciqual lisible sur mobile** : la correspondance entre l'ingrédient et l'aliment de la table officielle s'affiche en colonne sur téléphone, sans noms tronqués.
+- **Logo de l'Anses** : le bloc « D'où viennent ces valeurs » est signé du logo de l'Anses, lisible en clair comme en sombre.
+
+### Finitions
+- **Tirer pour actualiser** : la pointe de la flèche est plus nette et prolonge la courbe de l'arc.
+
+### Technique
+- Niveau du stock, recettes associées et teinte des bocaux regroupés dans `src/lib`, avec tests.
+
 ## v4.70.2 – Cardamome · Correctif de déploiement
 
 ### Technique

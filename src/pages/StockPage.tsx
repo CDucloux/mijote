@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, useTransition, type Dispatch, type SetStateAction } from "react";
+import { useState, useMemo, useEffect, useLayoutEffect, useCallback, useTransition, type Dispatch, type SetStateAction } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { LoadMoreButton } from "../components/ui/LoadMoreButton.jsx";
@@ -10,8 +10,13 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries, STOCK_CATEGORIES } from "../
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
-import { Jar, ShelfBoard, ShelfSprig, StockEmpty, StockWallSkeleton, type JarState } from "../components/stock/StockShelf.jsx";
-import type { IngredientDbItem } from "@/lib/types.js";
+import { Jar, ShelfBoard, ShelfSprig, StockEmpty, StockWallSkeleton } from "../components/stock/StockShelf.jsx";
+import { jarFillColor } from "@/lib/food/jarLook.js";
+import { JarSheet } from "../components/stock/JarSheet.jsx";
+import { useStockLevels } from "../hooks/useStockLevels.js";
+import { recipesUsingIngredient, stockLevelOf } from "@/lib/food/stockLevel.js";
+import type { Resolver } from "@/lib/food/nameMatcher.js";
+import type { IngredientDbItem, Recipe } from "@/lib/types.js";
 import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
@@ -38,9 +43,17 @@ interface StockPageProps {
   ingredientDB?: IngredientDbItem[];
   categories?: CategoryMap;
   loading?: boolean;
+  /** Bibliothèque, pour « À cuisiner avec » dans le menu d'un bocal. */
+  recipes?: Recipe[];
+  /** Rapprochement nom de ligne de recette vers fiche (mêmes règles que les filtres). */
+  resolver: Resolver;
+  onOpenRecipe: (recipeId: string) => void;
+  onOpenIngredient: (ingredientId: string) => void;
+  /** Ouvre la bibliothèque filtrée sur l'ingrédient. */
+  onSeeRecipesWith: (ingredientId: string) => void;
 }
 
-export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES, loading = false }: StockPageProps) {
+export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, ingredientDB = [], categories = DEFAULT_CATEGORIES, loading = false, recipes = [], resolver, onOpenRecipe, onOpenIngredient, onSeeRecipesWith }: StockPageProps) {
   const [search, setSearch] = useState("");
   // Vue par défaut : « ce que j'ai en stock » (l'objet de la page), pas le catalogue
   // complet des ingrédients gérables. "stock" = ce que j'ai | "low" = à racheter |
@@ -57,32 +70,14 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
   );
 
   const { logActivity } = useAppShell();
-  const stockSet = useMemo(() => new Set(stock), [stock]);
-  const lowSet = useMemo(() => new Set(lowStock), [lowStock]);
   const nameById = useMemo(() => new Map(ingredientDB.map(i => [i.id, i.name || ""])), [ingredientDB]);
-
-  // Cycle à 3 états : pas en stock → en stock → bientôt vide → pas en stock.
-  // Lecture de l'état courant via refs pour garder `cycle` stable (mémoïsation des
-  // bocaux) ; comportement identique à un accès direct à stock/lowStock.
-  const stockRef = useRef(stock);
-  const lowRef = useRef(lowStock);
-  useEffect(() => { stockRef.current = stock; lowRef.current = lowStock; }, [stock, lowStock]);
-  const cycle = useCallback((id: string) => {
-    const inStock = stockRef.current.includes(id);
-    const isLow = lowRef.current.includes(id);
-    const target = nameById.get(id) || "";
-    if (!inStock) {
-      setStock(prev => [...prev, id]);                       // → en stock
-      logActivity?.({ type: "stock.add", target });
-    } else if (!isLow) {
-      setLowStock(prev => [...prev, id]);                    // → bientôt vide
-      logActivity?.({ type: "stock.low", target });
-    } else {
-      setStock(prev => prev.filter(x => x !== id));          // → pas en stock
-      setLowStock(prev => prev.filter(x => x !== id));
-      logActivity?.({ type: "stock.out", target });
-    }
-  }, [setStock, setLowStock, logActivity, nameById]);
+  // Tap : cycle pas en stock → en stock → bientôt vide → pas en stock ; appui long : menu du bocal.
+  const { stockSet, lowSet, setLevel, cycle } = useStockLevels({ stock, setStock, lowStock, setLowStock, nameById, logActivity });
+  const [heldId, setHeldId] = useState<string | null>(null);
+  const holdJar = useCallback((id: string) => {
+    try { navigator.vibrate?.(12); } catch { /* vibration indisponible : ouverture silencieuse */ }
+    setHeldId(id);
+  }, []);
 
   // Tous les ingrédients stockables (catégories non-périssables, avec nom)
   const stockable = useMemo(() =>
@@ -187,6 +182,13 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
     if (loadingMore) return;
     startLoadMore(() => setVisibleShelves(c => c + SHELVES_PAGE));
   };
+
+  // Menu du bocal tenu : la recherche de recettes ne tourne que tant qu'il est ouvert.
+  const held = useMemo(() => (heldId ? ingredientDB.find(i => i.id === heldId) : undefined), [heldId, ingredientDB]);
+  const heldRecipes = useMemo(
+    () => (held ? recipesUsingIngredient(held.id, recipes, resolver, stockSet) : []),
+    [held, recipes, resolver, stockSet]);
+  const heldCat = held?.category || "other";
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -303,8 +305,7 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
                     <div key={ri} className="stk-shelf">
                       <div className="stk-jars">
                         {row.map(ing => {
-                          const state: JarState = lowSet.has(ing.id) ? "low" : stockSet.has(ing.id) ? "full" : "empty";
-                          return <Jar key={ing.id} ing={ing} state={state} onCycle={cycle} catKey={catKey} />;
+                          return <Jar key={ing.id} ing={ing} state={stockLevelOf(ing.id, stockSet, lowSet)} onCycle={cycle} onHold={holdJar} catKey={catKey} />;
                         })}
                       </div>
                       {roomForSprig && <ShelfSprig />}
@@ -323,6 +324,21 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
         )}
         </div>
       </div>
+
+      {held && (
+        <JarSheet
+          ingredient={held}
+          level={stockLevelOf(held.id, stockSet, lowSet)}
+          shelfLabel={(categories[heldCat] || DEFAULT_CATEGORIES.other).label || heldCat}
+          fillColor={jarFillColor(held, heldCat)}
+          recipes={heldRecipes}
+          onSetLevel={level => setLevel(held.id, level)}
+          onOpenIngredient={() => onOpenIngredient(held.id)}
+          onOpenRecipe={onOpenRecipe}
+          onSeeAllRecipes={() => onSeeRecipesWith(held.id)}
+          onClose={() => setHeldId(null)}
+        />
+      )}
     </div>
   );
 }

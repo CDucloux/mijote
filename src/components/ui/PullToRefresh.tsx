@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { usePullToRefresh } from "../../hooks/usePullToRefresh.js";
-import { pullIndicatorFrame, PULL_ARC_CIRCUMFERENCE, PULL_ARC_RADIUS } from "@/lib/ui/pullIndicator.js";
+import { pullIndicatorFrame, PULL_ARC_CIRCUMFERENCE, PULL_ARC_RADIUS, PULL_HEAD_PATH } from "@/lib/ui/pullIndicator.js";
 
 /** Position de repos du disque pendant le refresh (px depuis le haut). */
 const REST_Y = 64;
@@ -49,7 +49,7 @@ export function PullToRefresh({ enabled, onRefresh, children, threshold = 110 }:
               <svg className="ptr-svg" viewBox="0 0 24 24" aria-hidden="true" style={{ transform: `rotate(${frame.rotation}deg)` }}>
                 <circle cx="12" cy="12" r={PULL_ARC_RADIUS} className="ptr-arc" transform="rotate(-90 12 12)"
                   strokeDasharray={`${frame.dash} ${PULL_ARC_CIRCUMFERENCE}`} />
-                <path className="ptr-head" d="M-1.7 -2.6L2 0L-1.7 2.6Z"
+                <path className="ptr-head" d={PULL_HEAD_PATH}
                   transform={`translate(${frame.head.x} ${frame.head.y}) rotate(${frame.head.angle}) scale(${frame.head.scale})`} />
               </svg>
             )}

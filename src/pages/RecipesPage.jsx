@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useCallback, memo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { LoadMoreButton } from "../components/ui/LoadMoreButton.jsx";
 import { ClearSearchButton } from "../components/ui/ClearSearchButton.jsx";
@@ -127,6 +128,22 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
   const [storedFilters, setFilters] = useLS("rf_recipes_filters", DEFAULT_FILTERS);
   // Fusion avec les défauts : robuste si DEFAULT_FILTERS gagne une clé après coup.
   const filters = useMemo(() => ({ ...DEFAULT_FILTERS, ...storedFilters }), [storedFilters]);
+  // Arrivée depuis le menu d'un bocal (Stock) : bibliothèque filtrée sur cet
+  // ingrédient seul. Filtre posé PENDANT le rendu (une fois par entrée d'historique),
+  // puis l'état de navigation est effacé pour qu'un retour ne le réapplique pas.
+  const location = useLocation();
+  const navigate = useNavigate();
+  const seededIngredient = location.state?.ingredientFilter;
+  const [seededKey, setSeededKey] = useState(null);
+  if (seededIngredient && seededKey !== location.key) {
+    setSeededKey(location.key);
+    setFilterCol(null);
+    setSearch("");
+    setFilters({ ...DEFAULT_FILTERS, ingredients: [seededIngredient] });
+  }
+  useEffect(() => {
+    if (seededIngredient) navigate(location.pathname, { replace: true, state: null });
+  }, [seededIngredient, location.pathname, navigate]);
   const [filterOpen, setFilterOpen] = useState(false);
   // Tri « simple » : un clic sur la pilule fait défiler les critères (et remet le
   // sens naturel du critère) ; la flèche inverse le sens du critère courant.
