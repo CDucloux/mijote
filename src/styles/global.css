@@ -2149,6 +2149,7 @@ html.light .sheet-sticky-head::after {
   align-items: center;
   justify-content: center;
 }
+.stk-photo .ing-img-spinner { width: 36%; height: 36%; }
 .stk-photo img {
   width: 78%;
   height: 78%;
@@ -2245,11 +2246,8 @@ html.light .sheet-sticky-head::after {
     0 0 0 2px rgba(var(--accent-rgb), 0.32);
 }
 
-/* Appui long : le bocal se soulève le temps du maintien (480 ms), comme saisi sur
-   l'étagère ; un tap bref ne fait qu'esquisser le geste. */
-.stk-jar { transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
-.stk-jar:active { transform: translateY(-4px) scale(1.04); transition-duration: 0.48s; }
-@media (prefers-reduced-motion: reduce) { .stk-jar:active { transform: none; } }
+/* Appui long : pas de menu natif ni de sélection du texte pendant le maintien. */
+.stk-jar { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 
 /* ── Menu d'un bocal (feuille basse). --fill : teinte du bocal tenu. ── */
 .jsheet-head {
