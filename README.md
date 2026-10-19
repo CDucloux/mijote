@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.70.2-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.71.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -106,7 +106,9 @@ toujours avec vous.
 - 📦 **Stock** : inventaire présenté en **mur d'étagères**, chaque ingrédient
   un bocal en verre dont le niveau de remplissage dit l'état (en stock / bientôt
   vide / à racheter) ; les achats non périssables rejoignent automatiquement le
-  stock, et la fiche recette signale ce que vous avez déjà.
+  stock, et la fiche recette signale ce que vous avez déjà. Un **appui long** sur
+  un bocal ouvre son menu : niveau en un geste, recettes à cuisiner avec
+  l'ingrédient (les plus faisables d'abord) et accès à sa fiche.
 - 🏡 **Foyer** : partage temps réel des recettes, du planning et des courses
   entre les membres d'un même foyer (invitation par e-mail). Un **journal
   d'activité** (page dédiée, accessible d'un bouton sur l'accueil) retrace les
