@@ -63,10 +63,15 @@
 @media (hover: hover) and (pointer: fine) {
   .ciq-open:hover { background: var(--surface3); }
 }
-/* Très petit écran : la correspondance passe en colonne, liaison verticale. */
-@media (max-width: 360px) {
-  .ciq-match { grid-template-columns: 1fr; }
-  .ciq-link { width: 20px; height: 32px; flex-direction: column; justify-self: start; margin-left: 10px; }
+/* Mobile : trois colonnes ne tiennent pas (libellés tronqués, noms coupés en
+   plein mot). La correspondance devient une filiation verticale : les deux
+   aliments empilés, alignés à gauche, reliés par un pointillé qui court d'une
+   pastille à l'autre, la coche posée sur le fil. Chaque nom a toute la largeur. */
+@media (max-width: 560px) {
+  .ciq-match { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 14px; }
+  .ciq-node, .ciq-node--end { flex-direction: row; text-align: left; gap: 12px; }
+  .ciq-node__txt small { white-space: normal; }
+  .ciq-node__txt b { overflow-wrap: break-word; }
+  .ciq-link { width: 40px; height: 34px; flex-direction: column; justify-self: start; }
   .ciq-link i { width: 0; height: auto; border-top: 0; border-left: 1.5px dotted var(--text3); }
-  .ciq-node--end { flex-direction: row; text-align: left; }
 }
