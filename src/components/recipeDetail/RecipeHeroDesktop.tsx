@@ -13,7 +13,7 @@ interface RecipeHeroDesktopProps {
   recipe: Recipe;
   handleBack: () => void;
   publicMode?: boolean;
-  onEdit: () => void;
+  onEdit?: () => void;
   onExportPDF: (recipe: Recipe) => void;
   reportAvailable?: boolean;
   adminDeleteAvailable?: boolean;

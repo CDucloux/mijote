@@ -62,3 +62,20 @@ describe("buildMealPlanIcs", () => {
     expect(ics).not.toContain("ATTENDEE");
   });
 });
+
+describe("buildMealPlanIcs avec une recette incomplète", () => {
+  it("titre un repas sans nom « Recette » plutôt que « undefined » (non-régression)", () => {
+    const ics = buildMealPlanIcs({ "2026-01-19": [{ recipeId: "r3", slot: "soir" }] }, [{ id: "r3", servings: "2" }], {}, NOW);
+    expect(ics).toContain("Recette");
+    expect(ics).not.toContain("undefined");
+  });
+});
+
+describe("buildMealPlanIcs, description", () => {
+  it("omet temps et unités absents au lieu d'écrire « undefined »", () => {
+    const ics = buildMealPlanIcs({ "2026-01-19": [{ recipeId: "r4", slot: "midi" }] }, [{ id: "r4", name: "Œufs", ingredients: [{ name: "Œuf", amount: 2 }] }], {}, NOW);
+    expect(ics).not.toContain("Préparation");
+    expect(ics).toContain("Œuf 2");
+    expect(ics).not.toContain("undefined");
+  });
+});

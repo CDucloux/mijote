@@ -1,4 +1,6 @@
-export type NutriLetter = "A" | "B" | "C" | "D" | "E";
+import type { NutriLetter } from "@/lib/recipes/nutriscore.js";
+
+export type { NutriLetter };
 
 const NUTRI_COLORS: Record<NutriLetter, string> = { A: "#1a8a3c", B: "#85bb2f", C: "#f9c813", D: "#e07515", E: "#e63312" };
 

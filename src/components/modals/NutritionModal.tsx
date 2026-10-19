@@ -2,11 +2,11 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { StickySheetHeader } from "../ui/StickySheetHeader.jsx";
-import { NutriScoreBadge, type NutriLetter } from "../badges/NutriScoreBadge.jsx";
+import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
 import { Donut } from "../ui/Donut.jsx";
 import { Icon } from "../ui/Icon.jsx";
 import { PlusBadge } from "../badges/PlusBadge.jsx";
-import { computeNutritionDetail, computeNutriInfo, computeNutriBreakdown, buildRecipeIndex, type NutriComponent, type NutriBreakdown } from "@/lib/recipes/nutriscore.js";
+import { asNutriLetter, computeNutritionDetail, computeNutriInfo, computeNutriBreakdown, buildRecipeIndex, type NutriComponent, type NutriBreakdown } from "@/lib/recipes/nutriscore.js";
 import type { Recipe } from "@/lib/types";
 import { NUTRI_RI, MACRO_COLORS } from "../../constants/nutritionDisplay.js";
 import { Row, Col } from "../ui/primitives.jsx";
@@ -134,7 +134,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
   // (ex. « 3 kcal / portion », « 15 g de sel pour 100 g » quand seul le sel est
   // renseigné). On refuse alors d'afficher des chiffres, et la lettre, trompeurs.
   const reliable = detail.coverage >= 0.5;
-  const letter = reliable ? (liveLetter ?? (recipe.nutriLetter as NutriLetter | null)) : null;
+  const letter = reliable ? (liveLetter ?? asNutriLetter(recipe.nutriLetter)) : null;
   const data = basis === "portion" ? detail.perServing : detail.per100;
   const kcal = Math.round(data.calories);
   const kj = Math.round(data.calories * 4.184);

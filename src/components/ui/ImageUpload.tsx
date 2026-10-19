@@ -1,7 +1,7 @@
 import { useState, useRef, type ChangeEvent, type CSSProperties } from "react";
 import { Icon } from "./Icon.jsx";
 import { Img } from "./Img.jsx";
-import { uploadImage, compressImage } from "@/lib/firebase/storage.js";
+import { useImageUpload } from "../../hooks/useImageUpload.js";
 
 interface ImageUploadProps {
   value?: string;
@@ -13,29 +13,16 @@ interface ImageUploadProps {
 // ─── IMAGE UPLOAD ─────────────────────────────────────────────────────────────
 export function ImageUpload({ value, onChange, style, pathPrefix = "misc" }: ImageUploadProps) {
   const inputId = useRef("img_" + Math.random().toString(36).slice(2)).current;
-  const [uploading, setUploading] = useState(false);
+  const { uploading, upload } = useImageUpload(pathPrefix);
   const [error, setError] = useState("");
   const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]; if (!file) return;
+    const input = e.target;
+    const file = input.files?.[0]; if (!file) return;
     setError("");
-    setUploading(true);
-    try {
-      const url = await uploadImage(file, pathPrefix);
-      onChange(url);
-    } catch {
-      // Fallback: if Storage upload fails, keep working with compressed base64
-      try {
-        const { blob } = await compressImage(file);
-        const reader = new FileReader();
-        reader.onload = ev => onChange(String(ev.target?.result ?? ""));
-        reader.readAsDataURL(blob);
-      } catch {
-        setError("Échec de l'upload");
-      }
-    } finally {
-      setUploading(false);
-      e.target.value = ""; // allow re-selecting the same file
-    }
+    const url = await upload(file);
+    if (url === null) setError("Échec de l'upload");
+    else onChange(url);
+    input.value = ""; // allow re-selecting the same file
   };
   return (
     <div style={{ position: "relative", ...style }}>

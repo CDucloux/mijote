@@ -38,7 +38,7 @@ export interface PublicDoc {
   authorUid: string;
   authorName: string;
   authorPhoto: string;
-  recipe: Record<string, unknown>;
+  recipe: Recipe;
   componentRefs: string[];
   name: string;
   cuisine: string;
@@ -184,7 +184,7 @@ export function buildKeywords(recipe: PubRecipe | null | undefined, authorName: 
  * Retire les champs purement locaux avant publication (carnets, journal d'itérations,
  * attribution d'un clone). Le `source` web (URL d'origine) est conservé : info publique.
  */
-function stripForPublic(recipe: PubRecipe): Record<string, unknown> {
+function stripForPublic(recipe: PubRecipe): Recipe {
   const { collections, versions, journal, clonedFrom, visibility, publicId: _p, ...rest } = recipe;
   void collections; void versions; void journal; void clonedFrom; void visibility; void _p;
   return rest;
@@ -251,7 +251,7 @@ export function buildPublishBundle(recipe: PubRecipe, user: PubUser, { ingredien
  */
 function cloneOne(pub: PublicDoc, newId: string, now: number): PubRecipe {
   return {
-    ...(pub.recipe as PubRecipe),
+    ...pub.recipe,
     id: newId,
     collections: [],
     createdAt: new Date(now).toISOString().slice(0, 10),
@@ -340,7 +340,7 @@ const LETTER_RANK: Record<string, number> = { A: 1, B: 2, C: 3, D: 4, E: 5 };
 export function filterPublicRecipes(
   list: PublicDoc[],
   filters: DiscoverFilters = {},
-  { isInSeason }: { isInSeason?: (recipe: Record<string, unknown>) => boolean } = {},
+  { isInSeason }: { isInSeason?: (recipe: Recipe) => boolean } = {},
 ): PublicDoc[] {
   const q = normalizeStr(filters.text || "");
   return (list || []).filter(p => {
@@ -356,4 +356,47 @@ export function filterPublicRecipes(
     if (filters.seasonOnly && isInSeason && !isInSeason(p.recipe)) return false;
     return true;
   });
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === "object" && !Array.isArray(value);
+const str = (value: unknown): string => (typeof value === "string" ? value : "");
+const strList = (value: unknown): string[] => (Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : []);
+const finite = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? value : null);
+
+/**
+ * Valide un document de la collection publique lu depuis Firestore (forme non
+ * garantie : anciens docs, champs manquants). Les champs d'enveloppe sont
+ * normalisés (chaînes vides, listes vides, `null`) ; un doc sans `pubId` ni
+ * recette exploitable est écarté.
+ *
+ * La recette n'est vérifiée qu'en tant qu'objet : son seul écrivain est
+ * {@link toPublicRecipe} (règles Firestore), qui y range une `Recipe` épurée.
+ *
+ * @param raw - Données brutes du document.
+ * @returns Le doc public normalisé, ou `null` s'il est inutilisable.
+ */
+export function parsePublicDoc(raw: unknown): PublicDoc | null {
+  if (!isRecord(raw) || !isRecord(raw.recipe)) return null;
+  const pubId = str(raw.pubId);
+  if (!pubId) return null;
+  const letter = str(raw.nutriLetter);
+  return {
+    pubId,
+    originalId: str(raw.originalId),
+    authorUid: str(raw.authorUid),
+    authorName: str(raw.authorName),
+    authorPhoto: str(raw.authorPhoto),
+    recipe: raw.recipe,
+    componentRefs: strList(raw.componentRefs),
+    name: str(raw.name),
+    cuisine: str(raw.cuisine),
+    nutriLetter: letter || null,
+    healthScore: finite(raw.healthScore),
+    isComponent: raw.isComponent === true,
+    dietTags: strList(raw.dietTags),
+    keywords: strList(raw.keywords),
+    createdAt: finite(raw.createdAt) ?? 0,
+    updatedAt: finite(raw.updatedAt) ?? 0,
+  };
 }

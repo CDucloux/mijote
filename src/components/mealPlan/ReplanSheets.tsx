@@ -105,7 +105,7 @@ interface DuplicateSheetProps {
   recipe: Recipe | null | undefined;
   days: string[];
   sourceDate: string;
-  selected: Set<string>;
+  selected: ReadonlySet<string>;
   slot: string | null;
   onShift: (direction: number) => void;
   onToggleDay: (dstr: string) => void;

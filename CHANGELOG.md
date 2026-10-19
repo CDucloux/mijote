@@ -1,5 +1,26 @@
 # Changelog – Cardamome
 
+## v4.70.0 – Cardamome · Sous le capot
+
+### Planning
+- **Export agenda plus propre** : plus de « undefined » dans les repas exportés vers ton calendrier quand une recette n'a pas de temps de préparation, d'unité ou de nom.
+
+### Courses
+- **Préparations de base en stock** : une base déjà prête (pâte, sauce…) n'est plus remplacée par ses ingrédients bruts dans la liste de courses.
+
+### Nutri-Score
+- **Rendement saisi en texte** : une préparation de base dont le rendement est écrit « 500,5 » est désormais bien prise en compte dans le calcul de la recette qui l'utilise.
+
+### Confidentialité
+- **Rapports d'erreur sans données personnelles** : les rapports de plantage n'embarquent plus ni identité, ni cookies, ni en-têtes.
+
+### Correctifs
+- **Journal de cuisine** : un plat sans identifiant n'y est plus consigné.
+- **Recettes de la communauté** : un document public mal formé est écarté au lieu de perturber l'affichage.
+
+### Technique
+- Migration TypeScript poursuivie : il ne reste plus que 7 écrans en JavaScript ; fichiers redécoupés sous 400 lignes et logique dupliquée factorisée (avec tests).
+
 ## v4.69.0 – Cardamome · Démarrage éclair
 
 ### Hors ligne

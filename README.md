@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.69.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.70.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -310,8 +310,8 @@ ne vont jamais en sens inverse :
 
 ```
 src/
-├── main.jsx         # Bootstrap : choisit la zone (vitrine / ou app /app) + service worker
-├── PublicApp.jsx    # Vitrine publique montée à la racine (/)
+├── main.tsx         # Bootstrap : choisit la zone (vitrine / ou app /app) + service worker
+├── PublicApp.tsx    # Vitrine publique montée à la racine (/)
 ├── App.jsx          # Shell de l'app (sous /app) : routing, état global, câblage
 ├── context/         # Concerns transverses (AppShellContext)
 ├── hooks/           # Hooks réutilisables (useFirestoreSync, useHousehold, useLS…)

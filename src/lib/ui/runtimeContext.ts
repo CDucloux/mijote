@@ -69,7 +69,7 @@ export function readRuntimeSignals(): RuntimeSignals {
   const standalone =
     (typeof window !== "undefined" &&
       (window.matchMedia?.("(display-mode: standalone)").matches ||
-        (window.navigator as { standalone?: boolean }).standalone === true)) ||
+        window.navigator.standalone === true)) ||
     false;
   return {
     isNative: Capacitor.isNativePlatform(),

@@ -10,14 +10,14 @@ import type { useLongPress } from "../../hooks/useLongPress.js";
 type LongPressHandlers = ReturnType<typeof useLongPress>;
 
 /** Repas tiré par glisser-deposer : créneau source et index dans la journée. */
-interface DragInfo {
+export interface DragInfo {
   date: string;
   idx: number;
   slot: string;
 }
 
 /** Cible d'un menu contextuel d'item (appui long / clic droit). */
-interface ItemMenuTarget {
+export interface ItemMenuTarget {
   date: string;
   idx: number;
   slot: string;

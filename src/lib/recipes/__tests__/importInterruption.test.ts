@@ -17,3 +17,16 @@ describe("importFailureFor", () => {
     expect(importFailureFor({}, false)).toEqual({ message: "Import impossible.", code: "internal" });
   });
 });
+
+describe("importFailureFor avec une erreur de forme inattendue", () => {
+  it("lit message et code d'une vraie Error", () => {
+    const err = Object.assign(new Error("Lien inaccessible."), { code: "not-found" });
+    expect(importFailureFor(err, false)).toEqual({ message: "Lien inaccessible.", code: "not-found" });
+  });
+
+  it("ignore les champs non textuels et les valeurs primitives", () => {
+    expect(importFailureFor({ message: 42, code: { x: 1 } }, false)).toEqual({ message: "Import impossible.", code: "internal" });
+    expect(importFailureFor("boom", false)).toEqual({ message: "Import impossible.", code: "internal" });
+    expect(importFailureFor(undefined, false)).toEqual({ message: "Import impossible.", code: "internal" });
+  });
+});

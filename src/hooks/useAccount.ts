@@ -6,7 +6,7 @@ import { signInFeedback } from "@/lib/firebase/signInFeedback.js";
 import { googleSignIn } from "@/lib/firebase/googleAuth.js";
 
 /** Portée d'une purge de données depuis le profil. */
-type PurgeScope = "planning" | "shopping" | "stock" | "all";
+export type PurgeScope = "planning" | "shopping" | "stock" | "all";
 
 /** Dépendances injectées : utilisateur courant, notifications et setters d'état. */
 export interface AccountDeps {
