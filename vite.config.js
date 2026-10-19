@@ -26,6 +26,10 @@ export default defineConfig({
         // pdfjs (chunk + worker) n'est chargé qu'à la demande, pour l'import PDF qui
         // exige d'être en ligne : inutile de l'imposer au précache de tous (~330 Kio).
         globIgnores: ['**/pdf-*.js', '**/pdf.worker*.mjs'],
+        // Le chunk applicatif principal dépasse le plafond Workbox par défaut (2 Mio)
+        // sur le build Vercel : au-delà, generateSW fait échouer tout le build. Il doit
+        // rester précaché (shell hors ligne), d'où un plafond relevé avec de la marge.
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         // Toute navigation hors ligne (y compris /profile, /config…) sert le shell.
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,

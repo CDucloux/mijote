@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.70.2 – Cardamome · Correctif de déploiement
+
+### Technique
+- **Déploiement rétabli** : le build de production échouait depuis la v4.70 car le bundle principal dépassait la taille maximale mise en cache hors ligne par le service worker (2 Mio). Le plafond passe à 4 Mio : l'appli reste entièrement disponible hors ligne.
+
 ## v4.70.1 – Cardamome · Sous le capot, suite
 
 ### Console admin
