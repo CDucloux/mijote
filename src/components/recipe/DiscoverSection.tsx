@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback, type UIEvent } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { ClearSearchButton } from "../ui/ClearSearchButton.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
@@ -7,16 +7,14 @@ import { ElasticScroll } from "../ui/ElasticScroll.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
 import { useDiscoverRecipes } from "../../hooks/useDiscoverRecipes.js";
 import { useDiscoverFavorites } from "../../hooks/useDiscoverFavorites.js";
-import { RecipeCard } from "./RecipeCard.jsx";
-import { OverscrollRow } from "../ui/OverscrollRow.jsx";
-import { OfficialAvatar } from "../user/OfficialAvatar.jsx";
+import { PublicRecipeCard, DiscoverSkeleton, DiscoverRow, Carousel, CuisineMosaic, DISCOVER_RED } from "./DiscoverFeed.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { RecipeFilterSheet } from "./RecipeFilterSheet.jsx";
-import { filterPublicRecipes, publicId, isOfficialAuthor } from "@/lib/household/publicRecipes.js";
+import { filterPublicRecipes, publicId, type PublicDoc } from "@/lib/household/publicRecipes.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
-import { computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
+import { asNutriLetter, computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, collectChefs } from "@/lib/recipes/recipeFilters.js";
 import { DEFAULT_SORT_KEY, defaultDirFor, makeComparator } from "@/lib/recipes/recipeSort.js";
 import { STATIC_CATEGORIES, matchesDiscoverCategory, isQuickRecipe } from "@/lib/recipes/discoverFeed.js";
@@ -24,116 +22,44 @@ import { isEligible } from "@/lib/food/dietFilter.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { CUISINES } from "../../constants/cuisines.js";
-import { relativeDate } from "../../lib/format.js";
+import type { Preferences } from "../../constants/preferences.js";
+import type { DbEntry } from "@/lib/food/nameMatcher.js";
+import type { RecipeFilters } from "@/lib/recipes/recipeFilters.js";
+import type { Recipe } from "@/lib/types.js";
 
 const TINT = "rgba(var(--accent-rgb),0.14)";
-const RED = "#e0554e";
-// Largeur des cartes en carrousel : moitié de la rangée visible (2 cartes),
-// plafonnée à 210px sur desktop, cf. explication `cqw` conservée de l'existant.
-const CARD_W = "clamp(150px, calc(50cqw - 6px), 210px)";
 
-// Halos sombres signature pour les tuiles cuisine (mêmes teintes que RecipePlaceholder
-// + ambre & sarcelle pour la variété, comme le mockup). Teinte stable dérivée du nom.
-const MOSAIC_HALOS = [
-  "radial-gradient(115% 78% at 50% 118%, #b5512a 0%, #4a2f22 42%, #221a16 72%, #1a1411 100%)",
-  "radial-gradient(115% 78% at 50% 118%, #3f7d52 0%, #243a2a 42%, #18211a 72%, #131a15 100%)",
-  "radial-gradient(115% 78% at 50% 118%, #c98a2f 0%, #4a3a22 42%, #221d16 72%, #1a1611 100%)",
-  "radial-gradient(115% 78% at 50% 118%, #2f8f88 0%, #22403c 42%, #16211f 72%, #131a19 100%)",
-];
-function haloForName(name) {
-  let h = 0;
-  for (let i = 0; i < (name || "").length; i++) h = (h + name.charCodeAt(i)) % 997;
-  return MOSAIC_HALOS[h % MOSAIC_HALOS.length];
+interface DiscoverSectionProps {
+  ingredientDB?: DbEntry[];
+  preferences?: Preferences;
+  /** Recettes de l'utilisateur : repère celles déjà ajoutées depuis la communauté. */
+  recipes?: Recipe[];
+  /** Ouvre une recette publique avec ses préparations de base publiques. */
+  onOpenPublic?: (pub: PublicDoc, components: Recipe[]) => void;
+  onClonePublic?: (pub: PublicDoc) => void;
+  /** Création d'une recette pré-nommée depuis une recherche sans résultat. */
+  onNewRecipe?: (seed: { name: string }) => void;
+  /** Recherche pré-remplie (ex. depuis l'accueil), consommée une fois appliquée. */
+  initialSearch?: string;
+  onSeedConsumed?: () => void;
 }
 
-// Carte d'une recette publique : visuel (hover-lift) + crédit créateur & date dessous.
-function PublicRecipeCard({ p, onOpen, onAdd, onAuthor, owned, inSeason, vegan, nutriLetter, favorite, onToggleFavorite, style }) {
-  return (
-    <div>
-      <div className="discover-card"><RecipeCard recipe={p.recipe} onClick={onOpen} inSeason={inSeason} vegan={vegan} nutriLetter={nutriLetter} favorite={favorite} onToggleFavorite={onToggleFavorite} style={style} /></div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 7, padding: "0 2px" }}>
-        <button onClick={onAuthor} title="Filtrer par ce créateur"
-          style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-          {isOfficialAuthor(p.authorUid)
-            ? <OfficialAvatar size={16} />
-            : p.authorPhoto
-              ? <img src={p.authorPhoto} alt="" referrerPolicy="no-referrer" style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0 }} />
-              : <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--surface3)", flexShrink: 0 }} />}
-          <span style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.authorName || "Anonyme"}</span>
-          {owned && <Icon name="check" size={12} color="var(--ok)" />}
-        </button>
-        {!owned && onAdd ? (
-          <button onClick={e => { e.stopPropagation(); onAdd(); }}
-            style={{ marginLeft: "auto", flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer" }}>
-            <Icon name="plus" size={11} color="#fff" /> Ajouter
-          </button>
-        ) : p.createdAt && (
-          <span style={{ marginLeft: "auto", flexShrink: 0, fontSize: 10.5, color: "var(--text3)" }}>{relativeDate(p.createdAt)}</span>
-        )}
-      </div>
-    </div>
-  );
+/** État mémorisé entre deux visites (recherche, filtres, défilement). */
+interface DiscoverMemo {
+  text: string;
+  filters: RecipeFilters;
+  activeCat: string;
+  usePrefs: boolean;
+  authorUid: string | null;
+  top: number;
 }
-
-function SkeletonCard() {
-  return (
-    <div>
-      <div className="skeleton" style={{ width: "100%", aspectRatio: "16 / 10", borderRadius: 16 }} />
-      <div className="skeleton" style={{ height: 12, width: "85%", borderRadius: 6, marginTop: 10 }} />
-      <div className="skeleton" style={{ height: 10, width: "55%", borderRadius: 6, marginTop: 7 }} />
-    </div>
-  );
-}
-
-function SkeletonRow({ titleWidth = 130, count = 10 }) {
-  return (
-    <div style={{ marginBottom: 26 }}>
-      <div className="skeleton" style={{ height: 15, width: titleWidth, borderRadius: 6, marginBottom: 12 }} />
-      <div style={{ display: "flex", gap: 14, overflow: "hidden", containerType: "inline-size" }}>
-        {Array.from({ length: count }).map((_, i) => (
-          <div key={i} style={{ flex: `0 0 ${CARD_W}` }}><SkeletonCard /></div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function DiscoverSkeleton() {
-  return (
-    <div style={{ paddingTop: 14 }}>
-      <SkeletonRow titleWidth={110} />
-      <SkeletonRow titleWidth={160} />
-      <SkeletonRow titleWidth={130} />
-    </div>
-  );
-}
-
-// Rangée éditoriale horizontale (carrousel). Ne s'affiche pas si vide.
-function Carousel({ icon, iconNode, iconColor = "var(--accent)", title, extra, count, items, renderItem }) {
-  if (!items.length) return null;
-  return (
-    <div style={{ marginBottom: 28 }}>
-      <h3 style={{ fontSize: 15, fontWeight: 600, margin: "0 0 12px", display: "flex", alignItems: "center", gap: 8 }}>
-        {iconNode || (icon && <Icon name={icon} size={16} color={iconColor} />)}{title}
-        {count != null && <span style={{ fontSize: 11, fontWeight: 700, color: RED, background: "rgba(224,85,78,.12)", borderRadius: 999, padding: "2px 8px" }}>{count}</span>}
-        {extra && <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)" }}>{extra}</span>}
-      </h3>
-      <OverscrollRow stretch className="discover-row" style={{ gap: 14, paddingTop: 6, paddingBottom: 6 }} outerStyle={{ scrollSnapType: "x proximity", containerType: "inline-size" }}>
-        {items.map((it, i) => (
-          <div key={it.pubId} id={`discover-card-${it.pubId}`} style={{ flex: `0 0 ${CARD_W}`, scrollSnapAlign: "start" }}>{renderItem(it, i)}</div>
-        ))}
-      </OverscrollRow>
-    </div>
-  );
-}
-
 // ─── DÉCOUVRIR – recettes publiques de la communauté ──────────────────────────
 // Recherche, filtres et position de défilement mémorisés entre deux visites :
 // ouvrir une fiche démonte la section. Niveau module (réinitialisé au rechargement
 // complet), même dispositif que RecipesPage.
-let discoverMemo = { text: "", filters: { ...DEFAULT_FILTERS }, activeCat: "tout", usePrefs: false, authorUid: null, top: 0 };
+let discoverMemo: DiscoverMemo = { text: "", filters: { ...DEFAULT_FILTERS }, activeCat: "tout", usePrefs: false, authorUid: null, top: 0 };
 
-export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic, onNewRecipe, initialSearch = "", onSeedConsumed }) {
+export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], onOpenPublic, onClonePublic, onNewRecipe, initialSearch = "", onSeedConsumed }: DiscoverSectionProps) {
   const { user, techniques = [] } = useAppShell();
   const { recipes: pubs, loading, error, loadedOnce, online, reload } = useDiscoverRecipes(user);
   const { favorites, favIds, favCount, toggleFavorite } = useDiscoverFavorites(user);
@@ -141,7 +67,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
 
   const [text, setText] = useState(discoverMemo.text);
-  const searchRef = useRef(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const seed = (initialSearch || "").trim();
     if (!seed) return;
@@ -155,28 +81,27 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   const [usePrefs, setUsePrefs] = useState(discoverMemo.usePrefs);
   const [authorUid, setAuthorUid] = useState(discoverMemo.authorUid);
   useEffect(() => { discoverMemo = { ...discoverMemo, text, filters, activeCat, usePrefs, authorUid }; }, [text, filters, activeCat, usePrefs, authorUid]);
-  const rememberScroll = useCallback((e) => { discoverMemo.top = e.currentTarget.scrollTop; }, []);
+  const rememberScroll = useCallback((e: UIEvent<HTMLElement>) => { discoverMemo.top = e.currentTarget.scrollTop; }, []);
   const [spinning, setSpinning] = useState(false);
 
   // pubId des recettes déjà dans MA bibliothèque (clonées) ou publiées par moi.
   const ownedIds = useMemo(() => {
-    const s = new Set();
+    const s = new Set<string>();
     for (const r of recipes) { if (r.clonedFrom?.publicId) s.add(r.clonedFrom.publicId); }
     return s;
   }, [recipes]);
-  const isOwned = (p) => ownedIds.has(p.pubId) || p.authorUid === user?.uid;
-  const isInSeason = (payload) => isRecipeInSeason(payload, resolver);
-  const isVegan = (payload) => isRecipeVegan(payload, resolver);
+  const isOwned = (p: PublicDoc) => ownedIds.has(p.pubId) || p.authorUid === user?.uid;
+  const isInSeason = (payload: Recipe) => isRecipeInSeason(payload, resolver);
+  const isVegan = (payload: Recipe) => isRecipeVegan(payload, resolver);
   const pubRecipesById = useMemo(() => buildRecipeIndex(pubs.map(x => x.recipe)), [pubs]);
-  const liveNutri = (recipe) => computeNutriInfo(recipe.ingredients, ingredientDB || [], pubRecipesById).letter ?? recipe.nutriLetter;
+  const liveNutri = (recipe: Recipe) => computeNutriInfo(recipe.ingredients, ingredientDB || [], pubRecipesById).letter ?? asNutriLetter(recipe.nutriLetter);
 
-  const componentsFor = (p) => (p.componentRefs || [])
-    .map(origId => pubs.find(x => x.pubId === publicId(p.authorUid, origId)))
-    .filter(Boolean)
-    .map(x => x.recipe);
+  const componentsFor = (p: PublicDoc) => p.componentRefs
+    .map(origId => pubs.find(x => x.pubId === publicId(p.authorUid, origId))?.recipe)
+    .filter((recipe): recipe is Recipe => recipe !== undefined);
 
   // Drapeaux d'une recette pour l'appariement de catégorie (favori/vegan/saison/rapide/base/cuisine).
-  const flagsFor = (p) => ({
+  const flagsFor = (p: PublicDoc) => ({
     isFavorite: favorites.has(p.pubId),
     isVegan: isVegan(p.recipe),
     isInSeason: isInSeason(p.recipe),
@@ -207,13 +132,13 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
         if (!matchesDiscoverCategory(flagsFor(p), activeCat)) return false;
         return matchesFilters(p.recipe, filters, { resolver, techniques, techIndex });
       })
-      .map(p => ({ p, view: { ...p.recipe, id: p.pubId, createdAt: p.createdAt } }))
+      .map(p => ({ p, view: { ...p.recipe, id: p.pubId, name: p.recipe.name ?? "", createdAt: p.createdAt } }))
       .sort((a, b) => cmp(a.view, b.view))
       .map(x => x.p);
   }, [pubs, text, authorUid, usePrefs, preferences, filters, activeCat, favorites, resolver, techniques, techIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const usedCuisines = useMemo(() => CUISINES.filter(c => pubs.some(p => p.cuisine === c.label)), [pubs]);
-  const usedChefs = useMemo(() => collectChefs(pubs.map(p => p.recipe || {})), [pubs]);
+  const usedChefs = useMemo(() => collectChefs(pubs.map(p => p.recipe)), [pubs]);
   // Catégories = statiques + cuisines réellement présentes (chips collants).
   const categories = useMemo(() => [
     ...STATIC_CATEGORIES,
@@ -221,7 +146,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
   ], [usedCuisines]);
 
   // Rangées éditoriales (mode navigation).
-  const favList = useMemo(() => favIds.map(id => pubs.find(p => p.pubId === id)).filter(Boolean), [favIds, pubs]);
+  const favList = useMemo(() => favIds.map(id => pubs.find(p => p.pubId === id)).filter((p): p is PublicDoc => p !== undefined), [favIds, pubs]);
   const trending = useMemo(() => pubs.filter(p => !p.isComponent).slice(0, 12), [pubs]);
   const bases = useMemo(() => pubs.filter(p => p.isComponent).slice(0, 12), [pubs]);
   const seasonal = useMemo(() => filterPublicRecipes(pubs, { seasonOnly: true }, { isInSeason }).slice(0, 12), [pubs, resolver]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -231,7 +156,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
     .filter(c => c.count > 0)
     .sort((a, b) => b.count - a.count), [usedCuisines, pubs]);
 
-  const card = (p, idx) => (
+  const card = (p: PublicDoc, idx: number) => (
     <PublicRecipeCard
       p={p} owned={isOwned(p)} inSeason={isInSeason(p.recipe)} vegan={isVegan(p.recipe)} nutriLetter={liveNutri(p.recipe)}
       favorite={favorites.has(p.pubId)} onToggleFavorite={() => toggleFavorite(p.pubId)}
@@ -352,20 +277,16 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
             {/* Mes favoris (rangée ou état vide invitant) */}
             <div style={{ marginBottom: 28 }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, margin: "0 0 12px", display: "flex", alignItems: "center", gap: 8 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill={RED} stroke={RED} strokeWidth="1.5"><path d="M12 20.3 4.2 12.5a4.6 4.6 0 0 1 6.5-6.5l1.3 1.3 1.3-1.3a4.6 4.6 0 0 1 6.5 6.5z" /></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={DISCOVER_RED} stroke={DISCOVER_RED} strokeWidth="1.5"><path d="M12 20.3 4.2 12.5a4.6 4.6 0 0 1 6.5-6.5l1.3 1.3 1.3-1.3a4.6 4.6 0 0 1 6.5 6.5z" /></svg>
                 Mes favoris
-                {favCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: RED, background: "rgba(224,85,78,.12)", borderRadius: 999, padding: "2px 8px" }}>{favCount}</span>}
+                {favCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: DISCOVER_RED, background: "rgba(224,85,78,.12)", borderRadius: 999, padding: "2px 8px" }}>{favCount}</span>}
               </h3>
               {favList.length > 0 ? (
-                <OverscrollRow stretch className="discover-row" style={{ gap: 14, paddingTop: 6, paddingBottom: 6 }} outerStyle={{ scrollSnapType: "x proximity", containerType: "inline-size" }}>
-                  {favList.map((p, i) => (
-                    <div key={p.pubId} id={`discover-card-${p.pubId}`} style={{ flex: `0 0 ${CARD_W}`, scrollSnapAlign: "start" }}>{card(p, i)}</div>
-                  ))}
-                </OverscrollRow>
+                <DiscoverRow items={favList} renderItem={card} />
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "18px 20px", borderRadius: 16, background: "var(--surface)", border: "1px dashed rgba(224,85,78,.4)" }}>
                   <span style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(224,85,78,.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={RED} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20.3 4.2 12.5a4.6 4.6 0 0 1 6.5-6.5l1.3 1.3 1.3-1.3a4.6 4.6 0 0 1 6.5 6.5z" /></svg>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={DISCOVER_RED} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20.3 4.2 12.5a4.6 4.6 0 0 1 6.5-6.5l1.3 1.3 1.3-1.3a4.6 4.6 0 0 1 6.5 6.5z" /></svg>
                   </span>
                   <span>
                     <span style={{ display: "block", fontSize: 14, fontWeight: 600 }}>Aucun favori pour l'instant</span>
@@ -380,26 +301,7 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
             <Carousel icon="leaf" iconColor="var(--green)" title="De saison" items={seasonal} renderItem={card} />
             <Carousel iconNode={<Icon name="bolt" size={16} weight="fill" color="var(--spice)" />} title="Recettes rapides" extra="· moins de 20 min" items={rapide} renderItem={card} />
 
-            {mosaic.length > 0 && (
-              <div>
-                <h3 style={{ fontSize: 15, fontWeight: 600, margin: "0 0 12px", display: "flex", alignItems: "center", gap: 8 }}>
-                  <Icon name="globe" size={16} color="var(--accent)" /> Par cuisine
-                </h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
-                  {mosaic.map(c => (
-                    <button key={c.label} className="cuisine-tile ripple" onClick={() => setActiveCat(c.label)}
-                      style={{ position: "relative", aspectRatio: "4/3", borderRadius: 16, overflow: "hidden", border: "1px solid var(--border)", cursor: "pointer", padding: 0, background: haloForName(c.label) }}>
-                      <span style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0) 32%, rgba(0,0,0,.55) 100%)" }} />
-                      <span style={{ position: "absolute", top: 9, right: 10, fontSize: 17 }}>{c.emoji}</span>
-                      <span style={{ position: "absolute", left: 14, bottom: 12, textAlign: "left" }}>
-                        <span style={{ display: "block", fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em", textShadow: "0 2px 8px rgba(0,0,0,.45)" }}>{c.label}</span>
-                        <span style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,.82)", marginTop: 2 }}>{c.count} recette{c.count > 1 ? "s" : ""}</span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <CuisineMosaic tiles={mosaic} onSelect={setActiveCat} />
           </div>
         ) : filtered.length === 0 ? (() => {
           const q = text.trim();

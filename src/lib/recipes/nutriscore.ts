@@ -6,14 +6,18 @@
  * @module recipes/nutriscore
  */
 
-import type { IngredientLine, RecipeYield } from "@/lib/types.js";
+import type { IngredientLine, IngredientNutrition, RecipeYield } from "@/lib/types.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { isFruitVeg } from "@/constants/categories.js";
 
-/** Nutriments pour 100 g (`isVegetable` est traité comme drapeau numérique). */
-type Nutrition = Record<string, number>;
-/** Entrée de base minimale exploitée pour le calcul. */
-interface DbItem { id: string; category?: string; gramsPerPiece?: number; nutrition?: Nutrition }
+/** Entrée de base minimale exploitée pour le calcul (`nutrition: null` = non renseignée). */
+interface DbItem { id: string; category?: string; gramsPerPiece?: number; nutrition?: IngredientNutrition | null }
+
+/** Valeur numérique d'un nutriment, 0 si absente (ou drapeau non numérique). */
+const nutrient = (nutrition: IngredientNutrition, key: string): number => {
+  const value = nutrition[key];
+  return typeof value === "number" ? value : 0;
+};
 
 /**
  * L'ingrédient compte-t-il dans la composante « fruits & légumes » du Nutri-Score ?
@@ -174,7 +178,7 @@ function aggregateRaw(ingredients: IngredientLine[] | undefined, ingredientDB: D
     const cm = ingredientGrams(ci, di);
     mass += cm;
     if (di.nutrition) {
-      for (const k of keys) tot[k] += (di.nutrition[k] || 0) * cm / 100;
+      for (const k of keys) tot[k] += nutrient(di.nutrition, k) * cm / 100;
       covered += cm;
       if (wantVeg && countsAsFruitVeg(di)) vegMass += cm;
     }
@@ -363,7 +367,7 @@ export function computeNutritionDetail(ingredients: IngredientLine[] | null | un
     mass += m;
     if (dbItem.nutrition) {
       const n = dbItem.nutrition;
-      for (const k of NUTRI_KEYS) tot[k] += (n[k] || 0) * m / 100;
+      for (const k of NUTRI_KEYS) tot[k] += nutrient(n, k) * m / 100;
       covered += m;
     }
   }

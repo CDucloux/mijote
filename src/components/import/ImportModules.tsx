@@ -11,7 +11,7 @@ import { CREDIT_COST, type ImportKind, type CreditState } from "@/lib/aiQuota.js
 import { GIFT_OFFER } from "@/lib/onboarding/giftRecipe.js";
 
 // Mode d'onglet de la page d'import (clés françaises de l'UI, distinctes de ImportKind).
-type ImportMode = "lien" | "photo" | "texte" | "pdf";
+export type ImportMode = "lien" | "photo" | "texte" | "pdf";
 
 // ─── BRIQUES DE LA PAGE D'IMPORT INTELLIGENT ────────────────────────────────
 // Présentation pure (aucune I/O) : contrôle segmenté, intro par mode, quota

@@ -115,3 +115,17 @@ describe("asNutriLetter", () => {
     expect(asNutriLetter(3)).toBeNull();
   });
 });
+
+describe("computeNutriInfo avec fiches incomplètes", () => {
+  it("ignore une fiche sans nutrition (null) au lieu de planter", () => {
+    const db = [{ id: "neuf", name: "Neuf", nutrition: null }];
+    expect(computeNutriInfo([{ dbId: "neuf", amount: 100, unit: "g" }], db)).toEqual({ score: 50, letter: null });
+  });
+
+  it("ne compte pas le drapeau isVegetable comme un nutriment", () => {
+    const line = [{ dbId: "carotte", amount: 100, unit: "g" }];
+    const withFlag = computeNutriBreakdown(line, DB);
+    const withoutFlag = computeNutriBreakdown(line, DB.map(d => d.id === "carotte" ? { ...d, category: "vegetable", nutrition: { ...d.nutrition, isVegetable: undefined } } : d));
+    expect(withFlag?.score).toBe(withoutFlag?.score);
+  });
+});

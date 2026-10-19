@@ -178,6 +178,10 @@ export interface Recipe {
   /** Chef ou créatrice dont la recette est tirée (« Adam Byatt »). Optionnel, texte libre. */
   chef?: string;
   image?: string;
+  /** Origine d'une recette ajoutée depuis la communauté (doc public source). */
+  clonedFrom?: { publicId: string; authorUid?: string; authorName?: string };
+  /** Identifiant du doc public, une fois la recette publiée. */
+  publicId?: string;
   [k: string]: unknown;
 }
 
@@ -211,6 +215,28 @@ export interface CiqualRef {
 }
 
 /** Élément de la base d'ingrédients (forme large, champs additionnels tolérés). */
+/** Valeurs nutritionnelles d'un ingrédient pour 100 g (g, sauf `calories` en kcal). */
+export interface IngredientNutrition {
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  saturatedFat?: number;
+  sugar?: number;
+  fiber?: number;
+  salt?: number;
+  omega3?: number;
+  /** Compte comme fruit/légume au Nutri-Score (figé depuis la catégorie). */
+  isVegetable?: boolean;
+  [key: string]: number | boolean | undefined;
+}
+
+/** Conseil éditorial d'un ingrédient : type (clé de `TIP_TYPES`) et texte. */
+export interface IngredientTip {
+  type: string;
+  text: string;
+}
+
 export interface IngredientDbItem {
   id: string;
   name?: string;
@@ -219,10 +245,17 @@ export interface IngredientDbItem {
   image?: string;
   gramsPerPiece?: number;
   months?: number[];
-  nutrition?: Record<string, number> & { isVegetable?: boolean };
+  /** Valeurs pour 100 g ; `null` = fiche créée sans données nutritionnelles. */
+  nutrition?: IngredientNutrition | null;
   /** Recommandation de forme à privilégier (frais/surgelé…) ; absent = aucune. */
   qualityRecommendation?: QualityRecommendation;
   /** Aliment Ciqual source des valeurs nutritionnelles ; absent = non tracé. */
   ciqual?: CiqualRef;
+  /** Conseils de préparation, conservation, utilisation… */
+  tips?: IngredientTip[];
+  /** `"validated"` une fois la fiche relue ; absent = en cours de rédaction. */
+  status?: string;
+  /** Accroche courte (« ingrédient du moment »). */
+  description?: string;
   [k: string]: unknown;
 }

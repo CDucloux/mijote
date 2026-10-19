@@ -13,10 +13,10 @@ import type { MealPlan } from "@/lib/types.js";
 
 /** Sous-ensemble de recette nécessaire à l'export calendrier. */
 export interface IcsRecipe {
-  id: string;
-  name: string;
+  id?: string;
+  name?: string;
   description?: string;
-  servings?: number;
+  servings?: number | string;
   prepTime?: number;
   cookTime?: number;
   healthScore?: number;
@@ -84,10 +84,11 @@ export function buildMealPlanIcs(
       const descParts = [
         recipe.description,
         (meal.portions || 0) > 1 ? `${recipe.servings} portions sur ${meal.portions} jours` : "",
-        `Préparation : ${recipe.prepTime} min`,
-        `Cuisson : ${recipe.cookTime} min`,
+        // Champs optionnels : une ligne absente plutôt qu'un « undefined min » dans l'agenda.
+        recipe.prepTime != null ? `Préparation : ${recipe.prepTime} min` : "",
+        recipe.cookTime != null ? `Cuisson : ${recipe.cookTime} min` : "",
         `Score santé : ${recipe.healthScore || "–"}/100`,
-        recipe.ingredients?.map(i => `• ${i.name} ${i.amount} ${i.unit}`).join("\n") || "",
+        recipe.ingredients?.map(i => "• " + [i.name, i.amount, i.unit].filter(v => v != null && v !== "").join(" ")).join("\n") || "",
         recipe.source ? `Source : ${recipe.source}` : "",
       ].filter(Boolean).join("\n");
 
@@ -97,7 +98,7 @@ export function buildMealPlanIcs(
         `DTSTAMP:${dtstamp}`,
         `DTSTART;TZID=Europe/Paris:${toICSDate(date, times.start)}`,
         `DTEND;TZID=Europe/Paris:${toICSDate(date, times.end)}`,
-        `SUMMARY:${escapeICS(slotLabel + " – " + recipe.name)}`,
+        `SUMMARY:${escapeICS(slotLabel + " – " + (recipe.name || "Recette"))}`,
         `DESCRIPTION:${escapeICS(descParts)}`,
         `CATEGORIES:${escapeICS(slotLabel)}`,
         ...peopleLines,

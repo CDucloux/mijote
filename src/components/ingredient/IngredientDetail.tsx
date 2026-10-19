@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
@@ -9,62 +9,58 @@ import { CiqualSource } from "./CiqualSource.jsx";
 import { SeasonBadge } from "../badges/Badges.jsx";
 import { IngredientStatusBadge } from "../badges/IngredientStatusBadge.jsx";
 import { ConfirmDialog } from "../ui/ConfirmDialog.jsx";
-import { uploadImage, compressImage } from "@/lib/firebase/storage.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { DEFAULT_CATEGORIES, sortedCategoryEntries, isFruitVeg } from "../../constants/categories.js";
 import { ingredientMonths, isIngredientInSeason, SEASONAL_CATEGORIES, formatMonths } from "@/lib/food/seasonality.js";
 import { NUTRI_RI, MACRO_COLORS } from "../../constants/nutritionDisplay.js";
-import { TIP_TYPES, TIP_ORDER } from "../../constants/tipTypes.js";
+import type { IngredientDbItem } from "@/lib/types.js";
+import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
 
-// Photo ronde éditable en place : clic → change la photo (upload Storage, repli base64).
-function RoundImageUpload({ value, onChange, size = 82 }) {
-  const inputId = useRef("ingimg_" + Math.random().toString(36).slice(2)).current;
-  const [uploading, setUploading] = useState(false);
-  const handleFile = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    setUploading(true);
-    try { onChange(await uploadImage(file, "master/ingredients")); }
-    catch {
-      try { const { blob } = await compressImage(file); const r = new FileReader(); r.onload = ev => onChange(ev.target.result); r.readAsDataURL(blob); }
-      catch { /* ignore */ }
-    } finally { setUploading(false); e.target.value = ""; }
-  };
-  return (
-    <label htmlFor={inputId} title="Changer la photo" style={{ position: "relative", flexShrink: 0, cursor: "pointer", display: "block", borderRadius: "50%", boxShadow: "0 4px 14px -6px rgba(0,0,0,0.25)" }}>
-      <IngImage src={value} alt="" size={size} />
-      <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(0,0,0,0.42)", display: "grid", placeItems: "center" }}>
-        {uploading
-          ? <span style={{ width: 20, height: 20, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-          : <Icon name="photo" size={20} color="#fff" />}
-      </span>
-      <input id={inputId} type="file" accept="image/*" onChange={handleFile} disabled={uploading} style={{ position: "absolute", opacity: 0, width: 0, height: 0 }} />
-    </label>
-  );
+/** Fiche en cours d'édition : copie de travail, validée seulement à l'enregistrement. */
+export type IngredientDraft = IngredientDbItem;
+
+/** Nutriment éditable de la fiche (clé de `IngredientNutrition`). */
+type NutrientKey = "calories" | "protein" | "carbs" | "fat" | "saturatedFat" | "sugar" | "omega3" | "fiber" | "salt";
+
+interface IngredientDetailProps {
+  /** Absent si l'identifiant de l'URL ne correspond à aucune fiche. */
+  ingredient: IngredientDbItem | undefined;
+  ingredientDB: IngredientDbItem[];
+  categories?: CategoryMap;
+  isAdmin?: boolean;
+  /** Ouvre directement en édition (ingrédient fraîchement créé). */
+  autoEdit?: boolean;
+  onBack: () => void;
+  onSave?: (draft: IngredientDraft) => void;
+  /** Annulation de l'édition : l'appelant supprime un ingrédient neuf jamais nommé. */
+  onCancelNew?: (ingredient: IngredientDbItem) => void;
+  onDelete?: () => void;
 }
 
-// Champ nombre éditable inline (aligné à droite façon valeur).
-function NumField({ value, onChange, step = 0.1, width = 62, suffix }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "baseline", gap: 3 }}>
-      <input type="number" min="0" step={step} value={value ?? ""} placeholder="0" onChange={e => onChange(e.target.value)}
-        style={{ width, textAlign: "right", fontSize: 13, fontWeight: 600, color: "var(--text)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, padding: "3px 7px", outline: "none", fontFamily: "var(--ff-body)" }} />
-      {suffix && <span style={{ fontSize: 11, color: "var(--text3)" }}>{suffix}</span>}
-    </span>
-  );
+/** Ligne du détail nutritionnel, clé du champ `nutrition`. */
+interface DetailRow {
+  key: NutrientKey;
+  label: string;
+  color: string;
+  step?: number;
 }
+import { RoundImageUpload } from "./RoundImageUpload.jsx";
+import { NumField } from "./NumField.jsx";
+import { IngredientTipsEditor, IngredientTipsList } from "./IngredientTips.jsx";
 
 // ─── FICHE INGRÉDIENT (consultation ET édition WYSIWYG in-place) ─────────────
 // Page publique /admin/ingredients/{id}. L'admin bascule la MÊME page en édition :
 // chaque élément affiché devient éditable à sa place (photo, titre, catégorie,
 // frise, nutrition, poids…). `autoEdit` ouvre directement en édition (ingrédient
 // fraîchement créé). Annuler un ingrédient neuf jamais nommé le supprime.
-export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEGORIES, isAdmin, autoEdit = false, onBack, onSave, onCancelNew, onDelete }) {
+export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEGORIES, isAdmin, autoEdit = false, onBack, onSave, onCancelNew, onDelete }: IngredientDetailProps) {
   const [detailOpen, setDetailOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(null);
+  const [draft, setDraft] = useState<IngredientDraft | null>(null);
+  const editing = draft !== null;
   const [confirmStatus, setConfirmStatus] = useState(false); // modale de bascule du statut (édition)
 
   const startEdit = () => {
+    if (!ingredient) return;
     setDraft({
       ...ingredient,
       nutrition: ingredient.nutrition ? { ...ingredient.nutrition } : null,
@@ -72,9 +68,10 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
       aliases: Array.isArray(ingredient.aliases) ? [...ingredient.aliases] : [],
       months: Array.isArray(ingredient.months) ? [...ingredient.months] : undefined,
     });
-    setEditing(true);
   };
-  useEffect(() => { if (autoEdit && ingredient && !editing) startEdit(); /* eslint-disable-next-line */ }, [autoEdit, ingredient?.id]);
+  // Rejoué au changement de fiche seulement (pas à chaque frappe dans le brouillon).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (autoEdit && ingredient && !editing) startEdit(); }, [autoEdit, ingredient?.id]);
 
   if (!ingredient) {
     return (
@@ -87,14 +84,14 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
   }
 
   const CARD = { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" };
-  const up = (patch) => setDraft(p => ({ ...p, ...patch }));
-  const setNut = (k, v) => up({ nutrition: { ...(draft.nutrition || {}), isVegetable: isFruitVeg(draft.category), [k]: v === "" ? undefined : +v } });
-  const save = () => { onSave?.(draft); setEditing(false); setDraft(null); };
-  const cancel = () => { onCancelNew?.(ingredient); setEditing(false); setDraft(null); };
+  const up = (patch: Partial<IngredientDraft>) => setDraft(p => p && { ...p, ...patch });
+  const setNut = (k: NutrientKey, v: string) => up({ nutrition: { ...(draft?.nutrition || {}), isVegetable: isFruitVeg(draft?.category), [k]: v === "" ? undefined : +v } });
+  const save = () => { if (draft) onSave?.(draft); setDraft(null); };
+  const cancel = () => { onCancelNew?.(ingredient); setDraft(null); };
 
   // Source effective (draft en édition → aperçu live du Nutri-Score et du donut).
-  const src = editing ? draft : ingredient;
-  const cat = categories[src.category] || DEFAULT_CATEGORIES.other;
+  const src: IngredientDraft = editing ? draft : ingredient;
+  const cat = (src.category && categories[src.category]) || DEFAULT_CATEGORIES.other;
   const n = src.nutrition || {};
   const effDB = editing ? [...ingredientDB.filter(d => d.id !== src.id), src] : ingredientDB;
   const { letter } = computeNutriInfo([{ dbId: src.id, amount: 100, unit: "g" }], effDB);
@@ -102,15 +99,15 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
   const kj = Math.round((n.calories || 0) * 4.184);
   const aliases = Array.isArray(src.aliases) ? src.aliases : [];
 
-  const macroSegs = [
+  const macroSegs: { key: NutrientKey; label: string; color: string; value: number; grams: number }[] = [
     { key: "protein", label: "Protéines", color: MACRO_COLORS.protein, value: (n.protein || 0) * 4, grams: n.protein || 0 },
     { key: "carbs", label: "Glucides", color: MACRO_COLORS.carbs, value: (n.carbs || 0) * 4, grams: n.carbs || 0 },
     { key: "fat", label: "Lipides", color: MACRO_COLORS.fat, value: (n.fat || 0) * 9, grams: n.fat || 0 },
   ];
   const macroTot = macroSegs.reduce((s, x) => s + x.value, 0) || 1;
-  const fmt = v => v == null ? "–" : `${v >= 10 ? Math.round(v) : Math.round(v * 10) / 10} g`;
-  const riPct = (key, v) => NUTRI_RI[key] ? Math.round((v || 0) / NUTRI_RI[key] * 100) : null;
-  const detailRows = [
+  const fmt = (v: number | undefined) => v == null ? "–" : `${v >= 10 ? Math.round(v) : Math.round(v * 10) / 10} g`;
+  const riPct = (key: NutrientKey, v: number | undefined) => NUTRI_RI[key] ? Math.round((v || 0) / NUTRI_RI[key] * 100) : null;
+  const detailRows: DetailRow[] = [
     { key: "saturatedFat", label: "Acides gras saturés", color: "#c8581f" },
     { key: "sugar", label: "Sucres", color: "#d99a10" },
     { key: "omega3", label: "Oméga-3", color: "#2f9e6f", step: 0.01 },
@@ -118,11 +115,11 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
     { key: "salt", label: "Sel", color: "#9aa0a6", step: 0.01 },
   ];
   const hasNutrition = !!ingredient.nutrition;
-  const seasonalCat = SEASONAL_CATEGORIES.has(src.category);
+  const seasonalCat = !!src.category && SEASONAL_CATEGORIES.has(src.category);
   // Vue : mois dérivés (ingredientMonths). Édition : tableau brut du draft.
-  const dispMonths = editing ? draft.months : ingredientMonths(ingredient);
+  const dispMonths = editing ? draft.months : ingredientMonths(ingredient) ?? undefined;
   const monthsSet = new Set(dispMonths || []);
-  const toggleMonth = (m) => { const s = new Set(draft.months || []); s.has(m) ? s.delete(m) : s.add(m); const arr = [...s].sort((a, b) => a - b); up({ months: arr.length ? arr : undefined }); };
+  const toggleMonth = (m: number) => { const s = new Set(draft?.months || []); if (s.has(m)) s.delete(m); else s.add(m); const arr = [...s].sort((a, b) => a - b); up({ months: arr.length ? arr : undefined }); };
 
   return (
     <div key={ingredient.id} className="editor-enter" style={{ flex: 1, overflowY: "auto" }}>
@@ -312,48 +309,9 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
         </div>
 
         {/* ── Tips ── */}
-        {editing ? (
-          <div className="slide-up" style={{ marginTop: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>Tips utiles</div>
-              <button onClick={() => up({ tips: [...(draft.tips || []), { type: "prep", text: "" }] })} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 600, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.28)", borderRadius: 999, padding: "5px 12px", cursor: "pointer" }}>
-                <Icon name="plus" size={13} color="var(--accent)" /> Ajouter
-              </button>
-            </div>
-            {(draft.tips || []).length === 0 && <div style={{ fontSize: 12.5, color: "var(--text3)", fontStyle: "italic", padding: "8px 2px" }}>Aucun conseil. Préparation, choix, utilisation ou anti-gaspi.</div>}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {(draft.tips || []).map((tip, idx) => (
-                <div key={idx} style={{ ...CARD, padding: 12, display: "flex", gap: 8, alignItems: "flex-start" }}>
-                  <select value={tip.type} onChange={e => up({ tips: draft.tips.map((t, i) => i === idx ? { ...t, type: e.target.value } : t) })}
-                    style={{ width: 130, flexShrink: 0, appearance: "none", WebkitAppearance: "none", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 9px", fontSize: 12, color: "var(--text)", cursor: "pointer" }}>
-                    {Object.entries(TIP_TYPES).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
-                  </select>
-                  <textarea rows={2} placeholder="Conseil utile…" value={tip.text} onChange={e => up({ tips: draft.tips.map((t, i) => i === idx ? { ...t, text: e.target.value } : t) })}
-                    style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 9, padding: "7px 11px", fontSize: 12.5, color: "var(--text)", resize: "vertical", minHeight: 40, outline: "none", fontFamily: "var(--ff-body)" }} />
-                  <button onClick={() => up({ tips: draft.tips.filter((_, i) => i !== idx) })} aria-label="Supprimer" style={{ flexShrink: 0, marginTop: 5, background: "none", border: "none", cursor: "pointer", color: "var(--red)" }}><Icon name="trash" size={15} color="var(--red)" /></button>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : Array.isArray(ingredient.tips) && ingredient.tips.length > 0 && (
-          <div className="slide-up" style={{ animationDelay: "0.26s" }}>
-            <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, margin: "28px 0 12px" }}>Tips utiles</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {[...ingredient.tips].sort((a, b) => TIP_ORDER.indexOf(a.type) - TIP_ORDER.indexOf(b.type)).map((tip, i) => {
-                const t = TIP_TYPES[tip.type] || TIP_TYPES.prep;
-                return (
-                  <div key={i} style={{ ...CARD, display: "flex", gap: 13, padding: "13px 15px", alignItems: "flex-start" }}>
-                    <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 11, background: t.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>{t.icon}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: t.color, marginBottom: 3, letterSpacing: "0.01em" }}>{t.label}</div>
-                      <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5 }}>{tip.text}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {editing
+          ? <IngredientTipsEditor tips={draft.tips || []} onChange={tips => up({ tips })} />
+          : !!ingredient.tips?.length && <IngredientTipsList tips={ingredient.tips} />}
 
         {/* Origine des valeurs : correspondance avec l'aliment Ciqual (Anses). */}
         {!editing && <CiqualSource name={ingredient.name || ""} image={ingredient.image} ciqual={ingredient.ciqual} />}

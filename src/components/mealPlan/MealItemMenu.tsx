@@ -9,7 +9,6 @@ import { RecipeSheetThumb } from "../recipe/RecipeSheetThumb.jsx";
 interface PlannedItem {
   slot?: string;
   date: string;
-  [k: string]: unknown;
 }
 
 interface MealItemMenuProps {

@@ -20,16 +20,17 @@ export const IMPORT_INTERRUPTED: { code: string; message: string } = {
 /**
  * Choisit le message/code à afficher pour un échec d'import.
  *
- * @param err - L'erreur remontée (portant idéalement `message` et `code`).
+ * @param err - L'erreur remontée, de forme non garantie (`catch`) : `message` et
+ *   `code` ne sont repris que s'ils sont des chaînes non vides.
  * @param wentBackground - `true` si la page a été masquée pendant l'import (onglet
  *   quitté, app mobile mise en arrière-plan) : l'échec est alors traité comme une
  *   interruption plutôt que comme une panne serveur.
  * @returns `{ message, code }` prêt à afficher.
  */
-export function importFailureFor(
-  err: { message?: string; code?: string } | null | undefined,
-  wentBackground: boolean,
-): { message: string; code: string } {
+export function importFailureFor(err: unknown, wentBackground: boolean): { message: string; code: string } {
   if (wentBackground) return { ...IMPORT_INTERRUPTED };
-  return { message: err?.message || "Import impossible.", code: err?.code || "internal" };
+  const source = err && typeof err === "object" ? err : {};
+  const message = "message" in source && typeof source.message === "string" ? source.message : "";
+  const code = "code" in source && typeof source.code === "string" ? source.code : "";
+  return { message: message || "Import impossible.", code: code || "internal" };
 }

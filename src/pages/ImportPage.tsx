@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { ErrorModal } from "../components/modals/ErrorModal.jsx";
 import { LoadingOverlay } from "../components/import/ImportUI.jsx";
+import { ImportDropzone } from "../components/import/ImportDropzone.jsx";
 import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError, ImportPlusGate, ImportGiftOffer } from "../components/import/ImportModules.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useAiUsage } from "../hooks/useAiUsage.js";
@@ -15,7 +16,17 @@ import { visibleSources, prettyHost } from "@/lib/sources/recommendedSources.js"
 import { importFailureFor } from "@/lib/recipes/importInterruption.js";
 import { readClipboardLink } from "@/lib/launcher/plugin.js";
 import { DEFAULT_SOURCES } from "@/constants/recommendedSources.js";
+import type { ImportMode } from "../components/import/ImportModules.jsx";
+import type { ImportKind } from "@/lib/aiQuota.js";
+import type { ImagePart } from "@/lib/recipes/recipeUrlImport.js";
 import "../styles/import.css";
+
+/** Photo choisie : fichier, aperçu local (object URL) et partie image prête à l'envoi. */
+interface PickedPhoto {
+  file: File;
+  preview: string;
+  part: ImagePart;
+}
 
 // ─── PAGE IMPORT INTELLIGENT UNIFIÉE (lien / photo / texte) ──────────────────
 // Un seul écran à onglets pour les trois modes d'import intelligent. Le mode est
@@ -26,9 +37,9 @@ import "../styles/import.css";
 // reste serveur (Cardamome+), sur un pool mensuel de crédits (1 crédit par lien /
 // texte / PDF, 2 par photo).
 
-const ROUTE_BY_MODE = { lien: "import-from-url", photo: "import-from-picture", texte: "import-from-text", pdf: "import-from-pdf" };
-const KIND_BY_MODE = { lien: "url", photo: "photo", texte: "text", pdf: "pdf" };
-const CTA_LABEL = { lien: "Importer", photo: "Extraire", texte: "Extraire", pdf: "Extraire" };
+const ROUTE_BY_MODE: Record<ImportMode, string> = { lien: "import-from-url", photo: "import-from-picture", texte: "import-from-text", pdf: "import-from-pdf" };
+const KIND_BY_MODE: Record<ImportMode, ImportKind> = { lien: "url", photo: "photo", texte: "text", pdf: "pdf" };
+const CTA_LABEL: Record<ImportMode, string> = { lien: "Importer", photo: "Extraire", texte: "Extraire", pdf: "Extraire" };
 const URL_RE = /^https?:\/\/.+/i;
 const MIN_TEXT_LEN = 40;
 const MAX_PHOTOS = 2;
@@ -37,7 +48,7 @@ const MAX_PDF_BYTES = 20_000_000;
 // simule un temps d'analyse crédible pour préserver l'effet « import magique ».
 const GIFT_FAKE_MS = 6500;
 
-export function ImportPage({ mode = "lien" }) {
+export function ImportPage({ mode = "lien" }: { mode?: ImportMode }) {
   const { importFromUrl, importFromImages, importFromText, importFromPdf, importGift, giftImportUsed, markGiftImportUsed, sources, notify, isPlus, isAdmin, user } = useAppShell();
   const { unlimited, credits, canImport } = useAiUsage(user?.uid, isAdmin);
   const kind = KIND_BY_MODE[mode];
@@ -47,20 +58,19 @@ export function ImportPage({ mode = "lien" }) {
 
   const [url, setUrl] = useState("");
   const [clip, setClip] = useState("");            // URL détectée dans le presse-papiers
-  const [photos, setPhotos] = useState([]);        // [{ file, preview, part }]
+  const [photos, setPhotos] = useState<PickedPhoto[]>([]);
   const [text, setText] = useState("");
-  const [pdf, setPdf] = useState(null);            // { file, name } sélectionné
+  const [pdf, setPdf] = useState<File | null>(null);
   const [error, setError] = useState("");          // hint de saisie (inline)
-  const [importError, setImportError] = useState(null); // échec réel → popup
+  const [importError, setImportError] = useState<{ message: string; code: string } | null>(null); // échec réel → popup
   const [gate, setGate] = useState(false);         // mur d'offre (non-abonné)
   const [giftOffer, setGiftOffer] = useState(false); // feuille d'offre cadeau (non-abonné)
   const [gifting, setGifting] = useState(false);   // import cadeau en cours (overlay simulé)
   const [loading, setLoading] = useState(false);
-  const [drag, setDrag] = useState(false);
-  const urlRef = useRef(null);
-  const textRef = useRef(null);
-  const fileRef = useRef(null);
-  const pdfRef = useRef(null);
+  const urlRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
   const wentHiddenRef = useRef(false);  // page masquée pendant un import (arrière-plan)
   const photosRef = useRef(photos);
   useEffect(() => { photosRef.current = photos; }, [photos]);
@@ -96,7 +106,8 @@ export function ImportPage({ mode = "lien" }) {
 
   // Presse-papiers (lien) : proposer de coller un lien copié, best-effort. Venu du
   // widget d'import (« Un lien »), le geste vaut intention : on colle directement.
-  const fromLauncher = !!location.state?.launcher;
+  const navState: unknown = location.state;
+  const fromLauncher = !!navState && typeof navState === "object" && "launcher" in navState && !!navState.launcher;
   useEffect(() => {
     if (mode !== "lien") return;
     let alive = true;
@@ -135,28 +146,28 @@ export function ImportPage({ mode = "lien" }) {
     return () => clearTimeout(t);
   }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const selectMode = (m) => { if (m !== mode) navigate(`/recipes/${ROUTE_BY_MODE[m]}`, { replace: true }); };
+  const selectMode = (m: ImportMode) => { if (m !== mode) navigate(`/recipes/${ROUTE_BY_MODE[m]}`, { replace: true }); };
 
-  const addFiles = async (fileList) => {
+  const addFiles = async (fileList: FileList | null) => {
     setError("");
     const files = Array.from(fileList || []).filter(f => f.type.startsWith("image/"));
     const room = MAX_PHOTOS - photos.length;
     if (room <= 0) { setError("2 photos maximum (recette sur 2 pages)."); return; }
-    const next = [];
+    const next: PickedPhoto[] = [];
     for (const file of files.slice(0, room)) {
       try { next.push({ file, preview: URL.createObjectURL(file), part: await fileToImagePart(file) }); }
-      catch (e) { setError(e?.message || "Une image n'a pas pu être lue."); }
+      catch (e) { setError(e instanceof Error && e.message ? e.message : "Une image n'a pas pu être lue."); }
     }
     setPhotos(p => [...p, ...next]);
   };
-  const removePhoto = (i) => setPhotos(p => { const c = p[i]; if (c) URL.revokeObjectURL(c.preview); return p.filter((_, k) => k !== i); });
+  const removePhoto = (i: number) => setPhotos(p => { const c = p[i]; if (c) URL.revokeObjectURL(c.preview); return p.filter((_, k) => k !== i); });
 
-  const addPdf = (fileList) => {
+  const addPdf = (fileList: FileList | null) => {
     setError("");
     const file = Array.from(fileList || []).find(f => f.type === "application/pdf" || /\.pdf$/i.test(f.name));
     if (!file) { setError("Choisis un fichier PDF."); return; }
     if (file.size > MAX_PDF_BYTES) { setError("PDF trop volumineux (max 20 Mo)."); return; }
-    setPdf({ file, name: file.name });
+    setPdf(file);
   };
 
   const pasteFromClipboard = async () => {
@@ -187,7 +198,8 @@ export function ImportPage({ mode = "lien" }) {
       else if (mode === "pdf") {
         // Extraction de la couche texte côté client (aucune vision) : on n'appelle
         // le serveur (et ne consomme un quota) que si le PDF contient du texte.
-        const pdfText = await extractPdfText(pdf.file);
+        if (!pdf) { setLoading(false); return; }
+        const pdfText = await extractPdfText(pdf);
         if (!hasUsablePdfText(pdfText)) {
           setLoading(false);
           setError("Ce PDF ne contient pas de texte exploitable (document scanné ?). Essaie plutôt l'onglet Photo.");
@@ -257,14 +269,8 @@ export function ImportPage({ mode = "lien" }) {
     </div>
   );
   const dropzone = (
-    <div className={`imp-dropzone${drag ? " drag" : ""}`} onClick={() => fileRef.current?.click()}
-      onDragOver={e => { e.preventDefault(); setDrag(true); }}
-      onDragLeave={() => setDrag(false)}
-      onDrop={e => { e.preventDefault(); setDrag(false); addFiles(e.dataTransfer.files); }}>
-      <span className="plus"><Icon name="download" size={26} color="currentColor" /></span>
-      <span className="l">Glisse tes photos ou clique pour choisir</span>
-      <span className="h">Recette de livre, jusqu'à 2 pages, JPG ou PNG</span>
-    </div>
+    <ImportDropzone icon="download" label="Glisse tes photos ou clique pour choisir" hint="Recette de livre, jusqu'à 2 pages, JPG ou PNG"
+      onPick={() => fileRef.current?.click()} onDropFiles={addFiles} />
   );
   const textArea = (
     <>
@@ -289,14 +295,8 @@ export function ImportPage({ mode = "lien" }) {
       </button>
     </div>
   ) : (
-    <div className={`imp-dropzone${drag ? " drag" : ""}`} onClick={() => pdfRef.current?.click()}
-      onDragOver={e => { e.preventDefault(); setDrag(true); }}
-      onDragLeave={() => setDrag(false)}
-      onDrop={e => { e.preventDefault(); setDrag(false); addPdf(e.dataTransfer.files); }}>
-      <span className="plus"><Icon name="pdf" size={26} color="currentColor" /></span>
-      <span className="l">Glisse ton PDF ou clique pour choisir</span>
-      <span className="h">Une fiche ou un livre, avec du texte sélectionnable</span>
-    </div>
+    <ImportDropzone icon="pdf" label="Glisse ton PDF ou clique pour choisir" hint="Une fiche ou un livre, avec du texte sélectionnable"
+      onPick={() => pdfRef.current?.click()} onDropFiles={addPdf} />
   );
   // Le quota ne concerne que les abonnés ; pour un non-abonné il afficherait un
   // reliquat trompeur (il ne peut pas encore importer). Le CTA, lui, reste

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   publicId, collectComponentDeps, deriveDietTags, buildKeywords,
   toPublicRecipe, buildPublishBundle, clonePublicBundle, filterPublicRecipes,
-  hasExternalSource, publishBlockers,
+  hasExternalSource, publishBlockers, parsePublicDoc,
 } from "@/lib/household/publicRecipes.js";
 
 const user = { uid: "u1", displayName: "Chef Test", photoURL: "p.jpg" };
@@ -200,5 +200,35 @@ describe("publishBlockers", () => {
   it("bloque aussi quand seule une préparation de base est sourcée (publiée avec la recette)", () => {
     const sourcedSauce = { ...sauce, source: "cestmafournee.com/sauce" };
     expect(publishBlockers(dish, [sourcedSauce])).toEqual([sourcedSauce]);
+  });
+});
+
+describe("parsePublicDoc", () => {
+  const valid = {
+    pubId: "u1__r1", originalId: "r1", authorUid: "u1", authorName: "Léa", authorPhoto: "",
+    recipe: { name: "Tarte" }, componentRefs: ["r2"], name: "Tarte", cuisine: "Française",
+    nutriLetter: "B", healthScore: 62, isComponent: false, dietTags: ["vegetarien"], keywords: ["tarte"],
+    createdAt: 10, updatedAt: 20,
+  };
+
+  it("conserve un document complet", () => {
+    expect(parsePublicDoc(valid)).toEqual(valid);
+  });
+
+  it("normalise les champs absents ou mal typés", () => {
+    const doc = parsePublicDoc({ pubId: "p", recipe: {}, componentRefs: "r2", keywords: ["a", 3], nutriLetter: "", healthScore: "62", createdAt: NaN, isComponent: "oui" });
+    expect(doc).toEqual({
+      pubId: "p", originalId: "", authorUid: "", authorName: "", authorPhoto: "", recipe: {},
+      componentRefs: [], name: "", cuisine: "", nutriLetter: null, healthScore: null, isComponent: false,
+      dietTags: [], keywords: ["a"], createdAt: 0, updatedAt: 0,
+    });
+  });
+
+  it("écarte un document sans pubId ou sans recette objet", () => {
+    expect(parsePublicDoc({ ...valid, pubId: "" })).toBeNull();
+    expect(parsePublicDoc({ ...valid, recipe: null })).toBeNull();
+    expect(parsePublicDoc({ ...valid, recipe: ["x"] })).toBeNull();
+    expect(parsePublicDoc(null)).toBeNull();
+    expect(parsePublicDoc("doc")).toBeNull();
   });
 });
