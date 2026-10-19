@@ -1,0 +1,147 @@
+/* ── Feuille « Nouvelle recette » (cf. NewRecipeSheet) ─────────────────────────
+   Trois blocs, aucune carte : champ lien (seule action en accent), bande des
+   autres sources, ligne d'écriture manuelle. */
+.nr { display: flex; flex-direction: column; }
+
+.nr-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.nr-head h3 { margin: 0; font-family: var(--ff-display); font-size: 22px; font-weight: 700; letter-spacing: -0.015em; }
+.nr-x {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.nr-label { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.nr-label > span { margin-right: auto; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text2); }
+.nr-label small { font-size: 12px; color: var(--text3); }
+
+/* Champ lien : un faux champ (ouvre l'écran lien) + « Coller » (colle et importe). */
+.nr-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 54px;
+  padding: 0 7px 0 15px;
+  border-radius: 16px;
+  background: var(--surface2);
+}
+.nr-link__field {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: text;
+  text-align: left;
+}
+.nr-link__hints { position: relative; flex: 1; min-width: 0; height: 20px; overflow: hidden; font-size: 14.5px; color: var(--text3); }
+.nr-link__hints span {
+  position: absolute;
+  inset: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  animation: nrHint 9s infinite;
+}
+.nr-link__hints span:nth-child(2) { animation-delay: 3s; }
+.nr-link__hints span:nth-child(3) { animation-delay: 6s; }
+@keyframes nrHint {
+  0% { opacity: 0; transform: translateY(6px); }
+  4%, 30% { opacity: 1; transform: none; }
+  34%, 100% { opacity: 0; transform: translateY(-6px); }
+}
+.nr-link__paste {
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--ff-body);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Bande des autres sources : un seul conteneur, colonnes séparées d'un filet. */
+.nr-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 10px;
+  border-radius: 16px;
+  background: var(--surface2);
+  overflow: hidden;
+}
+.nr-strip button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 14px 6px 12px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-family: var(--ff-body);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.nr-strip button + button { box-shadow: inset 1px 0 0 var(--border); }
+.nr-strip button svg { margin-bottom: 3px; }
+.nr-strip b { font-size: 13.5px; font-weight: 600; }
+.nr-strip small { font-size: 11px; color: var(--text3); }
+
+/* Écriture manuelle : ligne sous un filet, sans carte. */
+.nr-manual {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 14px 4px 2px;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: none;
+  color: var(--text);
+  font-family: var(--ff-body);
+  text-align: left;
+  cursor: pointer;
+}
+.nr-manual__ic {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+}
+.nr-manual__txt { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.nr-manual__txt b { font-size: 14.5px; font-weight: 600; }
+.nr-manual__txt small { font-size: 12px; color: var(--text3); }
+.nr-manual__go { display: grid; color: var(--text3); }
+.nr-manual__go svg { transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.nr-manual:active .nr-manual__go svg { transform: translateX(4px); }
+
+@media (hover: hover) and (pointer: fine) {
+  .nr-strip button:hover { background: var(--surface3); }
+  .nr-x:hover { color: var(--text); }
+  .nr-link__paste:hover { background: var(--accent-strong); }
+  .nr-manual:hover .nr-manual__go { color: var(--accent); }
+  .nr-manual:hover .nr-manual__go svg { transform: translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nr-link__hints span { animation: none; }
+  .nr-link__hints span:first-child { opacity: 1; }
+}

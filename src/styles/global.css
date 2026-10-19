@@ -672,20 +672,6 @@ html.light select.field-input {
 /* « Charger plus de recettes » : pilule surface, même hover que les pills
    d'outils (la bordure se renforce). Styles portés en CSS pour que le :hover
    prenne (les styles inline précédents l'empêchaient). */
-.load-more-btn {
-  gap: 8px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 600;
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-  box-shadow: none;
-}
-.load-more-btn:hover {
-  border-color: var(--text3);
-}
-
 /* En-tête de la fiche ingrédient : boutons blancs dont le bord s'assombrit au
    survol (comme les pills de filtres), et flèche de retour qui glisse (comme les
    écrans d'import). */
@@ -3011,26 +2997,6 @@ html.light .sheet-sticky-head::after {
     color: #fff;
   }
 
-  /* Choix « Nouvelle recette » : survol neutre (fond crème/gris qui s'appuie,
-     bordure marquée), sans halo vert. Le chevron, lui, s'anime en accent. */
-  .nr-choice:hover {
-    border-color: var(--text3);
-    box-shadow: 0 8px 22px -14px rgba(0, 0, 0, 0.35);
-  }
-
-  .nr-choice:hover .nr-chev {
-    background: var(--accent);
-    color: #fff;
-  }
-
-  .nr-choice:hover .nr-chev svg {
-    transform: translateX(3px);
-  }
-
-  .nr-choice:active .nr-chev svg {
-    transform: translateX(5px);
-  }
-
   .import-back:hover {
     background: var(--surface3);
   }
@@ -3053,17 +3019,6 @@ html.light .sheet-sticky-head::after {
 
 .ing-hover {
   transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.2s ease;
-}
-
-/* Chevron des choix « Nouvelle recette » : le ROND reste fixe (couleur seule) ;
-   c'est la FLÈCHE (svg) qui glisse vers la droite au survol, façon flèche de
-   retour du détail recette. */
-.nr-chev {
-  transition: background-color 0.18s ease, color 0.18s ease;
-}
-
-.nr-chev svg {
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Flèche de retour des écrans d'import : glisse vers la GAUCHE au survol
@@ -3190,14 +3145,6 @@ html.light .sheet-sticky-head::after {
 }
 @media (hover: hover) and (pointer: fine) {
   .section-cut-cancel:hover { background: var(--surface2); color: var(--text); }
-}
-
-.nr-choice {
-  transition: border-color 0.15s ease, box-shadow 0.2s ease;
-}
-
-.nr-chev {
-  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .complete-row {

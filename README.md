@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.67.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.68.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -83,7 +83,8 @@ toujours avec vous.
 - 📝 **Journal d'itérations** : chaque modification de recette est versionnée
   avec un diff visuel, un commentaire et l'avatar de l'auteur.
 - 🥗 **Nutri-Score & score santé** : calculés automatiquement à partir des
-  ingrédients et de la base nutritionnelle (données Ciqual), avec difficulté
+  ingrédients et de la base nutritionnelle (données Ciqual, chaque fiche
+  ingrédient reliée à son aliment source), avec difficulté
   estimée et son calcul détaillé ligne par ligne (geste dominant, variété des
   gestes techniques, sous-recette, total), plus une charge de travail affichée à
   part (nombre d'étapes).
@@ -136,7 +137,8 @@ toujours avec vous.
   « Courses » (liste qui défile, articles à cocher sans ouvrir l'app) et
   « Import intelligent » (photo, lien copié collé tout seul, texte ou PDF).
 - 🖨️ **Export** : impression PDF propre (texte sélectionnable, étapes non
-  coupées, badges vegan / cuisine / difficulté, chef sous le titre) et JSON (import / export).
+  coupées, badges vegan / cuisine (drapeau compris) / difficulté, chef sous le
+  titre, pied de page signé de la gousse) et JSON (import / export).
 - 👤 **Profil** : nom d'affichage, heatmap d'activité cuisine façon GitHub, et
   zone de danger (purge ciblée, **suppression de compte** RGPD).
 - 📜 **Informations légales** : mentions légales, confidentialité, CGU, CGV

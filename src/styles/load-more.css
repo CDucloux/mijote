@@ -1,0 +1,34 @@
+/* Pill « voir plus » (cf. LoadMoreButton). Sans la classe .btn, dont le rayon
+   (--radius-sm) écrasait l'arrondi complet. */
+.load-more-row { display: flex; justify-content: center; margin-top: 20px; }
+.load-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface2);
+  color: var(--text);
+  font-family: var(--ff-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.12s ease;
+}
+.load-more small { font-size: 14px; font-weight: 500; color: var(--text3); }
+.load-more:active { transform: scale(0.97); }
+.load-more[aria-busy="true"] { cursor: progress; color: var(--text2); }
+.load-more__spin {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+  border-top-color: var(--text2);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@media (hover: hover) and (pointer: fine) {
+  .load-more:hover:not([aria-busy="true"]) { background: var(--surface3); }
+}

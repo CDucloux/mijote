@@ -1,5 +1,23 @@
 # Changelog – Cardamome
 
+## v4.68.0 – Cardamome · Le lien d'abord
+
+### Nouvelle recette
+- **Feuille repensée** : un champ prêt à coller pour le lien, « Coller » importe directement le lien copié ; photo, texte et PDF sur une seule bande ; écrire la recette soi-même reste à un tap. Le coût en crédits s'affiche pour les abonnés.
+
+### Fiche ingrédient
+- **« D'où viennent ces valeurs »** : l'ingrédient est relié à son aliment de la table Ciqual de l'Anses (nom et numéro), avec un lien direct vers sa fiche. Un aliment absent de la table l'indique clairement.
+
+### Export PDF
+- **Drapeau de cuisine enfin affiché** (il sortait en « FR »).
+- **Titres allégés** et pied de page signé de la gousse Cardamome.
+
+### Listes
+- **« Voir plus »** : bouton en pill sur Recettes et Stock, libellé plus court.
+
+### Correctifs
+- **Console admin** : déplier une catégorie ne ramène plus en haut de la page.
+
 ## v4.67.0 – Cardamome · Frigo ouvert
 
 ### Vitrine

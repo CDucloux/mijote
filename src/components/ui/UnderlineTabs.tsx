@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { OverscrollRow } from "./OverscrollRow.jsx";
+import { nearestScrollLeft } from "@/lib/ui/scrollNearest.js";
 
 /** Marge tactile de chaque onglet : borne l'onde sans décaler les libellés (marge négative). */
 const TAB_PAD_X = 6;
@@ -25,14 +26,25 @@ export function UnderlineTabs<T>({ tabs, value, onChange, label }: UnderlineTabs
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const [bar, setBar] = useState<{ left: number; width: number } | null>(null);
   const activeIndex = tabs.findIndex(t => t.value === value);
+  // Les parents recréent `tabs` à chaque rendu : on ne remesure que si libellés ou
+  // effectifs changent vraiment.
+  const tabsKey = tabs.map(t => `${t.label}:${t.count ?? ""}`).join("|");
 
   useLayoutEffect(() => {
     const el = refs.current[activeIndex];
     if (!el) { setBar(null); return; }
     // Le soulignement épouse le libellé, pas la zone tactile élargie de l'onde.
     setBar({ left: el.offsetLeft + TAB_PAD_X, width: el.offsetWidth - 2 * TAB_PAD_X });
-    el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
-  }, [activeIndex, tabs]);
+    // Défilement HORIZONTAL de la seule rangée : `scrollIntoView` ferait aussi
+    // défiler la page jusqu'aux onglets (retour en haut à chaque rendu parent).
+    // `offsetLeft` est relatif au contenu de la rangée (position: relative), qui
+    // démarre à 0 dans son conteneur défilant : le parent d'OverscrollRow.
+    const row = (el.offsetParent as HTMLElement | null)?.parentElement;
+    if (row && row.scrollWidth > row.clientWidth) {
+      const left = nearestScrollLeft(row.scrollLeft, row.clientWidth, el.offsetLeft, el.offsetWidth);
+      if (left !== row.scrollLeft) row.scrollTo({ left, behavior: "smooth" });
+    }
+  }, [activeIndex, tabsKey]);
 
   return (
     <OverscrollRow stretch outerStyle={{ borderBottom: "1px solid var(--border)" }} style={{ position: "relative", gap: 22 }}>
