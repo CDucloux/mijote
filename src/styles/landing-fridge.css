@@ -19,7 +19,6 @@
 .lpfr-edge { fill: var(--surface3); }
 .lpfr-sheen { fill: #fff; fill-opacity: 0.35; }
 .lpfr-contact { fill: #000; fill-opacity: 0.14; }
-.lpfr-floor { fill: #000; fill-opacity: 0.12; }
 .lpfr-foot { fill: var(--surface3); }
 .lpfr-drawer { fill: var(--surface2); }
 .lpfr-crisper { fill: var(--surface); fill-opacity: 0.58; stroke: var(--border); stroke-width: 1; }

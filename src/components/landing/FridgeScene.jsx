@@ -81,8 +81,7 @@ export function FridgeScene() {
           </linearGradient>
         </defs>
 
-        {/* Ombre au sol, pieds, carrosserie */}
-        <ellipse cx="138" cy="428" rx="132" ry="3.6" className="lpfr-floor" />
+        {/* Pieds, carrosserie */}
         <rect x="24" y="410" width="16" height="7" rx="2" className="lpfr-foot" />
         <rect x="160" y="410" width="16" height="7" rx="2" className="lpfr-foot" />
         <rect x="6" y="6" width="188" height="408" rx="20" className="lpfr-shell" />
