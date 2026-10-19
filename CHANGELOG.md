@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.70.1 – Cardamome · Sous le capot, suite
+
+### Console admin
+- **Export Markdown fidèle** : les exports Markdown des ingrédients et des ustensiles sont générés par une logique commune, testée, identique à celle du glossaire des techniques.
+
+### Recettes
+- **Étapes plus légères** : une nouvelle étape n'enregistre plus de titre vide inutile.
+
+### Technique
+- Migration TypeScript poursuivie : Stock, Accueil, éditeur de recette, vitrine publique et console admin passent en TypeScript, redécoupés en composants de moins de 400 lignes. Il ne reste plus que 2 fichiers en JavaScript.
+- Imports YAML de la console typés de bout en bout, logique de la console extraite dans `src/lib` avec tests.
+
 ## v4.70.0 – Cardamome · Sous le capot
 
 ### Planning
