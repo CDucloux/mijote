@@ -2245,6 +2245,55 @@ html.light .sheet-sticky-head::after {
     0 0 0 2px rgba(var(--accent-rgb), 0.32);
 }
 
+/* Appui long : le bocal se soulève le temps du maintien (480 ms), comme saisi sur
+   l'étagère ; un tap bref ne fait qu'esquisser le geste. */
+.stk-jar { transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+.stk-jar:active { transform: translateY(-4px) scale(1.04); transition-duration: 0.48s; }
+@media (prefers-reduced-motion: reduce) { .stk-jar:active { transform: none; } }
+
+/* ── Menu d'un bocal (feuille basse). --fill : teinte du bocal tenu. ── */
+.jsheet-head {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 0; background: none; border: 0; text-align: left; color: inherit; cursor: pointer;
+}
+.jsheet-title { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.jsheet-name { font-family: var(--ff-display); font-size: 22px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jsheet-shelf { font-size: 13px; color: var(--text2); }
+.jsheet-go { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 8px 2px 8px 10px; font-size: 13px; font-weight: 600; color: var(--accent); }
+
+.jsheet-levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; margin: 20px 0 26px; border-radius: 18px; background: var(--surface2); }
+.jsheet-level {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  min-height: 64px; padding: 10px 4px 9px; border: 0; border-radius: 14px;
+  background: transparent; color: var(--text2); font-family: var(--ff-body); font-size: 12.5px; font-weight: 500;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.jsheet-level[aria-checked="true"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--border); }
+/* Bocal miniature : couvercle, verre, contenu à la hauteur --m. */
+.jsheet-mini { position: relative; width: 18px; height: 22px; }
+.jsheet-mini::before { content: ""; position: absolute; left: 3px; right: 3px; top: 0; height: 4px; border-radius: 2px; background: var(--text3); }
+.jsheet-mini i { position: absolute; inset: 5px 0 0; border: 1.5px solid var(--text3); border-radius: 4px 4px 6px 6px; overflow: hidden; }
+.jsheet-mini i::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: var(--m); background: var(--text3); transition: background-color 0.2s; }
+.jsheet-level[aria-checked="true"] .jsheet-mini::before { background: var(--oak); }
+.jsheet-level[aria-checked="true"] .jsheet-mini i { border-color: var(--text2); }
+.jsheet-level[aria-checked="true"] .jsheet-mini i::after { background: var(--fill); }
+
+.jsheet-sec { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+.jsheet-sec h3 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text3); }
+.jsheet-sec span { font-size: 12px; color: var(--text3); font-variant-numeric: tabular-nums; }
+.jsheet-empty { margin: 6px 0 0; font-size: 14px; color: var(--text2); }
+.jsheet-recs { list-style: none; margin: 0; padding: 0; }
+.jsheet-recs li + li .jsheet-rec { border-top: 1px solid var(--border); }
+.jsheet-rec { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 0; background: none; border: 0; text-align: left; color: inherit; cursor: pointer; }
+.jsheet-rec-txt { flex: 1; min-width: 0; }
+.jsheet-rec-txt b, .jsheet-rec-txt small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jsheet-rec-txt b { font-size: 15px; font-weight: 600; }
+.jsheet-rec-txt small { margin-top: 1px; font-size: 12.5px; color: var(--text2); }
+.jsheet-rec-txt small[data-ready] { color: var(--ok); font-weight: 500; }
+.jsheet-more { width: 100%; height: 44px; margin-top: 10px; background: transparent; border: 1px solid var(--border) !important; color: var(--text); font-weight: 600; font-size: 14px; }
+.jsheet-head:focus-visible, .jsheet-level:focus-visible, .jsheet-rec:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 /* ── La BOUTEILLE (huiles, vinaigres) : même composant que le bocal, autre
    silhouette. Le couvercle devient bouchon + goulot ; le verre se resserre et
    prend des épaules ; le contenu est un liquide (aplat translucide + ménisque)

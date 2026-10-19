@@ -1,37 +1,12 @@
 import { useState, memo, type CSSProperties, type ReactNode } from "react";
 import { Icon, type IconName } from "../ui/Icon.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
-import { vesselColor, type VesselShelf } from "@/lib/food/vesselColor.js";
-
-const VESSEL_SHELVES: readonly VesselShelf[] = ["oil", "acid", "alcohol", "condiment"];
-const isVesselShelf = (key: string): key is VesselShelf => VESSEL_SHELVES.some(shelf => shelf === key);
-
-// Palette de contenus (fond du bocal quand l'image est absente/transparente) :
-// tons chauds « garde-manger », choisis déterministiquement par ingrédient.
-const STK_FILL = ["#cdb98a", "#c9a15c", "#b98c4a", "#a6743a", "#8f6b3f", "#7d5a34", "#c7b552", "#9aa15a", "#b5773f", "#d3a86a"];
-
-// Contenant selon le rayon : huiles, vinaigres et alcools en BOUTEILLE (liquides
-// dorés, du vinaigre blanc au balsamique, vins et spiritueux), condiments et
-// épices en POT À ÉPICES (poudres : paprika, curcuma, poivre, herbes séchées…).
-// Le reste en bocal. La couleur vient d'abord du nom (`vesselColor` : vin rouge,
-// balsamique, paprika…), la palette du rayon ne sert qu'à défaut.
-const VESSELS: Partial<Record<string, { kind: "bottle" | "spice"; fill: string[] }>> = {
-  oil: { kind: "bottle", fill: ["#d8b44a", "#c9a23a", "#b9a646", "#e0c46a"] },
-  acid: { kind: "bottle", fill: ["#a8483a", "#d6c38a", "#7a3b2a", "#c58a4a"] },
-  alcohol: { kind: "bottle", fill: ["#6e1f2a", "#e3cf86", "#e8a3a0", "#b8742a", "#8a2b3a"] },
-  condiment: { kind: "spice", fill: ["#b8432c", "#d9a42a", "#4a3a2c", "#7c8a45", "#a0522d", "#c9b48a"] },
-};
-
-/** Couleur de contenu stable pour un ingrédient (hash simple -> palette). */
-function stkFillColor(seed: string | undefined, palette: readonly string[] = STK_FILL) {
-  const s = String(seed || "");
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return palette[h % palette.length];
-}
+import { jarFillColor, jarVessel } from "@/lib/food/jarLook.js";
+import type { StockLevel } from "@/lib/food/stockLevel.js";
+import { useLongPress } from "../../hooks/useLongPress.js";
 
 /** État d'un bocal : plein (en stock), bientôt vide, ou vide (à racheter). */
-export type JarState = "full" | "low" | "empty";
+export type JarState = StockLevel;
 
 const STATE_LABEL: Record<JarState, string> = { full: "en stock", low: "bientôt vide", empty: "à racheter" };
 
@@ -47,6 +22,8 @@ interface JarProps {
   ing: ShelfIngredient;
   state: JarState;
   onCycle: (id: string) => void;
+  /** Appui long : ouvre le menu du bocal. */
+  onHold: (id: string) => void;
   /** Rayon : choisit le contenant (bouteille, pot à épices, bocal) et sa teinte. */
   catKey: string;
 }
@@ -54,17 +31,25 @@ interface JarProps {
 /**
  * Un bocal. Mémoïsé sur `(ing, state, onCycle)` : toggler un bocal ne re-rend que
  * lui, pas les 139. Le niveau de remplissage est piloté en CSS par `data-state`.
+ * Tap : niveau suivant du cycle ; appui long : menu du bocal (`onHold`).
  */
-export const Jar = memo(function Jar({ ing, state, onCycle, catKey }: JarProps) {
+export const Jar = memo(function Jar({ ing, state, onCycle, onHold, catKey }: JarProps) {
   const [imgErr, setImgErr] = useState(false);
-  const vessel = VESSELS[catKey];
+  const { startLongPress, cancelLongPress, moveLongPress, wasLongPress } = useLongPress();
+  const vessel = jarVessel(catKey);
   return (
     <button
       className="stk-jar"
       data-state={state}
       data-vessel={vessel?.kind}
-      onClick={() => onCycle(ing.id)}
-      style={{ "--fill": (vessel && isVesselShelf(catKey) && vesselColor(ing.name, catKey)) || stkFillColor(ing.dbId || ing.id, vessel?.fill) } as CSSProperties}
+      onClick={() => { if (!wasLongPress()) onCycle(ing.id); }}
+      onPointerDown={e => startLongPress(e, () => onHold(ing.id))}
+      onPointerMove={moveLongPress}
+      onPointerUp={cancelLongPress}
+      onPointerLeave={cancelLongPress}
+      onPointerCancel={cancelLongPress}
+      onContextMenu={e => e.preventDefault()}
+      style={{ "--fill": jarFillColor(ing, catKey) } as CSSProperties}
       aria-label={`${ing.name} : ${STATE_LABEL[state]}`}
     >
       <span className="stk-lid" aria-hidden="true" />
@@ -86,7 +71,7 @@ export const Jar = memo(function Jar({ ing, state, onCycle, catKey }: JarProps) 
       )}
     </button>
   );
-}, (a: JarProps, b: JarProps) => a.state === b.state && a.ing === b.ing && a.onCycle === b.onCycle && a.catKey === b.catKey);
+}, (a: JarProps, b: JarProps) => a.state === b.state && a.ing === b.ing && a.onCycle === b.onCycle && a.onHold === b.onHold && a.catKey === b.catKey);
 
 /** Équerre vue de FACE (comme l'étagère) : on n'en voit que la tranche, une barre
  *  étroite qui descend sous la planche et s'affine vers le mur, avec sa vis de
