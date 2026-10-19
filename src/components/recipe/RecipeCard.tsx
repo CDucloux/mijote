@@ -5,6 +5,7 @@ import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { BaseInfoModal } from "../modals/BaseInfoModal.jsx";
 import { Icon } from "../ui/Icon.jsx";
 import { NutriScoreBadge, type NutriLetter } from "../badges/NutriScoreBadge.jsx";
+import { asNutriLetter } from "@/lib/recipes/nutriscore.js";
 import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
 import { VeganBadge, SeasonBadge } from "../badges/Badges.jsx";
 import { fmtTime } from "../../lib/format.js";
@@ -70,7 +71,7 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = f
             <span style={{ width: 1, height: 10, background: "var(--border)", display: "inline-block", borderRadius: 1 }} />
             <span>{recipe.ingredients?.length || 0} ingr.</span>
           </span>
-          <NutriScoreBadge letter={(nutriLetter ?? recipe.nutriLetter) as NutriLetter | null | undefined} compact />
+          <NutriScoreBadge letter={nutriLetter ?? asNutriLetter(recipe.nutriLetter)} compact />
         </div>
       </div>
     </div>

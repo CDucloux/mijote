@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeNutriInfo, ingredientGrams, computeNutriBreakdown } from "@/lib/recipes/nutriscore.js";
+import { computeNutriInfo, ingredientGrams, computeNutriBreakdown, asNutriLetter } from "@/lib/recipes/nutriscore.js";
 
 const DB = [
   { id: "beurre", name: "Beurre", nutrition: { calories: 745, fat: 82, saturatedFat: 51, salt: 0.02, sugar: 0.6, protein: 0.7, fiber: 0 } },
@@ -79,5 +79,39 @@ describe("computeNutriInfo return shape", () => {
     const noCat = DB.map(d => d.category === "fruit" ? { ...d, category: undefined, nutrition: { ...d.nutrition } } : d);
     const withoutFruit = computeNutriInfo(guac, noCat, new Map());
     expect(withFruit.score).toBeGreaterThanOrEqual(withoutFruit.score);
+  });
+});
+
+describe("computeNutriInfo avec préparation de base", () => {
+  const base = { id: "roux", yield: { amount: 100, unit: "g" }, ingredients: [{ dbId: "beurre", name: "Beurre", amount: 100, unit: "g" }] };
+  const line = [{ recipeId: "roux", name: "Roux", amount: 50, unit: "g" }];
+
+  it("accepte un rendement saisi en texte, virgule décimale comprise (non-régression)", () => {
+    const numeric = computeNutriInfo(line, DB, new Map([["roux", base]]));
+    const textual = computeNutriInfo(line, DB, new Map([["roux", { ...base, yield: { amount: "100,0", unit: "g" } }]]));
+    expect(numeric.letter).not.toBeNull();
+    expect(textual).toEqual(numeric);
+  });
+
+  it("ignore une base au rendement nul ou illisible", () => {
+    const zero = computeNutriInfo(line, DB, new Map([["roux", { ...base, yield: { amount: "0", unit: "g" } }]]));
+    const junk = computeNutriInfo(line, DB, new Map([["roux", { ...base, yield: { amount: "beaucoup", unit: "g" } }]]));
+    expect(zero.letter).toBeNull();
+    expect(junk.letter).toBeNull();
+  });
+});
+
+describe("asNutriLetter", () => {
+  it("garde une lettre valide", () => {
+    expect(asNutriLetter("A")).toBe("A");
+    expect(asNutriLetter("E")).toBe("E");
+  });
+
+  it("rejette une valeur absente, inconnue ou d'un autre type", () => {
+    expect(asNutriLetter(undefined)).toBeNull();
+    expect(asNutriLetter(null)).toBeNull();
+    expect(asNutriLetter("a")).toBeNull();
+    expect(asNutriLetter("F")).toBeNull();
+    expect(asNutriLetter(3)).toBeNull();
   });
 });

@@ -13,7 +13,7 @@ const MOVE_END = HERO_H - BAR_H;      // 248 : course de repli du hero
 // matérialise que sur les tout derniers px, quand le hero a fini de se replier.
 const BAR_START = MOVE_END - 22;      // 226
 
-type Ref = React.RefObject<HTMLElement | null>;
+type Ref = React.RefObject<HTMLDivElement | null>;
 
 // Position de défilement mémorisée entre deux visites d'une MÊME fiche : ouvrir la
 // fiche d'un ingrédient depuis la recette démonte RecipeDetail, l'état de scroll ne
@@ -26,7 +26,7 @@ export interface HeroCollapse {
   scrollRef: React.RefObject<HTMLDivElement | null>;
   heroImgRef: Ref;
   shadeRef: Ref;
-  titleRef: Ref;
+  titleRef: React.RefObject<HTMLHeadingElement | null>;
   srcRef: Ref;
   attribRef: Ref;
   badgesRef: Ref;
@@ -69,18 +69,18 @@ export function useHeroCollapse(
   const scrollRef = useRef<HTMLDivElement | null>(null);
   // Refs d'animation : le collapse écrit directement dans le DOM (pas de state),
   // pour ne pas re-rendre ce composant (gros) à chaque frame de scroll.
-  const heroImgRef = useRef<HTMLElement | null>(null);
-  const shadeRef = useRef<HTMLElement | null>(null);
-  const titleRef = useRef<HTMLElement | null>(null);
-  const srcRef = useRef<HTMLElement | null>(null);
-  const attribRef = useRef<HTMLElement | null>(null);
-  const badgesRef = useRef<HTMLElement | null>(null);
-  const ctrlLRef = useRef<HTMLElement | null>(null);
-  const ctrlRRef = useRef<HTMLElement | null>(null);
-  const barRef = useRef<HTMLElement | null>(null);
-  const spacerRef = useRef<HTMLElement | null>(null); // cale de bas : garantit assez de défilement pour replier le hero
-  const barInnerRef = useRef<HTMLElement | null>(null);
-  const paneRef = useRef<HTMLElement | null>(null);
+  const heroImgRef = useRef<HTMLDivElement | null>(null);
+  const shadeRef = useRef<HTMLDivElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const srcRef = useRef<HTMLDivElement | null>(null);
+  const attribRef = useRef<HTMLDivElement | null>(null);
+  const badgesRef = useRef<HTMLDivElement | null>(null);
+  const ctrlLRef = useRef<HTMLDivElement | null>(null);
+  const ctrlRRef = useRef<HTMLDivElement | null>(null);
+  const barRef = useRef<HTMLDivElement | null>(null);
+  const spacerRef = useRef<HTMLDivElement | null>(null); // cale de bas : garantit assez de défilement pour replier le hero
+  const barInnerRef = useRef<HTMLDivElement | null>(null);
+  const paneRef = useRef<HTMLDivElement | null>(null);
   const swipeStart = useRef<{ x: number; y: number; axis: "x" | "y" | null } | null>(null);
 
   const swipeHandlers = {

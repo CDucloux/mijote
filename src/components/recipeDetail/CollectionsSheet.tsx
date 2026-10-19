@@ -3,7 +3,7 @@ import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 
 /** Carnet tel que rendu ici : la couleur pilote la mise en avant du carnet actif. */
-interface ColoredCollection extends Collection {
+export interface ColoredCollection extends Collection {
   color: string;
 }
 

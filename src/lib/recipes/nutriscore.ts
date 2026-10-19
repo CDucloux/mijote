@@ -6,7 +6,7 @@
  * @module recipes/nutriscore
  */
 
-import type { IngredientLine } from "@/lib/types.js";
+import type { IngredientLine, RecipeYield } from "@/lib/types.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { isFruitVeg } from "@/constants/categories.js";
 
@@ -22,13 +22,29 @@ interface DbItem { id: string; category?: string; gramsPerPiece?: number; nutrit
  */
 const countsAsFruitVeg = (di: DbItem): boolean => isFruitVeg(di.category) || !!di.nutrition?.isVegetable;
 /** Recette (utilisée comme composant : rendement + ingrédients bruts). */
-interface NutriRecipe { id?: string; ingredients?: IngredientLine[]; yield?: { amount?: number; unit?: string } }
+interface NutriRecipe { id?: string; ingredients?: IngredientLine[]; yield?: RecipeYield }
 type RecipeIndex = Map<string, NutriRecipe> | null | undefined;
 /** Poids d'une unité en grammes ; l'objet marque une unité « à la pièce ». */
 type UnitEntry = number | { g: number; piece: true };
 
 /** Résultat compact du Nutri-Score. */
-export interface NutriInfo { score: number; letter: "A" | "B" | "C" | "D" | "E" | null }
+/** Lettre du Nutri-Score, de A (meilleur) à E. */
+export type NutriLetter = "A" | "B" | "C" | "D" | "E";
+
+export interface NutriInfo { score: number; letter: NutriLetter | null }
+
+const NUTRI_LETTERS: readonly NutriLetter[] = ["A", "B", "C", "D", "E"];
+
+/**
+ * Lettre Nutri-Score figée sur une recette (`nutriLetter`, donnée Firestore ou
+ * import), validée plutôt que castée : une valeur inconnue n'affiche aucun badge.
+ *
+ * @param value - Valeur stockée, de forme non garantie.
+ * @returns La lettre si elle est valide, `null` sinon.
+ */
+export function asNutriLetter(value: unknown): NutriLetter | null {
+  return NUTRI_LETTERS.find(letter => letter === value) ?? null;
+}
 
 /** Tables de seuils par 100 g : {@link nsPoints} renvoie l'index du 1er seuil non dépassé. */
 const NS_ENERGY = [335, 670, 1005, 1340, 1675, 2010, 2345, 2680, 3015, 3350];                 // kJ → 0..10
@@ -175,8 +191,9 @@ interface ComponentAdd { totAdd: Record<string, number>; massAdd: number; covere
  */
 function componentContribution(line: IngredientLine, recipesById: RecipeIndex, ingredientDB: DbItem[], keys: readonly string[], wantVeg: boolean): ComponentAdd | null {
   const comp = line.recipeId ? recipesById?.get(line.recipeId) : null;
-  const yieldAmount = comp?.yield?.amount;
-  if (!comp || !yieldAmount || yieldAmount <= 0) return null; // orphelin / rendement inconnu → ignoré
+  // Rendement saisi au formulaire : peut arriver en texte (« 500 », « 500,5 »).
+  const yieldAmount = num(comp?.yield?.amount);
+  if (!comp || yieldAmount <= 0) return null; // orphelin / rendement inconnu → ignoré
   const f = num(line.amount) / yieldAmount;
   const agg = aggregateRaw(comp.ingredients, ingredientDB, keys, wantVeg);
   const unit = (comp.yield?.unit || "g").toLowerCase();

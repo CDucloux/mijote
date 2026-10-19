@@ -1,33 +1,71 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, type ComponentProps } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { parseDurations } from "@/lib/planning/stepTimers.js";
-import { BaseIcon } from "../components/ui/BaseIcon.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 import { buildPostesDecoupe, findDecoupeStepIndex, sortPostesByStep } from "@/lib/recipes/decoupe.js";
 import { createIngredientResolver, resolveLineEntry } from "@/lib/food/nameMatcher.js";
-import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { resolveUsagePrecaution } from "@/lib/utensils/usagePrecaution.js";
+import { findUtensilEntry } from "@/lib/utensils/utensilLookup.js";
 import { UtensilPrecautionSheet } from "../components/recipe/QualityHints.jsx";
-import { fmtQtyUnit, fmtElapsed } from "../lib/format.js";
-import { groupIngredientsByCategory, buildPendingComponents } from "@/lib/cookSession/misEnPlace.ts";
+import { fmtQtyUnit } from "../lib/format.js";
+import { groupIngredientsByCategory, buildPendingComponents } from "@/lib/cookSession/misEnPlace.js";
 import { spoonConversions } from "@/lib/food/calculators.js";
 import { QuantityConvertSheet } from "../components/ingredient/QuantityConvertSheet.jsx";
-import { AutoResizeTextarea } from "../components/ui/AutoResizeTextarea.jsx";
-import { RatingPicker } from "../components/ui/RatingPicker.jsx";
-import { addVersion, nextVersionLabel } from "@/lib/recipes/history.js";
-import { SwipeableSheet } from "../components/ui/SwipeableSheet.jsx";
+import { addVersion, nextVersionLabel, type HistoryRecipe } from "@/lib/recipes/history.js";
+import { stepLinked } from "@/lib/recipes/stepLinks.js";
 import { useLS } from "../hooks/useLS.js";
 import { useCookSession } from "../hooks/useCookSession.js";
 import { useCookTimers } from "../hooks/useCookTimers.js";
+import { useCookChecklist } from "../hooks/useCookChecklist.js";
 import { useStepGestures } from "../hooks/useStepGestures.js";
 import { CookTimersStack } from "../components/cookMode/CookTimersStack.jsx";
 import { CookDoneScreen } from "../components/cookMode/CookDoneScreen.jsx";
 import { CookContent } from "../components/cookMode/CookContent.jsx";
 import { CookSidebar } from "../components/cookMode/CookSidebar.jsx";
-import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.ts";
+import { CookModeHeader } from "../components/cookMode/CookModeHeader.jsx";
+import { CookIterationSheet } from "../components/cookMode/CookIterationSheet.jsx";
+import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
+import type { IngredientLine, Recipe, Utensil, UtensilDbItem } from "@/lib/types.js";
+import type { DbEntry } from "@/lib/food/nameMatcher.js";
+import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
+import type { CookPage } from "../components/cookMode/CookSidebar.js";
+import type { PrecautionSheetTarget } from "../components/recipeDetail/recipeView.js";
+
+interface CookModeSharedProps {
+  recipe: Recipe;
+  /** Facteur appliqué aux quantités (portions × moule). */
+  mult: number;
+  ingredientDB: DbEntry[];
+  utensilDB: UtensilDbItem[] | undefined;
+  categories?: CategoryMap;
+  onClose: () => void;
+  /** Consigne le plat au journal de cuisine (recette principale uniquement). */
+  onCooked?: (recipeId: string) => void;
+  /** IDs des préparations de base en stock (les autres sont à réaliser d'abord). */
+  stockSet: Set<string> | undefined;
+  onUpdateRecipe?: (recipe: HistoryRecipe) => void;
+}
+
+interface CookModeInnerProps extends CookModeSharedProps {
+  recipesById: Map<string, Recipe>;
+  /** CookMode ouvert depuis un autre pour réaliser une préparation de base. */
+  isNested?: boolean;
+}
+
+interface CookModeProps extends CookModeSharedProps {
+  recipes?: Recipe[];
+}
+
+/** Préparation de base ouverte dans un CookMode imbriqué, à son échelle. */
+interface SubCook {
+  recipe: Recipe;
+  mult: number;
+}
+
+type ConvertTarget = ComponentProps<typeof QuantityConvertSheet>["ing"];
 
 // ─── COOK MODE ────────────────────────────────────────────────────────────────
 // `recipes` + `stockSet` permettent de gérer les composants (préparations de base) :
@@ -35,7 +73,7 @@ import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 // - dans chaque step : les lignes composant s'affichent avec 🧈 (pas d'image dbId).
 // - bouton « Réaliser » → CookMode imbriqué sur le composant mis à l'échelle.
 
-function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEFAULT_CATEGORIES, onClose, onCooked, recipesById, stockSet, onUpdateRecipe, isNested = false }) {
+function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEFAULT_CATEGORIES, onClose, onCooked, recipesById, stockSet, onUpdateRecipe, isNested = false }: CookModeInnerProps) {
   const { techniques, notify } = useAppShell();
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const ingResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
@@ -54,35 +92,25 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   // de fin de la recette PRINCIPALE (les bases imbriquées ne comptent pas).
   const cookedLoggedRef = useRef(false);
   useEffect(() => {
-    if (done && !isNested && !cookedLoggedRef.current) { cookedLoggedRef.current = true; onCooked?.(recipe.id); }
+    if (done && !isNested && !cookedLoggedRef.current && recipe.id) { cookedLoggedRef.current = true; onCooked?.(recipe.id); }
   }, [done, isNested, onCooked, recipe.id]);
   const [closing, setClosing] = useState(false);
   // Fermeture animée : joue la sortie (fondu + glissé) avant de démonter réellement.
   const requestClose = () => { if (closing) return; setClosing(true); setTimeout(() => onClose(), 280); };
-  const [subCook, setSubCook] = useState(null); // { recipe, mult }
-  const [precSheet, setPrecSheet] = useState(null); // { name, prec } précaution ustensile ouverte
-  const [doneComponents, setDoneComponents] = useState(new Set());
-  // Checklist de « mise en place » (ingrédients/ustensiles rassemblés) : propre à
-  // CETTE session de cuisine, jamais persistée (elle n'a plus de sens à la prochaine).
-  const [checkedIngIds, setCheckedIngIds] = useState(() => new Set());
-  const [checkedUtIds, setCheckedUtIds] = useState(() => new Set());
-  const [checkedCutKeys, setCheckedCutKeys] = useState(() => new Set());
-  const toggleIngChecked = (id) => setCheckedIngIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
-  const toggleUtChecked = (id) => setCheckedUtIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
-  const toggleCutChecked = (key) => setCheckedCutKeys(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; });
+  const [subCook, setSubCook] = useState<SubCook | null>(null);
+  const [precSheet, setPrecSheet] = useState<PrecautionSheetTarget | null>(null);
+  const [doneComponents, setDoneComponents] = useState<ReadonlySet<string | undefined>>(() => new Set());
+  const {
+    checkedIngIds, checkedUtIds, checkedCutKeys, toggleIngChecked, toggleUtChecked, toggleCutChecked,
+    spoonUnitByIng, setSpoonUnit,
+  } = useCookChecklist();
   // Conversion d'une quantité en cuillères (feuille), depuis la mise en place.
-  const [convIng, setConvIng] = useState(null);
-  // Unité d'affichage choisie par ingrédient (cuillère à soupe / à café), pour qui
-  // préfère mesurer que peser. Propre à la session, appliquée partout dans le cook mode.
-  const [spoonUnitByIng, setSpoonUnitByIng] = useState(() => new Map());
-  const setSpoonUnit = (ingId, unit) => setSpoonUnitByIng(prev => { const m = new Map(prev); unit ? m.set(ingId, unit) : m.delete(ingId); return m; });
+  const [convIng, setConvIng] = useState<ConvertTarget | null>(null);
   // Préférence d'affichage (liste / par catégorie) : persistée, elle reste valable
   // d'une recette à l'autre.
   const [groupByCategory, setGroupByCategory] = useLS("rf_cookModeGroupByCategory", false);
   // Itération de fin de cuisson : alimente le carnet d'itérations depuis l'écran final.
   const [iterOpen, setIterOpen] = useState(false);
-  const [iterRating, setIterRating] = useState(null);
-  const [iterNotes, setIterNotes] = useState("");
   // Minuteurs déclenchés depuis les mentions de temps de l'étape. Base horodatée
   // (cf. `cookTimers`) : le restant se dérive de l'horloge, donc reste juste après
   // un passage en arrière-plan. En natif, une notification OS est planifiée à
@@ -90,8 +118,10 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const [navDir, setNavDir] = useState(1); // sens de navigation (animation d'étape)
   const { timers, timersOpen, setTimersOpen, now, addTimer, toggleTimer, restartTimer, removeTimer } = useCookTimers(notify);
   const canIterate = !isNested && !!onUpdateRecipe;
-  const saveIteration = () => {
-    onUpdateRecipe(addVersion(recipe, { label: nextVersionLabel(recipe.history), rating: iterRating, notes: iterNotes }));
+  const saveIteration = (rating: number | null, notes: string) => {
+    if (!onUpdateRecipe) return;
+    const versioned: HistoryRecipe = recipe;
+    onUpdateRecipe(addVersion(versioned, { label: nextVersionLabel(versioned.history), rating, notes }));
     setIterOpen(false);
     notify?.("Itération ajoutée au carnet");
     requestClose();
@@ -134,14 +164,14 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
   const realStepCount = (recipe.steps || []).length;
   const pages = useMemo(() => {
-    const arr = [];
+    const arr: CookPage[] = [];
     if (hasOverview) arr.push({ kind: "overview" });
     if (pendingComponents.length > 0) arr.push({ kind: "bases" });
     (recipe.steps || []).forEach((s, i) => arr.push({ kind: "step", step: s, realIdx: i }));
     return arr;
   }, [hasOverview, pendingComponents.length, recipe.steps]);
   const totalSteps = pages.length || 1;
-  const cur = pages[Math.min(stepIdx, pages.length - 1)] || { kind: "overview" };
+  const cur: CookPage = pages[Math.min(stepIdx, pages.length - 1)] || { kind: "overview" };
   const isOverview = cur.kind === "overview";
   const isBases = cur.kind === "bases";
   const step = cur.kind === "step" ? cur.step : null;
@@ -149,12 +179,12 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
   // Toutes les bases avec étapes doivent être réalisées avant de passer à la suite.
   const allComponentsDone = pendingComponents
-    .filter(({ comp }) => comp.steps?.length > 0)
+    .filter(({ comp }) => (comp.steps?.length ?? 0) > 0)
     .every(({ comp }) => doneComponents.has(comp.id));
 
   // Navigation entre pages, en mémorisant le sens pour l'animation d'expansion :
   // en avant le contenu monte depuis le bas, en arrière il descend depuis le haut.
-  const goTo = (idx) => {
+  const goTo = (idx: number) => {
     const next = Math.max(0, Math.min(totalSteps - 1, idx));
     if (next === stepIdx) return;
     if (isBases && next > stepIdx && !allComponentsDone) return; // bases à finir avant d'avancer
@@ -164,23 +194,23 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const goNext = () => { if (stepIdx < totalSteps - 1) goTo(stepIdx + 1); };
   const goPrev = () => goTo(stepIdx - 1);
   // Saute à une étape réelle (index dans recipe.steps) en la retrouvant dans les pages.
-  const goToStep = (realStepIdx) => {
+  const goToStep = (realStepIdx: number) => {
     if (realStepIdx < 0) return;
     const pageIdx = pages.findIndex(p => p.kind === "step" && p.realIdx === realStepIdx);
     if (pageIdx >= 0) goTo(pageIdx);
   };
 
-  const getIngImage = (dbId, name) => resolveLineEntry(dbId, name, ingredientDB, ingResolver)?.image || "";
-  const getUtImage = (dbId, name) => (utensilDB || []).find(d => d.id === dbId)?.image || (name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(name))?.image || "" : "");
+  const getIngImage = (dbId: string | undefined, name: string | undefined) => resolveLineEntry(dbId, name, ingredientDB, ingResolver)?.image || "";
+  const getUtImage = (dbId: string | undefined, name: string | undefined) => findUtensilEntry(utensilDB, dbId, name)?.image || "";
   // Précaution d'utilisation d'un ustensile (résolu à la base par dbId, sinon nom).
-  const getUtPrecaution = (u) => resolveUsagePrecaution((utensilDB || []).find(d => d.id === u.dbId) || (u.name ? (utensilDB || []).find(d => normalizeStr(d.name) === normalizeStr(u.name)) : null));
+  const getUtPrecaution = (u: Utensil) => resolveUsagePrecaution(findUtensilEntry(utensilDB, u.dbId, u.name));
   // Équivalent cuillères d'un ingrédient (null si non convertible : sert de garde
   // d'affichage du badge ET de payload d'ouverture de la feuille).
-  const convOf = (ing, amount) => spoonConversions(amount, ing.unit, ing.name);
-  const openConvert = (ing, amount) => setConvIng({ id: ing.id, name: ing.name, image: getIngImage(ing.dbId, ing.name), amount, unit: ing.unit, spoons: convOf(ing, amount) });
+  const convOf = (ing: IngredientLine, amount: number) => spoonConversions(amount, ing.unit, ing.name);
+  const openConvert = (ing: IngredientLine, amount: number) => setConvIng({ id: ing.id, name: ing.name, image: getIngImage(ing.dbId, ing.name), amount, unit: ing.unit, spoons: convOf(ing, amount) ?? [] });
   // Quantité affichée d'un ingrédient : en cuillères si l'utilisateur a choisi une
   // unité pour lui (et qu'elle reste convertible à cette quantité), sinon l'unité d'origine.
-  const displayQty = (ing, amount) => {
+  const displayQty = (ing: IngredientLine, amount: number) => {
     const chosen = spoonUnitByIng.get(ing.id);
     if (chosen) {
       const match = convOf(ing, amount)?.find(s => s.unit === chosen);
@@ -213,8 +243,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   // Navigation au clavier (desktop) : ← précédent, → suivant (ou terminer).
   useEffect(() => {
     if (subCook || done || iterOpen || closing) return;
-    const onKey = (e) => {
-      if (e.defaultPrevented || e.target?.closest?.("input, textarea, [contenteditable=true]")) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || (e.target instanceof Element && e.target.closest("input, textarea, [contenteditable=true]"))) return;
       if (e.key === "ArrowRight") {
         if (stepIdx < totalSteps - 1) goNext();
         else setDone(true);
@@ -236,12 +266,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   );
 
   // Ingrédients liés à l'étape courante (bruts + composants)
-  const linkedIngs = step
-    ? (recipe.ingredients || []).filter(i => step.ingredients?.includes(i.id))
-    : [];
-  const linkedUts = step
-    ? (recipe.utensils || []).filter(u => step.utensils?.includes(u.id))
-    : [];
+  const linkedIngs = stepLinked(recipe.ingredients, step?.ingredients);
+  const linkedUts = stepLinked(recipe.utensils, step?.utensils);
 
   return createPortal(
     <>
@@ -262,52 +288,15 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
       {done && !subCook && (
         <CookDoneScreen isNested={isNested} closing={closing} recipeName={recipe.name} canIterate={canIterate}
-          onIterate={() => { setIterRating(null); setIterNotes(""); setIterOpen(true); }} onClose={onClose} />
+          onIterate={() => setIterOpen(true)} onClose={onClose} />
       )}
 
       {/* Ajout d'une itération au carnet depuis l'écran de fin */}
-      {iterOpen && (
-        <SwipeableSheet onClose={() => setIterOpen(false)} zIndex={isNested ? 720 : 620} style={{ maxHeight: "88dvh" }}>
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Noter cette fois</h3>
-          <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>Fige l'état actuel de la recette dans le carnet d'itérations, avec ton ressenti.</p>
-          <div className="field-label">Note du résultat (optionnel)</div>
-          <div style={{ marginBottom: 16 }}><RatingPicker value={iterRating} onChange={setIterRating} /></div>
-          <div className="field-label">Notes de dégustation</div>
-          <AutoResizeTextarea className="field-input" value={iterNotes} onChange={e => setIterNotes(e.target.value)} placeholder="ex : -10 g de sucre, +zeste de citron vert, cuit 4 min de moins → meilleur" style={{ marginBottom: 18 }} />
-          <button className="btn btn-primary" style={{ width: "100%" }} onClick={saveIteration}>
-            <Icon name="save" size={15} /> Enregistrer l'itération
-          </button>
-        </SwipeableSheet>
-      )}
+      {iterOpen && <CookIterationSheet zIndex={isNested ? 720 : 620} onClose={() => setIterOpen(false)} onSave={saveIteration} />}
 
       <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "calc(16px + max(env(safe-area-inset-top) - 8px, 0px)) 20px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-          <button className="cook-close-btn" onClick={requestClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Icon name={isNested ? "back" : "close"} size={18} />
-          </button>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {isNested && <span style={{ display: "inline-flex", alignItems: "center", marginRight: 6 }}><BaseIcon size={14} /></span>}
-              {recipe.name}
-            </div>
-            <div style={{ fontSize: 12, color: "var(--text3)" }}>
-              {isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`}
-            </div>
-          </div>
-          {/* Chrono global : temps écoulé depuis le lancement de la recette. */}
-          {!isNested && (
-            <div title="Temps écoulé depuis le lancement" style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 11px", borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)", fontVariantNumeric: "tabular-nums" }}>
-              <Icon name="clock" size={14} color="var(--accent)" />
-              <span style={{ fontSize: 13.5, fontWeight: 600, letterSpacing: "0.02em", color: "var(--text)" }}>{fmtElapsed(elapsed)}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Progress bar */}
-        <div style={{ height: 3, background: "var(--surface2)", flexShrink: 0 }}>
-          <div style={{ height: "100%", background: isNested ? "var(--accent)" : "var(--accent)", width: `${progress}%`, transition: "width 0.4s ease" }} />
-        </div>
+        <CookModeHeader recipeName={recipe.name} isNested={isNested} elapsed={elapsed} progress={progress} onClose={requestClose}
+          pageLabel={isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`} />
 
         {/* Main content */}
         <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
@@ -370,8 +359,8 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   );
 }
 
-export function CookMode({ recipe, mult, ingredientDB, utensilDB, categories, onClose, onCooked, recipes = [], stockSet, onUpdateRecipe }) {
-  const recipesById = useMemo(() => new Map((recipes || []).map(r => [r.id, r])), [recipes]);
+export function CookMode({ recipe, mult, ingredientDB, utensilDB, categories, onClose, onCooked, recipes = [], stockSet, onUpdateRecipe }: CookModeProps) {
+  const recipesById = useMemo(() => new Map((recipes || []).flatMap(r => (r.id ? [[r.id, r] as const] : []))), [recipes]);
   return (
     <CookModeInner
       recipe={recipe}
