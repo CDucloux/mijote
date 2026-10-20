@@ -25,8 +25,9 @@ describe("feuilles de l'app", () => {
     const rules = parseCssRules(registry).filter((r) => r.selector.startsWith(":where("));
     const veil = rules.find((r) => r.body.includes("--veil-on: 0") && r.body.includes("isolation"));
     const enrolled = new Set([...selectorMembers(veil?.selector ?? ""), ".hover-ring", ".hover-text"]);
-    // Un membre peut raffiner un inscrit par un état : `.filter-chip[data-on]`.
-    const isEnrolled = (m) => [...enrolled].some((e) => m === e || (m.startsWith(e) && /^[[:]/.test(m.slice(e.length))));
+    // Un membre peut raffiner un inscrit par un état ou une variante :
+    // `.filter-chip[data-on]`, `.btn-ghost.btn-ghost-plain`.
+    const isEnrolled = (m) => [...enrolled].some((e) => m === e || (m.startsWith(e) && /^[[:.]/.test(m.slice(e.length))));
     const strays = rules.filter((r) => r !== veil)
       .flatMap((r) => selectorMembers(r.selector)).filter((m) => !isEnrolled(m));
     expect(veil).toBeDefined();

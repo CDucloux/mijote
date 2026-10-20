@@ -840,11 +840,17 @@ html.light select.field-input {
   box-shadow: none;
 }
 
-/* Variante « fond surface » d'une pastille fantôme : fond blanc en thème clair
-   (var(--surface)) plutôt que le gris-vert de surface2, pour les CTA secondaires
-   des états vides. Survol : même langage que les pilules Filtres / Tri (fond
-   voilé d'un cran, bordure et texte qui s'affirment, aucune teinte). */
-.btn-ghost.btn-ghost-plain { background: var(--surface); }
+/* Variante flottante d'une pastille fantôme, pour les CTA secondaires des états
+   vides : même langage que les pastilles flottantes (sans bordure, ombre légère qui
+   s'affirme au survol). */
+.btn-ghost.btn-ghost-plain {
+  background: var(--float-surface);
+  border-color: transparent;
+  box-shadow: var(--float-shadow);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-ghost.btn-ghost-plain:hover { box-shadow: var(--float-shadow-hover); }
+}
 
 /* Variante pleine SANS halo accent : pour les contextes où l'ombre colorée fait
    « tache » (ex. CTA plein écran du mode cuisine sur fond sombre). */
