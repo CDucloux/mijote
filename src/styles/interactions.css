@@ -34,12 +34,11 @@
   --card-shadow-hover: 0 10px 26px -12px rgba(var(--shadow-rgb), .32);
 }
 
-/* Thème clair : l'encre `--text` à faible dose donne un gris neutre, qui vire au
-   bleuté contre le fond crème. Le voile y prend la teinte de la gousse (accent
-   adouci d'encre papier), dosée pour retomber sur `--surface2` depuis le blanc. */
+/* Thème clair : voile gris pur (noir à faible dose), sans teinte héritée de
+   l'encre ni de l'accent. */
 html.light, .light {
-  --hover-veil-ink: color-mix(in srgb, var(--accent) 70%, var(--paper-ink));
-  --hover-veil-neutral: 16%;
+  --hover-veil-ink: #000;
+  --hover-veil-neutral: 5%;
 }
 
 /* ── Membres du voile (toutes intentions confondues ; neutre par défaut) ───── */
