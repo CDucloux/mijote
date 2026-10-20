@@ -137,9 +137,9 @@ html.light, .light {
 /* ── Liseré : outline superposé à une bordure de 1px (cohabite avec les bordures
    inline). Spécificité nulle : un `:focus-visible` posé ailleurs garde la main. ── */
 :where(
-  .hover-ring, .ut-pill-clickable, .btn-ghost:not(.btn-ghost-plain), .timer-btn, .complete-row,
+  .hover-ring, .ut-pill-clickable, .timer-btn, .complete-row,
   .yaml-drop:not([data-over]), .field-picker, .lp-next, .guide-row, .guide-next,
-  .ing-hover, .spotlight-explore, .save-carnet-btn, .convert-reset, .btn-danger
+  .ing-hover, .spotlight-explore, .save-carnet-btn, .convert-reset
 ) {
   outline: 1px solid color-mix(in srgb, var(--ring-color, var(--hover-ring)) calc(var(--veil-on, 0) * 100%), transparent);
   outline-offset: -1px;
