@@ -143,7 +143,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                   {isAdmin && <AdminBadge />}
                   {isPlus
                     ? <PlusBadge />
-                    : <span style={{ display: "inline-flex", alignItems: "center", fontSize: 11, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 999, padding: "3px 10px" }}>Plan gratuit</span>}
+                    : <span style={{ display: "inline-flex", alignItems: "center", fontSize: 11, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 999, padding: "3px 10px" }}>Plan gratuit</span>}
                 </Row>
               </div>
             </div>

@@ -144,7 +144,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                   <button onClick={startEdit} className="pressable fiche-hdr-btn float-pill" style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 17px", borderRadius: 999, cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: "var(--text2)" }}>
                     <Icon name="edit" size={15} color="currentColor" /> Modifier
                   </button>
-                  <button onClick={onDelete} className="pressable" aria-label="Supprimer" style={{ width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", background: "rgba(224,82,82,0.08)", border: "1px solid rgba(224,82,82,0.3)", cursor: "pointer", color: "var(--red)" }}>
+                  <button onClick={onDelete} className="pressable" aria-label="Supprimer" style={{ width: 40, height: 40, borderRadius: "50%", display: "grid", placeItems: "center", background: "rgba(224,82,82,0.08)", cursor: "pointer", color: "var(--red)" }}>
                     <Icon name="trash" size={16} color="var(--red)" />
                   </button>
                 </div>
@@ -176,11 +176,11 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
               )}
               {editing ? (
                 <select value={draft.category || "other"} onChange={e => up({ category: e.target.value })}
-                  style={{ appearance: "none", WebkitAppearance: "none", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 999, padding: "5px 30px 5px 12px", fontSize: 12, fontWeight: 600, color: "var(--text2)", cursor: "pointer", backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239a9088' stroke-width='2.5' stroke-linecap='round'><path d='M6 9l6 6 6-6'/></svg>\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 11px center" }}>
+                  style={{ appearance: "none", WebkitAppearance: "none", border: "none", background: "var(--surface2)", borderRadius: 999, padding: "5px 30px 5px 12px", fontSize: 12, fontWeight: 600, color: "var(--text2)", cursor: "pointer", backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%239a9088' stroke-width='2.5' stroke-linecap='round'><path d='M6 9l6 6 6-6'/></svg>\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 11px center" }}>
                   {sortedCategoryEntries(categories).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
                 </select>
               ) : (
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 999, padding: "4px 12px", fontSize: 12, fontWeight: 600, color: "var(--text2)" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--surface2)", borderRadius: 999, padding: "4px 12px", fontSize: 12, fontWeight: 600, color: "var(--text2)" }}>
                   <span>{cat.icon}</span> {cat.label}
                 </div>
               )}
@@ -228,7 +228,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
                 ? (monthsSet.size > 0 && <button onClick={() => up({ months: undefined })} style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}>Effacer</button>)
                 : isIngredientInSeason(ingredient)
                   ? <SeasonBadge />
-                  : <span style={{ display: "inline-flex", alignItems: "center", borderRadius: 20, padding: "3px 11px", background: "var(--surface2)", border: "1px solid var(--border)", fontSize: 9.5, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text3)" }}>Hors saison</span>}
+                  : <span style={{ display: "inline-flex", alignItems: "center", borderRadius: 20, padding: "3px 11px", background: "var(--surface2)", fontSize: 9.5, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text3)" }}>Hors saison</span>}
             </div>
             <SeasonBar months={dispMonths} onToggle={editing ? toggleMonth : undefined} />
             {editing && <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 9 }}>{monthsSet.size === 0 ? "Touche un mois pour le marquer « de saison » (aucun = toute l'année)." : `De saison : ${formatMonths([...monthsSet])}.`}</div>}

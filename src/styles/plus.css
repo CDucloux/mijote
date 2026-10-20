@@ -514,7 +514,7 @@
   letter-spacing: 0.05em;
   color: var(--admin);
   background: rgba(var(--admin-rgb), 0.13);
-  border: 1px solid rgba(var(--admin-rgb), 0.30);
+  border: none;
   padding: 2px 8px;
   border-radius: 999px;
   white-space: nowrap;
@@ -531,7 +531,7 @@
   width: 100%;
   background: var(--surface2);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 999px;
 }
 

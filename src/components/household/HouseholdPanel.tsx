@@ -90,7 +90,7 @@ export function HouseholdPanel({ onClose }: { onClose?: () => void }) {
             { icon: "shopping", label: "Courses" },
             { icon: "box", label: "Stock" },
           ].map(({ icon, label }) => (
-            <Row key={label} gap={5} style={{ alignItems: "center", background: "var(--surface)", border: "1px solid rgba(var(--accent-rgb),0.18)", borderRadius: 999, padding: "5px 11px" }}>
+            <Row key={label} gap={5} style={{ alignItems: "center", background: "var(--surface2)", borderRadius: 999, padding: "5px 11px" }}>
               <Icon name={icon as IconName} size={13} color="var(--accent)" />
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{label}</span>
             </Row>

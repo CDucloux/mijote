@@ -86,7 +86,8 @@ html.light, .light {
 
 /* ── Teintes par intention (ordre = priorité : la dernière qui matche gagne) ── */
 /* Éléments flottants : dose propre au thème clair (élévation seule), sinon voile neutre. */
-:where(.float-pill, .float-card, .toolbar-pill:not([data-active="1"]), .load-more:not([aria-busy="true"]), .btn-ghost.btn-ghost-plain) {
+:where(.float-pill, .float-card, .toolbar-pill:not([data-active="1"]), .load-more:not([aria-busy="true"]), .btn-ghost.btn-ghost-plain,
+  .classement-pill, .editor-add, .auth__theme) {
   --veil-max: var(--pill-veil-max, var(--hover-veil-neutral));
 }
 :where(
@@ -129,9 +130,8 @@ html.light, .light {
    inline). Spécificité nulle : un `:focus-visible` posé ailleurs garde la main. ── */
 :where(
   .hover-ring, .ut-pill-clickable, .btn-ghost:not(.btn-ghost-plain), .timer-btn, .complete-row,
-  .editor-add, .step-link-pill, .classement-pill,
-  .filter-chip, .yaml-drop:not([data-over]), .field-picker, .lp-next, .guide-row, .guide-next,
-  .ing-hover, .spotlight-explore, .save-carnet-btn, .convert-reset, .btn-danger, .auth__theme
+  .yaml-drop:not([data-over]), .field-picker, .lp-next, .guide-row, .guide-next,
+  .ing-hover, .spotlight-explore, .save-carnet-btn, .convert-reset, .btn-danger
 ) {
   outline: 1px solid color-mix(in srgb, var(--ring-color, var(--hover-ring)) calc(var(--veil-on, 0) * 100%), transparent);
   outline-offset: -1px;

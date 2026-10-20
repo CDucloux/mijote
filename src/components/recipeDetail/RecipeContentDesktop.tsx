@@ -46,7 +46,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }: R
                 <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } })} className={rc.comp ? "hover-neutral" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, cursor: rc.comp ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px" }}>
                   {rc.comp?.image
                     ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={48} cover />
-                    : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
+                    : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--accent-rgb),0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
                   <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
                     <span style={{ fontSize: 16, fontWeight: 600, color: "var(--accent)" }}>{fmtQty(Number(ing.amount) * mult, ing.unit)}</span>
                     <span style={{ fontSize: 12, color: "var(--text2)", marginLeft: 2 }}>{pluralizeUnit(Number(ing.amount) * mult, ing.unit)}</span>

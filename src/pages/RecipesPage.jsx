@@ -682,7 +682,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
               <div className="menu-row" style={{ cursor: "default", paddingTop: 6, paddingBottom: 6 }}>
                 <Icon name="updown" size={19} color="var(--text2)" />
                 <span style={{ flex: 1 }}>Position</span>
-                <div style={{ display: "flex", alignItems: "center", background: "var(--surface2)", borderRadius: 999, border: "1px solid var(--border)", padding: "2px 4px", flexShrink: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", background: "var(--surface2)", borderRadius: 999, padding: "2px 4px", flexShrink: 0 }}>
                   <button disabled={idx <= 0} onClick={() => moveCarnet(cm.id, -1)} style={stepBtn(idx <= 0)} aria-label="Reculer"><Icon name="back" size={15} color="currentColor" /></button>
                   <span style={{ fontSize: 13.5, fontWeight: 600, minWidth: 42, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{idx + 1} / {total}</span>
                   <button disabled={idx >= total - 1} onClick={() => moveCarnet(cm.id, 1)} style={stepBtn(idx >= total - 1)} aria-label="Avancer"><Icon name="forward" size={15} color="currentColor" /></button>
@@ -731,7 +731,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
           {newCarnet.smart && (() => {
             const nCrit = activeFilterCount(newCarnet.filters) + (newCarnet.search?.trim() ? 1 : 0);
             const nRec = recipes.reduce((n, r) => n + (carnetMatch({ kind: "smart", filters: newCarnet.filters, search: newCarnet.search }, r) ? 1 : 0), 0);
-            const pill = { display: "inline-flex", alignItems: "baseline", gap: 6, padding: "7px 14px", borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)", fontSize: 12.5, fontWeight: 600, color: "var(--text3)" };
+            const pill = { display: "inline-flex", alignItems: "baseline", gap: 6, padding: "7px 14px", borderRadius: 999, background: "var(--surface2)", fontSize: 12.5, fontWeight: 600, color: "var(--text3)" };
             const val = { fontSize: 15, fontWeight: 600, color: "var(--text)", fontVariantNumeric: "tabular-nums" };
             return (
               <div style={{ marginTop: -6, marginBottom: 20 }}>
@@ -799,7 +799,7 @@ export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived,
                 </div>
                 {chips.length ? (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                    {chips.map((c, i) => <span key={i} style={{ fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 20, background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.28)" }}>{c}</span>)}
+                    {chips.map((c, i) => <span key={i} style={{ fontSize: 12, fontWeight: 600, padding: "5px 11px", borderRadius: 20, background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}>{c}</span>)}
                   </div>
                 ) : (
                   <button onClick={editFilters} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "10px 12px", borderRadius: 12, background: "var(--surface2)", border: "1px dashed var(--border)", color: "var(--text3)", fontSize: 12.5, cursor: "pointer", textAlign: "left" }}>

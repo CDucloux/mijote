@@ -51,10 +51,10 @@ export function RecipeStatsMobile({ recipe, nutriLetter, publicMode, keepCta, on
         <div>{keepCta}</div>
       ) : (
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={onOpenShopping} className="tap" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid transparent", cursor: "pointer" }}>
+        <button onClick={onOpenShopping} className="tap" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--accent)", color: "#fff", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer" }}>
           <Icon name="shopping" size={14} color="#fff" /> Courses
         </button>
-        <button onClick={onOpenMealPlan} className="tap" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, background: "var(--surface)", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", border: "1px solid var(--border)", cursor: "pointer" }}>
+        <button onClick={onOpenMealPlan} className="tap float-pill" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer" }}>
           <Icon name="calendar" size={14} color="var(--text)" /> Planifier
         </button>
       </div>

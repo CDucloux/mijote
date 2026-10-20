@@ -35,7 +35,7 @@ export function ChangelogSection() {
                   {isLatest && <div style={{ fontSize: 12, color: "var(--text2)" }}>{entry.label}</div>}
                 </div>
                 {!isLatest && (
-                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.25s", transform: isExpanded ? "rotate(-90deg)" : "rotate(90deg)", flexShrink: 0 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", transition: "transform 0.25s", transform: isExpanded ? "rotate(-90deg)" : "rotate(90deg)", flexShrink: 0 }}>
                     <Icon name="forward" size={11} color="var(--text3)" />
                   </div>
                 )}

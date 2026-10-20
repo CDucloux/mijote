@@ -98,7 +98,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }: UtensilPickerPr
             const db = utensilDB.find(d => d.id === u.dbId);
             const active = replacing === u.id;
             return (
-              <div key={u.id} className="slide-up" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 10px 5px 5px", borderRadius: 30, background: active ? "var(--accent)" : "rgba(var(--accent-rgb),0.12)", border: `1px solid ${active ? "var(--accent)" : "rgba(var(--accent-rgb),0.35)"}`, cursor: "pointer" }}
+              <div key={u.id} className="slide-up" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 10px 5px 5px", borderRadius: 30, background: active ? "var(--accent)" : "rgba(var(--accent-rgb),0.12)", cursor: "pointer" }}
                 onClick={() => setReplacing(active ? null : u.id ?? null)} title="Remplacer cet ustensile">
                 <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#fff", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {db?.image

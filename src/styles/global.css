@@ -508,7 +508,7 @@ select {
   font-weight: 500;
   background: var(--surface2);
   color: var(--text2);
-  border: 1px solid var(--border);
+  border: none;
 }
 
 .tag.accent {
@@ -625,11 +625,17 @@ html.light select.field-input {
 .float-pill, .float-card, .toolbar-pill, .sort-control, .load-more {
   background: var(--float-surface);
   border: none;
+}
+/* Ombre flottante, y compris pour les pastilles de classe posées sur le fond de page
+   (éditeur, connexion). */
+.float-pill, .float-card, .toolbar-pill, .sort-control, .load-more,
+.classement-pill, .editor-add, .auth__theme {
   box-shadow: var(--float-inset, 0 0 transparent), var(--float-shadow);
   transition: background 0.15s ease, color 0.15s ease, box-shadow 0.18s ease;
 }
 @media (hover: hover) and (pointer: fine) {
-  :is(.float-pill, .float-card, .toolbar-pill, .sort-control, .load-more):hover {
+  :is(.float-pill, .float-card, .toolbar-pill, .sort-control, .load-more,
+      .classement-pill, .editor-add, .auth__theme):hover {
     box-shadow: var(--float-inset, 0 0 transparent), var(--float-shadow-hover);
   }
   /* Le libellé fonce (sans effet sur une couleur posée en inline : états actifs/teintés). */
@@ -1786,7 +1792,7 @@ html.light .sheet-sticky-head::after {
 .cook-timers-toggle {
   display: inline-flex; align-items: center; gap: 8px; align-self: stretch;
   padding: 9px 12px; border-radius: 999px; cursor: pointer;
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--surface); border: none;
   box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.45);
   font-size: 12.5px; font-weight: 600; color: var(--text);
   transition: border-color 0.15s ease, transform 0.1s ease;
@@ -1818,7 +1824,7 @@ html.light .sheet-sticky-head::after {
   display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
   padding: 2px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
   color: var(--accent); background: rgba(var(--accent-rgb), 0.1);
-  border: 1px solid rgba(var(--accent-rgb), 0.28);
+  border: none;
   transition: background 0.15s ease;
 }
 .cook-timer-step:active { background: rgba(var(--accent-rgb), 0.2); }
@@ -3019,13 +3025,13 @@ html.light .sheet-sticky-head::after {
   gap: 8px;
   padding: 11px 12px;
   border-radius: 999px;
-  border: 1px solid var(--border);
+  border: none;
   background: var(--surface);
   color: var(--text2);
   font-weight: 600;
   font-size: 13.5px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  transition: box-shadow 0.18s ease, background-color 0.15s ease, color 0.15s ease;
 }
 /* Le « + » garde l'accent (c'est une action de création) ; le reste est neutre. */
 .editor-add > svg { color: var(--accent); }
@@ -3813,7 +3819,7 @@ html.light .sheet-sticky-head::after {
     gap: 6px;
     padding: 6px;
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: 999px;
     box-shadow: 0 16px 42px -8px rgba(0, 0, 0, 0.28);
     transform-origin: right center;
@@ -4170,10 +4176,10 @@ html.light .sheet-sticky-head::after {
   justify-content: center;
   border-radius: 999px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: none;
   color: var(--text2);
   cursor: pointer;
-  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  transition: color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 /* Hover aligné sur celui de la landing (.lp-theme) : éclaircissement du fond, pas de
    bordure d'accent. */
@@ -4807,7 +4813,7 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
   background: var(--surface2);
   color: var(--text2);
-  border: 1px solid var(--border);
+  border: none;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .step-link-pill[data-active] {
@@ -4857,9 +4863,9 @@ html.light .sheet-sticky-head::after {
   font-weight: 600;
   background: var(--surface);
   color: var(--text2);
-  border: 1px solid var(--border);
+  border: none;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, box-shadow 0.18s ease, color 0.15s ease;
 }
 .classement-pill[data-active] {
   background: rgba(var(--accent-rgb), 0.14);
@@ -4888,7 +4894,7 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
   background: var(--surface2);
   color: var(--text2);
-  border: 1px solid var(--border);
+  border: none;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .filter-chip[data-on] {

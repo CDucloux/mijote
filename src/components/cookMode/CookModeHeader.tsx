@@ -31,7 +31,7 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
         </div>
         {/* Chrono global : temps écoulé depuis le lancement de la recette. */}
         {!isNested && (
-          <div title="Temps écoulé depuis le lancement" style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 11px", borderRadius: 999, background: "var(--surface2)", border: "1px solid var(--border)", fontVariantNumeric: "tabular-nums" }}>
+          <div title="Temps écoulé depuis le lancement" style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 11px", borderRadius: 999, background: "var(--surface2)", fontVariantNumeric: "tabular-nums" }}>
             <Icon name="clock" size={14} color="var(--accent)" />
             <span style={{ fontSize: 13.5, fontWeight: 600, letterSpacing: "0.02em", color: "var(--text)" }}>{fmtElapsed(elapsed)}</span>
           </div>
