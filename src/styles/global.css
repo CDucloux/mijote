@@ -51,6 +51,11 @@
   --text: #eef1e7;
   --text2: #a7ac9c;
   --text3: #6b7061;
+  /* Contrôles flottants sans bordure (recherche, pastilles d'outils) : en sombre,
+     l'ombre ne se lit pas, c'est le niveau de surface qui détache. */
+  --shadow-rgb: 45, 32, 18;
+  --float-surface: var(--surface2);
+  --float-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   --green: #46ab5f;          /* vert sémantique : saisonnalité, difficulté, vegan, santé */
   --green-rgb: 70, 171, 95;
   --ok: #1f9e8f;             /* sarcelle : actions validées / cochées / terminé */
@@ -132,6 +137,9 @@ html.light,
   --text: #23281d;
   --text2: #565b4c;
   --text3: #838872;
+  /* En clair, le blanc sur crème détache déjà : ombre chaude à peine posée. */
+  --float-surface: var(--surface);
+  --float-shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.07), 0 2px 10px rgba(var(--shadow-rgb), 0.06);
   /* Étagères du Stock : matériaux (clair). Chêne clair, mur plâtre chaud, fer, papier. */
   --oak-hi: #ecd3ac;
   --oak-top: #dcbb8d;
@@ -204,10 +212,9 @@ html.light .field-input {
   background-color: #e9ebdf;
 }
 
-/* Barre de recherche recettes : blanc franc en clair (le halo suffit à la
-   détacher du fond). En sombre, elle garde le --surface défini plus bas. */
+/* Barre de recherche : surface flottante (bat le fond de `html.light .field-input`). */
 html.light .recipe-search {
-  background: #ffffff;
+  background: var(--float-surface);
 }
 
 html.light select option {
@@ -574,17 +581,29 @@ html.light select.field-input {
   border-color: transparent;
 }
 
-/* Barre de recherche recettes : pilule blanche + halo orange au focus */
+/* Barre de recherche : pilule flottante sans bordure (surface + ombre légère),
+   halo accent au focus, seul contour qui traduit l'état de saisie. */
 .recipe-search {
-  background: var(--surface);
+  background: var(--float-surface);
+  border-color: transparent;
   border-radius: 999px;
   padding-top: 13px;
   padding-bottom: 13px;
   font-size: 15px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: var(--float-shadow);
+  transition: box-shadow 0.18s ease;
 }
 .recipe-search:focus {
-  border-color: var(--accent);
+  border-color: transparent;
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16), var(--float-shadow);
+}
+/* Variante remplie, pour les feuilles (fond déjà en surface) : un champ blanc sans
+   bordure s'y dissoudrait, c'est le cran de surface qui le pose. */
+.recipe-search.recipe-search--filled {
+  background: var(--surface2);
+  box-shadow: none;
+}
+.recipe-search.recipe-search--filled:focus {
   box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16);
 }
 /* `type="search"` : on masque la croix native (WebKit), on a notre propre
@@ -595,7 +614,8 @@ html.light select.field-input {
   appearance: none;
 }
 
-/* Pilules de la barre d'outils recettes (Filtres / Tri) */
+/* Pilules de la barre d'outils (Filtres / Tri) : flottantes sans bordure, comme la
+   recherche ; l'état actif se lit à la teinte, le survol au voile. */
 .toolbar-pill {
   flex-shrink: 0;
   display: inline-flex;
@@ -606,24 +626,21 @@ html.light select.field-input {
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  background: var(--surface);
+  background: var(--float-surface);
   color: var(--text2);
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  border: none;
+  box-shadow: var(--float-shadow);
+  transition: background 0.15s ease, color 0.15s ease;
   /* Accueille l'onde tactile (.ripple-ink) et la borne à la pilule. */
   position: relative;
   overflow: hidden;
 }
-/* Survol : même langage neutre que le reste (dashboard admin, zone de dépose) :
-   fond voilé d'un cran, bordure et texte qui s'affirment, aucune teinte. */
 @media (hover: hover) and (pointer: fine) {
   .toolbar-pill:not([data-active="1"]):hover { color: var(--text); }
 }
 .toolbar-pill[data-active="1"] {
   background: rgba(var(--accent-rgb), 0.14);
   color: var(--accent);
-  border-color: rgba(var(--accent-rgb), 0.5);
 }
 
 /* « Charger plus de recettes » : pilule surface, même hover que les pills
@@ -647,11 +664,20 @@ html.light select.field-input {
   transform: translateX(-5px);
 }
 
-/* Contrôle de tri : critère (défilant) + flèche de sens, accolés */
+/* Contrôle de tri : critère (défilant) + flèche de sens, une seule pilule. Le fond
+   et l'ombre sont portés par le conteneur (deux ombres accolées dessineraient une
+   couture) ; chaque moitié garde son propre voile au survol. */
 .sort-control {
   display: inline-flex;
   align-items: stretch;
   flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--float-surface);
+  box-shadow: var(--float-shadow);
+}
+.sort-control .toolbar-pill {
+  background: transparent;
+  box-shadow: none;
 }
 .sort-control .sort-cycle {
   border-top-right-radius: 0;
@@ -660,16 +686,12 @@ html.light select.field-input {
 .sort-control .sort-dir {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
-  border-left: none;
   padding-left: 11px;
   padding-right: 12px;
   color: var(--accent);
 }
-/* Les deux moitiés partagent leur bordure : survoler l'une affirme le contour
-   des deux (sinon la couture se dessine en deux tons), seul le fond suit la
-   moitié visée. La flèche garde son accent : c'est l'état du tri, pas le survol. */
+/* La flèche garde son accent au survol : c'est l'état du tri, pas le survol. */
 @media (hover: hover) and (pointer: fine) {
-  .sort-control:hover .toolbar-pill { border-color: var(--text3); }
   .sort-control .sort-dir:hover { color: var(--accent); }
 }
 

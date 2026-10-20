@@ -28,8 +28,8 @@
   --hover-veil-tinted: 12%;
   --hover-veil-deepen: 14%;
   --hover-ring: var(--text3);
-  /* Ombre chaude (brun torréfié) commune aux cartes et bocaux : une seule teinte d'ombre. */
-  --shadow-rgb: 45, 32, 18;
+  /* Ombres de carte : teinte chaude `--shadow-rgb` (tokens de global.css), commune
+     aux cartes, bocaux et contrôles flottants. */
   --card-shadow-rest: 0 2px 12px rgba(0, 0, 0, .07);
   --card-shadow-hover: 0 10px 26px -12px rgba(var(--shadow-rgb), .32);
 }
@@ -124,7 +124,7 @@ html.light, .light {
    inline). Spécificité nulle : un `:focus-visible` posé ailleurs garde la main. ── */
 :where(
   .hover-ring, .ut-pill-clickable, .fiche-hdr-btn, .btn-ghost, .timer-btn, .complete-row,
-  .toolbar-pill:not([data-active="1"]), .editor-add, .step-link-pill, .classement-pill,
+  .editor-add, .step-link-pill, .classement-pill,
   .filter-chip, .yaml-drop:not([data-over]), .field-picker, .lp-next, .guide-row, .guide-next,
   .ing-hover, .spotlight-explore, .save-carnet-btn, .convert-reset, .btn-danger, .auth__theme
 ) {
