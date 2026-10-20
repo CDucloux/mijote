@@ -37,7 +37,7 @@ export function ConsoleHeader({ section, onSection, isAdmin, pendingReports, bas
         {SECTIONS.map(([s, label, ic]) => {
           const active = section === s;
           return (
-            <button key={s} onClick={() => onSection(s)} className={active ? "ripple ripple-light" : "hover-neutral hover-ring ripple"} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: active ? "var(--accent)" : "var(--surface)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? "transparent" : "var(--border)"}` }}>
+            <button key={s} onClick={() => onSection(s)} className={`float-pill ripple${active ? " ripple-light" : ""}`} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: active ? "var(--accent)" : undefined, color: active ? "#fff" : "var(--text2)" }}>
               <Icon name={ic} size={13} color="currentColor" /> {label}
               {s === "modération" && pendingReports > 0 && (
                 <span style={{ fontSize: 10, fontWeight: 600, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", background: active ? "rgba(255,255,255,0.28)" : "var(--red)", color: "#fff" }}>{pendingReports}</span>

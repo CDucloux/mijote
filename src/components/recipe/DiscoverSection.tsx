@@ -205,28 +205,28 @@ export function DiscoverSection({ ingredientDB = [], preferences, recipes = [], 
             d'un bord à l'autre. */}
         {!noPublic && !error && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, overflowX: "auto", margin: "0 -20px", padding: "0 20px 10px" }}>
-            <button className="ripple" onClick={() => setFilterOpen(true)} title="Filtrer"
-              style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${nActiveFilters > 0 ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: nActiveFilters > 0 ? TINT : "var(--surface)", color: nActiveFilters > 0 ? "var(--accent)" : "var(--text2)" }}>
+            <button className="ripple float-pill" onClick={() => setFilterOpen(true)} title="Filtrer"
+              style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", background: nActiveFilters > 0 ? TINT : undefined, color: nActiveFilters > 0 ? "var(--accent)" : "var(--text2)" }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
               Filtres
               {nActiveFilters > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: "var(--accent)", color: "#fff", fontSize: 10.5, fontWeight: 600, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{nActiveFilters}</span>}
             </button>
             <span style={{ flex: "0 0 auto", width: 1, height: 20, background: "var(--border)", borderRadius: 1 }} />
             {categories.map(c => (
-              <button key={c.key} className="ripple" onClick={() => setActiveCat(c.key)}
-                style={{ flex: "0 0 auto", padding: "8px 15px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${activeCat === c.key ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: activeCat === c.key ? TINT : "var(--surface)", color: activeCat === c.key ? "var(--accent)" : "var(--text2)", transition: "background .16s, color .16s, border-color .16s" }}>
+              <button key={c.key} className="ripple float-pill" onClick={() => setActiveCat(c.key)}
+                style={{ flex: "0 0 auto", padding: "8px 15px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", background: activeCat === c.key ? TINT : undefined, color: activeCat === c.key ? "var(--accent)" : "var(--text2)", transition: "background .16s, color .16s, border-color .16s" }}>
                 {c.label}
               </button>
             ))}
             {!!((preferences?.diet && preferences.diet !== "omnivore") || preferences?.allergens?.length || preferences?.excludedCategories?.length) && (
-              <button className="ripple" onClick={() => setUsePrefs(v => !v)} title="Selon mes préférences alimentaires"
-                style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: `1px solid ${usePrefs ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, background: usePrefs ? TINT : "var(--surface)", color: usePrefs ? "var(--accent)" : "var(--text2)" }}>
+              <button className="ripple float-pill" onClick={() => setUsePrefs(v => !v)} title="Selon mes préférences alimentaires"
+                style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", background: usePrefs ? TINT : undefined, color: usePrefs ? "var(--accent)" : "var(--text2)" }}>
                 <Icon name="heart" size={13} color="currentColor" /> Mes préférences
               </button>
             )}
             {authorUid && (
-              <button className="ripple" onClick={() => setAuthorUid(null)}
-                style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: "1px solid rgba(var(--accent-rgb),0.5)", background: TINT, color: "var(--accent)" }}>
+              <button className="ripple float-pill" onClick={() => setAuthorUid(null)}
+                style={{ flex: "0 0 auto", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", background: TINT, color: "var(--accent)" }}>
                 <Icon name="close" size={11} color="var(--accent)" /> Créateur
               </button>
             )}

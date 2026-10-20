@@ -43,7 +43,7 @@ html.light, .light {
 
 /* ── Membres du voile (toutes intentions confondues ; neutre par défaut) ───── */
 :where(
-  .hover-neutral, .hover-tint, .hover-danger, .hover-deepen,
+  .hover-neutral, .hover-tint, .hover-danger, .hover-deepen, .float-pill,
   /* neutre */
   .ut-pill-clickable, .fiche-hdr-btn, .btn-ghost, .menu-row, .hh-calm-tile,
   .cook-close-btn, .editor-tab:not(.active), .complete-row, .import-back,
@@ -122,7 +122,7 @@ html.light, .light {
 /* ── Liseré : outline superposé à une bordure de 1px (cohabite avec les bordures
    inline). Spécificité nulle : un `:focus-visible` posé ailleurs garde la main. ── */
 :where(
-  .hover-ring, .ut-pill-clickable, .fiche-hdr-btn, .btn-ghost, .timer-btn, .complete-row,
+  .hover-ring, .ut-pill-clickable, .btn-ghost, .timer-btn, .complete-row,
   .editor-add, .step-link-pill, .classement-pill,
   .filter-chip, .yaml-drop:not([data-over]), .field-picker, .lp-next, .guide-row, .guide-next,
   .ing-hover, .spotlight-explore, .save-carnet-btn, .convert-reset, .btn-danger, .auth__theme

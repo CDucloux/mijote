@@ -7,15 +7,13 @@
   gap: 8px;
   height: 44px;
   padding: 0 20px;
-  border: 0;
   border-radius: 999px;
-  background: var(--surface2);
   color: var(--text);
   font-family: var(--ff-body);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.12s ease;
+  transition: background-color 0.15s ease, box-shadow 0.18s ease, transform 0.12s ease;
 }
 .load-more small { font-size: 14px; font-weight: 500; color: var(--text3); }
 .load-more:active { transform: scale(0.97); }

@@ -60,10 +60,10 @@ export function SubviewPill({ mode, onNavigate }: { mode: HomeSubview; onNavigat
     );
   };
   return (
-    <div role="tablist" aria-label="Vue de l'accueil" className="subview-pill" style={{ position: "relative", display: "inline-flex", gap: 3, padding: 3, borderRadius: 999, border: "1px solid var(--border)" }}>
+    <div role="tablist" aria-label="Vue de l'accueil" className="subview-pill" style={{ position: "relative", display: "inline-flex", gap: 3, padding: 3, borderRadius: 999 }}>
       <span ref={thumbRef} aria-hidden="true" className="subview-thumb" style={{
         position: "absolute", top: 3, left: 0, zIndex: 0, height: "calc(100% - 6px)", borderRadius: 999,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.10)",
+        boxShadow: "var(--float-shadow)",
         transition: "transform 0.28s cubic-bezier(0.4,0.08,0.16,1), width 0.28s cubic-bezier(0.4,0.08,0.16,1)",
       }} />
       {seg("home", "À suivre", homeRef)}

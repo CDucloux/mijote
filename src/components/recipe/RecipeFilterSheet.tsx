@@ -89,7 +89,7 @@ function IngredientPicker({ ingredientDB, selected, setFilters }: { ingredientDB
           })}
         </div>
       )}
-      <input className="field-input" placeholder="Rechercher un ingrédient…" value={q} onChange={e => setQ(e.target.value)} />
+      <input className="field-input field-bare" placeholder="Rechercher un ingrédient…" value={q} onChange={e => setQ(e.target.value)} />
       {matches.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 8 }}>
           {matches.map(ing => (

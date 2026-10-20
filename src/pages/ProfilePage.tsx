@@ -294,7 +294,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                 )}
                 {onImport && (
                   <>
-                    <button className="pressable" onClick={() => importInputRef.current?.click()} style={{ flex: isDesktop ? "0 1 auto" : "1 1 calc(50% - 4px)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}>
+                    <button className="pressable" onClick={() => importInputRef.current?.click()} style={{ flex: isDesktop ? "0 1 auto" : "1 1 calc(50% - 4px)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "var(--surface2)", color: "var(--text2)", border: "none" }}>
                       <Icon name="forward" size={15} color="var(--text2)" /> Importer un JSON
                     </button>
                     <input ref={importInputRef} type="file" accept="application/json,.json" multiple style={{ display: "none" }}
