@@ -71,9 +71,6 @@
   mask: url("/brands/anses-wordmark.png") center / contain no-repeat;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .ciq-open:hover { background: var(--surface3); }
-}
 /* Mobile : trois colonnes ne tiennent pas (libellés tronqués, noms coupés en
    plein mot). La correspondance devient une filiation verticale : les deux
    aliments empilés, alignés à gauche, reliés par un pointillé qui court d'une

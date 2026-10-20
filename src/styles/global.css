@@ -166,24 +166,15 @@ html.light .ut-pill-desktop {
 .ut-pill-clickable {
   transition: border-color .16s ease, background-color .16s ease;
 }
-@media (hover: hover) {
-  .ut-pill-clickable:hover {
-    border-color: var(--text3) !important;
-    background: var(--surface) !important;
-  }
-  html.light .ut-pill-clickable:hover {
-    background: #f3f4ec !important;
-  }
-}
 
 /* Bande foyer de l'accueil : pas de surbrillance de bordure. Le seul retour au
    survol desktop est le disque accent qui apparaît derrière l'icône d'action
    (état de repos : icône nue, sans cercle). Le reste du survol générique vit dans
    interactions.css. */
 @media (hover: hover) and (pointer: fine) {
-  .foyer-card:hover .foyer-affordance { background: rgba(var(--accent-rgb),0.14) !important; }
+  .foyer-card:hover .foyer-affordance { box-shadow: inset 0 0 0 999px rgba(var(--accent-rgb), 0.14); }
 }
-.foyer-affordance { transition: background-color .16s ease; }
+.foyer-affordance { transition: box-shadow .16s ease; }
 
 /* Sélecteur « À suivre / Découvrir » de l'accueil. En thème clair, le conteneur
    passe en blanc (plus net que le gris-vert surface2) et le segment actif est
@@ -627,11 +618,7 @@ html.light select.field-input {
 /* Survol : même langage neutre que le reste (dashboard admin, zone de dépose) :
    fond voilé d'un cran, bordure et texte qui s'affirment, aucune teinte. */
 @media (hover: hover) and (pointer: fine) {
-  .toolbar-pill:not([data-active="1"]):hover {
-    border-color: var(--text3);
-    background: color-mix(in srgb, var(--text) 4%, var(--surface));
-    color: var(--text);
-  }
+  .toolbar-pill:not([data-active="1"]):hover { color: var(--text); }
 }
 .toolbar-pill[data-active="1"] {
   background: rgba(var(--accent-rgb), 0.14);
@@ -648,14 +635,13 @@ html.light select.field-input {
 .fiche-hdr-btn {
   transition: border-color 0.15s ease, background 0.15s ease;
 }
-.fiche-hdr-btn:hover {
-  border-color: var(--text3);
-}
 .fiche-hdr-back svg {
   transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.fiche-hdr-back:hover svg {
-  transform: translateX(-3px);
+@media (hover: hover) and (pointer: fine) {
+  .fiche-hdr-back:hover svg {
+    transform: translateX(-3px);
+  }
 }
 .fiche-hdr-back:active svg {
   transform: translateX(-5px);
@@ -733,9 +719,8 @@ html.light select.field-input {
   transition: background-color 0.15s, color 0.15s;
 }
 
-.stepper-btn:hover {
-  background: rgba(var(--accent-rgb), 0.1);
-  color: var(--accent);
+@media (hover: hover) and (pointer: fine) {
+  .stepper-btn:hover { color: var(--accent); }
 }
 
 .stepper-btn:active {
@@ -802,8 +787,10 @@ html.light select.field-input {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
   transition: transform 0.12s ease, box-shadow 0.18s ease;
 }
-.btn-pill:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+@media (hover: hover) and (pointer: fine) {
+  .btn-pill:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+  }
 }
 .btn-pill:active {
   transform: scale(0.96);
@@ -811,8 +798,7 @@ html.light select.field-input {
 
 /* Pastille « fantôme » (ex. Précédent en mode cuisine) : pas d'ombre accent,
    celle-ci est réservée aux pastilles pleines (primaires). */
-.btn-ghost.btn-pill,
-.btn-ghost.btn-pill:hover {
+.btn-ghost.btn-pill {
   box-shadow: none;
 }
 
@@ -821,18 +807,10 @@ html.light select.field-input {
    des états vides. Survol : même langage que les pilules Filtres / Tri (fond
    voilé d'un cran, bordure et texte qui s'affirment, aucune teinte). */
 .btn-ghost.btn-ghost-plain { background: var(--surface); }
-@media (hover: hover) and (pointer: fine) {
-  .btn-ghost.btn-ghost-plain:hover {
-    background: color-mix(in srgb, var(--text) 4%, var(--surface));
-    border-color: var(--text3);
-    color: var(--text);
-  }
-}
 
 /* Variante pleine SANS halo accent : pour les contextes où l'ombre colorée fait
    « tache » (ex. CTA plein écran du mode cuisine sur fond sombre). */
-.btn-pill.btn-flat,
-.btn-pill.btn-flat:hover {
+.btn-pill.btn-flat {
   box-shadow: none;
 }
 
@@ -860,11 +838,8 @@ html.light select.field-input {
   color: var(--red);
   transition: background-color 0.16s ease, color 0.16s ease;
 }
-@media (hover: hover) {
-  .list-del-btn:hover {
-    background: rgba(224, 82, 82, 0.2);
-    color: color-mix(in srgb, var(--red) 82%, #fff);
-  }
+@media (hover: hover) and (pointer: fine) {
+  .list-del-btn:hover { color: color-mix(in srgb, var(--red) 82%, #fff); }
 }
 
 .btn-sm {
@@ -1223,30 +1198,7 @@ html.light .sheet-sticky-head::after {
   to { opacity: 1; }
 }
 
-/* Menus contextuels (appui long recette / carnet) : tuiles d'actions rapides
-   + lignes de liste. */
-.menu-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 8px;
-  border-radius: 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text2);
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
-}
-.menu-tile:hover {
-  border-color: var(--text3);
-}
-.menu-tile:active {
-  transform: scale(0.96);
-}
-
+/* Menus contextuels (appui long recette / carnet) : lignes de liste. */
 .menu-row {
   display: flex;
   align-items: center;
@@ -1279,11 +1231,6 @@ html.light .sheet-sticky-head::after {
   transition-duration: 0.22s;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
-@media (hover: hover) {
-  .menu-row:hover {
-    background-color: var(--surface2);
-  }
-}
 /* Rangée rouge (suppression) : la teinte de maintien/hover est ROUGE, jamais grise
    (le gris générique n'a aucun sens sur une action destructrice). Plus spécifique
    que `.menu-row:active`, donc l'emporte. */
@@ -1293,11 +1240,6 @@ html.light .sheet-sticky-head::after {
   background-color: rgba(var(--red-rgb), 0.14);
   transition-duration: 0.22s;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-}
-@media (hover: hover) {
-  .menu-row-danger:hover {
-    background-color: rgba(var(--red-rgb), 0.1);
-  }
 }
 .menu-row-danger {
   color: var(--red);
@@ -1324,15 +1266,13 @@ html.light .sheet-sticky-head::after {
   border: 1px solid rgba(var(--accent-rgb), 0.24);
   transition: background 0.18s ease, border-color 0.18s ease;
 }
-.save-carnet-btn:hover {
-  background: rgba(var(--accent-rgb), 0.13);
-  border-color: rgba(var(--accent-rgb), 0.4);
-}
 .save-carnet-btn .save-carnet-icon {
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.save-carnet-btn:hover .save-carnet-icon {
-  transform: rotate(-6deg) scale(1.06);
+@media (hover: hover) and (pointer: fine) {
+  .save-carnet-btn:hover .save-carnet-icon {
+    transform: rotate(-6deg) scale(1.06);
+  }
 }
 
 @keyframes spin {
@@ -1542,12 +1482,10 @@ html.light .sheet-sticky-head::after {
   border-radius: 999px;
 }
 
-@media (hover: hover) {
-  .account-group.is-special .menu-row:hover,
+@media (hover: hover) and (pointer: fine) {
   .account-group.is-special .menu-row:active {
     background-color: rgba(var(--admin-rgb), 0.16);
   }
-  .account-group.is-danger .menu-row:hover,
   .account-group.is-danger .menu-row:active {
     background-color: rgba(var(--red-rgb), 0.14);
   }
@@ -1759,20 +1697,17 @@ html.light .sheet-sticky-head::after {
   border: 1px solid var(--border);
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
-.timer-btn:hover { border-color: var(--text3); }
 .timer-btn:active { transform: scale(0.96); }
 .timer-btn-accent {
   color: var(--accent);
   background: rgba(var(--accent-rgb), 0.12);
   border-color: rgba(var(--accent-rgb), 0.35);
 }
-.timer-btn-accent:hover { border-color: rgba(var(--accent-rgb), 0.6); }
 .timer-btn-stop {
   color: var(--red);
   background: rgba(224, 82, 82, 0.1);
   border-color: rgba(224, 82, 82, 0.3);
 }
-.timer-btn-stop:hover { border-color: rgba(224, 82, 82, 0.55); }
 
 @keyframes timerPulse {
   0%, 100% { box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.4), 0 0 0 0 rgba(var(--ok-rgb), 0.5); }
@@ -1864,8 +1799,7 @@ html.light .sheet-sticky-head::after {
    s'allume, la pastille d'icône s'intensifie et la flèche glisse vers la droite ;
    feedback tactile mobile via l'onde `.ripple`. */
 .hh-calm-tile { transition: background-color 0.15s ease; }
-@media (hover: hover) {
-  .hh-calm-tile:hover { background: var(--surface2); }
+@media (hover: hover) and (pointer: fine) {
   .hh-calm-tile:hover .hh-calm-ico { background: rgba(var(--accent-rgb), 0.2); }
   .hh-calm-tile:hover .hh-calm-arrow { transform: translateX(3px); color: var(--accent); }
 }
@@ -2208,12 +2142,15 @@ html.light .sheet-sticky-head::after {
 
 /* Survol/focus : pas de lift, on révèle le verre + anneau accent. */
 .stk-jar:focus-visible { outline: none; }
-.stk-jar:hover .stk-glass,
-.stk-jar:focus-visible .stk-glass {
-  box-shadow:
+.stk-jar {
+  --jar-raised:
     inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    0 8px 18px -8px rgba(40, 35, 20, 0.34),
+    0 8px 18px -8px rgba(var(--shadow-rgb), 0.34),
     0 0 0 2px rgba(var(--accent-rgb), 0.32);
+}
+.stk-jar:focus-visible .stk-glass { box-shadow: var(--jar-raised); }
+@media (hover: hover) and (pointer: fine) {
+  .stk-jar:hover .stk-glass { box-shadow: var(--jar-raised); }
 }
 
 /* Appui long : pas de menu natif ni de sélection du texte pendant le maintien. */
@@ -2396,11 +2333,6 @@ html.light .sheet-sticky-head::after {
   transition: background .15s ease, color .15s ease;
 }
 
-.search-clear-btn:hover {
-  background: var(--accent);
-  color: #fff;
-}
-
 .detail-scroll-fix {
   min-height: 0;
 }
@@ -2479,7 +2411,7 @@ html.light .sheet-sticky-head::after {
   transition: background-color .18s ease, transform .12s ease;
 }
 @media (hover: hover) and (pointer: fine) {
-  .onb-cta:hover { background: #f1f1ee; }
+  .onb-cta:hover { background: color-mix(in srgb, #fff 94%, #000); }
 }
 
 /* Boutons « Passer » et « Glisse pour continuer » de l'onboarding : fond transparent au repos (défini ici et non en
@@ -2511,12 +2443,6 @@ html.light .sheet-sticky-head::after {
 @media (prefers-reduced-motion: reduce) {
   .page-slide-in {
     animation: none;
-  }
-}
-
-@media (hover:hover) {
-  .guide-row:hover {
-    border-color: var(--accent) !important;
   }
 }
 
@@ -2557,7 +2483,6 @@ html.light .sheet-sticky-head::after {
 .legal-row-chevron { display: inline-flex; color: var(--text3); transition: color 0.15s ease, transform 0.15s ease; }
 .legal-contact { color: var(--text2); text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
 @media (hover: hover) and (pointer: fine) {
-  .legal-row:hover { background: color-mix(in srgb, var(--text) 4%, var(--surface)); }
   .legal-row:hover .legal-row-num { color: var(--accent); }
   .legal-row:hover .legal-row-chevron { color: var(--text2); transform: translateX(2px); }
   .legal-contact:hover { color: var(--text); text-decoration-color: currentColor; }
@@ -2954,8 +2879,10 @@ html.light .sheet-sticky-head::after {
   font-weight: 600;
 }
 
-.guide-md a:hover {
-  opacity: 0.8;
+@media (hover: hover) and (pointer: fine) {
+  .guide-md a:hover {
+    opacity: 0.8;
+  }
 }
 
 /* Pied de thème : navigation vers le sujet suivant, teintée à l'accent du thème. */
@@ -2974,48 +2901,23 @@ html.light .sheet-sticky-head::after {
   transition: border-color 0.15s ease;
 }
 
-@media (hover: hover) {
-  .guide-next:hover {
-    border-color: var(--guide-accent);
-  }
-}
-
-@media (hover:hover) {
+@media (hover: hover) and (pointer: fine) {
   /* Bouton fermer du mode cuisine : retour de survol (desktop). */
   .cook-close-btn {
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
-  /* `!important` : le bouton porte un `background: var(--surface2)` en style inline
-     qui, sinon, l'emporte sur ce survol (le fond ne changerait jamais). */
-  .cook-close-btn:hover {
-    background: var(--surface3) !important;
-    color: var(--text);
-  }
+  .cook-close-btn:hover { color: var(--text); }
 
   /* Onglets de l'éditeur de recette : au survol desktop, un onglet non sélectionné
-     s'allume (fond + texte plus clair), comme le bouton fermer à gauche. */
-  .editor-tab:not(.active):hover {
-    background: var(--surface2);
-    color: var(--text2);
-  }
+     s'éclaircit (voile neutre + texte), comme le bouton fermer à gauche. */
+  .editor-tab:not(.active):hover { color: var(--text2); }
 
   /* Ligne de choix (compléter le repas, ajouter au planning, assigner une base) :
-     survol neutre, liseré qui fonce et voile d'un cran, sans halo ni teinte.
-     `!important` + voile en ombre interne : ces cartes portent `border`,
-     `background` et `box-shadow` en style inline, qui l'emporteraient sinon. */
-  .complete-row:hover {
-    border-color: var(--text3) !important;
-    box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--text) 4%, transparent) !important;
-  }
-
+     voile et liseré neutres via interactions.css ; le « + » s'allume en accent. */
   .complete-row:hover .complete-add {
     background: var(--accent);
     color: #fff;
-  }
-
-  .import-back:hover {
-    background: var(--surface3);
   }
 
   .import-back:hover svg {
@@ -3027,11 +2929,7 @@ html.light .sheet-sticky-head::after {
   }
 
   /* Fiche ingrédient : éléments interactifs (retour, détail, source). */
-  .ing-hover:hover {
-    border-color: var(--accent) !important;
-    color: var(--accent);
-    box-shadow: 0 6px 18px -12px rgba(var(--accent-rgb), 0.5) !important;
-  }
+  .ing-hover:hover { color: var(--accent); }
 }
 
 .ing-hover {
@@ -3052,11 +2950,7 @@ html.light .sheet-sticky-head::after {
 .spotlight-explore .sx-chev {
   transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-@media (hover: hover) {
-  .spotlight-explore:hover {
-    background: rgba(232, 146, 10, 0.2) !important;
-    border-color: rgba(232, 146, 10, 0.55) !important;
-  }
+@media (hover: hover) and (pointer: fine) {
   .spotlight-explore:hover .sx-chev {
     transform: translateX(3px);
   }
@@ -3094,11 +2988,7 @@ html.light .sheet-sticky-head::after {
 /* Survol : même langage que les pilules Filtres / Tri (voile, liseré et texte qui
    s'affirment, aucune teinte). */
 @media (hover: hover) and (pointer: fine) {
-  .editor-add:hover {
-    border-color: var(--text3);
-    background: color-mix(in srgb, var(--text) 4%, var(--surface));
-    color: var(--text);
-  }
+  .editor-add:hover { color: var(--text); }
 }
 .editor-add:active {
   transform: scale(0.99);
@@ -3161,7 +3051,7 @@ html.light .sheet-sticky-head::after {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 @media (hover: hover) and (pointer: fine) {
-  .section-cut-cancel:hover { background: var(--surface2); color: var(--text); }
+  .section-cut-cancel:hover { color: var(--text); }
 }
 
 .complete-row {
@@ -3474,6 +3364,11 @@ html.light .sheet-sticky-head::after {
   gap: 3px;
 }
 
+/* Repos posé ici et non en inline : l'inline battrait les survols ci-dessous. */
+.notebook-add-plus { background: var(--surface2); color: var(--text2); }
+.fab-toggle { box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.45); }
+.icon-btn-soft, .icon-btn-danger { color: var(--text3); }
+
 @media(min-width:768px) {
   .app-brand {
     display: none !important;
@@ -3574,9 +3469,8 @@ html.light .sheet-sticky-head::after {
     text-align: left;
   }
 
-  .desktop-nav-item:hover {
-    background: var(--surface2);
-    color: var(--text);
+  @media (hover: hover) and (pointer: fine) {
+    .desktop-nav-item:hover { color: var(--text); }
   }
 
   .desktop-nav-item.active {
@@ -3690,16 +3584,18 @@ html.light .sheet-sticky-head::after {
     transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
 
-  .recipe-card:hover .recipe-card-thumb img {
-    transform: scale(1.06);
+  @media (hover: hover) and (pointer: fine) {
+    .recipe-card:hover .recipe-card-thumb img {
+      transform: scale(1.06);
+    }
   }
 
   .recipe-card {
     transition: border-color 0.15s, box-shadow 0.25s;
   }
 
-  .recipe-card:hover {
-    box-shadow: 0 10px 26px -12px rgba(120, 70, 30, 0.28);
+  @media (hover: hover) and (pointer: fine) {
+    .recipe-card:hover { box-shadow: var(--card-shadow-hover); }
   }
 
   /* Button hover / press feedback, desktop only (no motion) */
@@ -3707,19 +3603,8 @@ html.light .sheet-sticky-head::after {
     transition: background-color .18s ease, border-color .18s ease, box-shadow .2s ease, filter .18s ease;
   }
 
-  .btn-primary:hover {
-    filter: brightness(1.06);
-  }
-
-  .btn-ghost:hover {
-    background: var(--surface3);
-    border-color: var(--text3);
-    color: var(--text);
-  }
-
-  .btn-danger:hover {
-    background: rgba(224, 82, 82, 0.22);
-    border-color: rgba(224, 82, 82, 0.5);
+  @media (hover: hover) and (pointer: fine) {
+    .btn-ghost:hover { color: var(--text); }
   }
 
   .btn:active {
@@ -3748,24 +3633,30 @@ html.light .sheet-sticky-head::after {
     transition: transform .25s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  .notebook-card:hover {
-    /* ALLER (survol) : ressort vif avec léger dépassement, l'animation qu'on aime,
-       rotation comprise. Le préfixe perspective(1px) (déjà posé au repos) garde le
-       texte sur la même couche GPU, donc net et sans tremblement. */
-    transform: perspective(1px) translateY(-4px) rotate(-0.6deg);
-    transition: transform .22s cubic-bezier(0.34, 1.4, 0.64, 1);
+  @media (hover: hover) and (pointer: fine) {
+    .notebook-card:hover {
+      /* ALLER (survol) : ressort vif avec léger dépassement, l'animation qu'on aime,
+         rotation comprise. Le préfixe perspective(1px) (déjà posé au repos) garde le
+         texte sur la même couche GPU, donc net et sans tremblement. */
+      transform: perspective(1px) translateY(-4px) rotate(-0.6deg);
+      transition: transform .22s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
   }
 
-  .notebook-card:hover .notebook-card-icon {
-    transform: scale(1.16) rotate(-5deg);
+  @media (hover: hover) and (pointer: fine) {
+    .notebook-card:hover .notebook-card-icon {
+      transform: scale(1.16) rotate(-5deg);
+    }
   }
 
   .notebook-card:active {
     transform: translateY(-1px);
   }
 
-  .notebook-card-add:hover {
-    transform: translateY(-3px);
+  @media (hover: hover) and (pointer: fine) {
+    .notebook-card-add:hover {
+      transform: translateY(-3px);
+    }
   }
 
   /* Discover cards, subtle lift on hover (desktop only), no image zoom */
@@ -3773,43 +3664,43 @@ html.light .sheet-sticky-head::after {
     transition: transform .16s ease;
   }
 
-  .discover-card:hover {
-    transform: translateY(-3px);
+  @media (hover: hover) and (pointer: fine) {
+    .discover-card:hover {
+      transform: translateY(-3px);
+    }
   }
 
-  .discover-card .recipe-card:hover .recipe-card-thumb img {
-    /* Pas de zoom sur les cartes « découvrir » (elles se soulèvent), on reste sur
-       l'identité GPU (translateZ), jamais `none`, pour éviter tout saut de rendu. */
-    transform: translateZ(0);
+  @media (hover: hover) and (pointer: fine) {
+    .discover-card .recipe-card:hover .recipe-card-thumb img {
+      /* Pas de zoom sur les cartes « découvrir » (elles se soulèvent), on reste sur
+         l'identité GPU (translateZ), jamais `none`, pour éviter tout saut de rendu. */
+      transform: translateZ(0);
+    }
   }
 
   /* Tuile de la mosaïque « Par cuisine » : même soulèvement que les cartes. */
   .cuisine-tile {
     transition: transform .16s ease, box-shadow .16s ease;
   }
-  .cuisine-tile:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 14px 26px -14px rgba(30, 20, 10, 0.4);
+  @media (hover: hover) and (pointer: fine) {
+    .cuisine-tile:hover { transform: translateY(-3px); box-shadow: var(--card-shadow-hover); }
   }
 
   .notebook-add-plus {
     transition: background-color .18s ease, color .18s ease, transform .2s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  .notebook-card-add:hover .notebook-add-plus {
-    background: var(--accent) !important;
-    color: #fff !important;
-    transform: scale(1.08);
+  @media (hover: hover) and (pointer: fine) {
+    .notebook-card-add:hover .notebook-add-plus { background: var(--accent); color: #fff; transform: scale(1.08); }
   }
 
   /* Floating action FAB + soft icon button (no lift) */
   .fab-toggle {
-    transition: filter .18s ease, box-shadow .2s ease;
+    transition: box-shadow .2s ease;
   }
 
-  .fab-toggle:hover {
-    filter: brightness(1.06);
-    box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.5);
+  @media (hover: hover) and (pointer: fine) {
+    .fab-toggle:hover { box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.5); }
   }
 
   .fab-toggle:active {
@@ -3822,11 +3713,8 @@ html.light .sheet-sticky-head::after {
 
   /* Le rond de fond n'apparaît qu'au survol souris (desktop) : sur tactile, le
      retour visuel passe par l'onde `.ripple`, pas par un hover qui resterait figé. */
-  @media (hover: hover) {
-    .icon-btn-soft:hover {
-      background: var(--surface3) !important;
-      color: var(--text) !important;
-    }
+  @media (hover: hover) and (pointer: fine) {
+    .icon-btn-soft:hover { color: var(--text); }
   }
 
   /* Variante « danger » du bouton d'icône : au survol souris, un rond rouge
@@ -3835,11 +3723,8 @@ html.light .sheet-sticky-head::after {
   .icon-btn-danger {
     transition: background-color .18s ease, color .18s ease;
   }
-  @media (hover: hover) {
-    .icon-btn-danger:hover {
-      background: rgba(224, 82, 82, 0.14) !important;
-      color: var(--red) !important;
-    }
+  @media (hover: hover) and (pointer: fine) {
+    .icon-btn-danger:hover { color: var(--red); }
   }
 
   /* Pastille de statut d'appariement (ligne d'ingrédient). Tonalité posée en inline
@@ -3850,22 +3735,12 @@ html.light .sheet-sticky-head::after {
     overflow: hidden;
     transition: background-color .18s ease;
   }
-  @media (hover: hover) {
-    .match-dot:hover {
-      background: color-mix(in srgb, var(--dot-fg) 22%, transparent) !important;
-    }
-  }
 
   /* Pastille « Apports » de la journée (planning). Fond piloté par la tonalité du
      jour (inline via `--pill-fg`) ; le survol souris densifie ce fond dans la même
      teinte. Le tactile s'appuie sur l'onde `.ripple` (via `.pressable`). */
   .day-intake-pill {
     transition: background-color 0.15s ease;
-  }
-  @media (hover: hover) {
-    .day-intake-pill:hover {
-      background: color-mix(in srgb, var(--pill-fg) 20%, transparent) !important;
-    }
   }
 
   /* Hero back button: chevron nudges left + slight grow on hover */
@@ -3877,12 +3752,10 @@ html.light .sheet-sticky-head::after {
     transition: transform .22s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  .hero-back:hover {
-    background: rgba(0, 0, 0, 0.66) !important;
-  }
-
-  .hero-back:hover svg {
-    transform: translateX(-3px);
+  @media (hover: hover) and (pointer: fine) {
+    .hero-back:hover svg {
+      transform: translateX(-3px);
+    }
   }
 
   .hero-back:active svg {
@@ -3959,8 +3832,10 @@ html.light .sheet-sticky-head::after {
     transition: transform .25s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  .fab-toggle:hover svg {
-    transform: rotate(90deg);
+  @media (hover: hover) and (pointer: fine) {
+    .fab-toggle:hover svg {
+      transform: rotate(90deg);
+    }
   }
 
   .action-dock-btn {
@@ -3987,17 +3862,9 @@ html.light .sheet-sticky-head::after {
     box-shadow: 0 3px 10px -4px rgba(0, 0, 0, 0.4);
   }
 
-  .action-dock-primary:hover {
-    filter: brightness(1.06);
-  }
-
   .action-dock-ghost {
     background: var(--surface2);
     color: var(--text);
-  }
-
-  .action-dock-ghost:hover {
-    background: var(--surface3);
   }
 
   .action-dock-close {
@@ -4014,9 +3881,8 @@ html.light .sheet-sticky-head::after {
     transition: background-color .16s ease, color .16s ease;
   }
 
-  .action-dock-close:hover {
-    background: var(--surface2);
-    color: var(--text);
+  @media (hover: hover) and (pointer: fine) {
+    .action-dock-close:hover { color: var(--text); }
   }
 
   /* Cook mode sidebar */
@@ -4267,7 +4133,9 @@ html.light .sheet-sticky-head::after {
 }
 /* Hover aligné sur celui de la landing (.lp-theme) : éclaircissement du fond, pas de
    bordure d'accent. */
-.auth__theme:hover { color: var(--text); background: var(--surface3); }
+@media (hover: hover) and (pointer: fine) {
+  .auth__theme:hover { color: var(--text); }
+}
 
 /* ── Panneau pitch (porte l'unique h1) ── */
 .auth__pitch {
@@ -4388,7 +4256,6 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
   transition: background 0.18s ease, transform 0.12s ease;
 }
-.auth__google:hover:not(:disabled) { background: var(--surface3); }
 .auth__google:disabled { cursor: default; opacity: 0.85; }
 
 .auth__spinner {
@@ -4400,7 +4267,6 @@ html.light .sheet-sticky-head::after {
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
 }
-
 
 .auth__feedback {
   margin: 14px 0 0;
@@ -4425,7 +4291,9 @@ html.light .sheet-sticky-head::after {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.auth__consent a:hover { color: var(--accent); }
+@media (hover: hover) and (pointer: fine) {
+  .auth__consent a:hover { color: var(--accent); }
+}
 
 /* Retour vitrine, ancré dans le coin haut-gauche (le pitch y est centré
    verticalement, le coin est libre). Masqué sur mobile (le logo prend sa place) et
@@ -4447,7 +4315,9 @@ html.light .sheet-sticky-head::after {
   text-decoration: none;
   transition: color 0.18s ease, background 0.18s ease;
 }
-.auth__back:hover { color: var(--text); background: rgba(var(--accent-rgb), 0.1); }
+@media (hover: hover) and (pointer: fine) {
+  .auth__back:hover { color: var(--text); }
+}
 .auth__back svg { flex-shrink: 0; }
 
 .auth__legalline {
@@ -4579,7 +4449,7 @@ html.light .sheet-sticky-head::after {
   transition: max-width 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.36s ease 0.14s, margin-right 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-@media (hover:hover) {
+@media (hover: hover) and (pointer: fine) {
   .mp-add-btn:hover {
     background: var(--accent);
     color: #fff;
@@ -4590,46 +4460,6 @@ html.light .sheet-sticky-head::after {
     max-width: 240px;
     opacity: 1;
     margin-right: 5px;
-  }
-}
-
-/* Bouton « Filtres » (/recipes & Découvrir), surbrillance élégante au survol
-   sur desktop. Les styles de base sont inline ; on force donc via !important pour
-   passer par-dessus le fond/bordure inline, uniquement sur périphérique à survol. */
-.filter-btn {
-  transition: background 0.16s, border-color 0.16s, box-shadow 0.16s, transform 0.12s;
-}
-
-@media (hover:hover) {
-  .filter-btn:hover {
-    border-color: color-mix(in srgb, var(--text3) 55%, transparent) !important;
-    background: var(--surface3) !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-  }
-
-  .filter-btn:hover svg {
-    color: var(--accent);
-  }
-}
-
-.filter-btn:active {
-  transform: scale(0.97);
-}
-
-/* Page Profil : sur desktop, TOUS les boutons manquaient de feedback au survol.
-   Leurs styles de base sont inline et de couleurs très variées (accent, rouge,
-   surfaces, pilules toggle) : on passe donc par `filter`, indépendant de la
-   couleur de fond, qui éclaircit en sombre et assombrit légèrement en clair.
-   Les cellules de la heatmap sont des `div` (jamais ciblées ici). */
-.profile-page button {
-  transition: filter 0.16s ease;
-}
-@media (hover: hover) {
-  .profile-page button:not(:disabled):hover {
-    filter: brightness(1.14);
-  }
-  .light .profile-page button:not(:disabled):hover {
-    filter: brightness(0.96);
   }
 }
 
@@ -4650,10 +4480,8 @@ html.light .sheet-sticky-head::after {
   transition: background 0.16s, color 0.16s, opacity 0.16s, transform 0.12s;
 }
 
-.mp-remove-btn:hover {
-  background: rgba(224, 82, 82, 0.12);
-  color: var(--red);
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .mp-remove-btn:hover { color: var(--red); opacity: 1; }
 }
 
 .mp-remove-btn:active {
@@ -4692,7 +4520,7 @@ html.light .sheet-sticky-head::after {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .mp-empty-slot[data-slot="midi"]:hover { background: var(--slot-midi); }
   .mp-empty-slot[data-slot="soir"]:hover { background: var(--slot-soir); }
   .mp-empty-slot[data-slot="matin"]:hover { background: var(--slot-matin); }
@@ -4869,7 +4697,7 @@ html.light .sheet-sticky-head::after {
 /* Pastilles rondes de la feuille de partage : sur souris uniquement, un léger
    soulèvement + éclaircissement fait office de hover (le tactile, lui, a l'onde). */
 .share-circle { transition: filter 0.16s ease; }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   button:hover > .share-circle { filter: brightness(1.08); }
 }
 /* Variante claire : sur une surface sombre (boutons ronds translucides sur photo),
@@ -4915,14 +4743,10 @@ html.light .sheet-sticky-head::after {
    hierarchie typographique et les filets suffisent. */
 .tech-confuse { transition: background-color 0.15s ease; }
 .tech-confuse:active { background: var(--surface2); }
-@media (hover: hover) { .tech-confuse:hover { background: var(--surface2); } }
 
 /* Bouton croix d'une feuille (fiche technique...) : fond piloté en CSS pour un
    survol desktop qui l'appuie d'un cran. */
 .sheet-close-btn { background: var(--surface2); transition: background-color 0.15s ease; }
-@media (hover: hover) {
-  .sheet-close-btn:hover { background: var(--surface3); }
-}
 
 /* Pills à bascule de l'éditeur d'étape (ingrédients liés, ustensiles liés) : fond,
    liseré et couleur pilotés en CSS pour un survol desktop (le fond/liseré inline
@@ -4947,9 +4771,8 @@ html.light .sheet-sticky-head::after {
   color: var(--accent);
   border-color: rgba(var(--accent-rgb), 0.5);
 }
-@media (hover: hover) {
-  .step-link-pill:hover { background: var(--surface3); border-color: var(--text3); color: var(--text); }
-  .step-link-pill[data-active]:hover { background: rgba(var(--accent-rgb), 0.2); border-color: var(--accent); color: var(--accent); }
+@media (hover: hover) and (pointer: fine) {
+  .step-link-pill:hover { color: var(--text); }
 }
 
 /* Pill « Retirer » (éditeur d'étape : photo, astuce) : pastille fantôme sobre qui
@@ -4968,16 +4791,13 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
-@media (hover: hover) {
-  .step-remove-pill:hover { background: var(--surface2); color: var(--text2); }
+@media (hover: hover) and (pointer: fine) {
+  .step-remove-pill:hover { color: var(--text2); }
 }
 
 /* Boutons flottants sur une photo d'étape (le « x » et la pill « Changer ») : fond
    sombre translucide piloté en CSS pour un survol desktop qui l'appuie. */
 .img-overlay-btn { background: rgba(0, 0, 0, 0.6); transition: background-color 0.15s ease; }
-@media (hover: hover) {
-  .img-overlay-btn:hover { background: rgba(0, 0, 0, 0.82); }
-}
 
 /* Pills de classement (éditeur : type de recette, style de cuisine) : fond, liseré
    et couleur pilotés en CSS pour un survol desktop (le fond/liseré inline bloquait
@@ -5002,9 +4822,8 @@ html.light .sheet-sticky-head::after {
   color: var(--accent);
   border-color: rgba(var(--accent-rgb), 0.5);
 }
-@media (hover: hover) {
-  .classement-pill:hover { background: var(--surface2); border-color: var(--text3); color: var(--text); }
-  .classement-pill[data-active]:hover { background: rgba(var(--accent-rgb), 0.2); border-color: var(--accent); color: var(--accent); }
+@media (hover: hover) and (pointer: fine) {
+  .classement-pill:hover { color: var(--text); }
 }
 
 /* Pills (toggles) du panneau de filtres : même feel que `.classement-pill` de
@@ -5033,9 +4852,8 @@ html.light .sheet-sticky-head::after {
   color: var(--chip-color);
   border-color: color-mix(in srgb, var(--chip-color) 53%, transparent);
 }
-@media (hover: hover) {
-  .filter-chip:not([data-on]):hover { background: var(--surface3); border-color: var(--text3); color: var(--text); }
-  .filter-chip[data-on]:hover { background: color-mix(in srgb, var(--chip-color) 22%, transparent); border-color: var(--chip-color); }
+@media (hover: hover) and (pointer: fine) {
+  .filter-chip:not([data-on]):hover { color: var(--text); }
 }
 
 /* Lien discret « Effacer la recherche » (état vide des recettes) : au survol desktop,
@@ -5047,17 +4865,14 @@ html.light .sheet-sticky-head::after {
   border-radius: 999px;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
-@media (hover: hover) {
-  .empty-clear-link:hover { background: var(--surface2); color: var(--text2); }
+@media (hover: hover) and (pointer: fine) {
+  .empty-clear-link:hover { color: var(--text2); }
 }
 
 /* Chip « Étape N » de la mise en place (saut vers l'étape d'origine d'une découpe) :
    fond d'accent piloté en CSS (et non inline) pour un survol desktop qui l'appuie. */
 .cook-step-link { background: rgba(var(--accent-rgb), 0.10); }
 .cook-step-link:active { background: rgba(var(--accent-rgb), 0.20); }
-@media (hover: hover) {
-  .cook-step-link:hover { background: rgba(var(--accent-rgb), 0.20); }
-}
 
 /* Bouton « Minuteur N min » (mentions de temps d'une étape) : fond et liseré épice
    pilotés en CSS (et non inline) pour un survol desktop qui appuie le tabac et le
@@ -5068,18 +4883,12 @@ html.light .sheet-sticky-head::after {
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 .cook-timer-btn:active { background: rgba(var(--spice-rgb), 0.22); }
-@media (hover: hover) {
-  .cook-timer-btn:hover { background: rgba(var(--spice-rgb), 0.22); border-color: rgba(var(--spice-rgb), 0.55); }
-}
 
 /* Bouton « Plus de détails » d'une pastille de technique : fond piloté en CSS (à
    partir de la couleur de catégorie passée en `--tech-accent`) pour permettre un
    survol desktop qui appuie le tabac de fond. */
 .tech-more { background: color-mix(in srgb, var(--tech-accent) 13%, transparent); transition: background-color 0.15s ease; }
 .tech-more:active { background: color-mix(in srgb, var(--tech-accent) 22%, transparent); }
-@media (hover: hover) {
-  .tech-more:hover { background: color-mix(in srgb, var(--tech-accent) 24%, transparent); }
-}
 
 /* Rangées de la feuille de conversion en cuillères (mode sélection d'unité) :
    fond piloté en CSS (et non inline) pour que le survol desktop puisse l'emporter.
@@ -5089,10 +4898,6 @@ html.light .sheet-sticky-head::after {
 .convert-row.is-active { background: rgba(var(--accent-rgb), 0.09); }
 .convert-row:active { background: rgba(var(--accent-rgb), 0.06); }
 .convert-row.is-active:active { background: rgba(var(--accent-rgb), 0.14); }
-@media (hover: hover) {
-  .convert-row:hover { background: rgba(var(--accent-rgb), 0.06); }
-  .convert-row.is-active:hover { background: rgba(var(--accent-rgb), 0.14); }
-}
 
 /* Bouton « Revenir à N g » (retour à l'unité d'origine) : fond et liseré pilotés en
    CSS (et non inline, qui bloquerait tout :hover) pour offrir un liseré d'accent au
@@ -5103,8 +4908,8 @@ html.light .sheet-sticky-head::after {
   color: var(--text2);
   transition: border-color 0.15s ease, color 0.15s ease;
 }
-@media (hover: hover) {
-  .convert-reset:hover { border-color: var(--accent); color: var(--text); }
+@media (hover: hover) and (pointer: fine) {
+  .convert-reset:hover { color: var(--text); }
 }
 
 /* Le nombre de portions « rebondit » à chaque changement. */
@@ -5215,7 +5020,6 @@ html.light .sheet-sticky-head::after {
   position: relative;
 }
 .notif-row--nav { cursor: pointer; transition: background 0.14s; }
-.notif-row--nav:hover { background: var(--surface2); }
 
 .notif-spine-wrap { display: flex; justify-content: center; }
 .notif-node {
@@ -5231,7 +5035,9 @@ html.light .sheet-sticky-head::after {
   flex-shrink: 0;
   transition: box-shadow 0.14s;
 }
-.notif-row--nav:hover .notif-node { box-shadow: 0 0 0 4px var(--surface2); }
+@media (hover: hover) and (pointer: fine) {
+  .notif-row--nav:hover .notif-node { box-shadow: 0 0 0 4px var(--surface2); }
+}
 
 .notif-body { min-width: 0; padding-top: 5px; }
 .notif-title {
@@ -5278,7 +5084,9 @@ html.light .sheet-sticky-head::after {
   opacity: 0.5;
   transition: opacity 0.14s, transform 0.14s;
 }
-.notif-row--nav:hover .notif-chev { opacity: 1; transform: translateX(1px); }
+@media (hover: hover) and (pointer: fine) {
+  .notif-row--nav:hover .notif-chev { opacity: 1; transform: translateX(1px); }
+}
 
 .notif-more {
   display: inline-flex;
@@ -5360,7 +5168,6 @@ html.light .sheet-sticky-head::after {
   .notif-daylabel span { font-size: 12px; }
   .notif-row { max-width: 620px; }
   .notif-more { margin-left: 156px; padding: 7px 14px; }
-  .notif-more:hover { background: var(--surface2); }
 }
 
 /* ─── DÉCOUVRIR : bouton cœur favori ─────────────────────────────────────────────
@@ -5417,10 +5224,6 @@ html.light .sheet-sticky-head::after {
 .yaml-drop[data-over] .yaml-drop-icon { color: var(--accent); }
 .yaml-drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (hover: hover) and (pointer: fine) {
-  .yaml-drop:not([data-over]):hover {
-    border-color: var(--text3);
-    background: var(--surface3);
-  }
   .yaml-drop:not([data-over]):hover .yaml-drop-icon { color: var(--text2); }
 }
 
@@ -5442,10 +5245,6 @@ html.light .sheet-sticky-head::after {
 }
 .photo-drop[data-busy] { cursor: progress; }
 @media (hover: hover) and (pointer: fine) {
-  .photo-drop:not([data-busy]):hover {
-    background: var(--surface3);
-    color: var(--text2);
-  }
   .photo-drop:not([data-busy]):hover .photo-drop-title { color: var(--text); }
 }
 
@@ -5473,14 +5272,6 @@ html.light .sheet-sticky-head::after {
   .import-bar-seg { animation: none; }
 }
 
-/* Hero desktop de la fiche recette : tout ce qui est cliquable (boutons ronds,
-   difficulté, base, « + Carnet ») s'assombrit au survol. Ombre interne plutôt
-   que `filter` : elle fonce le fond sans ternir l'icône ni le libellé. */
-.recipe-hero-desktop button:not(.menu-row) { transition: box-shadow 0.18s ease; }
-@media (hover: hover) and (pointer: fine) {
-  .recipe-hero-desktop button:not(.menu-row):hover { box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.28); }
-}
-
 /* Pastille couteau de l'éditeur, sans découpe choisie : discrète au repos (styles
    ici et non en inline, sinon l'inline battrait :hover), un cran plus contrastée au
    survol, en restant opaque et neutre (elle mord sur la photo). Pointeur fin seulement. */
@@ -5495,7 +5286,6 @@ html.light .sheet-sticky-head::after {
 .dash-card { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
 .dash-chevron { display: inline-flex; color: var(--text3); transition: color 0.15s ease, transform 0.15s ease; }
 @media (hover: hover) and (pointer: fine) {
-  .dash-card:hover { box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--text) 4%, transparent); }
   .dash-card:hover .dash-chevron { color: var(--text2); transform: translateX(2px); }
   .dash-legend:hover > span:last-child { text-decoration: underline; text-underline-offset: 3px; }
 }
@@ -5513,15 +5303,6 @@ html.light .sheet-sticky-head::after {
 }
 @media (prefers-reduced-motion: reduce) {
   .source-link-label { transition: none; }
-}
-
-/* Champ-sélecteur (ouvre une feuille) : même survol neutre que les autres champs
-   cliquables, liseré qui fonce et voile opaque, jamais d'accent. */
-@media (hover: hover) and (pointer: fine) {
-  .field-picker:hover {
-    border-color: var(--text3);
-    box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--text) 4%, transparent);
-  }
 }
 
 /* Image d'ingrédient (IngImage) : arrivée en fondu léger plutôt qu'en « pop ». */

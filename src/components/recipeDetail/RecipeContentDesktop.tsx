@@ -43,7 +43,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }: R
             {section.items.map(ing => {
               const rc = resolveComp(ing);
               if (rc) return (
-                <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } })} style={{ display: "flex", alignItems: "center", gap: 12, cursor: rc.comp ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (rc.comp) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
+                <div key={ing.id} onClick={() => rc.comp && navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } })} className={rc.comp ? "hover-neutral" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, cursor: rc.comp ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px" }}>
                   {rc.comp?.image
                     ? <IngImage src={rc.comp.image} alt={rc.comp.name} size={48} cover />
                     : <span style={{ width: 48, height: 48, borderRadius: "50%", flexShrink: 0, background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>}
@@ -59,7 +59,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }: R
               );
               const effDbId = getIngId(ing);
               return (
-              <div key={ing.id} onClick={() => effDbId && navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: effDbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px", transition: "background 0.15s" }} onMouseEnter={e => { if (effDbId) e.currentTarget.style.background = "var(--surface2)"; }} onMouseLeave={e => { e.currentTarget.style.background = ""; }}>
+              <div key={ing.id} onClick={() => effDbId && navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`)} className={effDbId ? "hover-neutral" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, cursor: effDbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px" }}>
                 <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
                   <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                 </span>
