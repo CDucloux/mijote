@@ -74,7 +74,7 @@ export function SpotlightIngredient({ ingredient, onOpenIngredient, onExplore }:
         <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>chaque semaine</span>
       </div>
 
-      <article style={{ position: "relative", overflow: "hidden", borderRadius: 20, border: "1px solid var(--border)", background: "var(--surface)", padding: "16px 16px 14px", boxShadow: "0 10px 26px -16px rgba(120,70,30,0.22)" }}>
+      <article style={{ position: "relative", overflow: "hidden", borderRadius: 20, background: "var(--float-surface)", padding: "16px 16px 14px", boxShadow: "var(--float-shadow)" }}>
         <span aria-hidden="true" style={{ position: "absolute", insetInline: 0, top: 0, height: 3, background: AMBER }} />
 
         {/* En-tête cliquable → fiche ingrédient */}

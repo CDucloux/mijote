@@ -617,18 +617,21 @@ html.light select.field-input {
   appearance: none;
 }
 
-/* Pastilles flottantes sans bordure, posées sur le fond de page : surface + ombre à
+/* Éléments flottants sans bordure, posés sur le fond de page : surface + ombre à
    peine posée, qui s'affirme au survol pendant que le voile grise le fond. L'état
-   actif se lit à la teinte (fond inline). `.float-pill` pour les pastilles du JSX,
-   partagé avec la barre d'outils (Filtres / Tri) et « Charger plus ». */
-.float-pill, .toolbar-pill, .sort-control, .load-more {
+   actif se lit à la teinte (fond inline). `.float-pill` (pastilles) et `.float-card`
+   (cartes actionnables) pour le JSX, partagés avec la barre d'outils (Filtres / Tri)
+   et « Charger plus ». `--float-inset` ajoute un liseré interne (bande du foyer). */
+.float-pill, .float-card, .toolbar-pill, .sort-control, .load-more {
   background: var(--float-surface);
   border: none;
-  box-shadow: var(--float-shadow);
+  box-shadow: var(--float-inset, 0 0 transparent), var(--float-shadow);
   transition: background 0.15s ease, color 0.15s ease, box-shadow 0.18s ease;
 }
 @media (hover: hover) and (pointer: fine) {
-  .float-pill:hover, .toolbar-pill:hover, .sort-control:hover, .load-more:hover { box-shadow: var(--float-shadow-hover); }
+  :is(.float-pill, .float-card, .toolbar-pill, .sort-control, .load-more):hover {
+    box-shadow: var(--float-inset, 0 0 transparent), var(--float-shadow-hover);
+  }
   .sort-control .toolbar-pill:hover { box-shadow: none; }
 }
 

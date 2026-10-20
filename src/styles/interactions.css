@@ -5,7 +5,6 @@
                                   (`--tint`, posée sur l'élément, accent par défaut).
    - danger  (`.hover-danger`)  : action destructive.
    - foncé   (`.hover-deepen`)  : CTA plein et bouton posé sur photo (voile noir).
-   - carte   (`.hover-card`)    : carte indépendamment actionnable (élévation + liseré).
    - texte   (`.hover-text`)    : libellé discret qui s'affirme ; couleur de repos
                                   `--text-rest` (text3 par défaut), jamais en inline.
    Modificateur liseré (`.hover-ring`) : la bordure s'affirme en plus du voile.
@@ -30,7 +29,6 @@
   --hover-ring: var(--text3);
   /* Ombres de carte : teinte chaude `--shadow-rgb` (tokens de global.css), commune
      aux cartes, bocaux et contrôles flottants. */
-  --card-shadow-rest: 0 2px 12px rgba(0, 0, 0, .07);
   --card-shadow-hover: 0 10px 26px -12px rgba(var(--shadow-rgb), .32);
 }
 
@@ -47,7 +45,7 @@ html.light, .light {
 
 /* ── Membres du voile (toutes intentions confondues ; neutre par défaut) ───── */
 :where(
-  .hover-neutral, .hover-tint, .hover-danger, .hover-deepen, .float-pill,
+  .hover-neutral, .hover-tint, .hover-danger, .hover-deepen, .float-pill, .float-card,
   /* neutre */
   .ut-pill-clickable, .fiche-hdr-btn, .btn-ghost, .menu-row, .hh-calm-tile,
   .cook-close-btn, .editor-tab:not(.active), .complete-row, .import-back,
@@ -88,7 +86,7 @@ html.light, .light {
 
 /* ── Teintes par intention (ordre = priorité : la dernière qui matche gagne) ── */
 /* Pastilles flottantes : encre propre en clair (sinon le voile neutre). */
-:where(.float-pill, .toolbar-pill:not([data-active="1"]), .load-more:not([aria-busy="true"])) {
+:where(.float-pill, .float-card, .toolbar-pill:not([data-active="1"]), .load-more:not([aria-busy="true"])) {
   --veil-color: var(--pill-veil-ink, var(--hover-veil-ink));
   --veil-max: var(--pill-veil-max, var(--hover-veil-neutral));
 }
@@ -147,22 +145,10 @@ html.light, .light {
   transition: color var(--hover-dur) var(--hover-ease);
 }
 
-/* ── Carte ── */
-:where(.hover-card) {
-  box-shadow: var(--card-shadow-rest);
-  outline: 1px solid transparent;
-  outline-offset: -1px;
-  transition: box-shadow var(--hover-dur) var(--hover-ease), outline-color var(--hover-dur) var(--hover-ease);
-}
-
 /* ── Bascules ── */
 /* Pointeur fin uniquement : au tactile, un survol synthétisé au tap resterait collé. */
 @media (hover: hover) and (pointer: fine) {
   :hover:not(:disabled) { --veil-on: 1; }
-  .hover-card:hover {
-    box-shadow: var(--card-shadow-hover);
-    outline-color: var(--tint, var(--hover-ring));
-  }
 }
 /* Parité clavier : le focus visible reçoit le même voile que le survol. */
 :focus-visible { --veil-on: 1; }

@@ -18,13 +18,11 @@ interface NotifRowProps {
 
 export function NotifRow({ icon, color, title, subtitle, onClick, animationDelay }: NotifRowProps) {
   return (
-    <button onClick={onClick} className="slide-up pressable ripple hover-card"
+    <button onClick={onClick} className="slide-up pressable ripple float-card"
       style={{
-        "--tint": color,
         animationDelay,
         display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
         padding: "13px 14px", borderRadius: 18,
-        background: "var(--surface)", border: "1px solid var(--border)",
         cursor: "pointer",
       }}>
       <span style={{
@@ -186,13 +184,11 @@ export function TodayMealRow({ card, index, onOpen }: TodayMealRowProps) {
   const slot = m.slot ? SLOT_BY_ID[m.slot] : undefined;
   return (
 
-    <button onClick={() => { if (m.recipe.id) onOpen(m.recipe.id); }} className="slide-up pressable ripple hover-card"
+    <button onClick={() => { if (m.recipe.id) onOpen(m.recipe.id); }} className="slide-up pressable ripple float-card"
       style={{
-        "--tint": slot?.accent || "var(--accent)",
         animationDelay: `${index * 0.06}s`,
         display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
         padding: "12px 14px", borderRadius: 18, cursor: "pointer", overflow: "hidden",
-        background: "var(--surface)", border: "1px solid var(--border)",
       }}>
       <div style={{ width: 70, height: 70, borderRadius: 14, overflow: "hidden", flexShrink: 0, boxShadow: "0 3px 10px rgba(0,0,0,0.14)" }}>
         <Img src={m.recipe.image} alt={m.recipe.name} style={{ width: "100%", height: "100%" }} />
