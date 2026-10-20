@@ -99,13 +99,13 @@ export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTa
               const role = itemRole(item, r);
               const label = composed ? roleLabel(role) : MP_SLOT_LABEL[slot];
               return (
-                <div key={globalIdx} draggable className="hov-tint"
+                <div key={globalIdx} draggable className="hover-neutral"
                   onDragStart={() => { cancelLongPress(); onSetDragInfo({ date, idx: globalIdx, slot }); }}
                   onDragEnd={() => onSetDragInfo(null)}
                   onContextMenu={e => { e.preventDefault(); onOpenItemMenu({ date, idx: globalIdx, slot, recipeId: item.recipeId }); }}
                   onPointerDown={e => startLongPress(e, () => onOpenItemMenu({ date, idx: globalIdx, slot, recipeId: item.recipeId }))}
                   onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
-                  style={{ display: "flex", alignItems: "center", gap: 8, cursor: "grab" }}>
+                  style={{ display: "flex", alignItems: "center", gap: 8, cursor: "grab", borderRadius: 8 }}>
                   <div style={{ width: composed ? 38 : 46, height: composed ? 38 : 46, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
                   <button onClick={() => { if (wasLongPress()) return; onSelectRecipe(r.id ?? "", date); }} style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>

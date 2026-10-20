@@ -14,13 +14,11 @@ import type { BaseTransfer } from "../../hooks/useMasterImports.js";
 
 function IngredientRowButton({ item, first, onOpen }: { item: IngredientDbItem; first: boolean; onOpen: () => void }) {
   return (
-    <button onClick={onOpen} title="Voir la fiche" className="ing-row-btn ripple" style={{
+    <button onClick={onOpen} title="Voir la fiche" className="ing-row-btn ripple hover-neutral" style={{
       width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
       borderTop: first ? "none" : "1px solid var(--border)",
-      background: "var(--surface)", textAlign: "left", cursor: "pointer", border: "none", transition: "background 0.15s",
-    }}
-      onMouseEnter={e => { e.currentTarget.style.background = "var(--surface2)"; }}
-      onMouseLeave={e => { e.currentTarget.style.background = "var(--surface)"; }}>
+      background: "var(--surface)", textAlign: "left", cursor: "pointer", border: "none",
+    }}>
       <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
         <IngImage src={item.image} alt={item.name} size={42} />
         <IngredientStatusBadge status={item.status} />

@@ -9,7 +9,6 @@ import { HouseholdSection } from "../components/household/HouseholdSection.jsx";
 import { NotifRow, OnboardingCard, CalmDayCard, TodayMealRow } from "../components/home/HomeCards.jsx";
 import { SubviewPill, type HomeSubview } from "../components/home/SubviewPill.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
-import { useCanHover } from "../hooks/useCanHover.js";
 import { pickSpotlightIngredient } from "@/lib/planning/spotlight.js";
 import { buildDashboardSummary, groupTodayMeals } from "@/lib/planning/dashboard.js";
 import type { IngredientDbItem, MealPlan, Recipe } from "@/lib/types.js";
@@ -58,7 +57,6 @@ const HOME_TITLE_STYLE: CSSProperties = { fontFamily: "var(--ff-display)", fontS
 
 export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowStock = [], ingredientDB = [], unreadCount = 0, preferences, loading = false, mode = "home", onNavigateSubview, onSelectRecipe, setTab, onOpenPublic, onClonePublic, onNewRecipe, onOpenIngredient, onExploreSeason, discoverSeed = "", onDiscoverSeedConsumed }: HomePageProps) {
   const { user } = useAppShell();
-  const canHover = useCanHover();
   const navigate = useNavigate();
   const firstName = ((preferences?.displayName || user?.displayName) || "").trim().split(" ")[0] || "";
   const spotlight = useMemo(() => pickSpotlightIngredient(ingredientDB), [ingredientDB]);
@@ -93,7 +91,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16, marginBottom: 12 }}>
           <SubviewPill mode={mode} onNavigate={onNavigateSubview} />
           <button
-            type="button" className="pressable hov-circle" onClick={() => navigate("/guide")}
+            type="button" className="pressable hover-neutral" onClick={() => navigate("/guide")}
             aria-label="Guide d'utilisation" title="Guide d'utilisation"
             style={{ marginLeft: "auto", flexShrink: 0, width: 40, height: 40, borderRadius: 999,
               display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
@@ -101,7 +99,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             <Icon name="help" size={22} color="var(--text2)" />
           </button>
           <button
-            type="button" className="pressable hov-circle" onClick={() => navigate("/notifications")}
+            type="button" className="pressable hover-neutral" onClick={() => navigate("/notifications")}
             aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : "Notifications"}
             title="Notifications"
             style={{ position: "relative", flexShrink: 0, width: 40, height: 40, borderRadius: 999,
@@ -161,14 +159,14 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {/* Repas du jour (un repas composé = une carte, plat en tête) */}
               {mealCards.map((card, i) => (
-                <TodayMealRow key={i} card={card} index={i} canHover={canHover} onOpen={id => onSelectRecipe?.(id)} />
+                <TodayMealRow key={i} card={card} index={i} onOpen={id => onSelectRecipe?.(id)} />
               ))}
 
               {/* Courses à faire */}
               {shoppingTodo > 0 && (
                 <NotifRow
                   animationDelay={`${meals.length * 0.06 + 0.04}s`}
-                  icon="shopping" color="var(--accent)" canHover={canHover}
+                  icon="shopping" color="var(--accent)"
                   onClick={() => setTab?.("shopping")}
                   title={`${shoppingTodo} article${shoppingTodo > 1 ? "s" : ""} à acheter`}
                   subtitle="Ta liste de courses t'attend" />
@@ -178,7 +176,7 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
               {lowStockNames.length > 0 && (
                 <NotifRow
                   animationDelay={`${(meals.length + (shoppingTodo > 0 ? 1 : 0)) * 0.06 + 0.04}s`}
-                  icon="warning" color="#e8920a" canHover={canHover}
+                  icon="warning" color="#e8920a"
                   onClick={() => navigate("/stock?view=low")}
                   title={`${lowStockNames.length} ingrédient${lowStockNames.length > 1 ? "s" : ""} à racheter bientôt`}
                   subtitle={lowStockNames.slice(0, 4).join(" · ")} />

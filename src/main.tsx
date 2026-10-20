@@ -1,6 +1,7 @@
 import React from 'react'
 import './styles/fonts.css'
 import './styles/global.css'
+import './styles/interactions.css'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'

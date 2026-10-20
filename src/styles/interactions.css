@@ -1,0 +1,72 @@
+/* ── Système de survol unifié ─────────────────────────────────────────────────
+   Une poignée d'INTENTIONS, jamais une recette par composant :
+   - `.hover-neutral` : rangées, boutons ghost, boutons-icônes, pastilles neutres.
+   - `.hover-tint`    : pastille déjà teintée ; le survol renforce SA couleur
+                        (`--tint`, posée sur l'élément, accent par défaut).
+   - `.hover-danger`  : action destructive (teinte rouge).
+   - `.hover-card`    : carte indépendamment actionnable (élévation + liseré `--tint`).
+   - `.hover-text`    : libellé discret qui s'affirme (menus texte) ; couleur de
+                        repos `--text-rest` (text3 par défaut), jamais en inline.
+   Modificateur `.hover-ring` : le liseré s'affirme en plus du voile.
+
+   Le survol est un VOILE translucide (ombre interne pleine surface) posé sur le fond
+   existant, pas une couleur absolue : il marche sur tout niveau de surface, dans les
+   deux thèmes, et cohabite avec les fonds inline sans `!important`. Le liseré passe
+   par `outline` (offset -1px, superposé à une bordure de 1px) pour la même raison.
+   Conséquence : un élément qui en porte un ne déclare ni `boxShadow` ni `transition`
+   inline (ils écraseraient le voile et son fondu). */
+
+:root {
+  --hover-dur: .16s;
+  --hover-ease: cubic-bezier(.2, .7, .3, 1);
+  --hover-veil-neutral: 6%;
+  --hover-veil-tinted: 12%;
+  --hover-ring: var(--text3);
+  --card-shadow-rest: 0 2px 12px rgba(0, 0, 0, .07);
+  --card-shadow-hover: 0 8px 22px -10px rgba(0, 0, 0, .3);
+}
+
+.hover-neutral {
+  --veil: var(--text);
+  --veil-strength: var(--hover-veil-neutral);
+  --ring: var(--hover-ring);
+}
+.hover-tint {
+  --veil: var(--tint, var(--accent));
+  --veil-strength: var(--hover-veil-tinted);
+  --ring: color-mix(in srgb, var(--tint, var(--accent)) 55%, transparent);
+}
+.hover-danger {
+  --veil: var(--red);
+  --veil-strength: var(--hover-veil-tinted);
+  --ring: rgba(var(--red-rgb), .5);
+}
+.hover-card { box-shadow: var(--card-shadow-rest); }
+.hover-text { color: var(--text-rest, var(--text3)); }
+
+/* Spécificité nulle : un `:focus-visible` posé ailleurs garde la main sur l'outline. */
+:where(.hover-ring, .hover-card) { outline: 1px solid transparent; outline-offset: -1px; }
+:where(.hover-neutral, .hover-tint, .hover-danger, .hover-card, .hover-ring, .hover-text) {
+  transition:
+    box-shadow var(--hover-dur) var(--hover-ease),
+    outline-color var(--hover-dur) var(--hover-ease),
+    color var(--hover-dur) var(--hover-ease);
+}
+
+/* Pointeur fin uniquement : au tactile, un survol synthétisé au tap resterait collé. */
+@media (hover: hover) and (pointer: fine) {
+  :is(.hover-neutral, .hover-tint, .hover-danger):hover {
+    box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--veil) var(--veil-strength), transparent);
+  }
+  .hover-ring:hover { outline-color: var(--ring); }
+  .hover-text:hover { color: var(--text); }
+  .hover-card:hover {
+    box-shadow: var(--card-shadow-hover);
+    outline-color: var(--tint, var(--hover-ring));
+  }
+}
+
+/* Parité clavier : le focus visible reçoit le même voile que le survol. */
+:is(.hover-neutral, .hover-tint, .hover-danger):focus-visible {
+  box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--veil) var(--veil-strength), transparent);
+}

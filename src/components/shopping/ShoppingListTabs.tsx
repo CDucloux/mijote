@@ -51,7 +51,7 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
         const items = l.items ?? [];
         const lChecked = items.filter(i => i.checked).length;
         return (
-          <div key={l.id} role="button" tabIndex={0} className={`slide-up ripple${isActive ? "" : " hov-pill"}`}
+          <div key={l.id} role="button" tabIndex={0} className={`slide-up ripple${isActive ? "" : " hover-neutral hover-ring"}`}
             onClick={() => { if (wasLongPress()) return; onSelect(l.id); }}
             onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(l.id); } }}
             onPointerDown={e => startLongPress(e, () => onOpenMenu(l))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
@@ -72,8 +72,8 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
             {/* Options : uniquement sur la liste active. La hauteur fixe de la
                 pastille empêche le bouton (22px) de la faire grandir. */}
             {isActive && (
-              <button onClick={e => { e.stopPropagation(); onOpenMenu(l); }} aria-label="Options de la liste" className="hov-white"
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "50%", flexShrink: 0, border: "none", background: "rgba(255,255,255,0.22)", cursor: "pointer", padding: 0 }}>
+              <button onClick={e => { e.stopPropagation(); onOpenMenu(l); }} aria-label="Options de la liste" className="hover-tint"
+                style={{ "--tint": "#fff", display: "flex", alignItems: "center", justifyContent: "center", width: 22, height: 22, borderRadius: "50%", flexShrink: 0, border: "none", background: "rgba(255,255,255,0.22)", cursor: "pointer", padding: 0 }}>
                 <Icon name="ellipsis" size={14} color="#fff" />
               </button>
             )}

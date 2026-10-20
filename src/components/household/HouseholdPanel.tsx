@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { CSSProperties, MouseEvent as ReactMouseEvent, ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../ui/Icon.jsx";
 import type { IconName } from "../ui/Icon.jsx";
@@ -186,10 +186,8 @@ export function HouseholdPanel({ onClose }: { onClose?: () => void }) {
                 ) : (
                   <Col gap={4} style={{ maxHeight: 240, overflowY: "auto", margin: "0 -6px" }}>
                     {candidates.map(d => (
-                      <Row as="button" key={d.uid || d.email} gap={11} onClick={() => d.email && actions.invite(d.email)}
-                        style={{ padding: "8px 6px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left", width: "100%" }}
-                        onMouseEnter={(e: ReactMouseEvent<HTMLElement>) => e.currentTarget.style.background = "var(--surface2)"}
-                        onMouseLeave={(e: ReactMouseEvent<HTMLElement>) => e.currentTarget.style.background = "none"}>
+                      <Row as="button" key={d.uid || d.email} gap={11} className="hover-neutral" onClick={() => d.email && actions.invite(d.email)}
+                        style={{ padding: "8px 6px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left", width: "100%" }}>
                         <Avatar photo={d.photoURL} label={d.displayName || d.email} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13.5, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.displayName || d.email}</div>
@@ -205,9 +203,7 @@ export function HouseholdPanel({ onClose }: { onClose?: () => void }) {
           )}
 
           {/* Quitter / dissoudre : action destructive, franchement rouge (pilule teintée). */}
-          <button className="btn" style={{ width: "100%", background: "rgba(224,82,82,0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => { setConfirmSnap({ name: household?.name || "", owner }); setConfirmLeave(true); }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.2)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.12)"; }}>
+          <button className="btn hover-danger" style={{ width: "100%", background: "rgba(var(--red-rgb),0.12)", color: "var(--red)", fontWeight: 600, borderRadius: 999 }} onClick={() => { setConfirmSnap({ name: household?.name || "", owner }); setConfirmLeave(true); }}>
             <Icon name="logout" size={15} color="var(--red)" /> {owner ? "Dissoudre le foyer" : "Quitter le foyer"}
           </button>
         </>

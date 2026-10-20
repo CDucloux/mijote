@@ -176,41 +176,11 @@ html.light .ut-pill-desktop {
   }
 }
 
-/* ── Survol desktop générique (feel de la page Profil) ────────────────────────
-   Rangées et pastilles interactives à fond neutre : au survol pointeur, le fond
-   vire vers surface2 (comme les rangées du profil) et le liseré des pastilles
-   s'affirme. Scopé aux pointeurs (jamais au tactile) ; `!important` pour l'emporter
-   sur les fonds posés en inline. `.hov-tint` : survol pour un élément déjà teinté
-   (carte dans une bande colorée) sans écraser sa couleur. */
-.hov-surface { transition: background-color .16s ease, border-color .16s ease; }
-.hov-pill { transition: background-color .16s ease, border-color .16s ease; }
-.hov-tint { transition: background-color .16s ease; border-radius: 8px; }
-@media (hover: hover) {
-  .hov-surface:hover { background: var(--surface2) !important; }
-  .hov-pill:hover { background: var(--surface2) !important; }
-  .hov-tint:hover { background: color-mix(in srgb, var(--text) 7%, transparent); }
-  /* Bouton teinté « ok » (Valider l'achat) : le survol renforce sa propre teinte,
-     jamais un gris qui casserait la couleur. */
-  .hov-ok:hover { background: rgba(var(--ok-rgb), 0.24) !important; border-color: rgba(var(--ok-rgb), 0.5) !important; }
-}
-
-/* Boutons-icônes ronds « nus » (accès guide / notifications de l'accueil) : au
-   survol desktop, un disque discret apparaît DERRIÈRE l'icône, comme sur la barre
-   de profil. `!important` pour l'emporter sur le `background: none` inline. */
-.hov-circle { transition: background-color .16s ease; }
-/* Pastille ronde ⋯ posée sur un fond accent (options d'une liste active) : le
-   survol renforce le voile blanc du disque. */
-.hov-white { transition: background-color .16s ease; }
-/* Segments inactifs d'un sélecteur (À suivre / Découvrir) : le libellé s'éclaircit
-   au survol pour signaler qu'il est cliquable, sans toucher au segment actif. */
-.hov-seg { transition: color .16s ease; }
-@media (hover: hover) {
-  .hov-circle:hover { background: var(--surface2) !important; }
-  .hov-white:hover { background: rgba(255,255,255,0.4) !important; }
-  .hov-seg:hover { color: var(--text2) !important; }
-  /* Bande foyer de l'accueil : pas de surbrillance de bordure. Le seul retour au
-     survol desktop est le disque accent qui apparaît derrière l'icône d'action
-     (état de repos : icône nue, sans cercle). */
+/* Bande foyer de l'accueil : pas de surbrillance de bordure. Le seul retour au
+   survol desktop est le disque accent qui apparaît derrière l'icône d'action
+   (état de repos : icône nue, sans cercle). Le reste du survol générique vit dans
+   interactions.css. */
+@media (hover: hover) and (pointer: fine) {
   .foyer-card:hover .foyer-affordance { background: rgba(var(--accent-rgb),0.14) !important; }
 }
 .foyer-affordance { transition: background-color .16s ease; }

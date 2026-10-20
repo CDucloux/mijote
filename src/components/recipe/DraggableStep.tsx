@@ -52,7 +52,6 @@ interface DraggableStepProps {
 }
 
 function DraggableStepBase({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, isDropTarget = false, onUpdate, onRemove, onMove, onTargetChange }: DraggableStepProps) {
-  const [trashHover, setTrashHover] = useState(false);
   const { dragging, rowProps, handleProps } = useDragReorder({ index, enabled: isDraggable, onMove, onTargetChange });
   // La carte saisie se soulève ; la carte VISÉE s'entoure d'accent.
   const aimed = isDropTarget && !dragging;
@@ -94,8 +93,8 @@ function DraggableStepBase({ step, index, total, ingredients, utensils, recipes,
           {!isDraggable && <MoveArrows index={index} total={total} onMove={onMove} />}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={() => onRemove(step.id)} onMouseEnter={() => setTrashHover(true)} onMouseLeave={() => setTrashHover(false)}
-            style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", cursor: "pointer", border: "none", background: trashHover ? "rgba(224,82,82,0.14)" : "transparent", transition: "background 0.15s" }}>
+          <button onClick={() => onRemove(step.id)} className="hover-danger"
+            style={{ width: 32, height: 32, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", cursor: "pointer", border: "none", background: "transparent" }}>
             <Icon name="trash" size={15} color="var(--red)" />
           </button>
         </div>

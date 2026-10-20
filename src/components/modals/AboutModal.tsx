@@ -1,4 +1,4 @@
-import type { ReactNode, MouseEvent } from "react";
+import type { ReactNode } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon, type IconName } from "../ui/Icon.jsx";
 import { ChangelogSection } from "../onboarding/ChangelogSection.jsx";
@@ -90,10 +90,8 @@ export function AboutModal({ onClose }: { onClose: () => void }) {
 
         {/* Nous contacter */}
         <Section icon="mail" title="Nous contacter">
-          <Row as="a" className="ripple ripple-accent" justify="space-between" gap={10} href={CONTACT_MAILTO}
-            style={{ padding: "11px 14px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", textDecoration: "none", transition: "border-color 0.15s, background 0.15s" }}
-            onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.13)"; }}
-            onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.borderColor = "rgba(var(--accent-rgb),0.18)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.07)"; }}>
+          <Row as="a" className="ripple ripple-accent hover-tint hover-ring" justify="space-between" gap={10} href={CONTACT_MAILTO}
+            style={{ padding: "11px 14px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.07)", border: "1px solid rgba(var(--accent-rgb),0.18)", textDecoration: "none" }}>
             <Col style={{ minWidth: 0 }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Une question, un bug, une idée ?</span>
               <span style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{CONTACT_EMAIL}</span>
