@@ -138,7 +138,9 @@ html.light, .light {
 }
 
 /* ── Texte ── */
-:where(.hover-text) {
+/* Spécificité de classe (pas `:where`) : la remise à zéro `button { color: inherit }`
+   l'emporterait, et le libellé hériterait de la couleur du texte principal. */
+.hover-text {
   --veil-on: 0;
   color: color-mix(in srgb, var(--text) calc(var(--veil-on) * 100%), var(--text-rest, var(--text3)));
   transition: color var(--hover-dur) var(--hover-ease);

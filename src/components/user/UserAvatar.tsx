@@ -100,11 +100,13 @@ export function UserAvatar() {
 
   // Rendu d'une rangée du dropdown WEB depuis une action (le drawer mobile a son
   // propre rendu dans AccountSheet). Styles inchangés par variante.
-  const dropDefault = { display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", textDecoration: "none" } as const;
+  // Rangées au survol de la barre latérale : voile neutre arrondi + libellé qui fonce ;
+  // marges négatives pour que le texte reste aligné sur l'e-mail malgré le padding.
+  const dropDefault = { "--text-rest": "var(--text2)", display: "flex", alignItems: "center", gap: 7, width: "calc(100% + 12px)", margin: "0 -6px", padding: "8px 10px", borderRadius: 10, background: "none", border: "none", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", textDecoration: "none" } as const;
   const dropRow = (a: AvatarAction, i: number | string) => {
     if (a.variant === "admin") return (
-      <button key={i} onClick={() => closeThen(a.onClick)} className="hover-text"
-        style={{ "--text-rest": "var(--text2)", display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 4px", background: "none", border: "none", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer" }}>
+      <button key={i} onClick={() => closeThen(a.onClick)} className="hover-neutral hover-text"
+        style={{ ...dropDefault, gap: 8, fontWeight: 600 }}>
         <span style={{ width: 22, height: 22, borderRadius: 7, background: "rgba(var(--admin-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>
           <Icon name={a.icon} size={13} color="var(--admin)" />
         </span> {a.label}
@@ -112,17 +114,17 @@ export function UserAvatar() {
     );
     if (a.variant === "danger") return (
       <button key={i} onClick={() => closeThen(a.onClick)} className="hover-danger"
-        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(var(--red-rgb),0.10)", border: "1px solid rgba(var(--red-rgb),0.25)", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(var(--red-rgb),0.10)", border: "none", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
         <Icon name={a.icon} size={16} color="var(--red)" /> {a.label}
       </button>
     );
     if (a.href) return (
-      <a key={i} href={a.href} onClick={() => closeThen()} className="hover-text" style={dropDefault}>
+      <a key={i} href={a.href} onClick={() => closeThen()} className="hover-neutral hover-text" style={dropDefault}>
         <Icon name={a.icon} size={13} color="currentColor" /> {a.label}
       </a>
     );
     return (
-      <button key={i} onClick={() => a.keepsOpen ? a.onClick?.() : closeThen(a.onClick)} className="hover-text" style={dropDefault}>
+      <button key={i} onClick={() => a.keepsOpen ? a.onClick?.() : closeThen(a.onClick)} className="hover-neutral hover-text" style={dropDefault}>
         <Icon name={a.icon} size={13} color="currentColor" /> {a.label}
       </button>
     );
@@ -141,7 +143,7 @@ export function UserAvatar() {
       {!useDrawer && (open || closing) && createPortal(
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 1299 }} onClick={() => closeThen()} />
-          <div ref={surfaceRef} onAnimationEnd={onAnimationEnd} style={{ position: "fixed", top: dropPos.top, right: dropPos.right, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px", zIndex: 1300, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: closing ? "collapseUp 0.16s ease forwards" : "expandDown 0.2s ease" }}>
+          <div ref={surfaceRef} onAnimationEnd={onAnimationEnd} style={{ position: "fixed", top: dropPos.top, right: dropPos.right, background: "var(--surface)", borderRadius: 14, padding: "12px 16px", zIndex: 1300, minWidth: 210, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", animation: closing ? "collapseUp 0.16s ease forwards" : "expandDown 0.2s ease" }}>
             <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 4 }}>{user.email}</div>
             {syncLabel && <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: syncColor, marginBottom: 4 }}>{offline && <Icon name="wifiOff" size={12} color={syncColor} />}{syncLabel}</div>}
             <div style={{ height: 1, background: "var(--border)", margin: "8px -4px" }} />
