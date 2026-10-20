@@ -45,7 +45,7 @@
   cursor: pointer;
 }
 .lp-pod { flex-shrink: 0; display: block; transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
-@media (hover: hover) { .lp-brandmark:hover .lp-pod { transform: rotate(-8deg); } }
+@media (hover: hover) and (pointer: fine) { .lp-brandmark:hover .lp-pod { transform: rotate(-8deg); } }
 .lp-brand {
   font-family: var(--ff-display);
   font-size: 21px;
@@ -97,7 +97,7 @@
   background: var(--accent);
   transition: right 0.2s ease;
 }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .lp-navbar__links a:hover { color: var(--text); }
   .lp-navbar__links a:hover::after { right: 0; }
 }
@@ -120,8 +120,8 @@
   flex-shrink: 0;
   transition: color 0.16s ease, background-color 0.16s ease;
 }
-@media (hover: hover) {
-  .lp-theme:hover { color: var(--text); background: var(--surface3); }
+@media (hover: hover) and (pointer: fine) {
+  .lp-theme:hover { color: var(--text); }
 }
 
 /* ── Boutons (pilules) ───────────────────────────────────────────────────── */
@@ -144,8 +144,8 @@
   transition: transform 0.12s ease, box-shadow 0.18s ease, background-color 0.16s ease;
 }
 .lp-cta--sm { padding: 9px 18px; font-size: 14px; }
-@media (hover: hover) {
-  .lp-cta:hover { box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.42); background: var(--accent-strong); }
+@media (hover: hover) and (pointer: fine) {
+  .lp-cta:hover { box-shadow: 0 6px 16px -6px rgba(0, 0, 0, 0.42); }
 }
 .lp-cta:active { transform: scale(0.97); }
 
@@ -324,8 +324,8 @@
 }
 .lp-next svg { animation: lpNudge 1.9s ease-in-out infinite; }
 .lp-next--hidden { opacity: 0; pointer-events: none; }
-@media (hover: hover) {
-  .lp-next:hover { color: var(--text); background: var(--surface3); border-color: var(--text3); }
+@media (hover: hover) and (pointer: fine) {
+  .lp-next:hover { color: var(--text); }
 }
 @keyframes lpNudge {
   0%, 100% { transform: translateY(0); }
@@ -598,7 +598,7 @@
   cursor: pointer;
   transition: color 0.16s ease;
 }
-@media (hover: hover) { .lp-footer a:hover { color: var(--accent); } }
+@media (hover: hover) and (pointer: fine) { .lp-footer a:hover { color: var(--accent); } }
 .lp-footer__base {
   display: flex;
   flex-wrap: wrap;

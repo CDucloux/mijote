@@ -47,12 +47,12 @@ export function SubviewPill({ mode, onNavigate }: { mode: HomeSubview; onNavigat
     return (
       <button ref={ref}
         role="tab" aria-selected={active} onClick={() => onNavigate?.(id)}
-        className={`pressable${active ? "" : " hov-seg"}`}
+        className={`pressable${active ? "" : " hover-text"}`}
         style={{
           position: "relative", zIndex: 1, flex: "0 0 auto", padding: "7px 16px", borderRadius: 999,
           border: "none", cursor: "pointer", background: "transparent",
           fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em",
-          color: active ? "var(--text)" : "var(--text3)",
+          color: active ? "var(--text)" : undefined,
           transition: "color 0.22s ease",
         }}>
         {label}

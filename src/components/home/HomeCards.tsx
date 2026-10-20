@@ -1,24 +1,10 @@
-import { useState, type MouseEvent } from "react";
+import { useState } from "react";
 import { Icon, type IconName } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { NewRecipeSheet } from "../recipe/NewRecipeButton.jsx";
 import { SLOT_BY_ID } from "../../constants/mealSlots.js";
 import { fmtTime } from "@/lib/format.js";
 import type { TodayMealCard } from "@/lib/planning/dashboard.js";
-
-/**
- * Surbrillance de survol (liseré + ombre), câblée seulement sur pointeur fin : sur
- * tactile, un mouseenter synthétisé au tap resterait collé (pas de mouseleave).
- */
-function hoverHighlight(canHover: boolean, borderColor: string, shadow: string) {
-  if (!canHover) return {};
-  return {
-    onMouseEnter: (e: MouseEvent<HTMLElement>) => { e.currentTarget.style.borderColor = borderColor; e.currentTarget.style.boxShadow = shadow; },
-    onMouseLeave: (e: MouseEvent<HTMLElement>) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.boxShadow = REST_SHADOW; },
-  };
-}
-
-const REST_SHADOW = "0 2px 12px rgba(0,0,0,0.07)";
 
 /** Carte de notification compacte (courses, stock bas) : icône, libellé, chevron. */
 interface NotifRowProps {
@@ -28,21 +14,19 @@ interface NotifRowProps {
   subtitle?: string;
   onClick: () => void;
   animationDelay: string;
-  canHover: boolean;
 }
 
-export function NotifRow({ icon, color, title, subtitle, onClick, animationDelay, canHover }: NotifRowProps) {
+export function NotifRow({ icon, color, title, subtitle, onClick, animationDelay }: NotifRowProps) {
   return (
-    <button onClick={onClick} className="slide-up pressable ripple"
+    <button onClick={onClick} className="slide-up pressable ripple hover-card"
       style={{
+        "--tint": color,
         animationDelay,
         display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
         padding: "13px 14px", borderRadius: 18,
         background: "var(--surface)", border: "1px solid var(--border)",
-        cursor: "pointer", transition: "border-color 0.15s, box-shadow 0.15s",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
-      }}
-      {...hoverHighlight(canHover, color, `0 4px 20px ${color}28`)}>
+        cursor: "pointer",
+      }}>
       <span style={{
         width: 44, height: 44, borderRadius: 13, flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -96,7 +80,7 @@ export function OnboardingCard({ onNewRecipe, onExplore }: { onNewRecipe: () => 
             <button onClick={() => setNewOpen(true)} className="btn btn-primary btn-pill pressable ripple" style={{ width: "auto" }}>
               <Icon name="plus" size={16} color="#fff" /> Ajouter une recette
             </button>
-            <button onClick={onExplore} className="pressable hov-pill" style={{ background: "none", border: "none", cursor: "pointer",
+            <button onClick={onExplore} className="pressable hover-tint" style={{ background: "none", border: "none", cursor: "pointer",
               display: "inline-flex", alignItems: "center", gap: 4, padding: "10px 16px", borderRadius: 999,
               fontFamily: "var(--ff-body)", fontSize: 14, fontWeight: 600, color: "var(--accent)" }}>
               Explorer la communauté <Icon name="forward" size={14} color="var(--accent)" />
@@ -193,26 +177,23 @@ interface TodayMealRowProps {
   card: TodayMealCard;
   /** Rang de la carte (décalage de l'animation d'entrée). */
   index: number;
-  canHover: boolean;
   onOpen: (recipeId: string) => void;
 }
 
 /** Repas du jour : vignette, créneau, nom, temps, et autres services du repas composé. */
-export function TodayMealRow({ card, index, canHover, onOpen }: TodayMealRowProps) {
+export function TodayMealRow({ card, index, onOpen }: TodayMealRowProps) {
   const m = card.primary;
   const slot = m.slot ? SLOT_BY_ID[m.slot] : undefined;
   return (
 
-    <button onClick={() => { if (m.recipe.id) onOpen(m.recipe.id); }} className="slide-up pressable ripple"
+    <button onClick={() => { if (m.recipe.id) onOpen(m.recipe.id); }} className="slide-up pressable ripple hover-card"
       style={{
+        "--tint": slot?.accent || "var(--accent)",
         animationDelay: `${index * 0.06}s`,
         display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
         padding: "12px 14px", borderRadius: 18, cursor: "pointer", overflow: "hidden",
         background: "var(--surface)", border: "1px solid var(--border)",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
-        transition: "border-color 0.15s, box-shadow 0.15s",
-      }}
-      {...hoverHighlight(canHover, slot?.accent || "var(--accent)", "0 4px 20px rgba(0,0,0,0.12)")}>
+      }}>
       <div style={{ width: 70, height: 70, borderRadius: 14, overflow: "hidden", flexShrink: 0, boxShadow: "0 3px 10px rgba(0,0,0,0.14)" }}>
         <Img src={m.recipe.image} alt={m.recipe.name} style={{ width: "100%", height: "100%" }} />
       </div>

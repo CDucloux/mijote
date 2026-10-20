@@ -1,5 +1,17 @@
 # Changelog – Cardamome
 
+## v4.72.0 – Cardamome · Sous le curseur
+
+### Survol sur ordinateur
+- **Un seul langage de survol** : boutons, rangées, pastilles et cartes réagissent désormais tous de la même façon au passage de la souris. Un voile discret pour les éléments neutres, la propre couleur de l'élément qui s'intensifie pour les pastilles teintées, un rouge franc pour les suppressions, et un léger assombrissement pour les boutons principaux.
+- **Plus de survol figé sur téléphone** : sur écran tactile, un bouton ne reste plus « allumé » après un tap.
+- **Au clavier aussi** : l'élément qui a le focus reçoit le même retour visuel qu'au survol.
+- **Cartes harmonisées** : les cartes se soulèvent avec une même ombre chaude, et le liseré des cartes de l'accueil reprend leur couleur.
+
+### Technique
+- Survol centralisé dans `src/styles/interactions.css` : intentions (neutre, teinté, danger, foncé, carte, texte) et voile sur pseudo-élément, sans `!important`.
+- Garde-fous : un test vérifie chaque feuille de style (survol réservé aux pointeurs fins, aucune couleur en dur, cohérence du registre) et ESLint interdit les survols pilotés en JavaScript.
+
 ## v4.71.1 – Cardamome · Bocaux posés
 
 ### Stock

@@ -135,9 +135,7 @@
 .nr-manual:active .nr-manual__go svg { transform: translateX(4px); }
 
 @media (hover: hover) and (pointer: fine) {
-  .nr-strip button:hover { background: var(--surface3); }
   .nr-x:hover { color: var(--text); }
-  .nr-link__paste:hover { background: var(--accent-strong); }
   .nr-manual:hover .nr-manual__go { color: var(--accent); }
   .nr-manual:hover .nr-manual__go svg { transform: translateX(3px); }
 }

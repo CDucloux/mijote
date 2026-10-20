@@ -34,7 +34,7 @@ interface ShoppingClearButtonProps {
 /** Pastille « Valider l'achat » (déversement des produits de placard dans le stock). */
 export function ShoppingClearButton({ onClick, title }: ShoppingClearButtonProps) {
   return (
-    <button className="ripple hov-ok" style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 14px", fontSize: 11.5, fontWeight: 600, borderRadius: 999, background: "rgba(var(--ok-rgb),0.14)", color: "var(--ok)", border: "1px solid rgba(var(--ok-rgb),0.35)", cursor: "pointer", transition: "background 0.16s ease, border-color 0.16s ease" }} onClick={onClick} title={title}>
+    <button className="ripple hover-tint hover-ring" style={{ "--tint": "var(--ok)", display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 14px", fontSize: 11.5, fontWeight: 600, borderRadius: 999, background: "rgba(var(--ok-rgb),0.14)", color: "var(--ok)", border: "1px solid rgba(var(--ok-rgb),0.35)", cursor: "pointer" }} onClick={onClick} title={title}>
       <Icon name="shopping" size={12} color="var(--ok)" /> Valider l'achat
     </button>
   );

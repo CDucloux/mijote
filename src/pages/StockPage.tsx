@@ -227,14 +227,14 @@ export function StockPage({ stock = [], setStock, lowStock = [], setLowStock, in
           ] satisfies { key: StockView; label: string; count: number }[]).map(p => {
             const active = view === p.key;
             return (
-              <button key={p.key} onClick={() => setView(p.key)} className={`ripple${active ? "" : " hov-pill"}`}
+              <button key={p.key} onClick={() => setView(p.key)} className={`ripple${active ? "" : " hover-neutral hover-ring"}`}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500,
                   background: active ? "var(--accent)" : "var(--surface)",
                   color: active ? "#fff" : "var(--text2)",
                   border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
-                  cursor: "pointer", transition: "all 0.15s",
+                  cursor: "pointer",
                 }}>
                 {p.label}
                 <span style={{

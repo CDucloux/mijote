@@ -38,7 +38,7 @@ export function RecipeActionDock({ onOpenShopping, onOpenMealPlan }: RecipeActio
           <button className="action-dock-close" title="Réduire" onClick={close}><Icon name="close" size={15} /></button>
         </div>
       ) : (
-        <button className="fab-toggle" title="Actions" onClick={() => setOpen(true)} style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 20px -6px rgba(0,0,0,0.45)" }}>
+        <button className="fab-toggle" title="Actions" onClick={() => setOpen(true)} style={{ width: 54, height: 54, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon name="plus" size={24} color="#fff" />
         </button>
       )}

@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import type { MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../ui/Icon.jsx";
@@ -101,34 +100,29 @@ export function UserAvatar() {
 
   // Rendu d'une rangée du dropdown WEB depuis une action (le drawer mobile a son
   // propre rendu dans AccountSheet). Styles inchangés par variante.
-  const dropDefault = { display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text3)", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "color 0.15s", textDecoration: "none" } as const;
-  const dropIn = (e: MouseEvent<HTMLElement>) => e.currentTarget.style.color = "var(--text)";
-  const dropOut = (e: MouseEvent<HTMLElement>) => e.currentTarget.style.color = "var(--text3)";
+  const dropDefault = { display: "flex", alignItems: "center", gap: 7, width: "100%", padding: "8px 4px", background: "none", border: "none", fontSize: 13, fontFamily: "var(--ff-body)", cursor: "pointer", textDecoration: "none" } as const;
   const dropRow = (a: AvatarAction, i: number | string) => {
     if (a.variant === "admin") return (
-      <button key={i} onClick={() => closeThen(a.onClick)}
-        style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 4px", background: "none", border: "none", color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer", transition: "opacity 0.15s" }}
-        onMouseEnter={e => e.currentTarget.style.opacity = "0.75"} onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
+      <button key={i} onClick={() => closeThen(a.onClick)} className="hover-text"
+        style={{ "--text-rest": "var(--text2)", display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 4px", background: "none", border: "none", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer" }}>
         <span style={{ width: 22, height: 22, borderRadius: 7, background: "rgba(var(--admin-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>
           <Icon name={a.icon} size={13} color="var(--admin)" />
         </span> {a.label}
       </button>
     );
     if (a.variant === "danger") return (
-      <button key={i} onClick={() => closeThen(a.onClick)}
-        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(224,82,82,0.10)", border: "1px solid rgba(224,82,82,0.25)", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.15s" }}
-        onMouseEnter={e => { e.currentTarget.style.background = "rgba(224,82,82,0.18)"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "rgba(224,82,82,0.10)"; }}>
+      <button key={i} onClick={() => closeThen(a.onClick)} className="hover-danger"
+        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", marginTop: 4, borderRadius: 11, background: "rgba(var(--red-rgb),0.10)", border: "1px solid rgba(var(--red-rgb),0.25)", color: "var(--red)", fontFamily: "var(--ff-body)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
         <Icon name={a.icon} size={16} color="var(--red)" /> {a.label}
       </button>
     );
     if (a.href) return (
-      <a key={i} href={a.href} onClick={() => closeThen()} style={dropDefault} onMouseEnter={dropIn} onMouseLeave={dropOut}>
+      <a key={i} href={a.href} onClick={() => closeThen()} className="hover-text" style={dropDefault}>
         <Icon name={a.icon} size={13} color="currentColor" /> {a.label}
       </a>
     );
     return (
-      <button key={i} onClick={() => a.keepsOpen ? a.onClick?.() : closeThen(a.onClick)} style={dropDefault} onMouseEnter={dropIn} onMouseLeave={dropOut}>
+      <button key={i} onClick={() => a.keepsOpen ? a.onClick?.() : closeThen(a.onClick)} className="hover-text" style={dropDefault}>
         <Icon name={a.icon} size={13} color="currentColor" /> {a.label}
       </button>
     );

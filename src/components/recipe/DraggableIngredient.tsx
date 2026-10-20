@@ -48,7 +48,6 @@ function DraggableIngredientBase({
   ingredientDB, recipes, autoFocus, isDropTarget = false,
   onRawChange, onUpdateAmount, onRemove, onMove, onTargetChange, onEnter, onBackspaceEmpty, onCutChange,
 }: DraggableIngredientProps) {
-  const [trashHover, setTrashHover] = useState(false);
   const [showMatch, setShowMatch] = useState(false);
   const [showCut, setShowCut] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -68,8 +67,8 @@ function DraggableIngredientBase({
   );
 
   const trashBtn = (
-    <button onClick={() => onRemove(ing.id)} onMouseEnter={() => setTrashHover(true)} onMouseLeave={() => setTrashHover(false)}
-      style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", background: trashHover ? "rgba(224,82,82,0.14)" : "transparent", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "background 0.15s" }}>
+    <button onClick={() => onRemove(ing.id)} className="hover-danger"
+      style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", background: "transparent", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
       <Icon name="trash" size={15} color="var(--red)" />
     </button>
   );

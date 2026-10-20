@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Icon } from "./Icon.jsx";
 
 interface ArrowBtnProps {
@@ -10,11 +9,9 @@ interface ArrowBtnProps {
 // Flèche ronde (monter/descendre) : fond qui n'apparaît qu'au survol (ghost),
 // chevron SVG net. Désactivée aux extrémités.
 function ArrowBtn({ dir, disabled, onClick }: ArrowBtnProps) {
-  const [hover, setHover] = useState(false);
   return (
-    <button type="button" onClick={onClick} disabled={disabled}
-      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-      style={{ width: 26, height: 26, borderRadius: "50%", border: "none", display: "grid", placeItems: "center", cursor: disabled ? "default" : "pointer", background: !disabled && hover ? "var(--surface2)" : "transparent", opacity: disabled ? 0.3 : 1, transition: "background 0.15s" }}>
+    <button type="button" onClick={onClick} disabled={disabled} className={disabled ? undefined : "hover-neutral"}
+      style={{ width: 26, height: 26, borderRadius: "50%", border: "none", display: "grid", placeItems: "center", cursor: disabled ? "default" : "pointer", background: "transparent", opacity: disabled ? 0.3 : 1 }}>
       <Icon name={dir === "up" ? "chevronUp" : "chevronDown"} size={15} color="var(--text2)" />
     </button>
   );

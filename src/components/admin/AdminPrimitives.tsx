@@ -3,7 +3,7 @@ import { Icon } from "../ui/Icon.jsx";
 
 // Bouton rond d'action (modifier / supprimer) des cartes de la console : le survol
 // desktop vient des classes `.icon-btn-soft` / `.icon-btn-danger` (global.css).
-const ROUND_ICON_BTN: CSSProperties = { width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "transparent", color: "var(--text3)", cursor: "pointer" };
+const ROUND_ICON_BTN: CSSProperties = { width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "transparent", cursor: "pointer" };
 
 /**
  * Repli animé dans les DEUX sens (ouverture ET fermeture) sans mesurer la

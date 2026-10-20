@@ -1,0 +1,151 @@
+/* ── Système de survol unifié ─────────────────────────────────────────────────
+   Une poignée d'INTENTIONS, jamais une recette par composant :
+   - neutre  (`.hover-neutral`) : rangées, ghost, boutons-icônes, pastilles neutres.
+   - teinté  (`.hover-tint`)    : élément déjà teinté ; le survol renforce SA couleur
+                                  (`--tint`, posée sur l'élément, accent par défaut).
+   - danger  (`.hover-danger`)  : action destructive.
+   - foncé   (`.hover-deepen`)  : CTA plein et bouton posé sur photo (voile noir).
+   - carte   (`.hover-card`)    : carte indépendamment actionnable (élévation + liseré).
+   - texte   (`.hover-text`)    : libellé discret qui s'affirme ; couleur de repos
+                                  `--text-rest` (text3 par défaut), jamais en inline.
+   Modificateur liseré (`.hover-ring`) : la bordure s'affirme en plus du voile.
+
+   Un composant stylé par classe CSS s'inscrit dans la liste du voile (sa classe de
+   base), puis dans celle de sa teinte, éventuellement raffinée par un état
+   (`.filter-chip[data-on]`) ; un élément stylé en inline porte la classe
+   d'intention. Le voile est un pseudo-élément
+   translucide glissé sous le contenu : il marche sur tout fond (inline compris),
+   dans les deux thèmes, sans toucher aux ombres ni aux transitions du composant.
+   Une seule bascule, `--veil-on` (0/1), le pilote : posée par tout `:hover` (pointeur
+   fin) ou `:focus-visible`, remise à 0 sur chaque membre pour qu'un survol d'ancêtre
+   ne l'allume pas par héritage. Garde-fou : src/lib/ui/__tests__/hoverRules.test.ts. */
+
+:root {
+  --hover-dur: .16s;
+  --hover-ease: cubic-bezier(.2, .7, .3, 1);
+  --hover-veil-neutral: 6%;
+  --hover-veil-tinted: 12%;
+  --hover-veil-deepen: 14%;
+  --hover-ring: var(--text3);
+  /* Ombre chaude (brun torréfié) commune aux cartes et bocaux : une seule teinte d'ombre. */
+  --shadow-rgb: 45, 32, 18;
+  --card-shadow-rest: 0 2px 12px rgba(0, 0, 0, .07);
+  --card-shadow-hover: 0 10px 26px -12px rgba(var(--shadow-rgb), .32);
+}
+
+/* ── Membres du voile (toutes intentions confondues ; neutre par défaut) ───── */
+:where(
+  .hover-neutral, .hover-tint, .hover-danger, .hover-deepen,
+  /* neutre */
+  .ut-pill-clickable, .fiche-hdr-btn, .btn-ghost, .menu-row, .hh-calm-tile,
+  .cook-close-btn, .editor-tab:not(.active), .complete-row, .import-back,
+  .desktop-nav-item, .icon-btn-soft, .action-dock-ghost, .action-dock-close,
+  .auth__theme, .auth__google, .tech-confuse, .sheet-close-btn,
+  .step-link-pill, .step-remove-pill, .classement-pill, .filter-chip, .empty-clear-link, .notif-row--nav, .notif-more,
+  .toolbar-pill:not([data-active="1"]), .editor-add, .legal-row, .field-picker, .dash-card,
+  .yaml-drop:not([data-over]), .photo-drop:not([data-busy]), .load-more:not([aria-busy="true"]),
+  .ciq-open, .section-cut-cancel, .imp-pdfcard .rm, .nr-strip button, .lp-theme, .lp-next,
+  .btn-manage, .timer-btn, .search-clear-btn, .profile-page button,
+  /* teinté */
+  .stepper-btn, .save-carnet-btn, .timer-btn-accent, .guide-row, .guide-next, .ing-hover,
+  .spotlight-explore, .match-dot, .day-intake-pill, .auth__back, .cook-step-link, .cook-timer-btn,
+  .tech-more, .convert-row, .convert-reset, .imp-creator, .account-group.is-special .menu-row,
+  /* danger */
+  .menu-row-danger, .account-group.is-danger .menu-row, .list-del-btn, .timer-btn-stop,
+  .btn-danger, .icon-btn-danger, .mp-remove-btn,
+  /* foncé */
+  .btn-primary, .action-dock-primary, .fab-toggle, .lp-cta, .nr-link__paste, .hero-back,
+  .img-overlay-btn, .recipe-hero-desktop button:not(.menu-row)
+) {
+  --veil-on: 0;
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: color-mix(in srgb, var(--veil-color, var(--text)) var(--veil-max, var(--hover-veil-neutral)), transparent);
+    opacity: var(--veil-on);
+    transition: opacity var(--hover-dur) var(--hover-ease);
+  }
+}
+
+/* ── Teintes par intention (ordre = priorité : la dernière qui matche gagne) ── */
+:where(
+  .hover-tint, .stepper-btn, .save-carnet-btn, .timer-btn-accent, .guide-row, .guide-next,
+  .ing-hover, .spotlight-explore, .match-dot, .day-intake-pill, .auth__back,
+  .step-link-pill[data-active], .classement-pill[data-active], .filter-chip[data-on],
+  .cook-step-link, .cook-timer-btn, .tech-more, .convert-row, .convert-reset, .imp-creator,
+  .account-group.is-special .menu-row
+) {
+  --veil-color: var(--tint, var(--accent));
+  --veil-max: var(--hover-veil-tinted);
+  --ring-color: color-mix(in srgb, var(--tint, var(--accent)) 55%, transparent);
+}
+:where(.guide-next) { --tint: var(--guide-accent); }
+:where(.spotlight-explore, .cook-timer-btn) { --tint: var(--spice); }
+:where(.match-dot) { --tint: var(--dot-fg); }
+:where(.day-intake-pill) { --tint: var(--pill-fg); }
+:where(.filter-chip[data-on]) { --tint: var(--chip-color); }
+:where(.tech-more) { --tint: var(--tech-accent); }
+:where(.account-group.is-special .menu-row) { --tint: var(--admin); }
+
+:where(
+  .hover-danger, .menu-row-danger, .account-group.is-danger .menu-row, .list-del-btn,
+  .timer-btn-stop, .btn-danger, .icon-btn-danger, .mp-remove-btn
+) {
+  --veil-color: var(--red);
+  --veil-max: var(--hover-veil-tinted);
+  --ring-color: rgba(var(--red-rgb), .5);
+}
+
+:where(
+  .hover-deepen, .btn-primary, .action-dock-primary, .fab-toggle, .lp-cta, .nr-link__paste,
+  .hero-back, .img-overlay-btn, .recipe-hero-desktop button:not(.menu-row)
+) {
+  --veil-color: #000;
+  --veil-max: var(--hover-veil-deepen);
+}
+
+/* ── Liseré : outline superposé à une bordure de 1px (cohabite avec les bordures
+   inline). Spécificité nulle : un `:focus-visible` posé ailleurs garde la main. ── */
+:where(
+  .hover-ring, .ut-pill-clickable, .fiche-hdr-btn, .btn-ghost, .timer-btn, .complete-row,
+  .toolbar-pill:not([data-active="1"]), .editor-add, .step-link-pill, .classement-pill,
+  .filter-chip, .yaml-drop:not([data-over]), .field-picker, .lp-next, .guide-row, .guide-next,
+  .ing-hover, .spotlight-explore, .save-carnet-btn, .convert-reset, .btn-danger, .auth__theme
+) {
+  outline: 1px solid color-mix(in srgb, var(--ring-color, var(--hover-ring)) calc(var(--veil-on, 0) * 100%), transparent);
+  outline-offset: -1px;
+}
+
+/* ── Texte ── */
+:where(.hover-text) {
+  --veil-on: 0;
+  color: color-mix(in srgb, var(--text) calc(var(--veil-on) * 100%), var(--text-rest, var(--text3)));
+  transition: color var(--hover-dur) var(--hover-ease);
+}
+
+/* ── Carte ── */
+:where(.hover-card) {
+  box-shadow: var(--card-shadow-rest);
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+  transition: box-shadow var(--hover-dur) var(--hover-ease), outline-color var(--hover-dur) var(--hover-ease);
+}
+
+/* ── Bascules ── */
+/* Pointeur fin uniquement : au tactile, un survol synthétisé au tap resterait collé. */
+@media (hover: hover) and (pointer: fine) {
+  :hover:not(:disabled) { --veil-on: 1; }
+  .hover-card:hover {
+    box-shadow: var(--card-shadow-hover);
+    outline-color: var(--tint, var(--hover-ring));
+  }
+}
+/* Parité clavier : le focus visible reçoit le même voile que le survol. */
+:focus-visible { --veil-on: 1; }

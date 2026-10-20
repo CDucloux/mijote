@@ -61,6 +61,24 @@ export default defineConfig([
     },
   },
   {
+    // Survol : jamais piloté en JS (un mouseenter synthétisé au tap reste collé au
+    // tactile, et le style muté échappe au système). Passer par les intentions de
+    // src/styles/interactions.css (`hover-neutral`, `hover-tint`…).
+    files: ['src/**/*.{jsx,tsx}'],
+    rules: {
+      'no-restricted-syntax': ['error',
+        {
+          selector: ":matches(JSXAttribute[name.name=/^onMouse(Enter|Leave|Over|Out)$/], Property[key.name=/^onMouse(Enter|Leave|Over|Out)$/]) AssignmentExpression[left.object.property.name='style']",
+          message: 'Survol en JS interdit : utiliser une classe d\'intention de src/styles/interactions.css.',
+        },
+        {
+          selector: 'JSXAttribute[name.name=/^onMouse(Enter|Leave)$/] CallExpression[callee.name=/^set\\w*Hover$/]',
+          message: 'État de survol interdit : utiliser une classe d\'intention de src/styles/interactions.css.',
+        },
+      ],
+    },
+  },
+  {
     // Cloud Functions : code CommonJS (require/module/exports) exécuté par Node,
     // pas le navigateur, sinon require/module/Buffer/__dirname sortent en no-undef.
     files: ['functions/**/*.js'],

@@ -29,6 +29,3 @@
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
-@media (hover: hover) and (pointer: fine) {
-  .load-more:hover:not([aria-busy="true"]) { background: var(--surface3); }
-}
