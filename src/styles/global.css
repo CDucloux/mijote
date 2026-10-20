@@ -2705,12 +2705,11 @@ html.light .sheet-sticky-head::after {
    Chaque thème porte sa propre couleur d'accent (--guide-accent, posée inline
    depuis le front-matter), à la manière des slides d'onboarding. La hiérarchie
    naît de la typo et de repères colorés discrets (marqueur de section, badges
-   d'étape, filet de callout), jamais d'un aplat criard. */
-/* Décline la couleur du thème en teintes douces (fond, bordure) via color-mix :
+   d'étape, fond teinté des encarts), jamais d'un aplat criard ni d'une bordure. */
+/* Décline la couleur du thème en teinte douce (fond) via color-mix :
    marche aussi bien pour un hex de front-matter que pour var(--accent). */
 .guide-doc {
   --guide-accent-soft: color-mix(in srgb, var(--guide-accent) 11%, transparent);
-  --guide-accent-border: color-mix(in srgb, var(--guide-accent) 30%, transparent);
 }
 
 .guide-hero {
@@ -2720,7 +2719,6 @@ html.light .sheet-sticky-head::after {
   padding: 16px 18px;
   border-radius: 18px;
   background: var(--guide-accent-soft);
-  border: 1px solid var(--guide-accent-border);
   margin-bottom: 24px;
 }
 
@@ -2732,7 +2730,6 @@ html.light .sheet-sticky-head::after {
   background: var(--guide-accent);
   display: grid;
   place-items: center;
-  box-shadow: 0 8px 20px -10px var(--guide-accent);
 }
 
 .guide-hero-lead {
@@ -2856,8 +2853,7 @@ html.light .sheet-sticky-head::after {
   margin: 16px 0;
   padding: 13px 16px;
   background: var(--guide-accent-soft);
-  border-left: 3px solid var(--guide-accent);
-  border-radius: 0 13px 13px 0;
+  border-radius: 13px;
   color: var(--text2);
   font-size: 13.5px;
 }
@@ -2877,7 +2873,6 @@ html.light .sheet-sticky-head::after {
   padding: 1.5px 6px;
   border-radius: 7px;
   background: var(--surface2);
-  border: 1px solid var(--border);
   color: var(--text);
 }
 
@@ -2893,7 +2888,6 @@ html.light .sheet-sticky-head::after {
   border-collapse: collapse;
   margin: 14px 0 18px;
   font-size: 13px;
-  border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
 }
