@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.71.1-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.72.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -177,7 +177,7 @@ toujours avec vous.
 | Backend | Firebase 12 (Auth, Firestore, Storage) |
 | Serveur | Cloud Functions v2 (Node 22, `europe-west1`) |
 | IA | Claude (Anthropic) pour l'import de recettes : Haiku 5.5 pour le texte (lien, texte collé, PDF), Sonnet 5 pour la vision (photos), effort bas sur toutes les extractions |
-| Tests | Vitest 4 (1282 tests unitaires sur les libs et hooks critiques) |
+| Tests | Vitest 4 (1484 tests unitaires sur les libs et hooks critiques) |
 | Observabilité | Sentry (erreurs de prod uniquement, région UE, source maps au build) |
 | CI | GitHub Actions (test + build sur chaque push) |
 | Qualité | ESLint 10 |
@@ -323,7 +323,7 @@ src/
 ├── content/         # Contenu Markdown (documents légaux)
 ├── components/      # Composants de présentation réutilisables
 ├── pages/           # Écrans (Home, MealPlan, Shopping, Recipes, Profile…)
-└── styles/          # global.css
+└── styles/          # global.css + interactions.css (registre unique du survol desktop)
 
 api/                 # Fonctions serverless Vercel (aperçu Open Graph des liens partagés)
 functions/           # Cloud Functions (import IA, paiement Stripe), extraction pure testée à part
