@@ -52,9 +52,9 @@ export function MealPlanHeader({ weekDays, isPlus, canUndo, onUndo, onGenerate, 
 /** Accès à la session batch, affiché quand la semaine contient au moins un plat. */
 export function BatchSessionBanner({ isPlus, onOpen }: { isPlus: boolean; onOpen: () => void }) {
   return (
-    <button onClick={onOpen} className="pressable hover-neutral hover-ring"
+    <button onClick={onOpen} className="pressable float-card"
       style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
-        padding: "12px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        padding: "12px 14px", borderRadius: 14 }}>
       <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--ok-rgb),0.18)" }}>
         <Icon name="fire" size={19} color="var(--ok)" />
       </span>
