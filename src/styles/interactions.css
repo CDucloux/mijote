@@ -39,6 +39,10 @@
 html.light, .light {
   --hover-veil-ink: #000;
   --hover-veil-neutral: 8%;
+  /* Pastilles flottantes : sur le blanc posé sur crème, un gris pur se confond avec
+     le fond ; un gris à peine verdi (gousse très assombrie) les démarque. */
+  --pill-veil-ink: color-mix(in srgb, var(--accent) 35%, #000);
+  --pill-veil-max: 10%;
 }
 
 /* ── Membres du voile (toutes intentions confondues ; neutre par défaut) ───── */
@@ -83,6 +87,11 @@ html.light, .light {
 }
 
 /* ── Teintes par intention (ordre = priorité : la dernière qui matche gagne) ── */
+/* Pastilles flottantes : encre propre en clair (sinon le voile neutre). */
+:where(.float-pill, .toolbar-pill:not([data-active="1"]), .load-more:not([aria-busy="true"])) {
+  --veil-color: var(--pill-veil-ink, var(--hover-veil-ink));
+  --veil-max: var(--pill-veil-max, var(--hover-veil-neutral));
+}
 :where(
   .hover-tint, .stepper-btn, .save-carnet-btn, .timer-btn-accent, .guide-row, .guide-next,
   .ing-hover, .spotlight-explore, .match-dot, .day-intake-pill, .auth__back,
