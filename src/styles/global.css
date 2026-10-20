@@ -632,6 +632,8 @@ html.light select.field-input {
   :is(.float-pill, .float-card, .toolbar-pill, .sort-control, .load-more):hover {
     box-shadow: var(--float-inset, 0 0 transparent), var(--float-shadow-hover);
   }
+  /* Le libellé fonce (sans effet sur une couleur posée en inline : états actifs/teintés). */
+  .float-pill:hover { color: var(--text); }
   .sort-control .toolbar-pill:hover { box-shadow: none; }
 }
 
