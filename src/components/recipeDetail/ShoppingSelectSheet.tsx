@@ -43,8 +43,8 @@ export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, i
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0 }}>
         <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{selectedIngs.length} / {flatIngs.length} sélectionné{selectedIngs.length > 1 ? "s" : ""}</span>
         <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={() => setSelectedIngs(flatIngs.map(fi => fi._fid))} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "rgba(var(--accent-rgb),0.10)", border: "1px solid rgba(var(--accent-rgb),0.28)", color: "var(--accent)" }}>Tout cocher</button>
-          <button onClick={() => setSelectedIngs([])} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text3)" }}>Tout décocher</button>
+          <button onClick={() => setSelectedIngs(flatIngs.map(fi => fi._fid))} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "rgba(var(--accent-rgb),0.10)", color: "var(--accent)" }}>Tout cocher</button>
+          <button onClick={() => setSelectedIngs([])} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "var(--surface2)", color: "var(--text3)" }}>Tout décocher</button>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 7, overflowY: "auto", WebkitOverflowScrolling: "touch", flex: 1, minHeight: 0, marginBottom: 16 }}>

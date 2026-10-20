@@ -51,16 +51,15 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
         const items = l.items ?? [];
         const lChecked = items.filter(i => i.checked).length;
         return (
-          <div key={l.id} role="button" tabIndex={0} className={`slide-up ripple${isActive ? "" : " hover-neutral hover-ring"}`}
+          <div key={l.id} role="button" tabIndex={0} className="slide-up ripple float-pill"
             onClick={() => { if (wasLongPress()) return; onSelect(l.id); }}
             onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(l.id); } }}
             onPointerDown={e => startLongPress(e, () => onOpenMenu(l))} onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
             onContextMenu={e => { e.preventDefault(); onOpenMenu(l); }}
             style={{
               flexShrink: 0, display: "flex", alignItems: "center", gap: 6, height: 34, boxSizing: "border-box", padding: isActive ? "0 6px 0 12px" : "0 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, cursor: "pointer", userSelect: "none",
-              background: isActive ? "var(--accent)" : "var(--surface)", animationDelay: `${idx * 0.05}s`,
+              background: isActive ? "var(--accent)" : undefined, animationDelay: `${idx * 0.05}s`,
               color: isActive ? "#fff" : "var(--text2)",
-              border: `1px solid ${isActive ? "transparent" : "var(--border)"}`
             }}>
             <Icon name={l.type === "recipe" ? "book" : "shopping"} size={12} color={isActive ? "#fff" : "var(--text3)"} />
             {l.name}

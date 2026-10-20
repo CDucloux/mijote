@@ -22,7 +22,7 @@ export function ErrorModal({ title = "Une erreur est survenue", message, code, o
   return createPortal(
     <div onClick={() => beginClose()} className={`alert-backdrop${closing ? " is-closing" : ""}`} style={{ zIndex: 800 }}>
       <div ref={surfaceRef} onClick={e => e.stopPropagation()} className={`alert-dialog${closing ? " is-closing" : ""}`} role="alertdialog" aria-label={title} onAnimationEnd={onAnimationEnd}>
-        <div style={{ width: 56, height: 56, borderRadius: "50%", margin: "0 auto 16px", background: "rgba(224,82,82,0.12)", border: "1px solid rgba(224,82,82,0.3)", display: "grid", placeItems: "center" }}>
+        <div style={{ width: 56, height: 56, borderRadius: "50%", margin: "0 auto 16px", background: "rgba(224,82,82,0.12)", display: "grid", placeItems: "center" }}>
           <Icon name="warning" size={28} color="var(--red)" />
         </div>
         <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 8px", textAlign: "center" }}>{title}</h3>

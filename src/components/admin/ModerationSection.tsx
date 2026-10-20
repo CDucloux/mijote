@@ -33,7 +33,7 @@ function ReportRow({ report, first, busy, onDismiss }: { report: StoredReport; f
         {report.reporterEmail && <div style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Signalé par {report.reporterEmail}</div>}
       </div>
       <button onClick={onDismiss} disabled={busy} title="Rejeter ce signalement" className="pressable"
-        style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, height: 28, padding: "0 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 600, background: "var(--surface2)", color: "var(--text3)", border: "1px solid var(--border)", cursor: "pointer", opacity: busy ? 0.5 : 1 }}>
+        style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, height: 28, padding: "0 10px", borderRadius: 999, fontSize: 11.5, fontWeight: 600, background: "var(--surface2)", color: "var(--text3)", cursor: "pointer", opacity: busy ? 0.5 : 1 }}>
         <Icon name="close" size={12} color="var(--text3)" /> Rejeter
       </button>
     </div>
@@ -65,7 +65,7 @@ export function ModerationSection({ reports, busy, dismissReport, deleteReported
               <div style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>{g.items.length} signalement{g.items.length > 1 ? "s" : ""}</div>
             </div>
             <button onClick={() => navigate(`${DISCOVER_PREFIX}${encodeURIComponent(g.pubId)}`)} className="pressable"
-              style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, height: 32, padding: "0 12px", borderRadius: 999, fontSize: 12, fontWeight: 600, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)", cursor: "pointer" }}>
+              style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, height: 32, padding: "0 12px", borderRadius: 999, fontSize: 12, fontWeight: 600, background: "var(--surface2)", color: "var(--text2)", cursor: "pointer" }}>
               <Icon name="forward" size={13} color="var(--text2)" /> Ouvrir
             </button>
           </div>

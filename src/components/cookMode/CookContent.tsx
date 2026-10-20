@@ -259,7 +259,7 @@ export function CookContent(props: CookContentProps) {
                 const gathered = checkedUtIds.has(u.id);
                 return (
                   <button key={u.id} type="button" onClick={() => toggleUtChecked(u.id)} className="pressable"
-                    style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: gathered ? "rgba(var(--ok-rgb),0.12)" : "var(--surface2)", border: `1px solid ${gathered ? "rgba(var(--ok-rgb),0.35)" : "transparent"}`, borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: gathered ? "var(--ok)" : "var(--text)", cursor: "pointer", textDecoration: gathered ? "line-through" : "none" }}>
+                    style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: gathered ? "rgba(var(--ok-rgb),0.12)" : "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: gathered ? "var(--ok)" : "var(--text)", cursor: "pointer", textDecoration: gathered ? "line-through" : "none" }}>
                     <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0, opacity: gathered ? 0.6 : 1 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" }} /></div>
                     {gathered && <Icon name="check" size={11} color="var(--ok)" />}
                     {u.name}

@@ -51,6 +51,12 @@
   --text: #eef1e7;
   --text2: #a7ac9c;
   --text3: #6b7061;
+  /* Éléments flottants sans bordure (recherche, pastilles, cartes) : en sombre, le
+     `--surface` d'origine, l'écart avec le fond suffit sans monter d'un cran. */
+  --shadow-rgb: 45, 32, 18;
+  --float-surface: var(--surface);
+  --float-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  --float-shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.3);
   --green: #46ab5f;          /* vert sémantique : saisonnalité, difficulté, vegan, santé */
   --green-rgb: 70, 171, 95;
   --ok: #1f9e8f;             /* sarcelle : actions validées / cochées / terminé */
@@ -132,6 +138,11 @@ html.light,
   --text: #23281d;
   --text2: #565b4c;
   --text3: #838872;
+  /* En clair, le blanc sur crème détache déjà : ombre chaude à peine posée. */
+  --float-surface: var(--surface);
+  --float-shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.045), 0 1px 5px rgba(var(--shadow-rgb), 0.03);
+  /* Au survol, le contour se raffermit pendant que le voile grise le fond. */
+  --float-shadow-hover: 0 1px 3px rgba(var(--shadow-rgb), 0.09), 0 3px 10px rgba(var(--shadow-rgb), 0.07);
   /* Étagères du Stock : matériaux (clair). Chêne clair, mur plâtre chaud, fer, papier. */
   --oak-hi: #ecd3ac;
   --oak-top: #dcbb8d;
@@ -176,13 +187,13 @@ html.light .ut-pill-desktop {
 }
 .foyer-affordance { transition: box-shadow .16s ease; }
 
-/* Sélecteur « À suivre / Découvrir » de l'accueil. En thème clair, le conteneur
-   passe en blanc (plus net que le gris-vert surface2) et le segment actif est
-   porté par une pastille surface2 ; le thème sombre garde sa hiérarchie de
-   surfaces (conteneur surface2, pastille active sur le fond de page). */
-.subview-pill { background: var(--bg); }
+/* Sélecteur « À suivre / Découvrir » de l'accueil. En clair, rail surface2 et
+   pastille active blanche. En sombre, le rail a la couleur du fond de page : seule
+   exception au sans-bordure, un liseré (ombre interne, sans décaler la mise en
+   page) dessine le contour du sélecteur. */
+.subview-pill { background: var(--bg); box-shadow: inset 0 0 0 1px var(--border); }
 .subview-thumb { background: var(--surface2); }
-html.light .subview-pill { background: var(--surface2); }
+html.light .subview-pill { background: var(--surface2); box-shadow: none; }
 html.light .subview-thumb { background: #fff; }
 
 /* Empty state d'accueil (« Ta cuisine démarre ici ») : mobile en colonne, le rail
@@ -204,10 +215,9 @@ html.light .field-input {
   background-color: #e9ebdf;
 }
 
-/* Barre de recherche recettes : blanc franc en clair (le halo suffit à la
-   détacher du fond). En sombre, elle garde le --surface défini plus bas. */
+/* Barre de recherche : surface flottante (bat le fond de `html.light .field-input`). */
 html.light .recipe-search {
-  background: #ffffff;
+  background: var(--float-surface);
 }
 
 html.light select option {
@@ -498,7 +508,7 @@ select {
   font-weight: 500;
   background: var(--surface2);
   color: var(--text2);
-  border: 1px solid var(--border);
+  border: none;
 }
 
 .tag.accent {
@@ -574,17 +584,29 @@ html.light select.field-input {
   border-color: transparent;
 }
 
-/* Barre de recherche recettes : pilule blanche + halo orange au focus */
+/* Barre de recherche : pilule flottante sans bordure (surface + ombre légère),
+   halo accent au focus, seul contour qui traduit l'état de saisie. */
 .recipe-search {
-  background: var(--surface);
+  background: var(--float-surface);
+  border-color: transparent;
   border-radius: 999px;
   padding-top: 13px;
   padding-bottom: 13px;
   font-size: 15px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: var(--float-shadow);
+  transition: box-shadow 0.18s ease;
 }
 .recipe-search:focus {
-  border-color: var(--accent);
+  border-color: transparent;
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16), var(--float-shadow);
+}
+/* Variante remplie, pour les feuilles (fond déjà en surface) : un champ blanc sans
+   bordure s'y dissoudrait, c'est le cran de surface qui le pose. */
+.recipe-search.recipe-search--filled {
+  background: var(--surface2);
+  box-shadow: none;
+}
+.recipe-search.recipe-search--filled:focus {
   box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16);
 }
 /* `type="search"` : on masque la croix native (WebKit), on a notre propre
@@ -595,7 +617,33 @@ html.light select.field-input {
   appearance: none;
 }
 
-/* Pilules de la barre d'outils recettes (Filtres / Tri) */
+/* Éléments flottants sans bordure, posés sur le fond de page : surface + ombre à
+   peine posée, qui s'affirme au survol pendant que le voile grise le fond. L'état
+   actif se lit à la teinte (fond inline). `.float-pill` (pastilles) et `.float-card`
+   (cartes actionnables) pour le JSX, partagés avec la barre d'outils (Filtres / Tri)
+   et « Charger plus ». `--float-inset` ajoute un liseré interne (bande du foyer). */
+.float-pill, .float-card, .toolbar-pill, .sort-control, .load-more {
+  background: var(--float-surface);
+  border: none;
+}
+/* Ombre flottante, y compris pour les pastilles de classe posées sur le fond de page
+   (éditeur, connexion). */
+.float-pill, .float-card, .toolbar-pill, .sort-control, .load-more,
+.classement-pill, .editor-add, .auth__theme {
+  box-shadow: var(--float-inset, 0 0 transparent), var(--float-shadow);
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.18s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  :is(.float-pill, .float-card, .toolbar-pill, .sort-control, .load-more,
+      .classement-pill, .editor-add, .auth__theme):hover {
+    box-shadow: var(--float-inset, 0 0 transparent), var(--float-shadow-hover);
+  }
+  /* Le libellé fonce (sans effet sur une couleur posée en inline : états actifs/teintés). */
+  .float-pill:hover { color: var(--text); }
+  .sort-control .toolbar-pill:hover { box-shadow: none; }
+}
+
+/* Pilules de la barre d'outils (Filtres / Tri). */
 .toolbar-pill {
   flex-shrink: 0;
   display: inline-flex;
@@ -606,24 +654,17 @@ html.light select.field-input {
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  background: var(--surface);
   color: var(--text2);
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
   /* Accueille l'onde tactile (.ripple-ink) et la borne à la pilule. */
   position: relative;
   overflow: hidden;
 }
-/* Survol : même langage neutre que le reste (dashboard admin, zone de dépose) :
-   fond voilé d'un cran, bordure et texte qui s'affirment, aucune teinte. */
 @media (hover: hover) and (pointer: fine) {
   .toolbar-pill:not([data-active="1"]):hover { color: var(--text); }
 }
 .toolbar-pill[data-active="1"] {
   background: rgba(var(--accent-rgb), 0.14);
   color: var(--accent);
-  border-color: rgba(var(--accent-rgb), 0.5);
 }
 
 /* « Charger plus de recettes » : pilule surface, même hover que les pills
@@ -633,7 +674,7 @@ html.light select.field-input {
    survol (comme les pills de filtres), et flèche de retour qui glisse (comme les
    écrans d'import). */
 .fiche-hdr-btn {
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: background 0.15s ease, box-shadow 0.18s ease;
 }
 .fiche-hdr-back svg {
   transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -647,11 +688,18 @@ html.light select.field-input {
   transform: translateX(-5px);
 }
 
-/* Contrôle de tri : critère (défilant) + flèche de sens, accolés */
+/* Contrôle de tri : critère (défilant) + flèche de sens, une seule pilule. Le fond
+   et l'ombre sont portés par le conteneur (deux ombres accolées dessineraient une
+   couture) ; chaque moitié garde son propre voile au survol. */
 .sort-control {
   display: inline-flex;
   align-items: stretch;
   flex-shrink: 0;
+  border-radius: 999px;
+}
+.sort-control .toolbar-pill {
+  background: transparent;
+  box-shadow: none;
 }
 .sort-control .sort-cycle {
   border-top-right-radius: 0;
@@ -660,16 +708,12 @@ html.light select.field-input {
 .sort-control .sort-dir {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
-  border-left: none;
   padding-left: 11px;
   padding-right: 12px;
   color: var(--accent);
 }
-/* Les deux moitiés partagent leur bordure : survoler l'une affirme le contour
-   des deux (sinon la couture se dessine en deux tons), seul le fond suit la
-   moitié visée. La flèche garde son accent : c'est l'état du tri, pas le survol. */
+/* La flèche garde son accent au survol : c'est l'état du tri, pas le survol. */
 @media (hover: hover) and (pointer: fine) {
-  .sort-control:hover .toolbar-pill { border-color: var(--text3); }
   .sort-control .sort-dir:hover { color: var(--accent); }
 }
 
@@ -759,7 +803,7 @@ html.light select.field-input {
 }
 
 .btn-ghost {
-  border: 1px solid var(--border);
+  border: none;
   color: var(--text2);
   background: var(--surface2);
 }
@@ -802,11 +846,16 @@ html.light select.field-input {
   box-shadow: none;
 }
 
-/* Variante « fond surface » d'une pastille fantôme : fond blanc en thème clair
-   (var(--surface)) plutôt que le gris-vert de surface2, pour les CTA secondaires
-   des états vides. Survol : même langage que les pilules Filtres / Tri (fond
-   voilé d'un cran, bordure et texte qui s'affirment, aucune teinte). */
-.btn-ghost.btn-ghost-plain { background: var(--surface); }
+/* Variante flottante d'une pastille fantôme, pour les CTA secondaires des états
+   vides : même langage que les pastilles flottantes (sans bordure, ombre légère qui
+   s'affirme au survol). */
+.btn-ghost.btn-ghost-plain {
+  background: var(--float-surface);
+  box-shadow: var(--float-shadow);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-ghost.btn-ghost-plain:hover { box-shadow: var(--float-shadow-hover); }
+}
 
 /* Variante pleine SANS halo accent : pour les contextes où l'ombre colorée fait
    « tache » (ex. CTA plein écran du mode cuisine sur fond sombre). */
@@ -815,9 +864,9 @@ html.light select.field-input {
 }
 
 .btn-danger {
-  background: rgba(224, 82, 82, 0.15);
+  background: rgba(var(--red-rgb), 0.15);
   color: var(--red);
-  border: 1px solid rgba(224, 82, 82, 0.3);
+  border: none;
 }
 
 /* Bouton « Supprimer la liste » de l'état vide « Tout est acheté » : pilule rouge
@@ -1742,7 +1791,7 @@ html.light .sheet-sticky-head::after {
 .cook-timers-toggle {
   display: inline-flex; align-items: center; gap: 8px; align-self: stretch;
   padding: 9px 12px; border-radius: 999px; cursor: pointer;
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--surface); border: none;
   box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.45);
   font-size: 12.5px; font-weight: 600; color: var(--text);
   transition: border-color 0.15s ease, transform 0.1s ease;
@@ -1774,7 +1823,7 @@ html.light .sheet-sticky-head::after {
   display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
   padding: 2px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
   color: var(--accent); background: rgba(var(--accent-rgb), 0.1);
-  border: 1px solid rgba(var(--accent-rgb), 0.28);
+  border: none;
   transition: background 0.15s ease;
 }
 .cook-timer-step:active { background: rgba(var(--accent-rgb), 0.2); }
@@ -2656,12 +2705,11 @@ html.light .sheet-sticky-head::after {
    Chaque thème porte sa propre couleur d'accent (--guide-accent, posée inline
    depuis le front-matter), à la manière des slides d'onboarding. La hiérarchie
    naît de la typo et de repères colorés discrets (marqueur de section, badges
-   d'étape, filet de callout), jamais d'un aplat criard. */
-/* Décline la couleur du thème en teintes douces (fond, bordure) via color-mix :
+   d'étape, fond teinté des encarts), jamais d'un aplat criard ni d'une bordure. */
+/* Décline la couleur du thème en teinte douce (fond) via color-mix :
    marche aussi bien pour un hex de front-matter que pour var(--accent). */
 .guide-doc {
   --guide-accent-soft: color-mix(in srgb, var(--guide-accent) 11%, transparent);
-  --guide-accent-border: color-mix(in srgb, var(--guide-accent) 30%, transparent);
 }
 
 .guide-hero {
@@ -2671,7 +2719,6 @@ html.light .sheet-sticky-head::after {
   padding: 16px 18px;
   border-radius: 18px;
   background: var(--guide-accent-soft);
-  border: 1px solid var(--guide-accent-border);
   margin-bottom: 24px;
 }
 
@@ -2683,7 +2730,6 @@ html.light .sheet-sticky-head::after {
   background: var(--guide-accent);
   display: grid;
   place-items: center;
-  box-shadow: 0 8px 20px -10px var(--guide-accent);
 }
 
 .guide-hero-lead {
@@ -2807,8 +2853,7 @@ html.light .sheet-sticky-head::after {
   margin: 16px 0;
   padding: 13px 16px;
   background: var(--guide-accent-soft);
-  border-left: 3px solid var(--guide-accent);
-  border-radius: 0 13px 13px 0;
+  border-radius: 13px;
   color: var(--text2);
   font-size: 13.5px;
 }
@@ -2828,7 +2873,6 @@ html.light .sheet-sticky-head::after {
   padding: 1.5px 6px;
   border-radius: 7px;
   background: var(--surface2);
-  border: 1px solid var(--border);
   color: var(--text);
 }
 
@@ -2844,7 +2888,6 @@ html.light .sheet-sticky-head::after {
   border-collapse: collapse;
   margin: 14px 0 18px;
   font-size: 13px;
-  border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -2895,10 +2938,7 @@ html.light .sheet-sticky-head::after {
   margin-top: 28px;
   padding: 14px 16px;
   border-radius: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
   cursor: pointer;
-  transition: border-color 0.15s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2975,13 +3015,13 @@ html.light .sheet-sticky-head::after {
   gap: 8px;
   padding: 11px 12px;
   border-radius: 999px;
-  border: 1px solid var(--border);
+  border: none;
   background: var(--surface);
   color: var(--text2);
   font-weight: 600;
   font-size: 13.5px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  transition: box-shadow 0.18s ease, background-color 0.15s ease, color 0.15s ease;
 }
 /* Le « + » garde l'accent (c'est une action de création) ; le reste est neutre. */
 .editor-add > svg { color: var(--accent); }
@@ -3769,7 +3809,7 @@ html.light .sheet-sticky-head::after {
     gap: 6px;
     padding: 6px;
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: none;
     border-radius: 999px;
     box-shadow: 0 16px 42px -8px rgba(0, 0, 0, 0.28);
     transform-origin: right center;
@@ -4126,10 +4166,10 @@ html.light .sheet-sticky-head::after {
   justify-content: center;
   border-radius: 999px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: none;
   color: var(--text2);
   cursor: pointer;
-  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  transition: color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 /* Hover aligné sur celui de la landing (.lp-theme) : éclaircissement du fond, pas de
    bordure d'accent. */
@@ -4763,7 +4803,7 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
   background: var(--surface2);
   color: var(--text2);
-  border: 1px solid var(--border);
+  border: none;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .step-link-pill[data-active] {
@@ -4813,9 +4853,9 @@ html.light .sheet-sticky-head::after {
   font-weight: 600;
   background: var(--surface);
   color: var(--text2);
-  border: 1px solid var(--border);
+  border: none;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, box-shadow 0.18s ease, color 0.15s ease;
 }
 .classement-pill[data-active] {
   background: rgba(var(--accent-rgb), 0.14);
@@ -4844,7 +4884,7 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
   background: var(--surface2);
   color: var(--text2);
-  border: 1px solid var(--border);
+  border: none;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .filter-chip[data-on] {

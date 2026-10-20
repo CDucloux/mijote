@@ -250,7 +250,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
               const intake = dayIntakes.get(date);
               const d = new Date(date + "T12:00");
               return (
-                <div key={date} data-date={date} className="slide-up" style={{ background: "var(--surface)", borderRadius: 14, padding: 10, border: `1px solid ${isToday ? "rgba(var(--accent-rgb),0.5)" : "var(--border)"}`, animationDelay: `${di * 0.04}s` }}>
+                <div key={date} data-date={date} className="slide-up" style={{ background: "var(--float-surface)", boxShadow: "var(--float-shadow)", borderRadius: 14, padding: 10, animationDelay: `${di * 0.04}s` }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: isToday ? "var(--accent)" : "var(--text)" }}>

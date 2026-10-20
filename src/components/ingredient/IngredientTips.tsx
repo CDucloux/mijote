@@ -17,7 +17,7 @@ export function IngredientTipsEditor({ tips, onChange }: IngredientTipsEditorPro
     <div className="slide-up" style={{ marginTop: 24 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700 }}>Tips utiles</div>
-        <button onClick={() => onChange([...tips, { type: "prep", text: "" }])} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 600, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.28)", borderRadius: 999, padding: "5px 12px", cursor: "pointer" }}>
+        <button onClick={() => onChange([...tips, { type: "prep", text: "" }])} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 600, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.1)", borderRadius: 999, padding: "5px 12px", cursor: "pointer" }}>
           <Icon name="plus" size={13} color="var(--accent)" /> Ajouter
         </button>
       </div>

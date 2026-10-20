@@ -73,15 +73,14 @@ export function HouseholdSection() {
 
   return (
     <section style={{ marginBottom: 26 }}>
-      {/* Carte foyer : surface neutre + liseré accent à gauche (inset box-shadow,
-          épouse les coins) + perforation pointillée comme séparateur distinctif. */}
-      <button onClick={openFoyer} aria-label="Ouvrir le foyer" className="pressable ripple foyer-card"
+      {/* Carte foyer : carte flottante + liseré accent à gauche (ombre interne, épouse
+          les coins) + perforation pointillée comme séparateur distinctif. */}
+      <button onClick={openFoyer} aria-label="Ouvrir le foyer" className="pressable ripple float-card foyer-card"
         style={{
+          "--float-inset": "inset 4px 0 0 var(--accent)",
           position: "relative", width: "100%", textAlign: "left", cursor: "pointer",
           display: "flex", alignItems: "stretch", gap: 0, padding: 0,
-          borderRadius: 18, border: "1px solid var(--border)",
-          background: "var(--surface)",
-          boxShadow: "inset 4px 0 0 var(--accent), 0 4px 16px rgba(0,0,0,0.06)", overflow: "hidden",
+          borderRadius: 18, overflow: "hidden",
         }}>
         {/* Souche gauche : pictogramme (sans foyer) ou pile d'avatars (foyer actif) */}
         <span style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px 18px 16px 22px" }}>
@@ -103,7 +102,7 @@ export function HouseholdSection() {
               {!household && (
                 !isPlus
                   ? <PlusBadge />
-                  : <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em", color: "var(--accent)", background: "rgba(var(--accent-rgb),0.14)", border: "1px solid rgba(var(--accent-rgb),0.3)", borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>
+                  : <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: "0.06em", color: "var(--accent)", background: "rgba(var(--accent-rgb),0.14)", borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>
                       {hasInvite ? "Invitation" : "Nouveau"}
                     </span>
               )}

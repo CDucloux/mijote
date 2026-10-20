@@ -18,7 +18,7 @@ interface MealPlanHeaderProps {
 }
 
 const dayOf = (iso: string) => new Date(iso + "T12:00");
-const NAV_BTN = { width: 32, height: 32, borderRadius: "50%", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } as const;
+const NAV_BTN = { width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } as const;
 
 /** En-tête du planning : titre, génération/annulation et navigation de semaine. */
 export function MealPlanHeader({ weekDays, isPlus, canUndo, onUndo, onGenerate, onShiftWeek, onToday, onExport }: MealPlanHeaderProps) {
@@ -35,13 +35,13 @@ export function MealPlanHeader({ weekDays, isPlus, canUndo, onUndo, onGenerate, 
         </div>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <button onClick={() => onShiftWeek(-1)} className="pressable ripple hover-neutral hover-ring" style={NAV_BTN}><Icon name="back" size={16} /></button>
+        <button onClick={() => onShiftWeek(-1)} className="pressable ripple float-pill" style={NAV_BTN}><Icon name="back" size={16} /></button>
         <span style={{ flex: 1, textAlign: "center", fontSize: 14, fontWeight: 600 }}>
           {`${first.getDate()} – ${last.getDate()} ${MONTHS_FR[last.getMonth()]} ${last.getFullYear()}`}
         </span>
-        <button onClick={() => onShiftWeek(1)} className="pressable ripple hover-neutral hover-ring" style={NAV_BTN}><Icon name="forward" size={16} /></button>
-        <button onClick={onToday} className="pressable ripple" style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", border: "1px solid rgba(var(--accent-rgb),0.3)", flexShrink: 0 }}>Auj.</button>
-        <button onClick={onExport} className="pressable ripple hover-neutral hover-ring" title="Ajoute le planning à ton agenda" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)", flexShrink: 0 }}>
+        <button onClick={() => onShiftWeek(1)} className="pressable ripple float-pill" style={NAV_BTN}><Icon name="forward" size={16} /></button>
+        <button onClick={onToday} className="pressable ripple float-pill" style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)", flexShrink: 0 }}>Auj.</button>
+        <button onClick={onExport} className="pressable ripple float-pill" title="Ajoute le planning à ton agenda" style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, color: "var(--text2)", flexShrink: 0 }}>
           <Icon name="calendar" size={13} color="var(--text2)" /> Agenda
         </button>
       </div>
@@ -52,9 +52,9 @@ export function MealPlanHeader({ weekDays, isPlus, canUndo, onUndo, onGenerate, 
 /** Accès à la session batch, affiché quand la semaine contient au moins un plat. */
 export function BatchSessionBanner({ isPlus, onOpen }: { isPlus: boolean; onOpen: () => void }) {
   return (
-    <button onClick={onOpen} className="pressable hover-neutral hover-ring"
+    <button onClick={onOpen} className="pressable float-card"
       style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
-        padding: "12px 14px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        padding: "12px 14px", borderRadius: 14 }}>
       <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--ok-rgb),0.18)" }}>
         <Icon name="fire" size={19} color="var(--ok)" />
       </span>

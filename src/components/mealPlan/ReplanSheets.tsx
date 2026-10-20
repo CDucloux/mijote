@@ -24,11 +24,11 @@ function SheetHeader({ icon, title, subtitle }: { icon: IconName; title: string;
 function WeekNav({ days, onShift }: { days: string[]; onShift: (direction: number) => void }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-      <button onClick={() => onShift(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={15} /></button>
+      <button onClick={() => onShift(-1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="back" size={15} /></button>
       <span style={{ flex: 1, textAlign: "center", fontSize: 13.5, fontWeight: 600 }}>
         {`${new Date(days[0] + "T12:00").getDate()} – ${new Date(days[6] + "T12:00").getDate()} ${MONTHS_FR[new Date(days[6] + "T12:00").getMonth()]}`}
       </span>
-      <button onClick={() => onShift(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={15} /></button>
+      <button onClick={() => onShift(1)} style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Icon name="forward" size={15} /></button>
     </div>
   );
 }

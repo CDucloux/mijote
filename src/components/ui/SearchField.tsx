@@ -20,7 +20,7 @@ export function SearchField({ value, onChange, placeholder = "Rechercher…", au
         <Icon name="search" size={16} color="var(--text3)" />
       </span>
       <input
-        className="field-input recipe-search"
+        className="field-input recipe-search recipe-search--filled"
         type="search"
         inputMode="search"
         enterKeyHint="search"

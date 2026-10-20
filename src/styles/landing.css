@@ -1138,7 +1138,7 @@
   font-weight: 600;
   color: var(--accent);
   background: rgba(var(--accent-rgb), 0.1);
-  border: 1px solid rgba(var(--accent-rgb), 0.32);
+  border: none;
   border-radius: 999px;
   padding: 4px 10px;
 }

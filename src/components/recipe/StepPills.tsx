@@ -6,7 +6,7 @@ import { fmtQtyUnit } from "../../lib/format.js";
 // (fiche recette, mode cuisine). Les styles sont définis UNE fois ici (références
 // stables, un poil de perf en prime).
 
-const chip: CSSProperties = { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)", border: "1px solid var(--border)" };
+const chip: CSSProperties = { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)" };
 const qtyStyle: CSSProperties = { color: "var(--text3)", fontWeight: 400, marginLeft: 2 };
 const utImgStyle: CSSProperties = { width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" };
 
