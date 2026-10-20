@@ -34,11 +34,11 @@
   --card-shadow-hover: 0 10px 26px -12px rgba(var(--shadow-rgb), .32);
 }
 
-/* Thème clair : voile gris pur (noir à faible dose), sans teinte héritée de
-   l'encre ni de l'accent. */
+/* Thème clair : voile gris pur (noir à 8 %, dose d'état Material), sans teinte
+   héritée de l'encre ni de l'accent ; il passe nettement sous la crème du fond. */
 html.light, .light {
   --hover-veil-ink: #000;
-  --hover-veil-neutral: 5%;
+  --hover-veil-neutral: 8%;
 }
 
 /* ── Membres du voile (toutes intentions confondues ; neutre par défaut) ───── */
