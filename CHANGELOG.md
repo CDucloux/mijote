@@ -1,5 +1,19 @@
 # Changelog – Cardamome
 
+## v4.73.0 – Cardamome · Sans contour
+
+### Interface épurée
+- **Fini les bordures** : barres de recherche, pastilles, filtres, cartes de l'accueil, jours du planning, menu du profil, boutons et contenu des guides se dessinent par leur fond et une ombre à peine posée, sans trait autour. Le sélecteur de l'accueil garde un liseré en thème sombre, où il se confondrait sinon avec le fond.
+- **Survol par élévation** : en thème clair, les pastilles et cartes se soulèvent légèrement au passage de la souris au lieu de se griser ; les rangées et menus prennent un gris neutre ; en sombre, un voile clair discret.
+- **Libellés synchrones** : au survol, le texte change en même temps que le fond.
+- **Menu du profil** : texte adouci et même survol que la barre latérale.
+- **Guides** : rangées et pages sans bordures, sans halo ni barre colorée.
+- **Petites finitions** : disque de survol sur l'œil des carnets, bouton « C'est parti ! » de l'introduction à sa juste taille, thème sombre revenu à son contraste d'origine.
+
+### Technique
+- Tokens `--float-surface` / `--float-shadow` et classes `.float-pill` / `.float-card` partagées ; registre de survol ajusté (voile neutre gris, élévation seule en clair pour les éléments flottants).
+- Correctifs : couleur de repos de `.hover-text` qui perdait contre la remise à zéro des boutons ; descendants qui ré-animaient la couleur héritée au survol.
+
 ## v4.72.1 – Cardamome · Survol de saison
 
 ### Survol sur ordinateur
