@@ -48,8 +48,8 @@ function Index({ navigate }: { navigate: NavigateFunction }) {
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {GUIDE_DOCS.map(d => (
-          <button key={d.id} onClick={() => navigate(`/guide/${d.id}`)} className="guide-row ripple"
-            style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)", cursor: "pointer" }}>
+          <button key={d.id} onClick={() => navigate(`/guide/${d.id}`)} className="guide-row ripple float-card"
+            style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left", padding: "14px 16px", borderRadius: 14, cursor: "pointer" }}>
             <span style={{ flexShrink: 0, width: 40, height: 40, borderRadius: 12, display: "grid", placeItems: "center", background: softTile(d.color) }}>
               <Icon name={d.icon as IconName} size={19} color={d.color} />
             </span>
@@ -80,7 +80,7 @@ function Document({ doc, navigate }: { doc: GuideDoc; navigate: NavigateFunction
         <div dangerouslySetInnerHTML={{ __html: doc.html }} />
       </article>
       {next && (
-        <button className="guide-next ripple" onClick={() => navigate(`/guide/${next.id}`)}
+        <button className="guide-next ripple float-card" onClick={() => navigate(`/guide/${next.id}`)}
           style={{ "--guide-accent": next.color } as CSSProperties}>
           <span style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: softTile(next.color) }}>
             <Icon name={next.icon as IconName} size={17} color={next.color} />
