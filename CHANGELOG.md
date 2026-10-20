@@ -1,5 +1,10 @@
 # Changelog – Cardamome
 
+## v4.72.1 – Cardamome · Survol de saison
+
+### Survol sur ordinateur
+- **Teinte du survol en thème clair** : les pastilles et rangées neutres ne prennent plus un gris légèrement bleuté au passage de la souris, mais un vert-crème chaud tiré de la gousse, accordé au fond de l'appli.
+
 ## v4.72.0 – Cardamome · Sous le curseur
 
 ### Survol sur ordinateur
