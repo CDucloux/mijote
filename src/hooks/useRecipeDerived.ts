@@ -39,7 +39,7 @@ export function useRecipeDerived(recipes: SavedRecipe[], ingredientDB: Ingredien
   const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
   const seasonVeganById = useMemo(() => {
     const m = new Map<string, RecipeDerived>();
-    const db = (ingredientDB || []) as Parameters<typeof computeNutriInfo>[1];
+    const db = ingredientDB || [];
     for (const r of recipes) {
       if (r.id == null) continue;
       const nutri = computeNutriInfo(r.ingredients, db, recipesById);

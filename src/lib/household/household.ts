@@ -23,12 +23,13 @@ export interface Household {
 /** Utilisateur (forme minimale) : uid + email. */
 export interface HouseholdUser {
   uid: string;
-  email?: string;
+  /** `null` côté Firebase Auth pour un compte sans email (anonyme, téléphone). */
+  email?: string | null;
 }
 
 export const MAX_HOUSEHOLD = 2;
 
-const norm = (e: string | undefined): string => (e || "").trim().toLowerCase();
+const norm = (e: string | null | undefined): string => (e || "").trim().toLowerCase();
 const uniq = <T,>(arr: T[]): T[] => Array.from(new Set(arr));
 
 /**
@@ -114,7 +115,7 @@ export function withInviteRemoved(household: Household, email: string): Househol
  * @param member.email - Son email (retiré des invitations en attente).
  * @returns Un nouveau foyer avec le membre actif, ou le doc inchangé si déjà membre / plein.
  */
-export function withAcceptedMember(household: Household, { uid, email }: { uid: string; email?: string }): Household {
+export function withAcceptedMember(household: Household, { uid, email }: HouseholdUser): Household {
   const e = norm(email);
   if (isMemberUid(household, uid)) return household;
   if ((household.memberUids || []).length >= MAX_HOUSEHOLD) return household;
@@ -136,7 +137,7 @@ export function withAcceptedMember(household: Household, { uid, email }: { uid: 
  * @param member.email - Son email (retiré de `memberEmails`).
  * @returns Un nouveau foyer sans ce membre.
  */
-export function withMemberRemoved(household: Household, { uid, email }: { uid: string; email?: string }): Household {
+export function withMemberRemoved(household: Household, { uid, email }: HouseholdUser): Household {
   const e = norm(email);
   return {
     ...household,

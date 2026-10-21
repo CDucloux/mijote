@@ -108,3 +108,18 @@ describe("planHouseholdExit", () => {
     expect(planHouseholdExit([], user)).toEqual({ deleteIds: [], leave: [] });
   });
 });
+
+describe("email null (compte Firebase sans email)", () => {
+  const hh = { ownerUid: "o", memberUids: ["o"], memberEmails: ["o@x.fr"], invitedEmails: ["b@x.fr"] };
+  it("withAcceptedMember ajoute l'uid sans toucher aux emails", () => {
+    const next = withAcceptedMember(hh, { uid: "b", email: null });
+    expect(next.memberUids).toEqual(["o", "b"]);
+    expect(next.memberEmails).toEqual(["o@x.fr"]);
+    expect(next.invitedEmails).toEqual(["b@x.fr"]);
+  });
+  it("withMemberRemoved retire l'uid sans planter", () => {
+    const next = withMemberRemoved({ ...hh, memberUids: ["o", "b"] }, { uid: "b", email: null });
+    expect(next.memberUids).toEqual(["o"]);
+    expect(next.memberEmails).toEqual(["o@x.fr"]);
+  });
+});

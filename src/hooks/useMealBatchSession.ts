@@ -3,7 +3,7 @@ import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from 
 import { buildPostesDecoupe, FORME_LABEL } from "@/lib/recipes/decoupe.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
-import type { IngredientLine, MealPlan, Recipe } from "@/lib/types.js";
+import type { IngredientDbItem, IngredientLine, MealPlan, SavedRecipe } from "@/lib/types.js";
 import type { UseRecipeDerivedResult } from "./useRecipeDerived.js";
 
 // Catégories dont la découpe vaut d'être mutualisée (produits frais à travailler).
@@ -13,10 +13,10 @@ const PREP_CATEGORIES = new Set(["vegetable", "herbs"]);
 export interface MealBatchSessionDeps {
   mealPlan: MealPlan;
   weekDays: string[];
-  recipes: Recipe[];
+  recipes: SavedRecipe[];
   recipesById: UseRecipeDerivedResult["recipesById"];
   resolver: UseRecipeDerivedResult["resolver"];
-  ingredientDB?: unknown[] | null;
+  ingredientDB?: IngredientDbItem[] | null;
   stock?: string[] | null;
 }
 
@@ -34,8 +34,8 @@ export interface MealBatchSessionDeps {
 export function useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, resolver, ingredientDB, stock }: MealBatchSessionDeps) {
   const batch = useMemo(
     () => buildBatchSession(
-      weekEntries(mealPlan as Parameters<typeof weekEntries>[0], weekDays),
-      recipes as Parameters<typeof buildBatchSession>[1],
+      weekEntries(mealPlan, weekDays),
+      recipes,
     ),
     [mealPlan, weekDays, recipes],
   );
@@ -43,7 +43,7 @@ export function useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, 
   const miseEnPlace = useMemo(
     () => buildMiseEnPlace(batch.dishes, {
       recipesById, resolver, ingredientDB: (ingredientDB || []), stockSet: new Set(stock || []), categoryOrder, includeCategories: PREP_CATEGORIES,
-    } as Parameters<typeof buildMiseEnPlace>[1]),
+    }),
     [batch, recipesById, resolver, ingredientDB, stock, categoryOrder],
   );
   const cookingGroups = useMemo(() => groupCookings(batch.dishes), [batch]);
@@ -67,7 +67,7 @@ export function useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, 
   // à la session batch depuis le header (ré-ouvrable à tout moment).
   const hasWeekDishes = useMemo(() => {
     const ids = new Set(recipes.filter(r => !r.isComponent).map(r => r.id));
-    return weekEntries(mealPlan, weekDays).some(e => ids.has(e.recipeId));
+    return weekEntries(mealPlan, weekDays).some(e => !!e.recipeId && ids.has(e.recipeId));
   }, [mealPlan, weekDays, recipes]);
   // Repas couverts = occasions distinctes (date × créneau) occupées par un plat,
   // un repas composé (entrée + plat + dessert sur le même créneau) compte pour 1.
@@ -76,7 +76,7 @@ export function useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, 
     let n = 0;
     for (const date of weekDays) {
       const slots = new Set<string>();
-      for (const it of (mealPlan[date] || [])) if (ids.has(it.recipeId)) slots.add(it.slot || "midi");
+      for (const it of (mealPlan[date] || [])) if (it.recipeId && ids.has(it.recipeId)) slots.add(it.slot || "midi");
       n += slots.size;
     }
     return n;

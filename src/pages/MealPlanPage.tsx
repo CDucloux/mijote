@@ -36,7 +36,7 @@ import type { useMealPlanner } from "../hooks/useMealPlanner.js";
 import type { UseRecipeDerivedResult } from "../hooks/useRecipeDerived.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
 import type { SlotGroup } from "@/lib/planning/composedMeal.js";
-import type { MealPlan, Recipe } from "@/lib/types.js";
+import type { MealPlan, Recipe, SavedRecipe } from "@/lib/types.js";
 import { DEFAULT_PREFERENCES, type Preferences } from "../constants/preferences.js";
 import type { DragInfo } from "../components/mealPlan/SlotZone.jsx";
 
@@ -44,7 +44,7 @@ type MealPlanner = ReturnType<typeof useMealPlanner>;
 
 interface MealPlanPageProps {
   mealPlan: MealPlan;
-  recipes: Recipe[];
+  recipes: SavedRecipe[];
   setMealPlan: Dispatch<SetStateAction<MealPlan>>;
   onSelectRecipe: (recipeId: string) => void;
   ingredientDB: DbEntry[];
