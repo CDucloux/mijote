@@ -3,6 +3,7 @@ import type { TouchEvent, TransitionEvent } from "react";
 import { createPortal } from "react-dom";
 import type { User } from "firebase/auth";
 import { Icon } from "../ui/Icon.jsx";
+import { ProfileAvatar } from "./ProfileAvatar.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
 import type { AvatarAction, AvatarGroup } from "./UserAvatar.jsx";
 
@@ -140,9 +141,7 @@ export function AccountSheet({ user, isPlus, syncLabel, syncColor, offline, grou
         </header>
 
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "6px 20px 22px" }}>
-          {user.photoURL
-            ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 76, height: 76, borderRadius: "50%", display: "block", border: `2.5px solid ${isPlus ? "var(--accent)" : "var(--border)"}` }} />
-            : <div style={{ width: 76, height: 76, borderRadius: "50%", background: "var(--accent)", display: "grid", placeItems: "center", fontSize: 30, fontWeight: 600, color: "#fff", border: `2.5px solid ${isPlus ? "var(--accent)" : "transparent"}` }}>{(user.displayName || "?")[0].toUpperCase()}</div>}
+          <ProfileAvatar photoURL={user.photoURL} name={user.displayName} size={80} ring={3} gapColor="var(--surface)" isPlus={!!isPlus} />
           <div style={{ maxWidth: "100%", fontSize: 14.5, fontWeight: 500, color: "var(--text3)", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>
           {syncLabel && (
             <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, color: syncColor }}>
