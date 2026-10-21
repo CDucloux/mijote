@@ -317,7 +317,8 @@ ne vont jamais en sens inverse :
 src/
 ├── main.tsx         # Bootstrap : choisit la zone (vitrine / ou app /app) + service worker
 ├── PublicApp.tsx    # Vitrine publique montée à la racine (/)
-├── App.jsx          # Shell de l'app (sous /app) : routing, état global, câblage
+├── App.tsx          # Racine de l'app (sous /app) : garde d'auth, routes publiques
+├── AppInner.tsx     # App connectée : état global, synchro, écran déduit de l'URL
 ├── context/         # Concerns transverses (AppShellContext)
 ├── hooks/           # Hooks réutilisables (useFirestoreSync, useHousehold, useLS…)
 ├── lib/             # Logique pure : domaine (Nutri-Score, planning, parsing,
