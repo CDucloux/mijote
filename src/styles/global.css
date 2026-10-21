@@ -877,6 +877,14 @@ html.light select.field-input {
   border: none;
 }
 
+/* Action destructive PRINCIPALE d'un écran (envoyer un signalement) : rouge plein,
+   l'élément le plus contrasté ; `.btn-danger` (teinté) reste pour le secondaire. */
+.btn-danger-solid {
+  background: var(--red);
+  color: #fff;
+  border: none;
+}
+
 /* Bouton « Supprimer la liste » de l'état vide « Tout est acheté » : pilule rouge
    douce SANS liseré (le fond teinté détache déjà l'action). Desktop → le rouge
    s'affirme au survol (fond plus dense, texte plus vif) ; mobile → l'onde `.ripple`
