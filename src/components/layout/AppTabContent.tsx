@@ -16,7 +16,7 @@ import type { UseRecipeDerivedResult } from "../../hooks/useRecipeDerived.js";
 import type { ActivityEvent } from "@/lib/notifications/activity.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { Preferences } from "@/constants/preferences.js";
-import type { Collection, MealPlan, SavedRecipe } from "@/lib/types.js";
+import type { Notebook, MealPlan, SavedRecipe } from "@/lib/types.js";
 
 // Pages mémoïsées : ne re-rendent que si LEURS props (ou le contexte) changent, et non
 // à chaque rendu d'App (toast, statut de sync…). Requiert des props stables.
@@ -36,8 +36,8 @@ interface AppTabContentProps {
   ingredientFiche: boolean;
   discoverMode: boolean;
   recipes: SavedRecipe[];
-  collections: Collection[];
-  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  collections: Notebook[];
+  setCollections: Dispatch<SetStateAction<Notebook[]>>;
   mealPlan: MealPlan;
   setMealPlan: Dispatch<SetStateAction<MealPlan>>;
   shoppingLists: ShoppingList[];

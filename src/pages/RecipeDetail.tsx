@@ -39,7 +39,7 @@ import { useRecipeView } from "../hooks/useRecipeView.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
 import type { IngredientCategories } from "@/lib/data/referenceData.js";
 import type { IngredientLine, Recipe, UtensilDbItem } from "@/lib/types.js";
-import type { Collection } from "@/lib/types.js";
+import type { Notebook } from "@/lib/types.js";
 import type { MenuItem } from "../components/recipeDetail/HeroMenu.js";
 
 interface RecipeDetailProps {
@@ -61,7 +61,7 @@ interface RecipeDetailProps {
   ingredientDB: DbEntry[];
   utensilDB: UtensilDbItem[];
   categories?: IngredientCategories;
-  collections?: Collection[];
+  collections?: Notebook[];
   onToggleCollection?: (recipeId: string | undefined, collectionId: string) => void;
   onUpdateRecipe?: (recipe: Recipe) => void;
   onCooked?: (recipeId: string) => void;

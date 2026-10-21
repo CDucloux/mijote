@@ -7,7 +7,7 @@
  * @module launcher/shortcuts
  */
 import { SLOT_BY_ID, slotOrder } from "@/constants/mealSlots.js";
-import { countShoppingTodo, getTodayMeals, todayKey, upcomingSlot, type DashRecipe, type TodayMeal } from "@/lib/planning/dashboard.js";
+import { countShoppingTodo, getTodayMeals, todayKey, upcomingSlot, type TodayMeal } from "@/lib/planning/dashboard.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
 import type { MealPlan, Recipe } from "@/lib/types.js";
@@ -32,7 +32,7 @@ export interface LauncherShortcut {
 export interface LauncherInput {
   mealPlan?: MealPlan;
   /** Recettes ; photo et temps nourrissent le widget « Au menu » quand ils sont là. */
-  recipes?: Array<DashRecipe & Pick<Recipe, "image" | "prepTime" | "cookTime">>;
+  recipes?: Array<Recipe & Pick<Recipe, "image" | "prepTime" | "cookTime">>;
   shoppingLists?: ShoppingList[];
   ingredientDB?: DbEntry[];
   date?: Date;

@@ -2,7 +2,8 @@ import type { CSSProperties } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
-import { DEFAULT_NOTEBOOK_COLOR, DEFAULT_NOTEBOOK_ICON, isSmartNotebook, type Notebook } from "@/lib/recipes/notebooks.js";
+import { DEFAULT_NOTEBOOK_COLOR, DEFAULT_NOTEBOOK_ICON, isSmartNotebook } from "@/lib/recipes/notebooks.js";
+import type { Notebook } from "@/lib/types.js";
 
 interface NotebookMenuSheetProps {
   notebook: Notebook;

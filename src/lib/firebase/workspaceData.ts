@@ -20,7 +20,7 @@ import { metaDoc, recipesCol, type WorkspaceRef } from "@/lib/firebase/paths.js"
 import { userDirDoc } from "@/lib/firebase/userDirectory.js";
 import { isSharedWritesLocked } from "@/lib/firebase/writeLock.js";
 import type { SharedData } from "@/lib/household/householdMigration.js";
-import type { Collection, MealPlan, Recipe, SavedRecipe } from "@/lib/types.js";
+import type { Notebook, MealPlan, Recipe, SavedRecipe } from "@/lib/types.js";
 import { isSavedRecipe } from "@/lib/recipes/savedRecipes.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { PersonalDB } from "@/lib/firebase/masterDb.js";
@@ -30,7 +30,7 @@ import { preferWithin, type PreferResult } from "@/lib/sync/preferWithin.js";
 /** Données complètes d'un workspace, telles que lues depuis la structure éclatée. */
 export interface UserData {
   recipes: SavedRecipe[];
-  collections: Collection[] | null;
+  collections: Notebook[] | null;
   mealPlan: MealPlan | null;
   shoppingLists: ShoppingList[] | null;
   stock: string[] | null;

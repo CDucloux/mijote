@@ -4,7 +4,7 @@ import { publicId, buildPublishBundle, collectComponentDeps, clonePublicBundle, 
 import { recomputeCollectionCounts } from "@/lib/recipes/recipeActions.js";
 import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
-import type { Collection } from "@/lib/types.js";
+import type { Notebook } from "@/lib/types.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
 
 /** Index de recettes tel qu'attendu par les fonctions de `publicRecipes`. */
@@ -19,7 +19,7 @@ export interface PublicRecipesDeps {
   displayName?: string;
   recipes: PubRecipe[];
   setRecipes: Dispatch<SetStateAction<PubRecipe[]>>;
-  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  setCollections: Dispatch<SetStateAction<Notebook[]>>;
   ingredientDB: PubDbItem[];
   isPlus: boolean;
   notify: (msg: string, type?: string) => void;

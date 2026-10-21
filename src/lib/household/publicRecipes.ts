@@ -12,9 +12,6 @@ import { ANIMAL_CATEGORIES } from "@/lib/food/dietary.js";
 import { isComponentLine } from "@/lib/recipes/nutriscore.js";
 import type { Recipe, IngredientLine, IngredientDbItem } from "@/lib/types.js";
 
-/** Ligne d'ingrédient (brute ou composant, alias de domaine). */
-export type PubLine = IngredientLine;
-
 /** Recette locale (type de domaine avec `id` garanti + attribution de clone). */
 export type PubRecipe = Recipe & {
   id: string;
@@ -123,7 +120,7 @@ export function publishBlockers<T extends Pick<Recipe, "source">>(recipe: T, com
 function collectCategories(recipe: PubRecipe | null | undefined, ingredientDB: PubDbItem[], recipesById: Map<string, PubRecipe> | undefined): Set<string> {
   const byId = new Map((ingredientDB || []).map(i => [i.id, i]));
   const cats = new Set<string>();
-  const addFrom = (lines: PubLine[] | undefined): void => {
+  const addFrom = (lines: IngredientLine[] | undefined): void => {
     for (const line of lines || []) {
       if (isComponentLine(line)) continue;
       const db = line.dbId ? byId.get(line.dbId) : undefined;
@@ -309,7 +306,7 @@ export function clonePublicBundle(
       const local = idMap.get(line.recipeId);
       return local ? { ...line, recipeId: local } : null; // composant manquant → drop
     })
-    .filter((l): l is PubLine => l !== null);
+    .filter((l): l is IngredientLine => l !== null);
   added.push(main);
   return { added, mainId, alreadyOwned: false };
 }

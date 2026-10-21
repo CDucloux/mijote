@@ -22,7 +22,7 @@ import { mergeShared, type SharedData } from "@/lib/household/householdMigration
 import { isSavedRecipe } from "@/lib/recipes/savedRecipes.js";
 import type { SyncStatus } from "../context/AppShellContext.jsx";
 import type { Dispatch, SetStateAction } from "react";
-import type { Collection, MealPlan, Recipe, SavedRecipe } from "@/lib/types.js";
+import type { Notebook, MealPlan, Recipe, SavedRecipe } from "@/lib/types.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { Preferences } from "@/constants/preferences.js";
 
@@ -30,7 +30,7 @@ import type { Preferences } from "@/constants/preferences.js";
 /** Slices partagés (recettes, carnets, planning, listes, stock), formes opaques. */
 interface SharedSlices {
   recipes?: SavedRecipe[] | null;
-  collections?: Collection[] | null;
+  collections?: Notebook[] | null;
   mealPlan?: MealPlan | null;
   shoppingLists?: ShoppingList[] | null;
   stock?: string[] | null;
@@ -40,7 +40,7 @@ interface SharedSlices {
 /** Données de bootstrap (workspace solo/foyer), recettes garanties, reste optionnel. */
 interface BootData {
   recipes: SavedRecipe[];
-  collections?: Collection[] | null;
+  collections?: Notebook[] | null;
   mealPlan?: MealPlan | null;
   shoppingLists?: ShoppingList[] | null;
   stock?: string[] | null;
@@ -70,8 +70,8 @@ export interface FirestoreSyncDeps {
   householdPointer: HouseholdPointer | null | undefined;
   recipes: SavedRecipe[];
   setRecipes: Dispatch<SetStateAction<SavedRecipe[]>>;
-  collections: Collection[];
-  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  collections: Notebook[];
+  setCollections: Dispatch<SetStateAction<Notebook[]>>;
   mealPlan: MealPlan;
   setMealPlan: Dispatch<SetStateAction<MealPlan>>;
   shoppingLists: ShoppingList[];
@@ -611,7 +611,7 @@ export function useFirestoreSync({
       metaSigRef.current[name] = sig;
       apply(val);
     });
-    unsubs.push(metaSub<Collection[]>("collections", d => d.items || [], setCollections));
+    unsubs.push(metaSub<Notebook[]>("collections", d => d.items || [], setCollections));
     unsubs.push(metaSub<MealPlan>("mealPlan", d => d.data || {}, setMealPlan));
     unsubs.push(metaSub<ShoppingList[]>("shoppingLists", d => d.items || [], setShoppingLists));
     unsubs.push(metaSub<{ items: string[]; low: string[] }>("stock", d => ({ items: d.items || [], low: d.low || [] }), v => { setStock(v.items); setLowStock(v.low); }));

@@ -3,7 +3,8 @@ import { Icon } from "../ui/Icon.jsx";
 import { OverscrollRow } from "../ui/OverscrollRow.jsx";
 import { NotebookCover } from "./NotebookCover.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
-import { DEFAULT_NOTEBOOK_COLOR, DEFAULT_NOTEBOOK_ICON, type Notebook } from "@/lib/recipes/notebooks.js";
+import { DEFAULT_NOTEBOOK_COLOR, DEFAULT_NOTEBOOK_ICON } from "@/lib/recipes/notebooks.js";
+import type { Notebook } from "@/lib/types.js";
 import type { useLongPress } from "../../hooks/useLongPress.js";
 
 type LongPress = ReturnType<typeof useLongPress>;

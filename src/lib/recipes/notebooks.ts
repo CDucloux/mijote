@@ -6,10 +6,7 @@
  * @module recipes/notebooks
  */
 import { DEFAULT_FILTERS, filtersEqual, matchesFilters, matchesRecipeSearch, type FilterContext, type RecipeFilters } from "@/lib/recipes/recipeFilters.js";
-import type { Collection, Recipe } from "@/lib/types.js";
-
-/** Carnet tel que lu et écrit par la bibliothèque. */
-export type Notebook = Collection;
+import type { Notebook, Recipe } from "@/lib/types.js";
 
 /** Brouillon de la feuille de création / modification d'un carnet. */
 export interface NotebookDraft {

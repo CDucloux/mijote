@@ -7,17 +7,8 @@
  */
 import { computeNutriInfo, buildRecipeIndex, isComponentLine, type NutriDbItem } from "@/lib/recipes/nutriscore.js";
 import { flattenForShopping, mergeRawLines, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
-import type { Recipe, SavedRecipe, IngredientLine, Collection } from "@/lib/types.js";
+import type { Recipe, SavedRecipe, IngredientLine, Notebook } from "@/lib/types.js";
 import type { ShoppingItem } from "@/lib/food/shoppingAggregate.js";
-
-/** Ligne d'ingrédient manipulée par les actions (alias du type de domaine). */
-export type RecipeLine = IngredientLine;
-
-/** Recette manipulée par les actions (alias du type de domaine). */
-export type ActionRecipe = Recipe;
-
-/** Carnet (manuel ou intelligent, alias du type de domaine). */
-export type ActionCollection = Collection;
 
 const norm = (s: string | undefined): string => (s || "").toLowerCase().trim();
 
@@ -34,8 +25,8 @@ const norm = (s: string | undefined): string => (s || "").toLowerCase().trim();
  *   (id et `createdAt` ajoutés en création).
  */
 export function prepareRecipeForSave(
-  r: ActionRecipe,
-  { recipes, ingredientDB }: { recipes: ActionRecipe[]; ingredientDB: NutriDbItem[] },
+  r: Recipe,
+  { recipes, ingredientDB }: { recipes: Recipe[]; ingredientDB: NutriDbItem[] },
 ): { error: string } | { recipe: SavedRecipe } {
   const missingQty = (r.ingredients || []).filter(ing => (ing.name || ing.dbId || ing.recipeId) && !(Number(ing.amount) > 0));
   if (missingQty.length > 0) {
@@ -57,7 +48,7 @@ export function prepareRecipeForSave(
   // valide, et l'unité consommée doit correspondre à l'unité du rendement.
   for (const line of r.ingredients || []) {
     if (!isComponentLine(line)) continue;
-    const comp = recipesById.get(line.recipeId!) as ActionRecipe | undefined;
+    const comp = recipesById.get(line.recipeId!) as Recipe | undefined;
     if (!comp || !comp.isComponent) return { error: `Composant introuvable : "${line.name || line.recipeId}"` };
     if (!(Number(comp.yield?.amount) > 0)) return { error: `Le composant "${comp.name}" n'a pas de rendement valide` };
     if (norm(line.unit) !== norm(comp.yield!.unit as string)) {
@@ -66,7 +57,7 @@ export function prepareRecipeForSave(
   }
 
   const { score, letter } = computeNutriInfo(r.ingredients, ingredientDB, recipesById);
-  const withScore: ActionRecipe = { ...r, healthScore: score, nutriLetter: letter };
+  const withScore: Recipe = { ...r, healthScore: score, nutriLetter: letter };
   const editedId = r.id && recipes.some(x => x.id === r.id) ? r.id : null;
 
   if (editedId) {
@@ -88,7 +79,7 @@ export function prepareRecipeForSave(
  * @param recipe - Recette à insérer ou remplacer.
  * @returns Une nouvelle liste avec la recette insérée (en tête) ou remplacée sur place.
  */
-export function upsertRecipe<T extends ActionRecipe>(recipes: T[], recipe: T): T[] {
+export function upsertRecipe<T extends Recipe>(recipes: T[], recipe: T): T[] {
   return recipes.some(x => x.id === recipe.id)
     ? recipes.map(x => x.id === recipe.id ? recipe : x)
     : [recipe, ...recipes];
@@ -102,7 +93,7 @@ export function upsertRecipe<T extends ActionRecipe>(recipes: T[], recipe: T): T
  * @param recipes - Toutes les recettes (pour compter l'appartenance).
  * @returns Les carnets avec leur `count` à jour (carnets intelligents inchangés).
  */
-export function recomputeCollectionCounts(collections: ActionCollection[], recipes: ActionRecipe[]): ActionCollection[] {
+export function recomputeCollectionCounts(collections: Notebook[], recipes: Recipe[]): Notebook[] {
   // Les carnets intelligents (vues de filtres) n'ont pas d'appartenance explicite :
   // leur contenu est calculé à l'affichage. On ne touche qu'aux carnets manuels.
   return collections.map(col => col.kind === "smart" ? col : ({
@@ -126,8 +117,8 @@ export function recomputeCollectionCounts(collections: ActionCollection[], recip
  * @returns Les items de courses cumulés et prêts à ajouter à une liste.
  */
 export function buildShoppingItems(
-  recipe: ActionRecipe,
-  selectedIngredients: RecipeLine[] | null | undefined,
+  recipe: Recipe,
+  selectedIngredients: IngredientLine[] | null | undefined,
   mult: number | undefined,
   ingredientDB: NutriDbItem[],
   recipesById: Map<string, ComponentRecipe>,

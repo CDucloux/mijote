@@ -12,12 +12,12 @@
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
-import type { Collection, MealPlan, SavedRecipe } from "@/lib/types.js";
+import type { Notebook, MealPlan, SavedRecipe } from "@/lib/types.js";
 
 /** Espace de données partageable (perso ou foyer). */
 export interface SharedData {
   recipes?: SavedRecipe[];
-  collections?: Collection[];
+  collections?: Notebook[];
   mealPlan?: MealPlan;
   shoppingLists?: ShoppingList[];
   stock?: string[];
@@ -44,7 +44,7 @@ export function mergeShared(local: SharedData | null | undefined, remote: Shared
   const remoteCols = remote.collections || [];
   const remoteColByName = new Map(remoteCols.map(c => [normalizeStr(c.name || ""), c.id]));
   const idRemap = new Map<string, string>();
-  const keptLocalCols: Collection[] = [];
+  const keptLocalCols: Notebook[] = [];
   for (const c of (local.collections || [])) {
     const remoteId = remoteColByName.get(normalizeStr(c.name || ""));
     if (remoteId) idRemap.set(c.id, remoteId);        // homonyme : on pointe vers celui du foyer

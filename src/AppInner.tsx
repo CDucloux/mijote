@@ -10,7 +10,7 @@ import { reportError } from "@/lib/observability/observability.js";
 import { installGlobalRipple } from "@/lib/ui/ripple.js";
 import { installGlobalElasticScroll } from "@/lib/ui/globalElasticScroll.js";
 import { countUnread } from "@/lib/notifications/activity.js";
-import type { Recipe, SavedRecipe, Collection, MealPlan } from "@/lib/types.js";
+import type { Recipe, SavedRecipe, Notebook, MealPlan } from "@/lib/types.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import { SAMPLE_RECIPES, SAMPLE_COLLECTIONS } from "./constants/categories.js";
 import { DEFAULT_PREFERENCES, type Preferences } from "./constants/preferences.js";
@@ -94,7 +94,7 @@ export function AppInner({ user, isDark, toggleTheme }: AppInnerProps) {
   const isAdmin = typeof ADMIN_EMAIL === "string" && !!ADMIN_EMAIL && user.email === ADMIN_EMAIL;
 
   const [recipes, setRecipes] = useLS<SavedRecipe[]>("rf_recipes2", SAMPLE_RECIPES);
-  const [collections, setCollections] = useLS<Collection[]>("rf_collections2", SAMPLE_COLLECTIONS);
+  const [collections, setCollections] = useLS<Notebook[]>("rf_collections2", SAMPLE_COLLECTIONS);
   const [mealPlan, setMealPlan] = useLS<MealPlan>("rf_mealplan2", {});
   const [shoppingLists, setShoppingLists] = useLS<ShoppingList[]>("rf_shopping3", []);
   const { directory, loadDirectory } = useUserDirectory(user.uid);

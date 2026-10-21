@@ -1,11 +1,11 @@
-import type { Collection, Recipe } from "@/lib/types.js";
+import type { Notebook, Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { DEFAULT_NOTEBOOK_COLOR } from "@/lib/recipes/notebooks.js";
 
 interface CollectionsSheetProps {
   recipe: Recipe;
-  collections?: Collection[];
+  collections?: Notebook[];
   onToggle: (recipeId: string | undefined, collectionId: string) => void;
   onClose: () => void;
 }

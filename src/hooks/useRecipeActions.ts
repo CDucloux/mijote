@@ -4,14 +4,14 @@ import { recomputeCollectionCounts } from "@/lib/recipes/recipeActions.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
 import { DEFAULT_PREFERENCES, type Preferences } from "../constants/preferences.js";
-import type { Recipe, SavedRecipe, Collection, MealPlan } from "@/lib/types.js";
+import type { Recipe, SavedRecipe, Notebook, MealPlan } from "@/lib/types.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
 
 /** Dépendances injectées (état de l'app + setters + notify/navigate). */
 export interface RecipeActionsDeps {
   recipes: SavedRecipe[];
   setRecipes: Dispatch<SetStateAction<SavedRecipe[]>>;
-  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  setCollections: Dispatch<SetStateAction<Notebook[]>>;
   setMealPlan: Dispatch<SetStateAction<MealPlan>>;
   setPreferences: Dispatch<SetStateAction<Preferences>>;
   isPlus: boolean;

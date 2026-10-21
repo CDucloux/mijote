@@ -197,7 +197,7 @@ export interface Recipe {
 export type SavedRecipe = Recipe & { id: string };
 
 /** Carnet de recettes : manuel (appartenance explicite) ou intelligent (`kind: "smart"`, vue de filtres). */
-export interface Collection {
+export interface Notebook {
   id: string;
   name?: string;
   kind?: string;

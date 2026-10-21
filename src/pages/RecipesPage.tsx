@@ -20,13 +20,13 @@ import { SORT_OPTIONS, DEFAULT_SORT_KEY, defaultDirFor, makeComparator, type Sor
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, matchesRecipeSearch, collectChefs, type RecipeFilters } from "@/lib/recipes/recipeFilters.js";
 import {
   blankNotebookDraft, isSmartNotebook, countNotebook, isSmartViewActive, reorderNotebooks,
-  shiftNotebook, createNotebook, applyNotebookEdit, type Notebook, type NotebookDraft,
+  shiftNotebook, createNotebook, applyNotebookEdit, type NotebookDraft,
 } from "@/lib/recipes/notebooks.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 import { busyFloor } from "@/lib/ui/busyFloor.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
-import type { Recipe, SavedRecipe } from "@/lib/types.js";
+import type { Notebook, Recipe, SavedRecipe } from "@/lib/types.js";
 import { isSavedRecipe } from "@/lib/recipes/savedRecipes.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";

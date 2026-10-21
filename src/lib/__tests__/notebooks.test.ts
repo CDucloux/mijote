@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
   blankNotebookDraft, isSmartNotebook, notebookMatches, countNotebook, isSmartViewActive,
-  reorderNotebooks, shiftNotebook, createNotebook, applyNotebookEdit, DEFAULT_NOTEBOOK_COLOR, type Notebook,
+  reorderNotebooks, shiftNotebook, createNotebook, applyNotebookEdit, DEFAULT_NOTEBOOK_COLOR,
 } from "@/lib/recipes/notebooks.js";
+import type { Notebook } from "@/lib/types.js";
 import { DEFAULT_FILTERS } from "@/lib/recipes/recipeFilters.js";
 
 const tarte = { id: "r1", name: "Tarte aux pommes", collections: ["c1"] };

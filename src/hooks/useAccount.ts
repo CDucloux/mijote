@@ -5,7 +5,7 @@ import { signInWithGoogle } from "@/lib/firebase/auth.js";
 import { signInFeedback } from "@/lib/firebase/signInFeedback.js";
 import { googleSignIn } from "@/lib/firebase/googleAuth.js";
 import type { Dispatch, SetStateAction } from "react";
-import type { Collection, MealPlan, SavedRecipe } from "@/lib/types.js";
+import type { Notebook, MealPlan, SavedRecipe } from "@/lib/types.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 
 /** Portée d'une purge de données depuis le profil. */
@@ -21,7 +21,7 @@ export interface AccountDeps {
   setStock: Dispatch<SetStateAction<string[]>>;
   setLowStock: Dispatch<SetStateAction<string[]>>;
   setRecipes: Dispatch<SetStateAction<SavedRecipe[]>>;
-  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  setCollections: Dispatch<SetStateAction<Notebook[]>>;
 }
 
 /**

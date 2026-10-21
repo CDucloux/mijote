@@ -1,4 +1,4 @@
-import type { Collection, Recipe } from "@/lib/types.js";
+import type { Notebook, Recipe } from "@/lib/types.js";
 import type { DifficultyResult, DifficultyExplain } from "@/lib/recipes/difficulty.js";
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
@@ -16,7 +16,7 @@ interface RecipeHeroBadgesProps {
   difficulty: DifficultyResult;
   difficultyExplain?: DifficultyExplain | null;
   difficultyTitle?: string;
-  collections?: Collection[];
+  collections?: Notebook[];
   publicMode?: boolean;
   onOpenBaseInfo: () => void;
   onOpenDifficulty: () => void;

@@ -1,6 +1,6 @@
 import { parse as parseYaml } from "yaml";
 import { parseIngredientCategories } from "@/lib/data/referenceData.js";
-import type { Collection, SavedRecipe } from "@/lib/types.js";
+import type { Notebook, SavedRecipe } from "@/lib/types.js";
 import raw from "../../data/ingredient-categories.yaml?raw";
 
 // ─── NUTRITION CATEGORIES ──────────────────────────────────────────────────────
@@ -47,4 +47,4 @@ export const isFruitVeg = (category: unknown): boolean => typeof category === "s
 // from the shared read-only Master DB in Firestore (master/ingredients,
 // master/utensils), merged with each user's own additions (meta/userDB).
 export const SAMPLE_RECIPES: SavedRecipe[] = [];
-export const SAMPLE_COLLECTIONS: Collection[] = [];
+export const SAMPLE_COLLECTIONS: Notebook[] = [];

@@ -8,7 +8,7 @@ import type { NutriDbItem } from "@/lib/recipes/nutriscore.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { deleteImageByUrl } from "@/lib/firebase/storage.js";
 import { printRecipe } from "@/lib/recipes/recipePdf.js";
-import type { Recipe, SavedRecipe, IngredientLine, Collection, UtensilDbItem } from "@/lib/types.js";
+import type { Recipe, SavedRecipe, IngredientLine, Notebook, UtensilDbItem } from "@/lib/types.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
 import type { ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
@@ -19,7 +19,7 @@ import { reportError } from "@/lib/observability/observability.js";
 export interface RecipeCrudDeps {
   recipes: SavedRecipe[];
   setRecipes: Dispatch<SetStateAction<SavedRecipe[]>>;
-  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  setCollections: Dispatch<SetStateAction<Notebook[]>>;
   setEditingRecipe: (r: Recipe | null) => void;
   shoppingLists: ShoppingList[];
   setShoppingLists: Dispatch<SetStateAction<ShoppingList[]>>;

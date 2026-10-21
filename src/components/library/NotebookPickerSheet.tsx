@@ -1,7 +1,7 @@
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
-import { DEFAULT_NOTEBOOK_COLOR, DEFAULT_NOTEBOOK_ICON, type Notebook } from "@/lib/recipes/notebooks.js";
-import type { Recipe } from "@/lib/types.js";
+import { DEFAULT_NOTEBOOK_COLOR, DEFAULT_NOTEBOOK_ICON } from "@/lib/recipes/notebooks.js";
+import type { Notebook, Recipe } from "@/lib/types.js";
 
 interface NotebookPickerSheetProps {
   recipe: Recipe;
