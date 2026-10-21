@@ -3,9 +3,13 @@ import { Icon } from "../ui/Icon.jsx";
 import { remainingSecs } from "@/lib/planning/cookTimers.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
 import { fmtCountdown } from "@/lib/planning/stepTimers.js";
+import { firstNameOf, type CookParticipant } from "@/lib/cookSession/together.js";
+import { ParticipantAvatar } from "./ParticipantAvatar.jsx";
 
 interface CookTimersStackProps {
   timers: CookTimer[];
+  /** Cuisiner à deux : autres membres par uid, pour signer les minuteurs qu'ils ont lancés. */
+  starters?: ReadonlyMap<string, CookParticipant>;
   timersOpen: boolean;
   setTimersOpen: Dispatch<SetStateAction<boolean>>;
   now: number;
@@ -19,10 +23,12 @@ interface CookTimersStackProps {
  * Pile de minuteurs actifs, ancrée en bas à droite au-dessus de la nav. Dépliée :
  * une carte complète par minuteur (compte à rebours, barre, pause/relance/stop).
  * Repliée : un aperçu compact par minuteur. Toutes les actions sont déléguées ;
- * `onGoToStep(stepIdx)` ramène à l'étape source (et déplie depuis l'aperçu).
+ * `onGoToStep(stepIdx)` ramène à l'étape source (et déplie depuis l'aperçu). À deux,
+ * un minuteur lancé par l'autre membre porte son avatar.
  */
-export function CookTimersStack({ timers, timersOpen, setTimersOpen, now, onGoToStep, onToggle, onRestart, onRemove }: CookTimersStackProps) {
+export function CookTimersStack({ timers, starters, timersOpen, setTimersOpen, now, onGoToStep, onToggle, onRestart, onRemove }: CookTimersStackProps) {
   if (timers.length === 0) return null;
+  const starterOf = (t: CookTimer): CookParticipant | null => (t.startedBy && starters?.get(t.startedBy)) || null;
   return (
     <div className="cook-timers" style={{ bottom: "calc(80px + max(env(safe-area-inset-bottom) - 8px, 0px))" }}>
       <button type="button" className="cook-timers-toggle" onClick={() => setTimersOpen(o => !o)}
@@ -36,6 +42,7 @@ export function CookTimersStack({ timers, timersOpen, setTimersOpen, now, onGoTo
       {timersOpen ? timers.map(t => {
         const rem = remainingSecs(t, now);
         const pct = t.totalSec ? Math.min(100, (1 - rem / t.totalSec) * 100) : 0;
+        const starter = starterOf(t);
         return (
           <div key={t.id} className="slide-up" style={{ alignSelf: "stretch", background: "var(--surface)", border: `1px solid ${t.done ? "var(--ok)" : "var(--border)"}`, borderRadius: 14, padding: "10px 12px", boxShadow: "0 8px 22px -10px rgba(0,0,0,0.4)", animation: t.done ? "timerPulse 1s ease-in-out infinite" : undefined }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -43,6 +50,7 @@ export function CookTimersStack({ timers, timersOpen, setTimersOpen, now, onGoTo
               <span style={{ flex: 1, fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 600, letterSpacing: "0.02em", color: t.done ? "var(--ok)" : "var(--text)" }}>
                 {t.done ? "Terminé !" : fmtCountdown(rem)}
               </span>
+              {starter && <span title={`Lancé par ${firstNameOf(starter)}`} style={{ display: "inline-flex" }}><ParticipantAvatar participant={starter} size={18} /></span>}
               <button type="button" className="cook-timer-step" onClick={() => onGoToStep(t.stepIdx)} title={`Aller à ${t.stepLabel}`}>
                 <Icon name="layers" size={11} color="var(--accent)" /> {t.stepLabel}
               </button>
@@ -66,6 +74,7 @@ export function CookTimersStack({ timers, timersOpen, setTimersOpen, now, onGoTo
         );
       }) : timers.map(t => {
         const rem = remainingSecs(t, now);
+        const starter = starterOf(t);
         return (
           <button type="button" key={t.id} className="cook-timer-chip" onClick={() => { onGoToStep(t.stepIdx); setTimersOpen(true); }}
             title={`${t.stepLabel}, ${t.done ? "terminé" : fmtCountdown(rem)}`}
@@ -73,6 +82,7 @@ export function CookTimersStack({ timers, timersOpen, setTimersOpen, now, onGoTo
             <Icon name="clock" size={14} color={t.done ? "var(--ok)" : "var(--accent)"} />
             <span className="t" style={{ color: t.done ? "var(--ok)" : "var(--text)" }}>{t.done ? "Terminé !" : fmtCountdown(rem)}</span>
             <span className="s">{t.stepLabel}</span>
+            {starter && <ParticipantAvatar participant={starter} size={16} />}
           </button>
         );
       })}

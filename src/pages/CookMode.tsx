@@ -103,12 +103,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const [groupByCategory, setGroupByCategory] = useLS("rf_cookModeGroupByCategory", false);
   // Itération de fin de cuisson : alimente le carnet d'itérations depuis l'écran final.
   const [iterOpen, setIterOpen] = useState(false);
-  // Minuteurs déclenchés depuis les mentions de temps de l'étape. Base horodatée
-  // (cf. `cookTimers`) : le restant se dérive de l'horloge, donc reste juste après
-  // un passage en arrière-plan. En natif, une notification OS est planifiée à
-  // l'échéance pour sonner même écran verrouillé (cf. `localNotifications`).
   const [navDir, setNavDir] = useState(1); // sens de navigation (animation d'étape)
-  const { timers, timersOpen, setTimersOpen, now, addTimer, toggleTimer, restartTimer, removeTimer } = useCookTimers(notify);
   const canIterate = !isNested && !!onUpdateRecipe;
   const saveIteration = (rating: number | null, notes: string) => {
     if (!onUpdateRecipe) return;
@@ -165,7 +160,19 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const totalSteps = pages.length || 1;
   const cur: CookPage = pages[Math.min(stepIdx, pages.length - 1)] || { kind: "overview" };
   // Cuisiner à deux (foyer) : positions, étapes faites et fin communes.
-  const together = useCookTogether({ householdId, recipe, user, pageKey: pageKeyOf(cur), enabled: !isNested });
+  const pageKeys = useMemo(() => pages.map(pageKeyOf), [pages]);
+  const together = useCookTogether({ householdId, recipe, user, pageKey: pageKeyOf(cur), pageKeys, enabled: !isNested });
+  // Minuteurs déclenchés depuis les mentions de temps de l'étape. Base horodatée
+  // (cf. `cookTimers`) : le restant se dérive de l'horloge, donc reste juste après
+  // un passage en arrière-plan. En natif, une notification OS est planifiée à
+  // l'échéance pour sonner même écran verrouillé (cf. `localNotifications`). À deux,
+  // ils sont communs : lancer, mettre en pause ou arrêter vaut pour les deux.
+  const { timers, timersOpen, setTimersOpen, now, addTimer, toggleTimer, restartTimer, removeTimer } =
+    useCookTimers(notify, { timers: together.timers, save: together.saveTimer, drop: together.dropTimer });
+  const timerStarters = useMemo(
+    () => new Map((together.session?.participants ?? []).filter(p => p.uid !== user?.uid).map(p => [p.uid, p])),
+    [together.session, user?.uid],
+  );
   const done = doneHere || together.finished;
   useEffect(() => { if (together.startedAt) startedAtRef.current = together.startedAt; }, [together.startedAt]);
   useEffect(() => {
@@ -180,7 +187,6 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   useEffect(() => {
     if (done && !isNested && !cookedByOther && !cookedLoggedRef.current && recipe.id) { cookedLoggedRef.current = true; onCooked?.(recipe.id); }
   }, [done, isNested, cookedByOther, onCooked, recipe.id]);
-  const pageKeys = useMemo(() => pages.map(pageKeyOf), [pages]);
   const companions = partnerPositions(pageKeys, together.others)
     .map(({ participant, index }) => ({ participant, progress: ((index + 1) / totalSteps) * 100, label: cookPageLabel(pages[index]) }));
   const isOverview = cur.kind === "overview";
@@ -347,7 +353,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         </div>
 
         {/* Minuteurs actifs : pile repliable ancrée à droite, au-dessus de la nav. */}
-        <CookTimersStack timers={timers} timersOpen={timersOpen} setTimersOpen={setTimersOpen} now={now}
+        <CookTimersStack timers={timers} starters={timerStarters} timersOpen={timersOpen} setTimersOpen={setTimersOpen} now={now}
           onGoToStep={goTo} onToggle={toggleTimer} onRestart={restartTimer} onRemove={removeTimer} />
 
         {/* Bottom nav */}

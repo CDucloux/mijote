@@ -4,9 +4,11 @@ import {
   HEARTBEAT_MS, othersByPage, parseCookSession,
   type CookParticipant, type CookTogetherSession,
 } from "@/lib/cookSession/together.js";
+import { parseSharedTimers, toSharedTimerEntry } from "@/lib/cookSession/sharedTimers.js";
+import type { CookTimer } from "@/lib/planning/cookTimers.js";
 import {
   joinCookSession, publishPresence, markStepDone, finishCookSession, leaveCookSession, subscribeCookSession,
-  type CookMember,
+  saveSharedTimer, removeSharedTimer, type CookMember,
 } from "@/lib/firebase/cookSessions.js";
 
 interface UseCookTogetherArgs {
@@ -18,6 +20,8 @@ interface UseCookTogetherArgs {
   user: { uid: string; displayName: string | null; email: string | null; photoURL: string | null } | null;
   /** Clé de la page courante (cf. `pageKeyOf`). */
   pageKey: string;
+  /** Clés de toutes les pages, dans l'ordre : traduit l'étape source des minuteurs. */
+  pageKeys: readonly string[];
   /** Faux pour un pas à pas imbriqué (préparation de base) : jamais partagé. */
   enabled: boolean;
 }
@@ -39,16 +43,22 @@ export interface CookTogether {
   offline: boolean;
   markDone: (realIdx: number) => void;
   finish: () => void;
+  /** Minuteurs communs une fois la session rejointe ; null en solo ou avant. */
+  timers: CookTimer[] | null;
+  /** Publie un minuteur (lancement, pause, reprise, relance). */
+  saveTimer: (timer: CookTimer) => void;
+  /** Arrête un minuteur pour tous. */
+  dropTimer: (id: string) => void;
 }
 
 const ignore = () => {};
 
 /**
  * Cuisiner à deux : rejoint la session de la recette dans le foyer, publie sa page et
- * sa présence (battement régulier), suit celle de l'autre membre et les étapes faites,
- * et quitte la session à la fermeture du pas à pas. Sans foyer, tout est inerte.
+ * sa présence (battement régulier), suit celle de l'autre membre, les étapes faites et
+ * les minuteurs communs, et quitte la session à la fermeture du pas à pas. Sans foyer, tout est inerte.
  */
-export function useCookTogether({ householdId, recipe, user, pageKey, enabled }: UseCookTogetherArgs): CookTogether {
+export function useCookTogether({ householdId, recipe, user, pageKey, pageKeys, enabled }: UseCookTogetherArgs): CookTogether {
   const me = useMemo<CookMember | null>(
     () => (user ? { uid: user.uid, name: user.displayName || user.email || "", photoURL: user.photoURL || "" } : null),
     [user],
@@ -133,10 +143,21 @@ export function useCookTogether({ householdId, recipe, user, pageKey, enabled }:
   // d'une recette, l'ancienne session « terminée » peut arriver avant sa remise à zéro.
   const finished = !!session?.finished && startedAt !== null && session.startedAt === startedAt;
 
+  const timers = useMemo(
+    () => (session && startedAt !== null && session.startedAt === startedAt ? parseSharedTimers(raw, pageKeys) : null),
+    [session, startedAt, raw, pageKeys],
+  );
+  const saveTimer = useCallback((timer: CookTimer) => {
+    if (hid && uid) saveSharedTimer(hid, rid, timer.id, toSharedTimerEntry(timer, pageKeys[timer.stepIdx] ?? "", uid)).catch(ignore);
+  }, [hid, rid, uid, pageKeys]);
+  const dropTimer = useCallback((id: string) => {
+    if (hid) removeSharedTimer(hid, rid, id).catch(ignore);
+  }, [hid, rid]);
+
   const online = useOnline();
 
   return {
     session, others, doneSteps, startedAt, finished, finishedBy: finished ? session?.finishedBy ?? null : null,
-    offline: hid !== null && !online, markDone, finish,
+    offline: hid !== null && !online, markDone, finish, timers, saveTimer, dropTimer,
   };
 }
