@@ -5354,7 +5354,14 @@ html.light .sheet-sticky-head::after {
 /* Dashboard de la console admin : cartes actionnables. Survol neutre (voile
    d'un cran porté par une ombre interne, l'inline gardant fond et bordure),
    chevron qui s'affirme et glisse de 2px vers la destination. Légende : soulignée. */
-.dash-card { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+/* Tableau de bord admin : surfaces flottantes sans bordure ; une colonne en mobile,
+   deux au large (avancement + bases | à compléter). */
+.dash-grid { display: grid; gap: 26px; align-items: start; }
+.dash-col { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+.dash-surface { background: var(--float-surface); box-shadow: var(--float-shadow); border-radius: 20px; }
+@media (min-width: 900px) {
+  .dash-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; }
+}
 .dash-chevron { display: inline-flex; color: var(--text3); transition: color 0.15s ease, transform 0.15s ease; }
 @media (hover: hover) and (pointer: fine) {
   .dash-card:hover .dash-chevron { color: var(--text2); transform: translateX(2px); }
