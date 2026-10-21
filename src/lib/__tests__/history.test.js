@@ -5,7 +5,7 @@ const baseRecipe = () => ({
   name: "Test",
   ingredients: [{ name: "Farine", amount: 200, unit: "g" }, { name: "Sel", amount: 1, unit: "pincée" }],
   utensils: [{ name: "Saladier" }],
-  steps: [{ description: "Mélanger" }, { description: "Cuire" }],
+  steps: [{ text: "Mélanger" }, { text: "Cuire" }],
   prepTime: 10, cookTime: 20, servings: 4,
 });
 
@@ -104,15 +104,21 @@ describe("diffSnapshots", () => {
   it("detects a changed step by position", () => {
     const base = snapshotOf(baseRecipe());
     const mutated = baseRecipe();
-    mutated.steps[1].description = "Cuire 20 min";
+    mutated.steps[1].text = "Cuire 20 min";
     const diff = diffSnapshots(base, snapshotOf(mutated));
     const ch = diff.steps.find(s => s.type === "changed");
     expect(ch).toMatchObject({ index: 1, from: "Cuire", to: "Cuire 20 min" });
   });
 
+  it("compare le texte réel des étapes (non-régression : le diff lisait un champ « description » inexistant)", () => {
+    const base = snapshotOf({ steps: [{ id: "s1", text: "Saisir la viande" }] });
+    const target = snapshotOf({ steps: [{ id: "s1", text: "Saisir la viande 3 min par face" }] });
+    expect(diffSnapshots(base, target).steps).toEqual([{ type: "changed", index: 0, from: "Saisir la viande", to: "Saisir la viande 3 min par face" }]);
+  });
+
   it("detects added/removed steps", () => {
     const base = snapshotOf(baseRecipe());
-    const target = snapshotOf({ ...baseRecipe(), steps: [{ description: "Mélanger" }] });
+    const target = snapshotOf({ ...baseRecipe(), steps: [{ text: "Mélanger" }] });
     const diff = diffSnapshots(base, target);
     expect(diff.steps.find(s => s.type === "removed")).toMatchObject({ index: 1 });
   });

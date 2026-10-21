@@ -8,7 +8,7 @@
  * @module recipes/recipeComponents
  */
 import { isComponentLine } from "@/lib/recipes/nutriscore.js";
-import type { IngredientLine, RecipeYield } from "@/lib/types.js";
+import type { IngredientLine, Recipe } from "@/lib/types.js";
 
 /** Ligne d'ingrédient (brute ou référence de composant) manipulée ici. */
 export interface ComponentLine extends IngredientLine {
@@ -17,18 +17,10 @@ export interface ComponentLine extends IngredientLine {
 }
 
 /** Recette-composant : rendement + ingrédients bruts. */
-export interface ComponentRecipe {
-  id?: string;
-  yield?: RecipeYield;
-  ingredients?: ComponentLine[];
-}
+export type ComponentRecipe = Pick<Recipe, "id" | "yield"> & { ingredients?: ComponentLine[] };
 
 /** Recette pouvant référencer un composant (pour l'avertissement de suppression). */
-export interface ReferencingRecipe {
-  id?: string;
-  name?: string;
-  ingredients?: { recipeId?: string }[];
-}
+export type ReferencingRecipe = Pick<Recipe, "id" | "name" | "ingredients">;
 
 const num = (v: number | string | null | undefined): number => parseFloat(String(v).replace(",", ".")) || 0;
 

@@ -12,9 +12,9 @@
  */
 
 import type { Resolver } from "@/lib/food/nameMatcher.js";
-import type { IngredientDbItem } from "@/lib/types.js";
+import type { IngredientDbItem, Recipe } from "@/lib/types.js";
 
-interface VeganRecipe { id?: string; ingredients?: { name?: string; recipeId?: string }[] }
+type VeganRecipe = Pick<Recipe, "id" | "ingredients">;
 /** Résolveur lu ici : seule la catégorie de la fiche compte. */
 type VeganResolver = Resolver<Pick<IngredientDbItem, "id" | "category">> | null | undefined;
 

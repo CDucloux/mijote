@@ -14,15 +14,13 @@
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import type { IngredientResolver } from "@/lib/food/nameMatcher.js";
+import type { Recipe } from "@/lib/types.js";
 
 /** Résolveur nom → fiche, absent quand la base n'est pas encore chargée. */
 type OptionalResolver = IngredientResolver | null | undefined;
 
 /** Recette inspectée (descend dans les préparations de base via `recipeId`). */
-export interface EligibleRecipe {
-  id?: string;
-  ingredients?: { name?: string; recipeId?: string }[];
-}
+export type EligibleRecipe = Pick<Recipe, "id" | "ingredients">;
 
 /** Contexte de résolution : résolveur + liste de recettes (pour les bases). */
 export interface EligibilityContext {

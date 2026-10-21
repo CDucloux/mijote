@@ -7,6 +7,7 @@
  * @module recipes/cooking
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import type { Recipe } from "@/lib/types.js";
 
 /** Mode de cuisson : id, libellé et mots-clés d'ustensiles associés. */
 export interface CookingMethod {
@@ -16,9 +17,7 @@ export interface CookingMethod {
 }
 
 /** Recette dont on lit les ustensiles pour déduire les modes de cuisson. */
-export interface CookableRecipe {
-  utensils?: { name?: string }[];
-}
+export type CookableRecipe = Pick<Recipe, "utensils">;
 
 export const COOKING_METHODS: CookingMethod[] = [
   { id: "four", label: "Four", keywords: ["four", "plat a gratin", "plat a four", "moule a cake", "moule a gateau", "moule a tarte", "cocotte en fonte", "ramequin", "lechefrite", "plaque de cuisson"] },

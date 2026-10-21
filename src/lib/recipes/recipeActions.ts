@@ -43,7 +43,7 @@ export function prepareRecipeForSave(
     return { error: `Quantité manquante pour : ${names}` };
   }
 
-  const recipesById = buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]);
+  const recipesById = buildRecipeIndex(recipes);
 
   // Règles propres aux composants (préparations de base).
   if (r.isComponent) {

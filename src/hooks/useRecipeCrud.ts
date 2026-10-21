@@ -7,7 +7,7 @@ import { prepareRecipeImport } from "@/lib/recipes/recipeImport.js";
 import type { NutriDbItem } from "@/lib/recipes/nutriscore.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { deleteImageByUrl } from "@/lib/firebase/storage.js";
-import { printRecipe, type PdfRecipe } from "@/lib/recipes/recipePdf.js";
+import { printRecipe } from "@/lib/recipes/recipePdf.js";
 import type { Recipe, SavedRecipe, IngredientLine, Collection, UtensilDbItem } from "@/lib/types.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
@@ -24,7 +24,7 @@ export interface RecipeCrudDeps {
   shoppingLists: ShoppingList[];
   setShoppingLists: Dispatch<SetStateAction<ShoppingList[]>>;
   ingredientDB: NutriDbItem[];
-  utensilDB: Pick<UtensilDbItem, "id" | "name">[];
+  utensilDB: Pick<UtensilDbItem, "id" | "name" | "image">[];
   techniques: unknown[];
   stock: string[];
   isPlus: boolean;
@@ -37,7 +37,7 @@ export interface RecipeCrudDeps {
 
 /** Index de recettes tel qu'attendu par les helpers courses/PDF (composants). */
 const componentIndex = (recipes: Recipe[]): Map<string, ComponentRecipe> =>
-  buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]) as unknown as Map<string, ComponentRecipe>;
+  buildRecipeIndex(recipes);
 
 /**
  * Recettes, opérations cœur (CRUD, courses, import/export). Sauvegarde, suppression
@@ -154,11 +154,11 @@ export function useRecipeCrud({
 
   const exportPDF = (recipe: Recipe): void => {
     notify("Ouverture de l'aperçu d'impression…");
-    printRecipe(recipe as unknown as PdfRecipe, {
+    printRecipe(recipe, {
       ingredientDB, utensilDB,
-      recipesById: buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]) as unknown as Map<string, PdfRecipe>,
+      recipesById: buildRecipeIndex(recipes),
       techniques,
-    } as Parameters<typeof printRecipe>[1]).catch(() => notify("Impression indisponible sur cet appareil.", "error"));
+    }).catch(() => notify("Impression indisponible sur cet appareil.", "error"));
   };
 
   return { saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF };

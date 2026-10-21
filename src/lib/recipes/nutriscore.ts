@@ -6,7 +6,7 @@
  * @module recipes/nutriscore
  */
 
-import type { IngredientDbItem, IngredientLine, IngredientNutrition, RecipeYield } from "@/lib/types.js";
+import type { IngredientDbItem, IngredientLine, IngredientNutrition, Recipe } from "@/lib/types.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { isFruitVeg } from "@/constants/categories.js";
 
@@ -26,8 +26,8 @@ const nutrient = (nutrition: IngredientNutrition, key: string): number => {
  * l'inclusion des fruits) avec repli sur le drapeau figé `nutrition.isVegetable`.
  */
 const countsAsFruitVeg = (di: NutriDbItem): boolean => isFruitVeg(di.category) || !!di.nutrition?.isVegetable;
-/** Recette (utilisée comme composant : rendement + ingrédients bruts). */
-interface NutriRecipe { id?: string; ingredients?: IngredientLine[]; yield?: RecipeYield }
+/** Recette lue comme composant : rendement + ingrédients bruts. */
+type NutriRecipe = Pick<Recipe, "id" | "ingredients" | "yield">;
 type RecipeIndex = Map<string, NutriRecipe> | null | undefined;
 /** Poids d'une unité en grammes ; l'objet marque une unité « à la pièce ». */
 type UnitEntry = number | { g: number; piece: true };
@@ -146,8 +146,8 @@ export const isComponentLine = (line: IngredientLine | null | undefined): boolea
  * @param recipes - Les recettes à indexer.
  * @returns Une map id → recette (recettes sans id ignorées).
  */
-export const buildRecipeIndex = (recipes: NutriRecipe[] | null | undefined): Map<string, NutriRecipe> =>
-  new Map((recipes || []).filter((r): r is NutriRecipe & { id: string } => !!r.id).map(r => [r.id, r]));
+export const buildRecipeIndex = <T extends Pick<Recipe, "id">>(recipes: readonly T[] | null | undefined): Map<string, T & { id: string }> =>
+  new Map((recipes || []).filter((r): r is T & { id: string } => !!r.id).map(r => [r.id, r]));
 
 /**
  * Résout l'entrée de base d'une ligne d'ingrédient BRUTE. Le `dbId` stocké est un

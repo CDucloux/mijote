@@ -9,7 +9,7 @@ import type { ActivityInput } from "@/lib/notifications/activity.js";
 
 /** Index de recettes tel qu'attendu par les fonctions de `publicRecipes`. */
 const indexOf = (recipes: PubRecipe[]): Map<string, PubRecipe> =>
-  buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]) as unknown as Map<string, PubRecipe>;
+  buildRecipeIndex(recipes);
 
 /** Dépendances injectées (état + notify + navigate). */
 export interface PublicRecipesDeps {

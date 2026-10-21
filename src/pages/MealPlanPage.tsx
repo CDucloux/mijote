@@ -15,7 +15,7 @@ import { computeDayIntake } from "@/lib/planning/dayIntake.js";
 import { isEligible } from "@/lib/food/dietFilter.js";
 import { createIngredientResolver } from "@/lib/food/nameMatcher.js";
 import { currentMonth } from "@/lib/food/seasonality.js";
-import { asNutriLetter } from "@/lib/recipes/nutriscore.js";
+import { asNutriLetter, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { DayIntakePill, DayIntakeSheet } from "../components/mealPlan/DayIntakeSheet.jsx";
@@ -111,7 +111,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const weekDays = useMemo(() => mondayWeekDays(currentDate), [currentDate]);
-  const recipesById = useMemo(() => new Map(recipes.flatMap(r => (r.id ? [[r.id, r] as const] : []))), [recipes]);
+  const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
   // Nutri-Score en direct SANS recalcul par ligne : on lit la lettre déjà mémoïsée
   // au niveau App (useRecipeDerived, un seul calcul par recette, stable tant que
   // recipes/ingredientDB ne bougent pas). Recomputer ici à chaque rendu/frappe dans

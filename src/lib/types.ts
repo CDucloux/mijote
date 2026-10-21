@@ -8,6 +8,7 @@
  * @module types
  */
 import type { RecipeFilters } from "@/lib/recipes/recipeFilters.js";
+import type { HistoryEntry } from "@/lib/recipes/history.js";
 
 /** Rendement d'une préparation de base (« pour 500 g », « pour 2 pots »…). */
 export interface RecipeYield {
@@ -159,6 +160,7 @@ export interface Step {
 export interface Recipe {
   id?: string;
   name?: string;
+  description?: string;
   category?: string;
   cuisine?: string;
   isComponent?: boolean;
@@ -183,6 +185,11 @@ export interface Recipe {
   clonedFrom?: { publicId: string; authorUid?: string; authorName?: string };
   /** Identifiant du doc public, une fois la recette publiée. */
   publicId?: string;
+  /** Création : date ISO (`YYYY-MM-DD`) à l'enregistrement, horodatage ms pour une copie. */
+  createdAt?: string | number;
+  updatedAt?: string | number;
+  /** Journal d'itérations (versions successives de la recette). */
+  history?: HistoryEntry[];
   [k: string]: unknown;
 }
 

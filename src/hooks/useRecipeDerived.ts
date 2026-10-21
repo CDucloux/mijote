@@ -3,7 +3,7 @@ import { createIngredientResolver, type IngredientResolver } from "@/lib/food/na
 import { isRecipeInSeason } from "@/lib/food/seasonality.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
-import type { IngredientDbItem, Recipe } from "@/lib/types.js";
+import type { IngredientDbItem, SavedRecipe } from "@/lib/types.js";
 
 /** Données dérivées mémoïsées pour une recette. */
 export interface RecipeDerived {
@@ -16,7 +16,7 @@ export interface RecipeDerived {
 /** Résultat du hook : résolveur d'ingrédients, index des recettes et données dérivées. */
 export interface UseRecipeDerivedResult {
   resolver: IngredientResolver;
-  recipesById: ReturnType<typeof buildRecipeIndex>;
+  recipesById: Map<string, SavedRecipe>;
   seasonVeganById: Map<string, RecipeDerived>;
 }
 
@@ -34,9 +34,9 @@ export interface UseRecipeDerivedResult {
  * @param ingredientDB - La base d'ingrédients (résolution nom → données).
  * @returns Le résolveur, l'index par id et les données dérivées par id de recette.
  */
-export function useRecipeDerived(recipes: Recipe[], ingredientDB: IngredientDbItem[] | null | undefined): UseRecipeDerivedResult {
+export function useRecipeDerived(recipes: SavedRecipe[], ingredientDB: IngredientDbItem[] | null | undefined): UseRecipeDerivedResult {
   const resolver = useMemo(() => createIngredientResolver(ingredientDB), [ingredientDB]);
-  const recipesById = useMemo(() => buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]), [recipes]);
+  const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
   const seasonVeganById = useMemo(() => {
     const m = new Map<string, RecipeDerived>();
     const db = (ingredientDB || []) as Parameters<typeof computeNutriInfo>[1];

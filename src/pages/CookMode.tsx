@@ -13,7 +13,7 @@ import { fmtQtyUnit } from "../lib/format.js";
 import { groupIngredientsByCategory, buildPendingComponents } from "@/lib/cookSession/misEnPlace.js";
 import { spoonConversions } from "@/lib/food/calculators.js";
 import { QuantityConvertSheet } from "../components/ingredient/QuantityConvertSheet.jsx";
-import { addVersion, nextVersionLabel, type HistoryRecipe } from "@/lib/recipes/history.js";
+import { addVersion, nextVersionLabel } from "@/lib/recipes/history.js";
 import { stepLinked } from "@/lib/recipes/stepLinks.js";
 import { useLS } from "../hooks/useLS.js";
 import { useCookSession } from "../hooks/useCookSession.js";
@@ -48,7 +48,7 @@ interface CookModeSharedProps {
   onCooked?: (recipeId: string) => void;
   /** IDs des préparations de base en stock (les autres sont à réaliser d'abord). */
   stockSet: Set<string> | undefined;
-  onUpdateRecipe?: (recipe: HistoryRecipe) => void;
+  onUpdateRecipe?: (recipe: Recipe) => void;
 }
 
 interface CookModeInnerProps extends CookModeSharedProps {
@@ -107,7 +107,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const canIterate = !isNested && !!onUpdateRecipe;
   const saveIteration = (rating: number | null, notes: string) => {
     if (!onUpdateRecipe) return;
-    const versioned: HistoryRecipe = recipe;
+    const versioned: Recipe = recipe;
     onUpdateRecipe(addVersion(versioned, { label: nextVersionLabel(versioned.history), rating, notes }));
     setIterOpen(false);
     notify?.("Itération ajoutée au carnet");

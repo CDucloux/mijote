@@ -8,7 +8,7 @@
  * @module planning/composedMeal
  */
 import { RECIPE_CATEGORIES } from "@/constants/recipeCategories.js";
-import type { MealItem, MealPlan } from "@/lib/types.js";
+import type { MealItem, MealPlan, Recipe } from "@/lib/types.js";
 
 export type { MealItem };
 
@@ -16,9 +16,7 @@ export type { MealItem };
 export type RoleId = "entree" | "plat" | "accompagnement" | "dessert";
 
 /** Recette (forme minimale) : seule la catégorie sert au calcul des rôles. */
-export interface CategorizedRecipe {
-  category?: string | null;
-}
+export type CategorizedRecipe = Pick<Recipe, "category">;
 
 /** Repas d'un créneau : un groupe d'items partageant un `groupId`. */
 export interface SlotGroup {

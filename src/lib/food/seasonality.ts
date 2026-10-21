@@ -7,11 +7,11 @@
  * @module food/seasonality
  */
 import type { Resolver } from "@/lib/food/nameMatcher.js";
-import type { IngredientDbItem } from "@/lib/types.js";
+import type { IngredientDbItem, Recipe } from "@/lib/types.js";
 
 /** Résolveur lu ici : seuls les mois de saison de la fiche comptent. */
 type SeasonResolver = Resolver<Pick<IngredientDbItem, "id" | "months">> | null | undefined;
-interface SeasonRecipe { ingredients?: { name?: string }[] }
+type SeasonRecipe = Pick<Recipe, "ingredients">;
 
 /** Score de saisonnalité d'une recette. */
 export interface SeasonScore { score: number; total: number; inSeason: number }

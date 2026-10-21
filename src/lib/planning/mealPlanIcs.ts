@@ -9,20 +9,10 @@
  * @module planning/mealPlanIcs
  */
 import { SLOT_BY_ID } from "@/constants/mealSlots.js";
-import type { MealPlan } from "@/lib/types.js";
+import type { MealPlan, Recipe } from "@/lib/types.js";
 
 /** Sous-ensemble de recette nécessaire à l'export calendrier. */
-export interface IcsRecipe {
-  id?: string;
-  name?: string;
-  description?: string;
-  servings?: number | string;
-  prepTime?: number;
-  cookTime?: number;
-  healthScore?: number;
-  source?: string;
-  ingredients?: { name?: string; amount?: number | string; unit?: string }[];
-}
+export type IcsRecipe = Pick<Recipe, "id" | "name" | "description" | "servings" | "prepTime" | "cookTime" | "healthScore" | "source" | "ingredients">;
 
 /** Identité pour l'organisateur / les participants (mode foyer). */
 export interface IcsPeople {
