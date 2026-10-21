@@ -38,8 +38,12 @@ function Spoon({ size = 20, color = "currentColor", weight = "regular", ...rest 
     <svg width={size} height={size} viewBox="0 0 256 256" fill="none" stroke={color} strokeWidth={SPOON_STROKE[weight]} strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg" {...rest}>
       {/* Orientée à 135° (cuilleron en haut à gauche, manche vers le bas à droite) */}
       <g transform="rotate(135 128 128)">
-        <ellipse cx="128" cy="84" rx="42" ry="56" fill={weight === "fill" || weight === "duotone" ? color : "none"} fillOpacity={weight === "duotone" ? 0.2 : 1} />
-        <line x1="128" y1="140" x2="128" y2="228" />
+        {/* Contour continu : cuilleron qui se resserre en col, manche qui s'élargit
+            jusqu'à un bout arrondi (comme les manches dessinés de Phosphor). */}
+        <path fill={weight === "fill" || weight === "duotone" ? color : "none"} fillOpacity={weight === "duotone" ? 0.2 : 1}
+          d="M120 130C97 125 82 105 82 80C82 50 102 26 128 26C154 26 174 50 174 80C174 105 159 125 136 130L141 210A13 13 0 0 1 115 210Z" />
+        {/* Reflet dans le cuilleron */}
+        {weight !== "fill" && <path d="M106 70C108 56 116 47 127 45" />}
       </g>
     </svg>
   );
