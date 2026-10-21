@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
-import { fmtQtyUnit } from "../../lib/format.js";
+import { capitalize, fmtQtyUnit } from "../../lib/format.js";
 import type { IngredientLine } from "@/lib/types.js";
 
 /** Ingrédient aplati pour la feuille de courses (clé locale `_fid` ajoutée par le parent). */
@@ -71,7 +71,7 @@ export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, i
               <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={30} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{ing.name}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{capitalize(ing.name)}</span>
                   <span style={{ fontSize: 12, color: "var(--text2)" }}>{fmtQtyUnit(Number(ing.amount ?? 0) * mult, ing.unit)}</span>
                   {inStock && (
                     <span style={{
