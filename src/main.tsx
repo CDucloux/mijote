@@ -87,7 +87,7 @@ if (!root) throw new Error('Élément #app introuvable dans index.html')
 
 ReactDOM.createRoot(root).render(
     <React.StrictMode>
-        <ErrorBoundary>
+        <ErrorBoundary homeHref={appZone ? APP_BASE : '/'}>
             <BrowserRouter basename={appZone ? APP_BASE : undefined}>
                 {appZone ? <App /> : <PublicApp />}
             </BrowserRouter>
