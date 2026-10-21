@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.73.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.74.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -133,6 +133,9 @@ toujours avec vous.
   faisant autre chose. Les
   gestes techniques repérés dans les étapes ouvrent un **glossaire enrichi**
   (définition, résultat attendu, erreurs fréquentes, à ne pas confondre).
+  **Cuisiner à deux** : un membre du foyer rejoint le pas-à-pas en cours (bandeau
+  « Rejoindre » sur tous les écrans), chacun voit l'avancée de l'autre et les
+  étapes faites sont partagées.
 - 📱 **Lanceur Android** : à l'appui long sur l'icône, des **raccourcis qui suivent
   le foyer** (prochain repas planifié, courses restantes, ajout en photo, planning),
   et trois **widgets** d'écran d'accueil : « Au menu » (repas du jour avec photos),
