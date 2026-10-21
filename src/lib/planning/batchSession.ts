@@ -10,7 +10,7 @@
  *
  * @module planning/batchSession
  */
-import type { IngredientLine, RecipeYield } from "@/lib/types.js";
+import type { IngredientDbItem, IngredientLine, RecipeYield } from "@/lib/types.js";
 import { flattenForShopping, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
 import { recipeCookingMethods, COOKING_METHODS } from "@/lib/recipes/cooking.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
@@ -136,14 +136,7 @@ export function weekEntries(mealPlan: Record<string, BatchEntry[]> = {}, dates: 
 export interface PrepResolver { (name: string | null | undefined): { id: string } | null }
 
 /** Ingrédient de la base enrichi (catégorie, poids/pièce, image, conseils). */
-export interface PrepDbItem {
-  id: string;
-  name?: string;
-  category?: string;
-  image?: string;
-  gramsPerPiece?: number;
-  tips?: { type?: string; text?: string }[];
-}
+export type PrepDbItem = Pick<IngredientDbItem, "id" | "name" | "category" | "image" | "gramsPerPiece" | "tips">;
 
 /** Un ingrédient à préparer, sommé sur toute la semaine. */
 export interface PrepItem {

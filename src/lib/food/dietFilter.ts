@@ -13,10 +13,10 @@
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { isRecipeVegan } from "@/lib/food/dietary.js";
+import type { IngredientResolver } from "@/lib/food/nameMatcher.js";
 
-/** Ingrédient résolu depuis la base (seule la catégorie sert ici). */
-export interface ResolvedItem { id: string; category?: string }
-export type IngredientResolver = ((name: string | undefined) => ResolvedItem | null) | null | undefined;
+/** Résolveur nom → fiche, absent quand la base n'est pas encore chargée. */
+type OptionalResolver = IngredientResolver | null | undefined;
 
 /** Recette inspectée (descend dans les préparations de base via `recipeId`). */
 export interface EligibleRecipe {
@@ -26,7 +26,7 @@ export interface EligibleRecipe {
 
 /** Contexte de résolution : résolveur + liste de recettes (pour les bases). */
 export interface EligibilityContext {
-  resolver?: IngredientResolver;
+  resolver?: OptionalResolver;
   recipes?: EligibleRecipe[];
   byId?: Map<string, EligibleRecipe>;
 }
@@ -82,7 +82,7 @@ export const ALLERGEN_SIGNALS: Record<string, { categories: string[]; keywords: 
  */
 export function collectIngredientSignals(
   recipe: EligibleRecipe | null | undefined,
-  { resolver, byId = new Map(), seen = new Set<string>() }: { resolver?: IngredientResolver; byId?: Map<string, EligibleRecipe>; seen?: Set<string> } = {},
+  { resolver, byId = new Map(), seen = new Set<string>() }: { resolver?: OptionalResolver; byId?: Map<string, EligibleRecipe>; seen?: Set<string> } = {},
 ): IngredientSignals {
   const categories = new Set<string>();
   const names: string[] = [];

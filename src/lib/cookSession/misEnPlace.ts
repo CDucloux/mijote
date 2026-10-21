@@ -2,14 +2,8 @@ import type { IngredientLine, Recipe } from "@/lib/types";
 import { consumptionFraction } from "@/lib/recipes/recipeComponents";
 import { findIngredientMatch, type DbEntry } from "@/lib/food/nameMatcher";
 import { sortedCategoryEntries } from "@/constants/categories.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 
-/** Définition d'un rayon (catégorie) telle que stockée dans les constantes. */
-export interface CategoryDef {
-  label?: string;
-  icon?: string;
-  order?: number;
-}
-export type CategoryMap = Record<string, CategoryDef>;
 
 /** Rayon de la mise en place : un en-tête de catégorie et ses ingrédients. */
 export interface IngredientGroup {
@@ -40,7 +34,7 @@ export interface PendingComponent {
 export function groupIngredientsByCategory(
   ingredients: readonly IngredientLine[] | null | undefined,
   ingredientDB: DbEntry[],
-  categories: CategoryMap,
+  categories: IngredientCategories,
 ): IngredientGroup[] {
   const buckets: Record<string, IngredientLine[]> = {};
   for (const ing of ingredients || []) {
@@ -48,7 +42,7 @@ export function groupIngredientsByCategory(
     const cat = info?.category || "other";
     (buckets[cat] = buckets[cat] || []).push(ing);
   }
-  const entries = sortedCategoryEntries(categories) as [string, CategoryDef][];
+  const entries = sortedCategoryEntries(categories);
   return entries
     .filter(([k]) => buckets[k]?.length)
     .map(([k, c]) => ({ key: k, label: c.label || k, icon: c.icon, items: buckets[k] }));

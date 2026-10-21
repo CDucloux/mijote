@@ -6,8 +6,11 @@
  * @module planning/cookingActivity
  */
 
-/** Planning : clé jour `YYYY-MM-DD` → items de repas. */
-export type MealPlan = Record<string, unknown[]>;
+/**
+ * Journal par jour (clé `YYYY-MM-DD` → entrées) : le planning (`MealPlan`) comme le
+ * journal des plats cuisinés s'y conforment, seul le nombre d'entrées compte ici.
+ */
+export type DailyLog = Record<string, readonly unknown[]>;
 
 /** Une case de la heatmap. */
 export interface HeatmapCell {
@@ -35,7 +38,7 @@ export interface Heatmap {
  * @param mealPlan - Le planning indexé par date.
  * @returns Une map jour → nombre d'items (jours vides omis).
  */
-export function activityCounts(mealPlan: MealPlan = {}): Map<string, number> {
+export function activityCounts(mealPlan: DailyLog = {}): Map<string, number> {
   const m = new Map<string, number>();
   for (const [date, items] of Object.entries(mealPlan)) {
     if (Array.isArray(items) && items.length) m.set(date, items.length);
@@ -69,7 +72,7 @@ const addDays = (d: Date, n: number): Date => { const x = new Date(d); x.setDate
  * @param options.end - Fin de la fenêtre (défaut : aujourd'hui).
  * @returns La heatmap (colonnes de cases + statistiques : total, série, max).
  */
-export function buildHeatmap(mealPlan: MealPlan = {}, { weeks = 26, end }: { weeks?: number; end?: Date | string } = {}): Heatmap {
+export function buildHeatmap(mealPlan: DailyLog = {}, { weeks = 26, end }: { weeks?: number; end?: Date | string } = {}): Heatmap {
   const counts = activityCounts(mealPlan);
   const last = end ? new Date(end) : new Date();
   last.setHours(12, 0, 0, 0); // midi : évite les bascules de date via toISOString

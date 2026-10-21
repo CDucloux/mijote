@@ -4,7 +4,7 @@
 // utilisent l'ingrédient, les plus faisables d'abord.
 
 import { PANTRY_STAPLE_CATEGORIES } from "@/constants/categories.js";
-import type { Resolver } from "@/lib/food/nameMatcher.js";
+import type { IngredientResolver } from "@/lib/food/nameMatcher.js";
 import type { Recipe } from "@/lib/types.js";
 
 /** Niveau d'un ingrédient du placard : plein (en stock), bientôt vide, ou à racheter. */
@@ -89,7 +89,7 @@ export interface RecipeUsingIngredient {
 export function recipesUsingIngredient(
   ingredientId: string,
   recipes: readonly Recipe[],
-  resolver: Resolver,
+  resolver: IngredientResolver,
   stockSet: ReadonlySet<string>,
 ): RecipeUsingIngredient[] {
   const out: RecipeUsingIngredient[] = [];

@@ -8,6 +8,7 @@
  * @module food/ingredientsMarkdown
  */
 import { formatMonths } from "@/lib/food/seasonality.js";
+import type { IngredientDbItem } from "@/lib/types.js";
 
 /** Colonne de la spec Markdown (le drapeau indique le traitement de la cellule). */
 export interface MdColumn {
@@ -76,21 +77,13 @@ export const ING_MD_BOUNDS: Record<string, [number, number]> = {
   salt: [0, 100], gramsPerPiece: [0, 10000],
 };
 
-/** Ingrédient tel que l'export Markdown le lit (forme large de la base). */
-export interface MarkdownIngredient {
-  name?: string;
-  category?: string;
-  aliases?: string[];
-  months?: number[];
-  tips?: { type?: string; text?: string }[];
-  nutrition?: Record<string, unknown> | null;
-  [key: string]: unknown;
-}
+/** Ingrédient tel que l'export Markdown le lit : une fiche dont tout champ peut manquer. */
+export type MarkdownIngredient = Partial<IngredientDbItem>;
 
 function ingredientCell(item: MarkdownIngredient, col: MdColumn): string {
   if (col.nut) {
     const v = item.nutrition?.[col.key];
-    return v == null || v === "" ? "" : escapeMdCell(v);
+    return v == null ? "" : escapeMdCell(v);
   }
   if (col.key === "aliases") return escapeMdCell((item.aliases || []).join(", "));
   if (col.months) return escapeMdCell(formatMonths(item.months));

@@ -14,7 +14,7 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries, isFruitVeg } from "../../con
 import { ingredientMonths, isIngredientInSeason, SEASONAL_CATEGORIES, formatMonths } from "@/lib/food/seasonality.js";
 import { NUTRI_RI, MACRO_COLORS } from "../../constants/nutritionDisplay.js";
 import type { IngredientDbItem } from "@/lib/types.js";
-import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 
 /** Fiche en cours d'édition : copie de travail, validée seulement à l'enregistrement. */
 export type IngredientDraft = IngredientDbItem;
@@ -26,7 +26,7 @@ interface IngredientDetailProps {
   /** Absent si l'identifiant de l'URL ne correspond à aucune fiche. */
   ingredient: IngredientDbItem | undefined;
   ingredientDB: IngredientDbItem[];
-  categories?: CategoryMap;
+  categories?: IngredientCategories;
   isAdmin?: boolean;
   /** Ouvre directement en édition (ingrédient fraîchement créé). */
   autoEdit?: boolean;

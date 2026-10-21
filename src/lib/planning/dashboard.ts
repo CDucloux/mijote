@@ -9,7 +9,7 @@ import { slotOrder } from "@/constants/mealSlots.js";
 import { aggregateShopping, type ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
 import { itemRole, roleOrder } from "@/lib/planning/composedMeal.js";
-import type { MealItem, Recipe } from "@/lib/types.js";
+import type { IngredientDbItem, MealItem, Recipe } from "@/lib/types.js";
 
 /** Item de planning (alias de domaine). */
 export type PlanEntry = MealItem;
@@ -20,10 +20,7 @@ export type DashRecipe = Recipe;
 export type { ShoppingList };
 
 /** Ingrédient de la base (forme minimale). */
-export interface DashIngredient {
-  id: string;
-  name?: string;
-}
+export type DashIngredient = Pick<IngredientDbItem, "id" | "name">;
 
 /** Repas planifié enrichi de sa recette résolue. */
 export interface TodayMeal extends PlanEntry {

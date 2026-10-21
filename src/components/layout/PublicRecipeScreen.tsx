@@ -5,7 +5,7 @@ import { RecipeNotFound } from "../recipe/RecipeNotFound.jsx";
 import { deletePublicRecipe, reportPublicRecipe } from "@/lib/firebase/community.js";
 import type { PublicDoc } from "@/lib/household/publicRecipes.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
-import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 import type { Recipe, UtensilDbItem } from "@/lib/types.js";
 
 interface PublicRecipeScreenProps {
@@ -23,7 +23,7 @@ interface PublicRecipeScreenProps {
   notify: (message: string, type?: string) => void;
   ingredientDB: DbEntry[];
   utensilDB: UtensilDbItem[];
-  categories: CategoryMap;
+  categories: IngredientCategories;
 }
 
 /** Fiche d'une recette publique de la communauté (`/discover/:pubId`), en lecture seule. */

@@ -14,11 +14,10 @@
 import { recipeSeasonScore, currentMonth } from "@/lib/food/seasonality.js";
 import { collectIngredientSignals, isEligible, type DietPreferences } from "@/lib/food/dietFilter.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import type { IngredientResolver } from "@/lib/food/nameMatcher.js";
 import { roleForCategory, newGroupId, platNeedsSide, type RoleId } from "@/lib/planning/composedMeal.js";
 import { PANTRY_STAPLE_CATEGORIES } from "@/constants/categories.js";
 
-/** Résolveur nom d'ingrédient → entrée de base. */
-export type IngredientResolver = (name: string | undefined) => { id: string; category?: string; months?: unknown } | null;
 
 /** Recette candidate du générateur (forme minimale ; les appelants en portent plus). */
 export interface PlannerRecipe {

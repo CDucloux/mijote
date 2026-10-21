@@ -7,16 +7,14 @@
  * @module recipes/recipeImport
  */
 import { validateRecipeSchema } from "@/lib/recipes/recipeSchema.js";
-import { buildNameMatcher } from "@/lib/food/nameMatcher.js";
-import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
+import { buildNameMatcher, type MatchableEntry } from "@/lib/food/nameMatcher.js";
+import { computeNutriInfo, type NutriDbItem } from "@/lib/recipes/nutriscore.js";
 import { parseCut } from "@/lib/recipes/decoupe.js";
 import type { Recipe, SavedRecipe } from "@/lib/types.js";
 
 /** Recette importée (alias du type de domaine). */
 export type ImportRecipe = Recipe;
 
-/** Ingrédient / ustensile de la base (forme minimale). */
-export interface ImportDbItem { id: string; name: string; aliases?: string[]; [k: string]: unknown }
 
 /** Résultat d'un import réussi. */
 export interface ImportResult {
@@ -39,7 +37,7 @@ export interface ImportResult {
  */
 export function prepareRecipeImport(
   json: string,
-  { ingredientDB = [], utensilDB = [] }: { ingredientDB?: ImportDbItem[]; utensilDB?: ImportDbItem[] } = {},
+  { ingredientDB = [], utensilDB = [] }: { ingredientDB?: NutriDbItem[]; utensilDB?: MatchableEntry[] } = {},
 ): { error: string } | ImportResult {
   let data: unknown;
   try { data = JSON.parse(json); }

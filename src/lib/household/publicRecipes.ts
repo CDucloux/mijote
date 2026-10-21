@@ -10,7 +10,7 @@
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { ANIMAL_CATEGORIES } from "@/lib/food/dietary.js";
 import { isComponentLine } from "@/lib/recipes/nutriscore.js";
-import type { Recipe, IngredientLine } from "@/lib/types.js";
+import type { Recipe, IngredientLine, IngredientDbItem } from "@/lib/types.js";
 
 /** Ligne d'ingrédient (brute ou composant, alias de domaine). */
 export type PubLine = IngredientLine;
@@ -29,7 +29,7 @@ export interface PubUser {
 }
 
 /** Ingrédient de la base (forme minimale). */
-export interface PubDbItem { id: string; category?: string }
+export type PubDbItem = Pick<IngredientDbItem, "id" | "category">;
 
 /** Document public complet (recette dénormalisée + refs). */
 export interface PublicDoc {

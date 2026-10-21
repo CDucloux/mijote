@@ -6,12 +6,13 @@
  * @module recipes/nutriscore
  */
 
-import type { IngredientLine, IngredientNutrition, RecipeYield } from "@/lib/types.js";
+import type { IngredientDbItem, IngredientLine, IngredientNutrition, RecipeYield } from "@/lib/types.js";
 import { findIngredientMatch } from "@/lib/food/nameMatcher.js";
 import { isFruitVeg } from "@/constants/categories.js";
 
 /** Entrée de base minimale exploitée pour le calcul (`nutrition: null` = non renseignée). */
-interface DbItem { id: string; category?: string; gramsPerPiece?: number; nutrition?: IngredientNutrition | null }
+/** Fiche de base lue par le calcul nutritionnel (rapprochement par nom, poids, valeurs, image). */
+export type NutriDbItem = Pick<IngredientDbItem, "id" | "name" | "aliases" | "category" | "image" | "gramsPerPiece" | "nutrition">;
 
 /** Valeur numérique d'un nutriment, 0 si absente (ou drapeau non numérique). */
 const nutrient = (nutrition: IngredientNutrition, key: string): number => {
@@ -24,7 +25,7 @@ const nutrient = (nutrition: IngredientNutrition, key: string): number => {
  * On dérive de la CATÉGORIE (source de vérité, robuste aux fiches enregistrées avant
  * l'inclusion des fruits) avec repli sur le drapeau figé `nutrition.isVegetable`.
  */
-const countsAsFruitVeg = (di: DbItem): boolean => isFruitVeg(di.category) || !!di.nutrition?.isVegetable;
+const countsAsFruitVeg = (di: NutriDbItem): boolean => isFruitVeg(di.category) || !!di.nutrition?.isVegetable;
 /** Recette (utilisée comme composant : rendement + ingrédients bruts). */
 interface NutriRecipe { id?: string; ingredients?: IngredientLine[]; yield?: RecipeYield }
 type RecipeIndex = Map<string, NutriRecipe> | null | undefined;
@@ -112,7 +113,7 @@ export const UNIT_GRAMS: Record<string, UnitEntry> = {
  * @param dbItem - L'ingrédient de la base (pour `gramsPerPiece` des unités « à la pièce »).
  * @returns La masse en grammes (au moins 1).
  */
-export function ingredientGrams(recipeIng: IngredientLine, dbItem?: DbItem): number {
+export function ingredientGrams(recipeIng: IngredientLine, dbItem?: NutriDbItem): number {
   const amount = parseFloat(String(recipeIng.amount).replace(",", ".")) || 1;
   const unit = (recipeIng.unit || "").trim().toLowerCase();
   const entry = UNIT_GRAMS[unit];
@@ -155,20 +156,18 @@ export const buildRecipeIndex = (recipes: NutriRecipe[] | null | undefined): Map
  * (comme l'image, la saison et le stock côté fiche), pour que la nutrition tienne
  * compte des ingrédients appariés après coup, sans devoir ré-enregistrer.
  */
-function dbItemFor(line: IngredientLine, ingredientDB: DbItem[]): DbItem | undefined {
+function dbItemFor(line: IngredientLine, ingredientDB: NutriDbItem[]): NutriDbItem | undefined {
   if (line.dbId) {
     const byId = ingredientDB.find(d => d.id === line.dbId);
     if (byId) return byId;
   }
-  // `findIngredientMatch` type sa base avec `name` requis ; notre `DbItem` (calcul)
-  // ne modélise que id/nutrition. La base réelle porte `name` → cast sûr.
-  return line.name ? (findIngredientMatch(line.name, ingredientDB as unknown as Parameters<typeof findIngredientMatch>[1]) as DbItem | null) ?? undefined : undefined;
+  return findIngredientMatch(line.name, ingredientDB) ?? undefined;
 }
 
 interface RawAgg { tot: Record<string, number>; mass: number; covered: number; vegMass: number }
 
 /** Agrège les ingrédients BRUTS d'une liste (ignore les sous-références composant). */
-function aggregateRaw(ingredients: IngredientLine[] | undefined, ingredientDB: DbItem[], keys: readonly string[], wantVeg: boolean): RawAgg {
+function aggregateRaw(ingredients: IngredientLine[] | undefined, ingredientDB: NutriDbItem[], keys: readonly string[], wantVeg: boolean): RawAgg {
   const tot: Record<string, number> = Object.fromEntries(keys.map(k => [k, 0]));
   let mass = 0, covered = 0, vegMass = 0;
   for (const ci of ingredients || []) {
@@ -193,7 +192,7 @@ interface ComponentAdd { totAdd: Record<string, number>; massAdd: number; covere
  * réduction est reflétée : nutriments = totaux bruts × fraction, répartis sur la
  * masse FINIE → densité ↑.
  */
-function componentContribution(line: IngredientLine, recipesById: RecipeIndex, ingredientDB: DbItem[], keys: readonly string[], wantVeg: boolean): ComponentAdd | null {
+function componentContribution(line: IngredientLine, recipesById: RecipeIndex, ingredientDB: NutriDbItem[], keys: readonly string[], wantVeg: boolean): ComponentAdd | null {
   const comp = line.recipeId ? recipesById?.get(line.recipeId) : null;
   // Rendement saisi au formulaire : peut arriver en texte (« 500 », « 500,5 »).
   const yieldAmount = num(comp?.yield?.amount);
@@ -218,7 +217,7 @@ const NS_KEYS = ["calories", "sugar", "saturatedFat", "salt", "fiber", "protein"
  * @param recipesById - Index des recettes (résolution des composants).
  * @returns `{ score, letter }` (score 50 / lettre `null` si aucun ingrédient).
  */
-export function computeNutriInfo(ingredients: IngredientLine[] | null | undefined, ingredientDB: DbItem[], recipesById?: RecipeIndex): NutriInfo {
+export function computeNutriInfo(ingredients: IngredientLine[] | null | undefined, ingredientDB: NutriDbItem[], recipesById?: RecipeIndex): NutriInfo {
   const raw = nutriRaw(ingredients, ingredientDB, recipesById);
   return raw ? { score: raw.score, letter: raw.letter } : { score: 50, letter: null };
 }
@@ -249,7 +248,7 @@ export interface NutriBreakdown {
  * Calcul BRUT et détaillé du Nutri-Score (accumulation partagée avec
  * {@link computeNutriInfo}). Renvoie `null` si aucune donnée exploitable.
  */
-function nutriRaw(ingredients: IngredientLine[] | null | undefined, ingredientDB: DbItem[], recipesById?: RecipeIndex): NutriBreakdown | null {
+function nutriRaw(ingredients: IngredientLine[] | null | undefined, ingredientDB: NutriDbItem[], recipesById?: RecipeIndex): NutriBreakdown | null {
   if (!ingredients || ingredients.length === 0) return null;
   let mass = 0, vegMass = 0;
   const tot: Record<string, number> = { calories: 0, sugar: 0, saturatedFat: 0, salt: 0, fiber: 0, protein: 0 };
@@ -322,7 +321,7 @@ function nutriRaw(ingredients: IngredientLine[] | null | undefined, ingredientDB
  * @param recipesById - Index des recettes (composants).
  * @returns Le détail ({@link NutriBreakdown}) ou `null` si aucune donnée.
  */
-export function computeNutriBreakdown(ingredients: IngredientLine[] | null | undefined, ingredientDB: DbItem[], recipesById?: RecipeIndex): NutriBreakdown | null {
+export function computeNutriBreakdown(ingredients: IngredientLine[] | null | undefined, ingredientDB: NutriDbItem[], recipesById?: RecipeIndex): NutriBreakdown | null {
   return nutriRaw(ingredients, ingredientDB, recipesById);
 }
 
@@ -349,7 +348,7 @@ export interface NutritionDetail {
  * @param recipesById - Index des recettes (composants).
  * @returns Le détail nutritionnel (totaux, par portion, pour 100 g, masse, couverture).
  */
-export function computeNutritionDetail(ingredients: IngredientLine[] | null | undefined, ingredientDB: DbItem[], servings: number, recipesById?: RecipeIndex): NutritionDetail {
+export function computeNutritionDetail(ingredients: IngredientLine[] | null | undefined, ingredientDB: NutriDbItem[], servings: number, recipesById?: RecipeIndex): NutritionDetail {
   const tot: Record<string, number> = Object.fromEntries(NUTRI_KEYS.map(k => [k, 0]));
   let mass = 0, covered = 0;
   for (const recipeIng of ingredients || []) {

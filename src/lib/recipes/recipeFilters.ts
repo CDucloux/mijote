@@ -11,6 +11,7 @@ import { computeDifficulty, DIFFICULTY_LABEL } from "@/lib/recipes/difficulty.js
 import { RECIPE_CATEGORIES } from "@/constants/recipeCategories.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import type { Recipe } from "@/lib/types.js";
+import type { IngredientResolver } from "@/lib/food/nameMatcher.js";
 
 /** État de filtrage avancé (une « vue » de la bibliothèque). */
 export interface RecipeFilters {
@@ -33,7 +34,7 @@ export type FilterableRecipe = Recipe;
 
 /** Dépendances facultatives pour le prédicat (résolveur, techniques, recettes). */
 export interface FilterContext {
-  resolver?: (name: string | undefined) => { id: string; category?: string; months?: unknown } | null;
+  resolver?: IngredientResolver;
   techniques?: unknown;
   techIndex?: unknown;
   recipes?: FilterableRecipe[];

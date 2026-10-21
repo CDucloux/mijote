@@ -55,7 +55,7 @@ const readStoredUndo = (): StoredUndo | null => {
  *   Le snapshot est persisté (localStorage) → l'undo survit à un rechargement de page.
  */
 export function useMealPlanner({ recipes = [], ingredientDB = [], preferences = {}, stock = [], mealPlan = {}, setMealPlan }: MealPlannerDeps) {
-  const resolver = useMemo(() => createIngredientResolver((ingredientDB || []) as Parameters<typeof createIngredientResolver>[0]), [ingredientDB]);
+  const resolver = useMemo(() => createIngredientResolver(ingredientDB), [ingredientDB]);
   // Amorçage depuis le stockage (une passe) : l'undo d'une génération précédente
   // reste proposé après un reload, tant qu'on ne l'a pas annulé ou re-généré.
   const undoRef = useRef<MealPlan | null>(null);

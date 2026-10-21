@@ -5,7 +5,7 @@
  *
  * @module recipes/recipeActions
  */
-import { computeNutriInfo, buildRecipeIndex, isComponentLine } from "@/lib/recipes/nutriscore.js";
+import { computeNutriInfo, buildRecipeIndex, isComponentLine, type NutriDbItem } from "@/lib/recipes/nutriscore.js";
 import { flattenForShopping, mergeRawLines, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
 import type { Recipe, SavedRecipe, IngredientLine, Collection } from "@/lib/types.js";
 import type { ShoppingItem } from "@/lib/food/shoppingAggregate.js";
@@ -15,9 +15,6 @@ export type RecipeLine = IngredientLine;
 
 /** Recette manipulée par les actions (alias du type de domaine). */
 export type ActionRecipe = Recipe;
-
-/** Ingrédient de la base (forme minimale). */
-export interface ActionDbItem { id: string; image?: string }
 
 /** Carnet (manuel ou intelligent, alias du type de domaine). */
 export type ActionCollection = Collection;
@@ -38,7 +35,7 @@ const norm = (s: string | undefined): string => (s || "").toLowerCase().trim();
  */
 export function prepareRecipeForSave(
   r: ActionRecipe,
-  { recipes, ingredientDB }: { recipes: ActionRecipe[]; ingredientDB: ActionDbItem[] },
+  { recipes, ingredientDB }: { recipes: ActionRecipe[]; ingredientDB: NutriDbItem[] },
 ): { error: string } | { recipe: SavedRecipe } {
   const missingQty = (r.ingredients || []).filter(ing => (ing.name || ing.dbId || ing.recipeId) && !(Number(ing.amount) > 0));
   if (missingQty.length > 0) {
@@ -132,7 +129,7 @@ export function buildShoppingItems(
   recipe: ActionRecipe,
   selectedIngredients: RecipeLine[] | null | undefined,
   mult: number | undefined,
-  ingredientDB: ActionDbItem[],
+  ingredientDB: NutriDbItem[],
   recipesById: Map<string, ComponentRecipe>,
   stockSet: Set<string>,
 ): ShoppingItem[] {

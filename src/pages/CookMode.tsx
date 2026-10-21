@@ -32,7 +32,7 @@ import { useCookTogether } from "../hooks/useCookTogether.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import type { IngredientLine, Recipe, Utensil, UtensilDbItem } from "@/lib/types.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
-import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 import type { CookPage } from "../components/cookMode/CookSidebar.js";
 import type { PrecautionSheetTarget } from "../components/recipeDetail/recipeView.js";
 
@@ -42,7 +42,7 @@ interface CookModeSharedProps {
   mult: number;
   ingredientDB: DbEntry[];
   utensilDB: UtensilDbItem[] | undefined;
-  categories?: CategoryMap;
+  categories?: IngredientCategories;
   onClose: () => void;
   /** Consigne le plat au journal de cuisine (recette principale uniquement). */
   onCooked?: (recipeId: string) => void;

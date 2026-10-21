@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { buildHeatmap } from "@/lib/planning/cookingActivity.js";
-import type { HeatmapCell, MealPlan } from "@/lib/planning/cookingActivity.js";
+import type { DailyLog, HeatmapCell } from "@/lib/planning/cookingActivity.js";
 
 // ─── HEATMAP D'ACTIVITÉ CUISINE (façon GitHub) ───────────────────────────────
 // Colonnes = semaines (lundi→dimanche), teinte selon le nombre de repas du jour.
@@ -21,7 +21,7 @@ function Legend() {
   );
 }
 
-export function CookingHeatmap({ mealPlan = {}, weeks = 26 }: { mealPlan?: MealPlan; weeks?: number }) {
+export function CookingHeatmap({ mealPlan = {}, weeks = 26 }: { mealPlan?: DailyLog; weeks?: number }) {
   const data = useMemo(() => buildHeatmap(mealPlan, { weeks }), [mealPlan, weeks]);
 
   // Étiquettes de mois : au-dessus de la 1re colonne où le mois change.
@@ -67,6 +67,6 @@ export function CookingHeatmap({ mealPlan = {}, weeks = 26 }: { mealPlan?: MealP
 }
 
 // Statistiques compactes dérivées de la même source (pour l'en-tête du profil).
-export function useCookingStats(mealPlan: MealPlan, weeks = 26) {
+export function useCookingStats(mealPlan: DailyLog, weeks = 26) {
   return useMemo(() => buildHeatmap(mealPlan, { weeks }), [mealPlan, weeks]);
 }

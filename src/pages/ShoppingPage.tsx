@@ -8,7 +8,7 @@ import { useLongPress } from "../hooks/useLongPress.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import { useShopping, ALL_ID, type StockSinks } from "../hooks/useShopping.js";
-import { stockMatchesFromChecked, type CategoriesConfig } from "@/lib/food/shoppingList.js";
+import { stockMatchesFromChecked } from "@/lib/food/shoppingList.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
 import type { Recipe } from "@/lib/types.js";
@@ -21,13 +21,14 @@ import { ConfirmClearSheet } from "../components/shopping/ConfirmClearSheet.jsx"
 import { AddItemSheet } from "../components/shopping/AddItemSheet.jsx";
 import { ListConfigSheet, type ConfigListDraft } from "../components/shopping/ListConfigSheet.jsx";
 import { busyFloor } from "@/lib/ui/busyFloor.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 
 interface ShoppingPageProps extends StockSinks {
   shoppingLists: ShoppingList[];
   setShoppingLists: Dispatch<SetStateAction<ShoppingList[]>>;
   ingredientDB: DbEntry[];
   recipes?: Recipe[];
-  categories?: CategoriesConfig;
+  categories?: IngredientCategories;
   /** Données partagées encore en hydratation : spinner plutôt qu'état vide. */
   loading?: boolean;
 }

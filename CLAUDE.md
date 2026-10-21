@@ -16,7 +16,8 @@ La dette technique est l'ennemi. Chaque changement doit **réduire ou maintenir*
 ## 2. Typage : TypeScript PARTOUT, non négociable
 - **Tout le code de `src/` est en TypeScript** : composants et pages en `.tsx`, hooks et logique en `.ts` (`.tsx` si JSX). Plus aucun `.js`/`.jsx` : la migration est terminée et `allowJs` est désactivé. Seuls les tests `__tests__/*.test.js` existants restent tolérés ; un test neuf naît en `.ts`.
 - Tout code dans `src/lib/` et `functions/` est en **TypeScript fortement typé**. Interdits : `any` implicite ou explicite (préférer `unknown` + narrowing), types manquants sur les signatures publiques, casts non justifiés.
-- **Hooks** : props et retour via une interface dédiée, frontières avec `lib/` typées par `Parameters<typeof fn>[i]` / `ReturnType<>`, jamais de cast à l'aveugle.
+- **Types dérivés, jamais recopiés.** Un concept = UN type canonique (`src/lib/types.ts` ou le module qui possède le concept). Une fonction qui n'a besoin que de quelques champs prend un type DÉRIVÉ de ce canonique (`Pick<Recipe, "id" | "ingredients">`, `Partial<>`, `Omit<>`, générique `<T extends Pick<Recipe, "id">>` quand elle rend ce qu'elle reçoit), jamais une interface réécrite à la main ni un alias vide (`type ActionRecipe = Recipe`). Une copie diverge en silence (champ devenu obligatoire, type élargi) et se paie ensuite en casts (`as unknown as`) : un cast de ce genre est le signal d'un type recopié à dériver.
+- **Hooks** : props et retour via une interface dédiée, frontières avec `lib/` typées par les types de domaine ou leurs dérivés (`Parameters<typeof fn>[i]` / `ReturnType<>` en annotation, jamais en cast).
 - Les payloads externes (réponse LLM, données Firestore, entrées réseau) sont typés `unknown` puis validés/narrowés, jamais castés à l'aveugle.
 - `tsc --noEmit` doit passer (0 erreur). `strict` est activé, il le reste.
 

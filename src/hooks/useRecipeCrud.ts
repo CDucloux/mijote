@@ -1,13 +1,14 @@
 import type { Dispatch, SetStateAction } from "react";
-import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems, type ActionDbItem } from "@/lib/recipes/recipeActions.js";
+import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "@/lib/recipes/recipeActions.js";
 import { recipesReferencing } from "@/lib/recipes/recipeComponents.js";
 import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
-import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImport.js";
+import { prepareRecipeImport } from "@/lib/recipes/recipeImport.js";
+import type { NutriDbItem } from "@/lib/recipes/nutriscore.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { deleteImageByUrl } from "@/lib/firebase/storage.js";
 import { printRecipe, type PdfRecipe } from "@/lib/recipes/recipePdf.js";
-import type { Recipe, SavedRecipe, IngredientLine, Collection } from "@/lib/types.js";
+import type { Recipe, SavedRecipe, IngredientLine, Collection, UtensilDbItem } from "@/lib/types.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
 import type { ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
@@ -22,8 +23,8 @@ export interface RecipeCrudDeps {
   setEditingRecipe: (r: Recipe | null) => void;
   shoppingLists: ShoppingList[];
   setShoppingLists: Dispatch<SetStateAction<ShoppingList[]>>;
-  ingredientDB: ActionDbItem[];
-  utensilDB: ImportDbItem[];
+  ingredientDB: NutriDbItem[];
+  utensilDB: Pick<UtensilDbItem, "id" | "name">[];
   techniques: unknown[];
   stock: string[];
   isPlus: boolean;
@@ -131,7 +132,7 @@ export function useRecipeCrud({
   };
 
   const importJSON = (json: string): void => {
-    const result = prepareRecipeImport(json, { ingredientDB: ingredientDB as unknown as ImportDbItem[], utensilDB });
+    const result = prepareRecipeImport(json, { ingredientDB, utensilDB });
     if ("error" in result) { notify(result.error, "error"); return; }
     const { prepared, linked, rejected } = result;
     // Quota du plan : borne haute (avant déduplication) des recettes ajoutées.

@@ -16,7 +16,7 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries } from "../constants/categori
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import type { PurgeScope } from "../hooks/useAccount.js";
-import type { CategoriesConfig } from "@/lib/food/shoppingList.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
 import type { Recipe } from "@/lib/types.js";
 
@@ -71,7 +71,7 @@ interface ProfilePageProps {
   /** Résout `true` si le compte a bien été supprimé. */
   onDeleteAccount?: () => Promise<boolean>;
   ingredientDB?: DbEntry[];
-  categories?: CategoriesConfig;
+  categories?: IngredientCategories;
   onExportAll?: () => void;
   /** Importe le contenu texte d'un fichier JSON ; lève si le fichier est invalide. */
   onImport?: (json: string) => void;

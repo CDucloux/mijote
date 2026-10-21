@@ -19,7 +19,7 @@ import { fmtQtyUnit } from "@/lib/format.js";
 import { outboundSourceHref, sourceHost } from "@/lib/sources/outboundLink.js";
 import { Capacitor } from "@capacitor/core";
 import { Printer } from "@bcyesil/capacitor-plugin-printer";
-import type { IngredientLine, Step } from "@/lib/types.js";
+import type { IngredientDbItem, IngredientLine, Step, UtensilDbItem } from "@/lib/types.js";
 
 /** Ligne d'ingrédient/ustensile d'une recette pour le rendu PDF (alias de domaine). */
 export type PdfLine = IngredientLine;
@@ -48,13 +48,13 @@ export interface PdfRecipe {
   [k: string]: unknown;
 }
 
-/** Élément de base (ingrédient ou ustensile) : id + image. */
-export interface PdfDbItem { id: string; image?: string }
+/** Fiche d'ingrédient lue à l'impression : image, et rapprochement par nom pour le badge vegan. */
+export type PdfIngredient = Pick<IngredientDbItem, "id" | "name" | "aliases" | "image" | "category">;
 
 /** Dépendances de rendu (bases d'ingrédients/ustensiles, index de recettes, techniques). */
 export interface PdfDbs {
-  ingredientDB?: PdfDbItem[];
-  utensilDB?: PdfDbItem[];
+  ingredientDB?: PdfIngredient[];
+  utensilDB?: Pick<UtensilDbItem, "id" | "image">[];
   recipesById?: Map<string, PdfRecipe>;
   techniques?: unknown[];
   /** Source de la police des drapeaux (URL ou data URI). Sans elle, les paires
@@ -98,7 +98,7 @@ export function buildRecipePdfHtml(recipe: PdfRecipe, { ingredientDB = [], utens
   // recette et cuisine. Superposés en haut à droite DANS l'image du plat ; en
   // l'absence d'image, repli en pills claires sous le titre.
   const recipesList = recipesById ? [...recipesById.values()] : [];
-  const resolver = createIngredientResolver((ingredientDB || []) as Parameters<typeof createIngredientResolver>[0]);
+  const resolver = createIngredientResolver(ingredientDB);
   const vegan = isRecipeVegan(recipe, resolver, { recipes: recipesList });
   const leafSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
   const cuisineFlag = recipe.cuisine ? cuisineEmoji(normalizeCuisine(recipe.cuisine)) : "";
