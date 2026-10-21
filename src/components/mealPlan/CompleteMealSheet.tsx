@@ -90,14 +90,15 @@ export function CompleteMealSheet({ base, eligiblePool, suggestCtx, liveNutri, o
         {list.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>{list.length}</span>}
       </div>
 
-      <ElasticScroll max={64} style={{ maxHeight: "46vh", margin: "0 -2px", padding: "2px 2px 4px" }} contentStyle={{ display: "flex", flexDirection: "column", gap: 9 }}>
+      {/* Hauteur fixe (et non max) : la feuille garde sa taille quand la recherche filtre. */}
+      <ElasticScroll max={64} style={{ height: "46vh", margin: "0 -10px", padding: "0 0 4px" }} contentStyle={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {list.map(r => {
           const total = (r.prepTime || 0) + (r.cookTime || 0);
           const nIng = r.ingredients?.length || 0;
           const nutri = liveNutri(r);
           return (
             <button key={r.id} onClick={() => onAttach(r.id ?? "", completeRole)} className="complete-row ripple"
-              style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "transparent", borderRadius: 16, border: "none", textAlign: "left", cursor: "pointer" }}>
               <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
