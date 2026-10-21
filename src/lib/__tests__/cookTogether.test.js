@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
-  PRESENCE_TTL_MS, pageKeyOf, parseCookSession, activeParticipants, isSessionLive,
-  othersByPage, joinableSessions, firstNameOf, partnerPositions, cookPageLabel,
+  PRESENCE_TTL_MS, AWAY_TTL_MS, pageKeyOf, parseCookSession, activeParticipants, isSessionLive,
+  othersByPage, joinableSessions, firstNameOf, partnerPositions, cookPageLabel, companionText,
 } from "../cookSession/together.js";
 
 const NOW = 1_800_000_000_000;
@@ -59,6 +59,20 @@ describe("présence", () => {
       off: { name: "Off", page: "overview", lastSeen: NOW - PRESENCE_TTL_MS },
     } }));
     expect(activeParticipants(s, NOW).map(p => p.uid)).toEqual(["on"]);
+  });
+
+  it("en veille : toléré bien au-delà du TTL, jusqu'à AWAY_TTL", () => {
+    const s = parseCookSession(doc({ participants: {
+      asleep: { name: "Léa", page: "step:2", away: true, lastSeen: NOW - PRESENCE_TTL_MS * 3 },
+      gone: { name: "Ancien", page: "step:2", away: true, lastSeen: NOW - AWAY_TTL_MS },
+    } }));
+    expect(activeParticipants(s, NOW).map(p => p.uid)).toEqual(["asleep"]);
+    expect(s.participants[0].away).toBe(true);
+  });
+
+  it("away absent ou non booléen : présent normal", () => {
+    const s = parseCookSession(doc({ participants: { a: { name: "A", page: "overview", away: "yes", lastSeen: NOW } } }));
+    expect(s.participants[0].away).toBe(false);
   });
 
   it("session vivante = non terminée avec au moins un présent", () => {
@@ -125,5 +139,12 @@ describe("cookPageLabel", () => {
     expect(cookPageLabel({ kind: "overview" })).toBe("Mise en place");
     expect(cookPageLabel({ kind: "bases" })).toBe("Bases");
     expect(cookPageLabel({ kind: "step", realIdx: 0 })).toBe("Étape 1");
+  });
+});
+
+describe("companionText", () => {
+  it("prénom et page, suffixe quand l'écran est en veille", () => {
+    expect(companionText({ name: "Léa Martin", away: false }, "Étape 4")).toBe("Léa : étape 4");
+    expect(companionText({ name: "Léa", away: true }, "Mise en place")).toBe("Léa : mise en place (écran en veille)");
   });
 });

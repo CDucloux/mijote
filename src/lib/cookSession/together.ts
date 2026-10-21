@@ -12,6 +12,12 @@
 /** Délai au-delà duquel un participant sans battement est considéré parti (ms). */
 export const PRESENCE_TTL_MS = 90_000;
 
+/**
+ * Tolérance d'un participant « en veille » (app en arrière-plan, écran éteint) : le
+ * système suspend son battement, mais il cuisine encore (ms).
+ */
+export const AWAY_TTL_MS = 15 * 60_000;
+
 /** Intervalle de battement de présence recommandé (ms), bien sous le TTL. */
 export const HEARTBEAT_MS = 30_000;
 
@@ -24,6 +30,8 @@ export interface CookParticipant {
   page: string;
   /** Dernier battement de présence (epoch ms, horloge du participant). */
   lastSeen: number;
+  /** App en arrière-plan (écran éteint) : présent, mais sans battement régulier. */
+  away: boolean;
 }
 
 /** Session de cuisine partagée, telle que validée depuis Firestore. */
@@ -72,7 +80,7 @@ function parseParticipant(uid: string, raw: unknown): CookParticipant | null {
   if (!uid || !isRecord(raw)) return null;
   const page = str(raw.page);
   if (!page) return null;
-  return { uid, name: str(raw.name), photoURL: str(raw.photoURL), page, lastSeen: toMillis(raw.lastSeen) };
+  return { uid, name: str(raw.name), photoURL: str(raw.photoURL), page, lastSeen: toMillis(raw.lastSeen), away: raw.away === true };
 }
 
 /**
@@ -105,14 +113,15 @@ export function parseCookSession(raw: unknown): CookTogetherSession | null {
 }
 
 /**
- * Participants encore présents (battement reçu depuis moins de {@link PRESENCE_TTL_MS}).
+ * Participants encore présents : battement reçu depuis moins de {@link PRESENCE_TTL_MS},
+ * ou de {@link AWAY_TTL_MS} pour un participant en veille.
  *
  * @param session - Session validée.
  * @param now - Horloge courante (epoch ms).
  * @returns Les participants actifs, dans l'ordre du document.
  */
 export function activeParticipants(session: CookTogetherSession, now: number): CookParticipant[] {
-  return session.participants.filter((p) => now - p.lastSeen < PRESENCE_TTL_MS);
+  return session.participants.filter((p) => now - p.lastSeen < (p.away ? AWAY_TTL_MS : PRESENCE_TTL_MS));
 }
 
 /**
@@ -203,4 +212,17 @@ export function partnerPositions(pageKeys: readonly string[], others: ReadonlyMa
  */
 export function cookPageLabel(page: CookPageRef): string {
   return page.kind === "overview" ? "Mise en place" : page.kind === "bases" ? "Bases" : `Étape ${page.realIdx + 1}`;
+}
+
+/**
+ * Position de l'autre membre en une ligne (en-tête, notification Android) :
+ * « Léa : étape 4 », suffixée quand son écran est en veille.
+ *
+ * @param participant - Autre membre.
+ * @param pageLabel - Libellé de sa page (cf. {@link cookPageLabel}).
+ * @returns La ligne à afficher.
+ */
+export function companionText(participant: Pick<CookParticipant, "name" | "away">, pageLabel: string): string {
+  const where = `${firstNameOf(participant)} : ${pageLabel.toLowerCase()}`;
+  return participant.away ? `${where} (écran en veille)` : where;
 }

@@ -1,7 +1,7 @@
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { fmtElapsed } from "@/lib/format.js";
-import { firstNameOf, type CookParticipant } from "@/lib/cookSession/together.js";
+import { companionText, type CookParticipant } from "@/lib/cookSession/together.js";
 import { ParticipantAvatar } from "./ParticipantAvatar.jsx";
 
 /** Autre membre du foyer en cuisine : où il en est dans le pas à pas. */
@@ -24,11 +24,13 @@ interface CookModeHeaderProps {
   progress: number;
   /** Cuisiner à deux : l'autre membre, posé sur la barre de progression. */
   companions?: CookCompanion[];
+  /** Cuisiner à deux, hors ligne : l'autre membre ne voit plus notre position. */
+  offline?: boolean;
   onClose: () => void;
 }
 
 /** En-tête du pas à pas : fermeture, titre, page courante, chrono global et progression. */
-export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progress, companions = [], onClose }: CookModeHeaderProps) {
+export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progress, companions = [], offline = false, onClose }: CookModeHeaderProps) {
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "calc(16px + max(env(safe-area-inset-top) - 8px, 0px)) 20px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
@@ -42,7 +44,9 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
           </div>
           <div style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {pageLabel}
-            {companions.map(c => <span key={c.participant.uid}> · {firstNameOf(c.participant)} : <span style={{ color: "var(--text2)", fontWeight: 600 }}>{c.label.toLowerCase()}</span></span>)}
+            {offline
+              ? <span style={{ color: "var(--text2)" }}> · Hors ligne : ton binôme ne te voit plus</span>
+              : companions.map(c => <span key={c.participant.uid} style={{ color: "var(--text2)" }}> · {companionText(c.participant, c.label)}</span>)}
           </div>
         </div>
         {/* Chrono global : temps écoulé depuis le lancement de la recette. */}

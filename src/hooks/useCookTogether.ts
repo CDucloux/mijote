@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useOnline } from "./useOnline.js";
 import {
   HEARTBEAT_MS, othersByPage, parseCookSession,
   type CookParticipant, type CookTogetherSession,
@@ -34,6 +35,8 @@ export interface CookTogether {
   finished: boolean;
   /** Uid de celui qui a terminé (lui seul consigne le plat), null sinon. */
   finishedBy: string | null;
+  /** En foyer mais hors ligne : l'autre membre ne voit plus où on en est. */
+  offline: boolean;
   markDone: (realIdx: number) => void;
   finish: () => void;
 }
@@ -66,26 +69,43 @@ export function useCookTogether({ householdId, recipe, user, pageKey, enabled }:
     nameRef.current = recipe.name ?? "";
   });
 
-  // Rejoindre, s'abonner, battre la présence ; quitter au démontage ou à la fermeture
+  // Rejoindre (et retenter tant que ce n'est pas fait : la transaction exige le réseau),
+  // s'abonner, battre la présence ; passer « en veille » quand l'app quitte l'écran
+  // (le système suspend alors le battement) ; quitter au démontage ou à la fermeture
   // de l'onglet (pagehide), pour ne pas laisser un fantôme dans le bandeau de l'autre.
   useEffect(() => {
     const self = meRef.current;
     if (!hid || !self) return;
     let alive = true;
-    joinCookSession(hid, { id: rid, name: nameRef.current }, self, pageRef.current)
-      .then((t) => { if (alive) setStartedAt(t); })
-      .catch(ignore);
-    const unsub = subscribeCookSession(hid, rid, (data) => { setNow(Date.now()); setRaw(data); });
-    const beat = setInterval(() => {
+    let joined = false;
+    let joining = false;
+    const away = () => typeof document !== "undefined" && document.visibilityState === "hidden";
+    const tryJoin = () => {
+      if (joined || joining) return;
+      joining = true;
+      joinCookSession(hid, { id: rid, name: nameRef.current }, self, pageRef.current)
+        .then((t) => { joined = true; if (alive) setStartedAt(t); })
+        .catch(ignore)
+        .finally(() => { joining = false; });
+    };
+    const beat = () => {
       setNow(Date.now());
-      publishPresence(hid, rid, self.uid, pageRef.current).catch(ignore);
-    }, HEARTBEAT_MS);
+      if (!joined) tryJoin();
+      else publishPresence(hid, rid, self, pageRef.current, away()).catch(ignore);
+    };
+    tryJoin();
+    const unsub = subscribeCookSession(hid, rid, (data) => { setNow(Date.now()); setRaw(data); });
+    const timer = setInterval(beat, HEARTBEAT_MS);
     const leave = () => { leaveCookSession(hid, rid, self.uid).catch(ignore); };
+    window.addEventListener("online", tryJoin);
+    document.addEventListener("visibilitychange", beat);
     window.addEventListener("pagehide", leave);
     return () => {
       alive = false;
       unsub();
-      clearInterval(beat);
+      clearInterval(timer);
+      window.removeEventListener("online", tryJoin);
+      document.removeEventListener("visibilitychange", beat);
       window.removeEventListener("pagehide", leave);
       leave();
       setRaw(undefined);
@@ -94,9 +114,10 @@ export function useCookTogether({ householdId, recipe, user, pageKey, enabled }:
   }, [hid, rid]);
 
   useEffect(() => {
-    if (!hid || !uid) return;
-    publishPresence(hid, rid, uid, pageKey).catch(ignore);
-  }, [hid, rid, uid, pageKey]);
+    if (!hid || !me || startedAt === null) return;
+    // « Suivant » depuis la notification Android change la page app en arrière-plan.
+    publishPresence(hid, rid, me, pageKey, document.visibilityState === "hidden").catch(ignore);
+  }, [hid, rid, me, pageKey, startedAt]);
 
   const session = useMemo(() => (hid ? parseCookSession(raw) : null), [hid, raw]);
   const others = useMemo(() => othersByPage(session, uid, now), [session, uid, now]);
@@ -112,5 +133,10 @@ export function useCookTogether({ householdId, recipe, user, pageKey, enabled }:
   // d'une recette, l'ancienne session « terminée » peut arriver avant sa remise à zéro.
   const finished = !!session?.finished && startedAt !== null && session.startedAt === startedAt;
 
-  return { session, others, doneSteps, startedAt, finished, finishedBy: finished ? session?.finishedBy ?? null : null, markDone, finish };
+  const online = useOnline();
+
+  return {
+    session, others, doneSteps, startedAt, finished, finishedBy: finished ? session?.finishedBy ?? null : null,
+    offline: hid !== null && !online, markDone, finish,
+  };
 }

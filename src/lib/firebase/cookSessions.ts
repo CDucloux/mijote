@@ -26,6 +26,10 @@ export interface CookMember {
 const sessionDoc = (hid: string, recipeId: string): DocumentReference =>
   doc(db, "households", hid, "cookSessions", recipeId);
 
+/** Entrée complète d'un participant : l'identité voyage à chaque battement. */
+const participantEntry = (me: CookMember, page: string, away: boolean, now: number) =>
+  ({ name: me.name, photoURL: me.photoURL, page, lastSeen: now, away });
+
 /**
  * Rejoint (ou démarre) la session d'une recette. Si la session est terminée ou que
  * plus personne n'y est présent, elle repart de zéro (nouveau chrono, étapes vierges) ;
@@ -43,7 +47,7 @@ export async function joinCookSession(hid: string, recipe: { id: string; name: s
   return runTransaction(db, async (tx) => {
     const now = Date.now();
     const current = parseCookSession((await tx.get(ref)).data());
-    const self = { name: me.name, photoURL: me.photoURL, page, lastSeen: now };
+    const self = participantEntry(me, page, false, now);
     if (current && isSessionLive(current, now)) {
       tx.update(ref, { [`participants.${me.uid}`]: self, recipeName: recipe.name });
       return current.startedAt || now;
@@ -57,15 +61,18 @@ export async function joinCookSession(hid: string, recipe: { id: string; name: s
 }
 
 /**
- * Publie sa position et son battement de présence.
+ * Publie sa position et son battement de présence. L'entrée est réécrite en entier
+ * (nom, photo compris) : un participant dont la jonction a échoué hors ligne n'apparaît
+ * jamais anonyme chez l'autre.
  *
  * @param hid - Foyer.
  * @param recipeId - Recette de la session.
- * @param uid - Participant.
+ * @param me - Identité du participant.
  * @param page - Clé de la page courante.
+ * @param away - App en arrière-plan (écran éteint) : tolérance de présence longue.
  */
-export async function publishPresence(hid: string, recipeId: string, uid: string, page: string): Promise<void> {
-  await updateDoc(sessionDoc(hid, recipeId), { [`participants.${uid}.page`]: page, [`participants.${uid}.lastSeen`]: Date.now() });
+export async function publishPresence(hid: string, recipeId: string, me: CookMember, page: string, away: boolean): Promise<void> {
+  await updateDoc(sessionDoc(hid, recipeId), { [`participants.${me.uid}`]: participantEntry(me, page, away, Date.now()) });
 }
 
 /**

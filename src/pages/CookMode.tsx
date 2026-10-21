@@ -27,7 +27,7 @@ import { CookSidebar } from "../components/cookMode/CookSidebar.jsx";
 import { CookModeHeader } from "../components/cookMode/CookModeHeader.jsx";
 import { CookIterationSheet } from "../components/cookMode/CookIterationSheet.jsx";
 import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.js";
-import { cookPageLabel, pageKeyOf, partnerPositions } from "@/lib/cookSession/together.js";
+import { companionText, cookPageLabel, pageKeyOf, partnerPositions } from "@/lib/cookSession/together.js";
 import { useCookTogether } from "../hooks/useCookTogether.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import type { IngredientLine, Recipe, Utensil, UtensilDbItem } from "@/lib/types.js";
@@ -251,6 +251,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     stepIdx, totalSteps, realIdx,
     stepText: step?.text || "",
     timers,
+    companion: companions.map(co => companionText(co.participant, co.label)).join(" · "),
   });
   useCookSession({
     active: !isNested && !done && !closing,
@@ -316,7 +317,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       {iterOpen && <CookIterationSheet zIndex={isNested ? 720 : 620} onClose={() => setIterOpen(false)} onSave={saveIteration} />}
 
       <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
-        <CookModeHeader recipeName={recipe.name} isNested={isNested} elapsed={elapsed} progress={progress} companions={companions} onClose={requestClose}
+        <CookModeHeader recipeName={recipe.name} isNested={isNested} elapsed={elapsed} progress={progress} companions={companions} offline={together.offline} onClose={requestClose}
           pageLabel={isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`} />
 
         {/* Main content */}

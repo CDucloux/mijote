@@ -86,5 +86,6 @@ function serializeSnapshot(s: CookSessionSnapshot): string {
   return [
     s.recipeTitle, s.imageUrl, s.stepLabel, s.stepText, s.pageIndex, s.pageCount, s.canPrev, s.canNext,
     s.timer ? `${s.timer.endAt}|${s.timer.running}|${s.timer.label}|${s.timer.totalMs}` : "",
+    s.companion,
   ].join("");
 }

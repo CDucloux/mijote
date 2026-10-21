@@ -97,10 +97,12 @@ final class CookMedia {
      * progression, qui suffit.
      */
     static String subtitle(CookSnapshot snap) {
+        // Cuisiner à deux : la position de l'autre membre suit la sienne (« · Léa : étape 4 »).
+        String where = snap.companion.isEmpty() ? snap.stepLabel : snap.stepLabel + " · " + snap.companion;
         if (snap.stepText != null && !snap.stepText.isEmpty()) {
-            return snap.stepLabel + " · " + snap.stepText;
+            return where + " · " + snap.stepText;
         }
-        return snap.stepLabel;
+        return where;
     }
 
     /** Route les contrôles de la tuile média vers le cook mode (via le plugin). */

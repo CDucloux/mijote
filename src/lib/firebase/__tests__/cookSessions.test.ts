@@ -39,7 +39,7 @@ describe("joinCookSession", () => {
     expect(startedAt).toBe(NOW);
     expect(tx.set).toHaveBeenCalledWith({ path: "households/h1/cookSessions/r1" }, {
       recipeId: "r1", recipeName: "Hachis", startedAt: NOW,
-      participants: { me: { name: "Corentin", photoURL: "a.png", page: "overview", lastSeen: NOW } },
+      participants: { me: { name: "Corentin", photoURL: "a.png", page: "overview", lastSeen: NOW, away: false } },
       doneSteps: [], finished: false, finishedBy: null,
     });
     expect(tx.update).not.toHaveBeenCalled();
@@ -50,7 +50,7 @@ describe("joinCookSession", () => {
     const startedAt = await joinCookSession("h1", RECIPE, ME, "overview");
     expect(startedAt).toBe(NOW - 60_000);
     expect(tx.update).toHaveBeenCalledWith({ path: "households/h1/cookSessions/r1" }, {
-      "participants.me": { name: "Corentin", photoURL: "a.png", page: "overview", lastSeen: NOW }, recipeName: "Hachis",
+      "participants.me": { name: "Corentin", photoURL: "a.png", page: "overview", lastSeen: NOW, away: false }, recipeName: "Hachis",
     });
     expect(tx.set).not.toHaveBeenCalled();
   });
@@ -65,9 +65,11 @@ describe("joinCookSession", () => {
 
 describe("écritures de session", () => {
   const ref = { path: "households/h1/cookSessions/r1" };
-  it("présence : page et battement du participant", async () => {
-    await publishPresence("h1", "r1", "me", "step:3");
-    expect(updateDoc).toHaveBeenCalledWith(ref, { "participants.me.page": "step:3", "participants.me.lastSeen": NOW });
+  it("présence : entrée complète (identité comprise, non-régression avatar anonyme) et état de veille", async () => {
+    await publishPresence("h1", "r1", ME, "step:3", true);
+    expect(updateDoc).toHaveBeenCalledWith(ref, {
+      "participants.me": { name: "Corentin", photoURL: "a.png", page: "step:3", lastSeen: NOW, away: true },
+    });
   });
   it("étape faite : ajout idempotent", async () => {
     await markStepDone("h1", "r1", 2);
