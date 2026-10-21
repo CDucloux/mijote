@@ -10,11 +10,12 @@
  * @module firebase/cookSessions
  */
 import {
-  collection, doc, onSnapshot, runTransaction, updateDoc, arrayUnion, deleteField,
+  collection, doc, onSnapshot, runTransaction, updateDoc, arrayUnion, deleteField, FieldPath,
   type DocumentReference, type Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/firebase.js";
 import { isSessionLive, parseCookSession } from "@/lib/cookSession/together.js";
+import type { SharedTimerEntry } from "@/lib/cookSession/sharedTimers.js";
 
 /** Identité publiée par un participant (lue telle quelle par l'autre membre). */
 export interface CookMember {
@@ -54,7 +55,7 @@ export async function joinCookSession(hid: string, recipe: { id: string; name: s
     }
     tx.set(ref, {
       recipeId: recipe.id, recipeName: recipe.name, startedAt: now,
-      participants: { [me.uid]: self }, doneSteps: [], finished: false, finishedBy: null,
+      participants: { [me.uid]: self }, doneSteps: [], finished: false, finishedBy: null, timers: {},
     });
     return now;
   });
@@ -95,6 +96,30 @@ export async function markStepDone(hid: string, recipeId: string, realIdx: numbe
  */
 export async function finishCookSession(hid: string, recipeId: string, uid: string): Promise<void> {
   await updateDoc(sessionDoc(hid, recipeId), { finished: true, finishedBy: uid });
+}
+
+/**
+ * Publie (crée ou remplace) un minuteur commun. Le chemin passe par `FieldPath` :
+ * l'identifiant d'un minuteur peut contenir un point (durée fractionnaire).
+ *
+ * @param hid - Foyer.
+ * @param recipeId - Recette de la session.
+ * @param timerId - Identifiant du minuteur.
+ * @param entry - Minuteur sous sa forme publiée.
+ */
+export async function saveSharedTimer(hid: string, recipeId: string, timerId: string, entry: SharedTimerEntry): Promise<void> {
+  await updateDoc(sessionDoc(hid, recipeId), new FieldPath("timers", timerId), entry);
+}
+
+/**
+ * Arrête un minuteur commun pour tous les participants.
+ *
+ * @param hid - Foyer.
+ * @param recipeId - Recette de la session.
+ * @param timerId - Identifiant du minuteur.
+ */
+export async function removeSharedTimer(hid: string, recipeId: string, timerId: string): Promise<void> {
+  await updateDoc(sessionDoc(hid, recipeId), new FieldPath("timers", timerId), deleteField());
 }
 
 /**

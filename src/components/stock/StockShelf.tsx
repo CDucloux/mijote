@@ -1,7 +1,7 @@
 import { memo, type CSSProperties, type ReactNode } from "react";
 import { Icon, type IconName } from "../ui/Icon.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
-import { jarFillColor, jarVessel } from "@/lib/food/jarLook.js";
+import { jarFillColor, jarVessel, type JarIngredient } from "@/lib/food/jarLook.js";
 import type { StockLevel } from "@/lib/food/stockLevel.js";
 import { useLongPress } from "../../hooks/useLongPress.js";
 import { useImageState } from "../../hooks/useImageState.js";
@@ -12,12 +12,7 @@ export type JarState = StockLevel;
 const STATE_LABEL: Record<JarState, string> = { full: "en stock", low: "bientôt vide", empty: "à racheter" };
 
 /** Ingrédient posé sur l'étagère (fiche de la base). */
-export interface ShelfIngredient {
-  id: string;
-  name?: string;
-  dbId?: string;
-  image?: string;
-}
+export type ShelfIngredient = JarIngredient & { image?: string };
 
 interface JarProps {
   ing: ShelfIngredient;

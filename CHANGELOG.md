@@ -1,5 +1,22 @@
 # Changelog – Cardamome
 
+## v4.75.0 – Cardamome · Minuteurs à deux
+
+### Cuisiner à deux
+- **Minuteurs communs** : un minuteur lancé sur un téléphone apparaît sur l'autre, avec l'avatar de qui l'a lancé ; l'arrêter d'un côté l'arrête pour les deux. Chacun reçoit l'alerte à l'échéance.
+
+### Mode cuisine
+- **Cartes de minuteur sans contour** : la pile de minuteurs et leurs boutons se dessinent par leur fond et une ombre légère, comme le reste du mode cuisine.
+
+### Corrections
+- **Tri A → Z** : une recette sans nom ne fait plus échouer le tri de la bibliothèque.
+- **Historique des versions** : les modifications du texte d'une étape apparaissent de nouveau dans le journal de la recette.
+
+### Technique
+- **Fin de la migration TypeScript** : `RecipesPage` et `App` passent en `.tsx` (découpés en composants `library/*` et `layout/*`, hooks `useLibraryPaging`, `useDraftEditor`, `useHouseholdPointer`…) ; plus aucun `.js`/`.jsx` dans `src`, `allowJs` désactivé.
+- **Types dérivés** : un seul type par concept (`Pick`, `Partial`, génériques plutôt que des copies), suppression des casts de domaine et des alias vides ; le carnet s'appelle désormais `Notebook` dans le code (le champ persisté `collections` est inchangé).
+- Minuteurs partagés dans le document de session (`timers.{id}`), logique pure dans `src/lib/cookSession/sharedTimers.ts`, testée ; rien à déployer.
+
 ## v4.74.0 – Cardamome · Cuisiner à deux
 
 ### Cuisiner à deux

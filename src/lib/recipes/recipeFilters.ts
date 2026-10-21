@@ -11,6 +11,7 @@ import { computeDifficulty, DIFFICULTY_LABEL } from "@/lib/recipes/difficulty.js
 import { RECIPE_CATEGORIES } from "@/constants/recipeCategories.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import type { Recipe } from "@/lib/types.js";
+import type { IngredientResolver } from "@/lib/food/nameMatcher.js";
 
 /** État de filtrage avancé (une « vue » de la bibliothèque). */
 export interface RecipeFilters {
@@ -28,15 +29,12 @@ export interface RecipeFilters {
   ingredients: string[];
 }
 
-/** Recette filtrable (alias du type de domaine). */
-export type FilterableRecipe = Recipe;
-
 /** Dépendances facultatives pour le prédicat (résolveur, techniques, recettes). */
 export interface FilterContext {
-  resolver?: (name: string | undefined) => { id: string; category?: string; months?: unknown } | null;
+  resolver?: IngredientResolver;
   techniques?: unknown;
   techIndex?: unknown;
-  recipes?: FilterableRecipe[];
+  recipes?: Recipe[];
 }
 
 export const DEFAULT_FILTERS: RecipeFilters = { season: false, vegan: false, type: "all", categories: [], timeMax: null, cuisines: [], chefs: [], cooking: [], nutriMax: null, diffMax: null, ingredients: [] };
@@ -112,7 +110,7 @@ export function filtersEqual(a: Partial<RecipeFilters> = {}, b: Partial<RecipeFi
  * @param ctx - Dépendances facultatives (résolveur, techniques + index, recettes).
  * @returns `true` si la recette passe tous les critères actifs.
  */
-export function matchesFilters(recipe: FilterableRecipe, filters: RecipeFilters, ctx: FilterContext = {}): boolean {
+export function matchesFilters(recipe: Recipe, filters: RecipeFilters, ctx: FilterContext = {}): boolean {
   const { resolver, techniques, techIndex, recipes } = ctx;
   if (filters.type === "base" && !recipe.isComponent) return false;
   if (filters.type === "dish" && recipe.isComponent) return false;

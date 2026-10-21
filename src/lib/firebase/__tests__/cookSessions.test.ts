@@ -16,11 +16,14 @@ vi.mock("firebase/firestore", () => ({
   updateDoc: (...args: unknown[]) => updateDoc(...args),
   arrayUnion: (v: unknown) => ({ arrayUnion: v }),
   deleteField: () => ({ deleteField: true }),
+  FieldPath: class { segments: string[]; constructor(...segments: string[]) { this.segments = segments; } },
   onSnapshot: vi.fn(),
 }));
 vi.mock("@/lib/firebase/firebase.js", () => ({ db: {} }));
 
-import { joinCookSession, markStepDone, finishCookSession, leaveCookSession, publishPresence } from "../cookSessions.js";
+import {
+  joinCookSession, markStepDone, finishCookSession, leaveCookSession, publishPresence, saveSharedTimer, removeSharedTimer,
+} from "../cookSessions.js";
 
 const ME = { uid: "me", name: "Corentin", photoURL: "a.png" };
 const RECIPE = { id: "r1", name: "Hachis" };
@@ -40,7 +43,7 @@ describe("joinCookSession", () => {
     expect(tx.set).toHaveBeenCalledWith({ path: "households/h1/cookSessions/r1" }, {
       recipeId: "r1", recipeName: "Hachis", startedAt: NOW,
       participants: { me: { name: "Corentin", photoURL: "a.png", page: "overview", lastSeen: NOW, away: false } },
-      doneSteps: [], finished: false, finishedBy: null,
+      doneSteps: [], finished: false, finishedBy: null, timers: {},
     });
     expect(tx.update).not.toHaveBeenCalled();
   });
@@ -59,7 +62,7 @@ describe("joinCookSession", () => {
     stored.data = { recipeId: "r1", startedAt: 1, finished: true, doneSteps: [0, 1], participants: { her: { name: "Léa", page: "step:2", lastSeen: NOW } } };
     await joinCookSession("h1", RECIPE, ME, "overview");
     expect(tx.set).toHaveBeenCalledTimes(1);
-    expect(tx.set.mock.calls[0][1]).toMatchObject({ doneSteps: [], finished: false, startedAt: NOW });
+    expect(tx.set.mock.calls[0][1]).toMatchObject({ doneSteps: [], finished: false, startedAt: NOW, timers: {} });
   });
 });
 
@@ -80,5 +83,12 @@ describe("écritures de session", () => {
     await leaveCookSession("h1", "r1", "me");
     expect(updateDoc).toHaveBeenNthCalledWith(1, ref, { finished: true, finishedBy: "me" });
     expect(updateDoc).toHaveBeenNthCalledWith(2, ref, { "participants.me": { deleteField: true } });
+  });
+  it("minuteur commun : publié et arrêté par chemin explicite (identifiant à point)", async () => {
+    const entry = { label: "1 min 30", totalSec: 90, running: true, endAt: NOW + 90_000, remainingMs: 90_000, page: "step:1", stepLabel: "Étape 2", startedBy: "me" };
+    await saveSharedTimer("h1", "r1", "1.5-1-abc", entry);
+    await removeSharedTimer("h1", "r1", "1.5-1-abc");
+    expect(updateDoc).toHaveBeenNthCalledWith(1, ref, { segments: ["timers", "1.5-1-abc"] }, entry);
+    expect(updateDoc).toHaveBeenNthCalledWith(2, ref, { segments: ["timers", "1.5-1-abc"] }, { deleteField: true });
   });
 });

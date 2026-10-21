@@ -1,37 +1,30 @@
 import type { Dispatch, SetStateAction } from "react";
-import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems, type ActionDbItem } from "@/lib/recipes/recipeActions.js";
+import { prepareRecipeForSave, upsertRecipe, recomputeCollectionCounts, buildShoppingItems } from "@/lib/recipes/recipeActions.js";
 import { recipesReferencing } from "@/lib/recipes/recipeComponents.js";
 import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
-import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImport.js";
+import { prepareRecipeImport } from "@/lib/recipes/recipeImport.js";
+import type { NutriDbItem } from "@/lib/recipes/nutriscore.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { deleteImageByUrl } from "@/lib/firebase/storage.js";
-import { printRecipe, type PdfRecipe } from "@/lib/recipes/recipePdf.js";
-import type { Recipe, IngredientLine, Collection } from "@/lib/types.js";
+import { printRecipe } from "@/lib/recipes/recipePdf.js";
+import type { Recipe, SavedRecipe, IngredientLine, Notebook, UtensilDbItem } from "@/lib/types.js";
+import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
 import type { ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
 import { exportTextFile } from "@/lib/ui/fileExport.js";
 import { reportError } from "@/lib/observability/observability.js";
 
-/** Liste de courses (forme minimale manipulée ici). */
-export interface ShoppingList {
-  id: string;
-  name?: string;
-  type?: string;
-  recipeId?: string;
-  items: unknown[];
-}
-
 /** Dépendances injectées (état de l'app + setters + notify/navigate). */
 export interface RecipeCrudDeps {
-  recipes: Recipe[];
-  setRecipes: Dispatch<SetStateAction<Recipe[]>>;
-  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  recipes: SavedRecipe[];
+  setRecipes: Dispatch<SetStateAction<SavedRecipe[]>>;
+  setCollections: Dispatch<SetStateAction<Notebook[]>>;
   setEditingRecipe: (r: Recipe | null) => void;
   shoppingLists: ShoppingList[];
   setShoppingLists: Dispatch<SetStateAction<ShoppingList[]>>;
-  ingredientDB: ActionDbItem[];
-  utensilDB: ImportDbItem[];
+  ingredientDB: NutriDbItem[];
+  utensilDB: Pick<UtensilDbItem, "id" | "name" | "image">[];
   techniques: unknown[];
   stock: string[];
   isPlus: boolean;
@@ -44,7 +37,7 @@ export interface RecipeCrudDeps {
 
 /** Index de recettes tel qu'attendu par les helpers courses/PDF (composants). */
 const componentIndex = (recipes: Recipe[]): Map<string, ComponentRecipe> =>
-  buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]) as unknown as Map<string, ComponentRecipe>;
+  buildRecipeIndex(recipes);
 
 /**
  * Recettes, opérations cœur (CRUD, courses, import/export). Sauvegarde, suppression
@@ -124,7 +117,7 @@ export function useRecipeCrud({
     const existing = shoppingLists.find(l => l.type === "recipe" && l.recipeId === recipe.id);
     const listId = existing ? existing.id : "sl" + Date.now();
     setShoppingLists(prev => {
-      if (prev.find(l => l.id === listId)) return prev.map(l => l.id === listId ? { ...l, items: [...l.items, ...items] } : l);
+      if (prev.find(l => l.id === listId)) return prev.map(l => l.id === listId ? { ...l, items: [...(l.items || []), ...items] } : l);
       return [...prev, { id: listId, name: recipe.name, type: "recipe", recipeId: recipe.id, items }];
     });
     notify(`${items.length} ingrédient(s) ajoutés aux courses`);
@@ -139,7 +132,7 @@ export function useRecipeCrud({
   };
 
   const importJSON = (json: string): void => {
-    const result = prepareRecipeImport(json, { ingredientDB: ingredientDB as unknown as ImportDbItem[], utensilDB });
+    const result = prepareRecipeImport(json, { ingredientDB, utensilDB });
     if ("error" in result) { notify(result.error, "error"); return; }
     const { prepared, linked, rejected } = result;
     // Quota du plan : borne haute (avant déduplication) des recettes ajoutées.
@@ -161,11 +154,11 @@ export function useRecipeCrud({
 
   const exportPDF = (recipe: Recipe): void => {
     notify("Ouverture de l'aperçu d'impression…");
-    printRecipe(recipe as unknown as PdfRecipe, {
+    printRecipe(recipe, {
       ingredientDB, utensilDB,
-      recipesById: buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]) as unknown as Map<string, PdfRecipe>,
+      recipesById: buildRecipeIndex(recipes),
       techniques,
-    } as Parameters<typeof printRecipe>[1]).catch(() => notify("Impression indisponible sur cet appareil.", "error"));
+    }).catch(() => notify("Impression indisponible sur cet appareil.", "error"));
   };
 
   return { saveRecipe, deleteRecipe, addToShopping, exportJSON, importJSON, exportPDF };

@@ -5,14 +5,10 @@
  * @module planning/spotlight
  */
 import { ingredientMonths } from "@/lib/food/seasonality.js";
+import type { IngredientDbItem } from "@/lib/types.js";
 
 /** Ingrédient de la base (forme minimale utilisée ici). */
-export interface SpotlightIngredient {
-  id: string;
-  name?: string;
-  category?: string;
-  months?: unknown;
-}
+export type SpotlightCandidate = Pick<IngredientDbItem, "id" | "name" | "category" | "months">;
 
 const SPOTLIGHT_CATEGORIES = new Set(["fruit", "vegetable"]);
 
@@ -39,7 +35,7 @@ export function weekIndex(date: Date = new Date()): number {
  * @param date - Date de référence (mois + rotation hebdomadaire).
  * @returns L'ingrédient vedette de la semaine, ou `null` si aucun candidat de saison.
  */
-export function pickSpotlightIngredient<T extends SpotlightIngredient>(
+export function pickSpotlightIngredient<T extends SpotlightCandidate>(
   ingredientDB: T[] | null | undefined,
   date: Date = new Date(),
 ): T | null {

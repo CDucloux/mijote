@@ -11,9 +11,12 @@
  * @module food/dietary
  */
 
-interface VeganItem { id: string; category?: string }
-interface VeganRecipe { id?: string; ingredients?: { name?: string; recipeId?: string }[] }
-type VeganResolver = ((name: string | undefined) => VeganItem | null) | null | undefined;
+import type { Resolver } from "@/lib/food/nameMatcher.js";
+import type { IngredientDbItem, Recipe } from "@/lib/types.js";
+
+type VeganRecipe = Pick<Recipe, "id" | "ingredients">;
+/** Résolveur lu ici : seule la catégorie de la fiche compte. */
+type VeganResolver = Resolver<Pick<IngredientDbItem, "id" | "category">> | null | undefined;
 
 /**
  * Catégories d'ingrédient d'origine animale : une seule suffit à exclure le

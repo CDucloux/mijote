@@ -10,17 +10,24 @@ import { doc, getDoc, onSnapshot, type DocumentData, type DocumentSnapshot, type
 import { db } from "@/lib/firebase/firebase.js";
 import { reportError } from "@/lib/observability/observability.js";
 import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
+import { mergeIngredientCategories, type IngredientCategories } from "@/lib/data/referenceData.js";
+import type { TechniqueEntry } from "@/lib/recipes/techniques.js";
+import type { RecommendedSource } from "@/lib/sources/recommendedSources.js";
+import type { IngredientDbItem, UtensilDbItem } from "@/lib/types.js";
 
-/** Table des catégories (clé → définition d'affichage). Valeurs opaques ici. */
-export type CategoryMap = Record<string, unknown>;
-
-/** Base Master partagée (ingrédients, ustensiles, techniques, catégories). */
+/** Base Master partagée (ingrédients, ustensiles, techniques, sources, catégories), écrite par l'admin. */
 export interface MasterDB {
-  ingredients: DocumentData[];
-  utensils: DocumentData[];
-  techniques: DocumentData[];
-  sources: DocumentData[];
-  categories: CategoryMap;
+  ingredients: IngredientDbItem[];
+  utensils: UtensilDbItem[];
+  techniques: TechniqueEntry[];
+  sources: RecommendedSource[];
+  categories: IngredientCategories;
+}
+
+/** Ajouts personnels d'un utilisateur à la base (hors Master). */
+export interface PersonalDB {
+  ingredients: IngredientDbItem[];
+  utensils: UtensilDbItem[];
 }
 
 /**
@@ -55,10 +62,8 @@ export async function loadMasterDB(): Promise<MasterDB> {
 }
 
 /** Normalise le doc `master/categories` (fusion défauts + overrides, filtré aux clés connues). */
-function normCategories(data: DocumentData | undefined): CategoryMap {
-  return data && data.map && Object.keys(data.map).length
-    ? Object.fromEntries(Object.entries({ ...DEFAULT_CATEGORIES, ...data.map }).filter(([k]) => k in DEFAULT_CATEGORIES))
-    : DEFAULT_CATEGORIES;
+function normCategories(data: DocumentData | undefined): IngredientCategories {
+  return mergeIngredientCategories(DEFAULT_CATEGORIES, data?.map);
 }
 
 /**

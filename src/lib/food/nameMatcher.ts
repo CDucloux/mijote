@@ -15,6 +15,7 @@
  *
  * @module food/nameMatcher
  */
+import type { IngredientDbItem } from "@/lib/types.js";
 
 /** Entrée de base (ingrédient/ustensile). Champs libres tolérés via l'index. */
 export interface DbEntry {
@@ -26,8 +27,14 @@ export interface DbEntry {
   [k: string]: unknown;
 }
 
-/** Fonction de résolution : nom → entrée de base (ou `null`). */
-export type Resolver = (name: string | null | undefined) => DbEntry | null;
+/** Entrée rapprochable par nom : une entrée sans nom est ignorée, jamais rendue. */
+export type MatchableEntry = Pick<DbEntry, "id" | "aliases"> & { name?: string };
+
+/** Fonction de résolution : nom → entrée de base (ou `null`), du type de la base interrogée. */
+export type Resolver<T extends MatchableEntry = DbEntry> = (name: string | null | undefined) => T | null;
+
+/** Résolveur sur la base d'ingrédients : rend la fiche complète (catégorie, saisons…). */
+export type IngredientResolver = Resolver<IngredientDbItem>;
 
 /** Minuscules, sans accents ni ponctuation, espaces compactés. « Huile d'olive »
  * → « huile d olive ». */
@@ -86,12 +93,12 @@ function stripToCanonical(normName: string): string {
   return toks.sort().join(" "); // tri → comparaison ensembliste (ordre indifférent)
 }
 
-function itemNameForms(item: DbEntry): string[] {
+function itemNameForms(item: MatchableEntry): string[] {
   return [item?.name, ...(Array.isArray(item?.aliases) ? item.aliases : [])]
     .filter((s): s is string => typeof s === "string" && !!s.trim());
 }
 
-interface SubsetEntry { item: DbEntry; tokens: string[]; ntok: number; len: number; }
+interface SubsetEntry<T> { item: T; tokens: string[]; ntok: number; len: number; }
 
 /**
  * Construit un résolveur `(name) => entrée | null` à partir d'une base.
@@ -102,11 +109,11 @@ interface SubsetEntry { item: DbEntry; tokens: string[]; ntok: number; len: numb
  *
  * @param db - La base d'ingrédients (ou d'ustensiles).
  * @returns Un résolveur `(name) => entrée | null` à 4 paliers (exact, singulier,
- *   canonique, sous-ensemble de tokens).
+ *   canonique, sous-ensemble de tokens), qui rend les entrées de `db` telles quelles.
  */
-export function createIngredientResolver(db: DbEntry[] | null | undefined): Resolver {
-  const exact = new Map<string, DbEntry>(), singular = new Map<string, DbEntry>(), canonical = new Map<string, DbEntry>();
-  const subset: SubsetEntry[] = [];
+export function createIngredientResolver<T extends MatchableEntry>(db: readonly T[] | null | undefined): Resolver<T> {
+  const exact = new Map<string, T>(), singular = new Map<string, T>(), canonical = new Map<string, T>();
+  const subset: SubsetEntry<T>[] = [];
   // Indexé du plus générique au plus spécifique : à canonique égal, l'entrée la
   // plus courte (souvent l'ingrédient de base) l'emporte.
   const indexed = (db || []).filter(d => d?.id && d?.name).map(d => {
@@ -147,7 +154,7 @@ export function createIngredientResolver(db: DbEntry[] | null | undefined): Reso
  * @param db - La base à interroger.
  * @returns L'entrée correspondante, ou `null`.
  */
-export function findIngredientMatch(name: string | null | undefined, db: DbEntry[] | null | undefined): DbEntry | null {
+export function findIngredientMatch<T extends MatchableEntry>(name: string | null | undefined, db: readonly T[] | null | undefined): T | null {
   if (!name || !db || !db.length) return null;
   return createIngredientResolver(db)(name);
 }
@@ -164,7 +171,7 @@ export function findIngredientMatch(name: string | null | undefined, db: DbEntry
  * @param resolve - Résolveur déjà construit sur `db` (évite de le recréer à chaque ligne).
  * @returns L'entrée correspondante, ou `null`.
  */
-export function resolveLineEntry(dbId: string | null | undefined, name: string | null | undefined, db: DbEntry[] | null | undefined, resolve?: Resolver): DbEntry | null {
+export function resolveLineEntry<T extends MatchableEntry>(dbId: string | null | undefined, name: string | null | undefined, db: readonly T[] | null | undefined, resolve?: Resolver<T>): T | null {
   const pinned = dbId ? (db || []).find(d => d.id === dbId) : undefined;
   if (pinned) return pinned;
   if (!name) return null;
@@ -177,7 +184,7 @@ export function resolveLineEntry(dbId: string | null | undefined, name: string |
  * @param db - La base à interroger.
  * @returns Une fonction qui renvoie l'id de l'entrée rapprochée, ou `""` si aucune.
  */
-export function buildNameMatcher(db: DbEntry[] | null | undefined): (name: string | null | undefined) => string {
+export function buildNameMatcher(db: readonly MatchableEntry[] | null | undefined): (name: string | null | undefined) => string {
   const resolve = createIngredientResolver(db);
   return (name) => { const m = resolve(name); return m ? m.id : ""; };
 }

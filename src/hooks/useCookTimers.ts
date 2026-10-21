@@ -1,11 +1,20 @@
 import { useState, useRef, useEffect, type Dispatch, type SetStateAction } from "react";
 import { startTimer, hasElapsed, markDone, pauseTimer, resumeTimer, resetTimer as resetTimerState, hasActiveDuration, type CookTimer } from "@/lib/planning/cookTimers.js";
+import { mergeSharedTimers } from "@/lib/cookSession/sharedTimers.js";
 import { ensureTimerNotificationPermission, scheduleTimerNotification, cancelTimerNotification, deriveNotifId } from "@/lib/notifications/localNotifications.js";
 
 /** Durée candidate d'un minuteur (préréglage d'étape). */
 export interface TimerDuration {
   minutes: number;
   label: string;
+}
+
+/** Minuteurs communs d'une session à deux (cf. `useCookTogether`). */
+export interface SharedCookTimers {
+  /** Minuteurs lus dans la session, ou null hors session. */
+  timers: CookTimer[] | null;
+  save: (timer: CookTimer) => void;
+  drop: (id: string) => void;
 }
 
 /** État et actions exposés par {@link useCookTimers}. */
@@ -47,59 +56,99 @@ function playAlarm(): void {
  * au premier plan) et alarme à l'échéance. Les minuteurs sont horodatés (cf.
  * `cookTimers`), donc le restant reste juste après un passage en arrière-plan.
  *
+ * À deux, les minuteurs sont communs : chaque action est publiée dans la session et
+ * la liste se recale sur celle-ci (arrêter un minuteur l'arrête chez l'autre). Les
+ * notifications OS se déduisent de l'état, quelle que soit l'origine du changement.
+ *
  * @param notify - Callback de notification in-app (toast), appelé à l'échéance.
+ * @param shared - Minuteurs de la session à deux, absent en solo.
  * @returns L'état (`timers`, `now`, `timersOpen`) et les actions (`addTimer`,
  *   `toggleTimer`, `restartTimer`, `removeTimer`, `setTimersOpen`).
  */
-export function useCookTimers(notify?: (message: string) => void): UseCookTimersResult {
+export function useCookTimers(notify?: (message: string) => void, shared?: SharedCookTimers): UseCookTimersResult {
   const [timers, setTimers] = useState<CookTimer[]>([]);
   const [timersOpen, setTimersOpen] = useState(true);
   const [now, setNow] = useState(() => Date.now());
   const notifiedRef = useRef(new Set<string>());
   const permAskedRef = useRef(false);
 
+  const armedRef = useRef(new Map<string, number>());
+  const seenRef = useRef(new Set<string>());
+  // Dernières valeurs lues par le recalage sur la session, sans le relancer.
+  const timersRef = useRef(timers);
+  const sharedRef = useRef(shared);
+  useEffect(() => { timersRef.current = timers; sharedRef.current = shared; });
+
   const timerNotifBody = (t: CookTimer): string => `${t.label}${t.stepLabel ? `, ${t.stepLabel.toLowerCase()}` : ""}`;
-  const armNotif = async (t: CookTimer): Promise<void> => {
-    if (t.endAt == null) return;
+  const armNotif = async (t: CookTimer, at: number): Promise<void> => {
     // Permission demandée à la volée au premier minuteur (Android 13+), avant de planifier.
     if (!permAskedRef.current) { permAskedRef.current = true; await ensureTimerNotificationPermission(); }
-    scheduleTimerNotification({ notifId: deriveNotifId(t.id), title: "Minuteur terminé", body: timerNotifBody(t), at: new Date(t.endAt) });
+    scheduleTimerNotification({ notifId: deriveNotifId(t.id), title: "Minuteur terminé", body: timerNotifBody(t), at: new Date(at) });
   };
-  const cancelNotif = (t: CookTimer): Promise<void> => cancelTimerNotification(deriveNotifId(t.id));
+
+  // Applique un minuteur modifié localement et le publie à deux.
+  const commit = (t: CookTimer): void => {
+    setTimers(prev => prev.some(x => x.id === t.id) ? prev.map(x => x.id === t.id ? t : x) : [...prev, t]);
+    sharedRef.current?.save(t);
+  };
 
   // Ajoute un minuteur pour la durée `duration`, rattaché à l'étape (`stepIdx`/`stepLabel`)
-  // depuis laquelle il est lancé. Sans effet si un minuteur identique tourne déjà.
+  // depuis laquelle il est lancé. Sans effet si un minuteur identique tourne déjà (lancé
+  // ici ou par l'autre membre) : la pile se déplie pour le montrer.
   const addTimer = (d: TimerDuration, stepIdx: number, stepLabel: string): void => {
+    setTimersOpen(true);
     if (hasActiveDuration(timers, d.minutes)) return;
     const clock = Date.now();
-    const t = startTimer({ minutes: d.minutes, label: d.label, stepIdx, stepLabel }, clock);
-    setTimers(prev => hasActiveDuration(prev, d.minutes) ? prev : [...prev, t]);
+    commit(startTimer({ minutes: d.minutes, label: d.label, stepIdx, stepLabel }, clock));
     setNow(clock); // recale l'horloge d'affichage sur le même instant que l'échéance, sinon le restant part faux d'un `now` gelé (voir battement)
-    setTimersOpen(true);
-    armNotif(t);
   };
   const toggleTimer = (id: string): void => {
     const t = timers.find(x => x.id === id);
     if (!t || t.done) return;
     const clock = Date.now();
-    setTimers(prev => prev.map(x => x.id === id ? (x.running ? pauseTimer(x, clock) : resumeTimer(x, clock)) : x));
+    commit(t.running ? pauseTimer(t, clock) : resumeTimer(t, clock));
     setNow(clock);
-    if (t.running) cancelNotif(t); else armNotif(resumeTimer(t, clock));
   };
   const restartTimer = (id: string): void => {
     const t = timers.find(x => x.id === id);
+    if (!t) return;
     const clock = Date.now();
-    notifiedRef.current.delete(id);
-    setTimers(prev => prev.map(x => x.id === id ? resetTimerState(x, clock) : x));
+    commit(resetTimerState(t, clock));
     setNow(clock);
-    if (t) armNotif(resetTimerState(t, clock));
   };
   const removeTimer = (id: string): void => {
-    const t = timers.find(x => x.id === id);
-    if (t) cancelNotif(t);
-    notifiedRef.current.delete(id);
     setTimers(prev => prev.filter(x => x.id !== id));
+    sharedRef.current?.drop(id);
   };
+
+  // À deux : recalage sur les minuteurs de la session à chaque changement distant.
+  const sharedTimers = shared?.timers ?? null;
+  useEffect(() => {
+    if (!sharedTimers) return;
+    const { timers: next, pending } = mergeSharedTimers(timersRef.current, sharedTimers, seenRef.current, Date.now());
+    for (const t of sharedTimers) seenRef.current.add(t.id);
+    setTimers(next);
+    for (const t of pending) sharedRef.current?.save(t);
+  }, [sharedTimers]);
+
+  // Notifications OS déduites de l'état : une par minuteur en marche, replanifiée si
+  // son échéance bouge, annulée en pause, à l'arrêt ou à l'échéance (l'alarme premier
+  // plan prend alors le relais, sans bannière redondante).
+  useEffect(() => {
+    const live = new Map<string, number>();
+    for (const t of timers) if (t.running && !t.done && t.endAt != null) live.set(t.id, t.endAt);
+    for (const [id, at] of armedRef.current) {
+      if (live.get(id) === at) continue;
+      armedRef.current.delete(id);
+      cancelTimerNotification(deriveNotifId(id));
+    }
+    for (const t of timers) {
+      const at = live.get(t.id);
+      if (at == null || armedRef.current.has(t.id)) continue;
+      armedRef.current.set(t.id, at);
+      armNotif(t, at);
+    }
+  });
 
   // Battement d'horloge tant qu'un minuteur tourne : on avance `now` (le restant
   // s'en dérive) et on bascule à « terminé » les échéances dépassées. Un recalage
@@ -123,17 +172,15 @@ export function useCookTimers(notify?: (message: string) => void): UseCookTimers
     return () => { clearInterval(iv); document.removeEventListener("visibilitychange", onWake); window.removeEventListener("focus", onWake); };
   }, [timers]);
 
-  // Alarme quand un minuteur se termine (une seule fois, compatible StrictMode).
+  // Alarme quand un minuteur se termine (une seule fois, compatible StrictMode). Un
+  // minuteur relancé (ici ou par l'autre membre) pourra sonner de nouveau.
   useEffect(() => {
     for (const t of timers) {
-      if (t.done && !notifiedRef.current.has(t.id)) {
-        notifiedRef.current.add(t.id);
-        playAlarm();
-        // L'alarme premier plan a joué : on annule la notif OS encore en attente
-        // pour éviter une bannière redondante quand le minuteur échoit app ouverte.
-        cancelNotif(t);
-        notify?.(`Minuteur terminé, ${t.label}`);
-      }
+      if (!t.done) { notifiedRef.current.delete(t.id); continue; }
+      if (notifiedRef.current.has(t.id)) continue;
+      notifiedRef.current.add(t.id);
+      playAlarm();
+      notify?.(`Minuteur terminé, ${t.label}`);
     }
   }, [timers, notify]);
 

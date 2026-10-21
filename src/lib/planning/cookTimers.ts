@@ -33,6 +33,8 @@ export interface CookTimer {
   stepIdx: number;
   /** Libellé de l'étape source, ex. `"Étape 3"` ou `"Mise en place"`. */
   stepLabel: string;
+  /** Cuisiner à deux : uid du membre qui l'a lancé (absent en solo). */
+  startedBy?: string;
 }
 
 /** Paramètres de création d'un minuteur. */

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchPublicDocsByIds } from "@/lib/firebase/community.js";
-import { publicId } from "@/lib/household/publicRecipes.js";
-import type { DocumentData } from "firebase/firestore";
+import { publicId, parsePublicDoc, type PublicDoc } from "@/lib/household/publicRecipes.js";
+import type { Recipe } from "@/lib/types.js";
 
 // ─── VUE D'UNE RECETTE PUBLIQUE (pilotée par l'URL /discover/:pubId) ──────────
 // pubId = "{authorUid}__{recipeId}" : l'auteur est lisible dans l'URL, la vue est
@@ -11,7 +11,7 @@ import type { DocumentData } from "firebase/firestore";
 export const DISCOVER_PREFIX = "/discover/";
 
 /** Valeur d'entrée : `undefined` (chargement), `null` (introuvable) ou le doc + bases. */
-type ViewValue = undefined | null | { pub: DocumentData; components: unknown[] };
+type ViewValue = undefined | null | { pub: PublicDoc; components: Recipe[] };
 /** Entrée courante, étiquetée par son pubId. */
 interface Entry { id: string; value: ViewValue }
 
@@ -44,7 +44,7 @@ export function usePublicRecipeView({ user, recipes, location, navigate }: Publi
 
   // Ouvre une recette publique : ma propre recette → ma version locale éditable ;
   // sinon précharge le doc connu et route vers /discover/:pubId.
-  const open = useCallback((pub: DocumentData, components?: unknown[]) => {
+  const open = useCallback((pub: PublicDoc, components?: Recipe[]) => {
     if (pub?.authorUid === user?.uid && recipes.some(r => r.id === pub.originalId)) {
       // On vient de « Découvrir » : on mémorise l'origine pour que le bouton
       // « retour » de la fiche perso revienne au feed et non à la liste Recettes.
@@ -63,13 +63,15 @@ export function usePublicRecipeView({ user, recipes, location, navigate }: Publi
     setEntry({ id: pubId, value: undefined }); // chargement
     (async () => {
       try {
-        const [pub] = await fetchPublicDocsByIds([pubId]);
+        const [raw] = await fetchPublicDocsByIds([pubId]);
         if (!alive) return;
+        const pub = parsePublicDoc(raw);
         if (!pub) { setEntry({ id: pubId, value: null }); return; }
-        const compIds = ((pub.componentRefs || []) as string[]).map(o => publicId(pub.authorUid, o));
+        const compIds = pub.componentRefs.map(o => publicId(pub.authorUid, o));
         const comps = compIds.length ? await fetchPublicDocsByIds(compIds) : [];
         if (!alive) return;
-        setEntry({ id: pubId, value: { pub, components: comps.map(c => c.recipe) } });
+        const components = comps.map(parsePublicDoc).flatMap(c => (c ? [c.recipe] : []));
+        setEntry({ id: pubId, value: { pub, components } });
       } catch { if (alive) setEntry({ id: pubId, value: null }); }
     })();
     return () => { alive = false; };

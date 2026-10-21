@@ -1,4 +1,4 @@
-import type { Collection, Recipe } from "@/lib/types.js";
+import type { Notebook, Recipe } from "@/lib/types.js";
 import type { DifficultyResult, DifficultyExplain } from "@/lib/recipes/difficulty.js";
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
@@ -6,12 +6,9 @@ import { VeganBadge, SeasonBadge } from "../badges/Badges.jsx";
 import { DifficultyBadge } from "../badges/DifficultyBadge.jsx";
 import { cuisineEmoji } from "../../constants/cuisines.js";
 import { categoryLabel, categoryEmoji } from "../../constants/recipeCategories.js";
+import { DEFAULT_NOTEBOOK_COLOR } from "@/lib/recipes/notebooks.js";
 
 /** Carnet tel que rendu ici : la couleur pilote la teinte du badge. */
-interface ColoredCollection extends Collection {
-  color: string;
-}
-
 interface RecipeHeroBadgesProps {
   recipe: Recipe;
   recipeVegan?: boolean;
@@ -19,7 +16,7 @@ interface RecipeHeroBadgesProps {
   difficulty: DifficultyResult;
   difficultyExplain?: DifficultyExplain | null;
   difficultyTitle?: string;
-  collections?: ColoredCollection[];
+  collections?: Notebook[];
   publicMode?: boolean;
   onOpenBaseInfo: () => void;
   onOpenDifficulty: () => void;
@@ -57,7 +54,7 @@ export function RecipeHeroBadges({ recipe, recipeVegan, recipeInSeason, difficul
       <DifficultyBadge score={difficulty.score} onImage title={difficultyExplain ? "Voir comment la difficulté est calculée" : difficultyTitle} onClick={difficultyExplain ? onOpenDifficulty : undefined} />
       {categoryLabel(recipe.category) && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: `1px solid ${tagBorder}` }}><span style={{ fontSize: 12, lineHeight: 1 }}>{categoryEmoji(recipe.category)}</span>{categoryLabel(recipe.category)}</span>}
       {recipe.cuisine && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: `1px solid ${tagBorder}` }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
-      {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: col.color + "33", color: col.color }}>{col.name}</span> : null; })}
+      {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: (col.color || DEFAULT_NOTEBOOK_COLOR) + "33", color: col.color || DEFAULT_NOTEBOOK_COLOR }}>{col.name}</span> : null; })}
       {!publicMode && <button onClick={onOpenCollections} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: `1px solid ${tagBorder}`, display: "inline-flex", alignItems: "center", gap: 4, ...(variant === "desktop" ? {} : { cursor: "pointer" }) }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>}
     </>
   );

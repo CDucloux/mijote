@@ -37,10 +37,9 @@ import { useAppShell } from "../context/AppShellContext.jsx";
 import { DISCOVER_PREFIX } from "../hooks/usePublicRecipeView.js";
 import { useRecipeView } from "../hooks/useRecipeView.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
-import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
-import type { HistoryRecipe } from "@/lib/recipes/history.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 import type { IngredientLine, Recipe, UtensilDbItem } from "@/lib/types.js";
-import type { ColoredCollection } from "../components/recipeDetail/CollectionsSheet.js";
+import type { Notebook } from "@/lib/types.js";
 import type { MenuItem } from "../components/recipeDetail/HeroMenu.js";
 
 interface RecipeDetailProps {
@@ -61,10 +60,10 @@ interface RecipeDetailProps {
   onUnpublish?: (recipe: Recipe) => void;
   ingredientDB: DbEntry[];
   utensilDB: UtensilDbItem[];
-  categories?: CategoryMap;
-  collections?: ColoredCollection[];
+  categories?: IngredientCategories;
+  collections?: Notebook[];
   onToggleCollection?: (recipeId: string | undefined, collectionId: string) => void;
-  onUpdateRecipe?: (recipe: HistoryRecipe) => void;
+  onUpdateRecipe?: (recipe: Recipe) => void;
   onCooked?: (recipeId: string) => void;
   notify?: (message: string, type?: string) => void;
   /** IDs en stock (ingrédients et préparations de base déjà réalisées). */

@@ -19,6 +19,7 @@
  * @module recipes/difficulty
  */
 import { buildTechniqueIndex, annotateText, type TechniqueIndex, type TechniqueEntry } from "@/lib/recipes/techniques.js";
+import type { Recipe } from "@/lib/types.js";
 
 /** Un geste technique noté (issu du glossaire). */
 export interface Technique {
@@ -26,14 +27,7 @@ export interface Technique {
   name?: string;
   difficulty?: number;
 }
-interface DiffStep { text?: string }
-interface DiffRecipe {
-  id?: string;
-  name?: string;
-  difficultyOverride?: number;
-  ingredients?: { recipeId?: string | null }[];
-  steps?: DiffStep[];
-}
+type DiffRecipe = Pick<Recipe, "id" | "name" | "difficultyOverride" | "ingredients" | "steps">;
 /** Options communes : index de glossaire pré-construit et base de recettes
  * (typée souplement, les appelants passent des recettes de formes variées). */
 export interface DiffOpts {
@@ -60,7 +54,7 @@ export const DIFFICULTY_LABEL: Record<number, string> = { 1: "Très facile", 2: 
 export const difficultyColor = (lvl: number): string => lvl <= 2 ? "var(--green)" : lvl === 3 ? "#e8920a" : "var(--red)";
 
 /** Gestes (avec difficulté) repérés dans une liste d'étapes, dédoublonnés. */
-function techniquesInSteps(steps: DiffStep[] | undefined, index: TechniqueIndex): Technique[] {
+function techniquesInSteps(steps: Recipe["steps"], index: TechniqueIndex): Technique[] {
   const found = new Map<string, Technique>();
   for (const step of steps || []) {
     for (const seg of annotateText(step.text || "", index)) {

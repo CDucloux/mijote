@@ -5,6 +5,8 @@ import type { TechniqueEntry } from "@/lib/recipes/techniques.js";
 import type { PlanState } from "@/lib/firebase/subscription.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
 import type { ImagePart } from "@/lib/recipes/recipeUrlImport.js";
+import type { SharedData } from "@/lib/household/householdMigration.js";
+import type { RecommendedSource } from "@/lib/sources/recommendedSources.js";
 
 /** Phases du moteur de synchro Firestore, telles qu'écrites par `useFirestoreSync`. */
 export type SyncStatus = "idle" | "syncing" | "synced" | "error" | "blocked";
@@ -26,7 +28,7 @@ export interface AppShell {
   isDark: boolean;
   notify: (message: string, type?: string) => void;
   techniques: TechniqueEntry[];
-  sources: DbRow[];
+  sources: RecommendedSource[];
   directory: DbRow[];
   isAdmin: boolean;
   isPlus: boolean;
@@ -35,7 +37,7 @@ export interface AppShell {
   markGiftImportUsed: () => void;
   signOut: () => void;
   toggleTheme: () => void;
-  getSharedData: () => unknown;
+  getSharedData: () => SharedData;
   loadDirectory: () => Promise<void>;
   importFromUrl: (url: string) => Promise<{ method: string }>;
   importFromImages: (images: ImagePart[]) => Promise<{ method: string }>;

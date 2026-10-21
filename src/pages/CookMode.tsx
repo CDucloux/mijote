@@ -13,7 +13,7 @@ import { fmtQtyUnit } from "../lib/format.js";
 import { groupIngredientsByCategory, buildPendingComponents } from "@/lib/cookSession/misEnPlace.js";
 import { spoonConversions } from "@/lib/food/calculators.js";
 import { QuantityConvertSheet } from "../components/ingredient/QuantityConvertSheet.jsx";
-import { addVersion, nextVersionLabel, type HistoryRecipe } from "@/lib/recipes/history.js";
+import { addVersion, nextVersionLabel } from "@/lib/recipes/history.js";
 import { stepLinked } from "@/lib/recipes/stepLinks.js";
 import { useLS } from "../hooks/useLS.js";
 import { useCookSession } from "../hooks/useCookSession.js";
@@ -32,7 +32,7 @@ import { useCookTogether } from "../hooks/useCookTogether.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import type { IngredientLine, Recipe, Utensil, UtensilDbItem } from "@/lib/types.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
-import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 import type { CookPage } from "../components/cookMode/CookSidebar.js";
 import type { PrecautionSheetTarget } from "../components/recipeDetail/recipeView.js";
 
@@ -42,13 +42,13 @@ interface CookModeSharedProps {
   mult: number;
   ingredientDB: DbEntry[];
   utensilDB: UtensilDbItem[] | undefined;
-  categories?: CategoryMap;
+  categories?: IngredientCategories;
   onClose: () => void;
   /** Consigne le plat au journal de cuisine (recette principale uniquement). */
   onCooked?: (recipeId: string) => void;
   /** IDs des préparations de base en stock (les autres sont à réaliser d'abord). */
   stockSet: Set<string> | undefined;
-  onUpdateRecipe?: (recipe: HistoryRecipe) => void;
+  onUpdateRecipe?: (recipe: Recipe) => void;
 }
 
 interface CookModeInnerProps extends CookModeSharedProps {
@@ -103,16 +103,11 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const [groupByCategory, setGroupByCategory] = useLS("rf_cookModeGroupByCategory", false);
   // Itération de fin de cuisson : alimente le carnet d'itérations depuis l'écran final.
   const [iterOpen, setIterOpen] = useState(false);
-  // Minuteurs déclenchés depuis les mentions de temps de l'étape. Base horodatée
-  // (cf. `cookTimers`) : le restant se dérive de l'horloge, donc reste juste après
-  // un passage en arrière-plan. En natif, une notification OS est planifiée à
-  // l'échéance pour sonner même écran verrouillé (cf. `localNotifications`).
   const [navDir, setNavDir] = useState(1); // sens de navigation (animation d'étape)
-  const { timers, timersOpen, setTimersOpen, now, addTimer, toggleTimer, restartTimer, removeTimer } = useCookTimers(notify);
   const canIterate = !isNested && !!onUpdateRecipe;
   const saveIteration = (rating: number | null, notes: string) => {
     if (!onUpdateRecipe) return;
-    const versioned: HistoryRecipe = recipe;
+    const versioned: Recipe = recipe;
     onUpdateRecipe(addVersion(versioned, { label: nextVersionLabel(versioned.history), rating, notes }));
     setIterOpen(false);
     notify?.("Itération ajoutée au carnet");
@@ -165,7 +160,19 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const totalSteps = pages.length || 1;
   const cur: CookPage = pages[Math.min(stepIdx, pages.length - 1)] || { kind: "overview" };
   // Cuisiner à deux (foyer) : positions, étapes faites et fin communes.
-  const together = useCookTogether({ householdId, recipe, user, pageKey: pageKeyOf(cur), enabled: !isNested });
+  const pageKeys = useMemo(() => pages.map(pageKeyOf), [pages]);
+  const together = useCookTogether({ householdId, recipe, user, pageKey: pageKeyOf(cur), pageKeys, enabled: !isNested });
+  // Minuteurs déclenchés depuis les mentions de temps de l'étape. Base horodatée
+  // (cf. `cookTimers`) : le restant se dérive de l'horloge, donc reste juste après
+  // un passage en arrière-plan. En natif, une notification OS est planifiée à
+  // l'échéance pour sonner même écran verrouillé (cf. `localNotifications`). À deux,
+  // ils sont communs : lancer, mettre en pause ou arrêter vaut pour les deux.
+  const { timers, timersOpen, setTimersOpen, now, addTimer, toggleTimer, restartTimer, removeTimer } =
+    useCookTimers(notify, { timers: together.timers, save: together.saveTimer, drop: together.dropTimer });
+  const timerStarters = useMemo(
+    () => new Map((together.session?.participants ?? []).filter(p => p.uid !== user?.uid).map(p => [p.uid, p])),
+    [together.session, user?.uid],
+  );
   const done = doneHere || together.finished;
   useEffect(() => { if (together.startedAt) startedAtRef.current = together.startedAt; }, [together.startedAt]);
   useEffect(() => {
@@ -180,7 +187,6 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   useEffect(() => {
     if (done && !isNested && !cookedByOther && !cookedLoggedRef.current && recipe.id) { cookedLoggedRef.current = true; onCooked?.(recipe.id); }
   }, [done, isNested, cookedByOther, onCooked, recipe.id]);
-  const pageKeys = useMemo(() => pages.map(pageKeyOf), [pages]);
   const companions = partnerPositions(pageKeys, together.others)
     .map(({ participant, index }) => ({ participant, progress: ((index + 1) / totalSteps) * 100, label: cookPageLabel(pages[index]) }));
   const isOverview = cur.kind === "overview";
@@ -347,7 +353,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         </div>
 
         {/* Minuteurs actifs : pile repliable ancrée à droite, au-dessus de la nav. */}
-        <CookTimersStack timers={timers} timersOpen={timersOpen} setTimersOpen={setTimersOpen} now={now}
+        <CookTimersStack timers={timers} starters={timerStarters} timersOpen={timersOpen} setTimersOpen={setTimersOpen} now={now}
           onGoToStep={goTo} onToggle={toggleTimer} onRestart={restartTimer} onRemove={removeTimer} />
 
         {/* Bottom nav */}

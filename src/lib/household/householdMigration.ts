@@ -11,19 +11,15 @@
  * @module household/householdMigration
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
-
-/** Carnet (forme minimale). */
-export interface SharedCollection { id: string; name?: string; [k: string]: unknown }
-
-/** Recette (forme minimale utilisée par la fusion ; champs additionnels tolérés). */
-export interface SharedRecipe { id: string; name?: string; collections?: string[]; [k: string]: unknown }
+import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
+import type { Notebook, MealPlan, SavedRecipe } from "@/lib/types.js";
 
 /** Espace de données partageable (perso ou foyer). */
 export interface SharedData {
-  recipes?: SharedRecipe[];
-  collections?: SharedCollection[];
-  mealPlan?: Record<string, unknown>;
-  shoppingLists?: unknown[];
+  recipes?: SavedRecipe[];
+  collections?: Notebook[];
+  mealPlan?: MealPlan;
+  shoppingLists?: ShoppingList[];
   stock?: string[];
   lowStock?: string[];
 }
@@ -48,7 +44,7 @@ export function mergeShared(local: SharedData | null | undefined, remote: Shared
   const remoteCols = remote.collections || [];
   const remoteColByName = new Map(remoteCols.map(c => [normalizeStr(c.name || ""), c.id]));
   const idRemap = new Map<string, string>();
-  const keptLocalCols: SharedCollection[] = [];
+  const keptLocalCols: Notebook[] = [];
   for (const c of (local.collections || [])) {
     const remoteId = remoteColByName.get(normalizeStr(c.name || ""));
     if (remoteId) idRemap.set(c.id, remoteId);        // homonyme : on pointe vers celui du foyer
@@ -59,11 +55,11 @@ export function mergeShared(local: SharedData | null | undefined, remote: Shared
   // ── Recettes : union, dédup par nom ; remap des carnets ; id local régénéré si collision ──
   const remoteNames = byNameSet(remote.recipes);
   const remoteIds = new Set((remote.recipes || []).map(r => r.id));
-  const remapCols = (r: SharedRecipe): SharedRecipe => {
+  const remapCols = (r: SavedRecipe): SavedRecipe => {
     const cols = (r.collections || []).map(id => idRemap.get(id) || id);
     return cols.length ? { ...r, collections: [...new Set(cols)] } : r;
   };
-  const addedLocal: SharedRecipe[] = [];
+  const addedLocal: SavedRecipe[] = [];
   for (const r of (local.recipes || [])) {
     if (remoteNames.has(normalizeStr(r.name || ""))) continue;     // homonyme : on garde celle du foyer
     let rr = remapCols(r);

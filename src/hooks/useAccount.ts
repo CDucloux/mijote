@@ -4,6 +4,9 @@ import { deleteAllUserData } from "@/lib/firebase/workspaceData.js";
 import { signInWithGoogle } from "@/lib/firebase/auth.js";
 import { signInFeedback } from "@/lib/firebase/signInFeedback.js";
 import { googleSignIn } from "@/lib/firebase/googleAuth.js";
+import type { Dispatch, SetStateAction } from "react";
+import type { Notebook, MealPlan, SavedRecipe } from "@/lib/types.js";
+import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 
 /** Portée d'une purge de données depuis le profil. */
 export type PurgeScope = "planning" | "shopping" | "stock" | "all";
@@ -13,12 +16,12 @@ export interface AccountDeps {
   user: { uid?: string } | null | undefined;
   setUser: (u: null) => void;
   notify: (msg: string, type?: string) => void;
-  setMealPlan: (v: Record<string, unknown>) => void;
-  setShoppingLists: (v: unknown[]) => void;
-  setStock: (v: unknown[]) => void;
-  setLowStock: (v: unknown[]) => void;
-  setRecipes: (v: unknown[]) => void;
-  setCollections: (v: unknown[]) => void;
+  setMealPlan: Dispatch<SetStateAction<MealPlan>>;
+  setShoppingLists: Dispatch<SetStateAction<ShoppingList[]>>;
+  setStock: Dispatch<SetStateAction<string[]>>;
+  setLowStock: Dispatch<SetStateAction<string[]>>;
+  setRecipes: Dispatch<SetStateAction<SavedRecipe[]>>;
+  setCollections: Dispatch<SetStateAction<Notebook[]>>;
 }
 
 /**

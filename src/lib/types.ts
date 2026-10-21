@@ -7,6 +7,8 @@
  *
  * @module types
  */
+import type { RecipeFilters } from "@/lib/recipes/recipeFilters.js";
+import type { HistoryEntry } from "@/lib/recipes/history.js";
 
 /** Rendement d'une préparation de base (« pour 500 g », « pour 2 pots »…). */
 export interface RecipeYield {
@@ -158,6 +160,7 @@ export interface Step {
 export interface Recipe {
   id?: string;
   name?: string;
+  description?: string;
   category?: string;
   cuisine?: string;
   isComponent?: boolean;
@@ -182,15 +185,30 @@ export interface Recipe {
   clonedFrom?: { publicId: string; authorUid?: string; authorName?: string };
   /** Identifiant du doc public, une fois la recette publiée. */
   publicId?: string;
+  /** Création : date ISO (`YYYY-MM-DD`) à l'enregistrement, horodatage ms pour une copie. */
+  createdAt?: string | number;
+  updatedAt?: string | number;
+  /** Journal d'itérations (versions successives de la recette). */
+  history?: HistoryEntry[];
   [k: string]: unknown;
 }
 
-/** Carnet de recettes (manuel ou intelligent). */
-export interface Collection {
+/** Recette enregistrée (bibliothèque) : toujours identifiée. */
+export type SavedRecipe = Recipe & { id: string };
+
+/** Carnet de recettes : manuel (appartenance explicite) ou intelligent (`kind: "smart"`, vue de filtres). */
+export interface Notebook {
   id: string;
   name?: string;
   kind?: string;
   count?: number;
+  color?: string;
+  /** Picto choisi par l'utilisateur (emoji). */
+  icon?: string;
+  /** Vue de filtres d'un carnet intelligent. */
+  filters?: Partial<RecipeFilters>;
+  /** Recherche d'un carnet intelligent. */
+  search?: string;
   [k: string]: unknown;
 }
 

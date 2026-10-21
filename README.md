@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.74.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.75.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -134,8 +134,9 @@ toujours avec vous.
   gestes techniques repérés dans les étapes ouvrent un **glossaire enrichi**
   (définition, résultat attendu, erreurs fréquentes, à ne pas confondre).
   **Cuisiner à deux** : un membre du foyer rejoint le pas-à-pas en cours (bandeau
-  « Rejoindre » sur tous les écrans), chacun voit l'avancée de l'autre et les
-  étapes faites sont partagées.
+  « Rejoindre » sur tous les écrans), chacun voit l'avancée de l'autre, les
+  étapes faites sont partagées et les minuteurs aussi (lancé ou arrêté sur un
+  téléphone, il l'est sur l'autre, avec l'avatar de qui l'a lancé).
 - 📱 **Lanceur Android** : à l'appui long sur l'icône, des **raccourcis qui suivent
   le foyer** (prochain repas planifié, courses restantes, ajout en photo, planning),
   et trois **widgets** d'écran d'accueil : « Au menu » (repas du jour avec photos),
@@ -317,7 +318,8 @@ ne vont jamais en sens inverse :
 src/
 ├── main.tsx         # Bootstrap : choisit la zone (vitrine / ou app /app) + service worker
 ├── PublicApp.tsx    # Vitrine publique montée à la racine (/)
-├── App.jsx          # Shell de l'app (sous /app) : routing, état global, câblage
+├── App.tsx          # Racine de l'app (sous /app) : garde d'auth, routes publiques
+├── AppInner.tsx     # App connectée : état global, synchro, écran déduit de l'URL
 ├── context/         # Concerns transverses (AppShellContext)
 ├── hooks/           # Hooks réutilisables (useFirestoreSync, useHousehold, useLS…)
 ├── lib/             # Logique pure : domaine (Nutri-Score, planning, parsing,

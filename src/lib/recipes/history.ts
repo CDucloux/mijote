@@ -7,23 +7,12 @@
  * @module recipes/history
  */
 
-interface IngredientLike { name?: string; amount?: number | string | null; unit?: string | null }
-interface UtensilLike { name?: string }
-interface StepLike { description?: string }
+import type { IngredientLine, Recipe } from "@/lib/types.js";
+
+const SNAPSHOT_FIELDS = ["ingredients", "utensils", "steps", "prepTime", "cookTime", "servings", "yield", "nutriLetter", "healthScore"] as const;
 
 /** Instantané des champs « live » d'une recette (ceux qui définissent la préparation). */
-export interface Snapshot {
-  ingredients?: IngredientLike[];
-  utensils?: UtensilLike[];
-  steps?: StepLike[];
-  prepTime?: number;
-  cookTime?: number;
-  servings?: number;
-  yield?: unknown;
-  nutriLetter?: string;
-  healthScore?: number;
-  [k: string]: unknown;
-}
+export type Snapshot = Pick<Recipe, (typeof SNAPSHOT_FIELDS)[number]>;
 
 /** Une entrée du journal : métadonnées + snapshot figé. */
 export interface HistoryEntry {
@@ -35,13 +24,6 @@ export interface HistoryEntry {
   snapshot: Snapshot;
 }
 
-/** Recette porteuse d'un historique (forme souple : autres champs tolérés). */
-export interface HistoryRecipe {
-  history?: HistoryEntry[];
-  [k: string]: unknown;
-}
-
-const SNAPSHOT_FIELDS = ["ingredients", "utensils", "steps", "prepTime", "cookTime", "servings", "yield", "nutriLetter", "healthScore"] as const;
 
 /**
  * Snapshot de l'état courant (copie défensive des tableaux).
@@ -49,12 +31,12 @@ const SNAPSHOT_FIELDS = ["ingredients", "utensils", "steps", "prepTime", "cookTi
  * @param recipe - La recette à figer.
  * @returns Un instantané des champs versionnés (ingrédients, étapes, temps…).
  */
-export function snapshotOf(recipe: HistoryRecipe): Snapshot {
+export function snapshotOf(recipe: Recipe): Snapshot {
   const snap: Snapshot = {};
   for (const f of SNAPSHOT_FIELDS) {
     const v = recipe[f];
     if (v === undefined) continue; // Firestore refuse les valeurs undefined
-    snap[f] = Array.isArray(v) ? JSON.parse(JSON.stringify(v)) : v;
+    Object.assign(snap, { [f]: Array.isArray(v) ? JSON.parse(JSON.stringify(v)) : v });
   }
   return snap;
 }
@@ -79,7 +61,7 @@ export function nextVersionLabel(history: HistoryEntry[] | null | undefined): st
  * @param meta.notes - Notes libres.
  * @returns La recette avec la nouvelle entrée ajoutée à `history`.
  */
-export function addVersion(recipe: HistoryRecipe, { label, rating, notes }: { label?: string; rating?: number | null; notes?: string }): HistoryRecipe {
+export function addVersion<T extends Recipe>(recipe: T, { label, rating, notes }: { label?: string; rating?: number | null; notes?: string }): T {
   const entry: HistoryEntry = {
     id: "h" + Date.now(),
     label: (label || "").trim() || nextVersionLabel(recipe.history),
@@ -98,7 +80,7 @@ export function addVersion(recipe: HistoryRecipe, { label, rating, notes }: { la
  * @param entryId - L'id de l'entrée à retirer.
  * @returns La recette sans cette entrée d'historique.
  */
-export function deleteVersion(recipe: HistoryRecipe, entryId: string): HistoryRecipe {
+export function deleteVersion<T extends Recipe>(recipe: T, entryId: string): T {
   return { ...recipe, history: (recipe.history || []).filter(h => h.id !== entryId) };
 }
 
@@ -111,7 +93,7 @@ export type IngredientDiff =
   | { type: "same"; name?: string; qty: string };
 export type UtensilDiff = { type: "added" | "removed" | "same"; name?: string };
 export type StepDiff =
-  | { type: "added" | "removed" | "same"; index: number; description?: string }
+  | { type: "added" | "removed" | "same"; index: number; text?: string }
   | { type: "changed"; index: number; from?: string; to?: string };
 export interface ScalarDiff { label: string; from: string; to: string }
 
@@ -139,7 +121,7 @@ export function diffSnapshots(base: Snapshot | null | undefined, target: Snapsho
 
   const baseIng = new Map((b.ingredients || []).map(i => [diffKey(i.name), i]));
   const targetIng = new Map((t.ingredients || []).map(i => [diffKey(i.name), i]));
-  const qtyOf = (i: IngredientLike): string => `${i.amount ?? ""}${i.unit ? " " + i.unit : ""}`.trim();
+  const qtyOf = (i: IngredientLine): string => `${i.amount ?? ""}${i.unit ? " " + i.unit : ""}`.trim();
   const ingredients: IngredientDiff[] = [];
   for (const [k, ti] of targetIng) {
     const bi = baseIng.get(k);
@@ -162,16 +144,16 @@ export function diffSnapshots(base: Snapshot | null | undefined, target: Snapsho
   for (let i = 0; i < Math.max(bs.length, ts.length); i++) {
     const bStep = bs[i], tStep = ts[i];
     if (bStep && tStep) {
-      if ((bStep.description || "") !== (tStep.description || "")) steps.push({ type: "changed", index: i, from: bStep.description, to: tStep.description });
-      else steps.push({ type: "same", index: i, description: tStep.description });
-    } else if (tStep) steps.push({ type: "added", index: i, description: tStep.description });
-    else steps.push({ type: "removed", index: i, description: bStep!.description });
+      if ((bStep.text || "") !== (tStep.text || "")) steps.push({ type: "changed", index: i, from: bStep.text, to: tStep.text });
+      else steps.push({ type: "same", index: i, text: tStep.text });
+    } else if (tStep) steps.push({ type: "added", index: i, text: tStep.text });
+    else steps.push({ type: "removed", index: i, text: bStep!.text });
   }
 
   const scalars: ScalarDiff[] = [];
   for (const [field, label, unit] of [["prepTime", "Préparation", " min"], ["cookTime", "Cuisson", " min"], ["servings", "Portions", ""]] as const) {
-    const bv = (b[field] ?? null) as number | null;
-    const tv = (t[field] ?? null) as number | null;
+    const bv = b[field] ?? null;
+    const tv = t[field] ?? null;
     if (bv !== tv) scalars.push({ label, from: bv != null ? bv + unit : "–", to: tv != null ? tv + unit : "–" });
   }
 

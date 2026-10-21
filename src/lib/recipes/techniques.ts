@@ -14,8 +14,11 @@ export const GENERIC_TECHNIQUE_PREFIX = "tech_grp_";
 /** Une relation « ne pas confondre avec » (schema v2). */
 export interface TechniqueConfusion { technique_id: string; distinction?: string }
 
-/** Une entrée de glossaire (geste technique). */
-export interface TechniqueEntry {
+/**
+ * Champs connus d'un geste technique (schéma v2), sans clé libre : base des types
+ * dérivés (`Partial`, `Omit`), qu'une signature d'index rendrait inopérants.
+ */
+export interface TechniqueFields {
   id: string;
   name?: string;
   category?: string;
@@ -31,6 +34,10 @@ export interface TechniqueEntry {
   common_errors?: string[];
   /** Confusions plausibles v2 (« ne pas confondre avec »). */
   not_to_be_confused_with?: TechniqueConfusion[];
+}
+
+/** Une entrée de glossaire (geste technique) : champs connus, autres clés tolérées. */
+export interface TechniqueEntry extends TechniqueFields {
   [k: string]: unknown;
 }
 

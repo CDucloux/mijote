@@ -10,7 +10,7 @@
  *
  * @module planning/batchSession
  */
-import type { IngredientLine, RecipeYield } from "@/lib/types.js";
+import type { IngredientDbItem, SavedRecipe } from "@/lib/types.js";
 import { flattenForShopping, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
 import { recipeCookingMethods, COOKING_METHODS } from "@/lib/recipes/cooking.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
@@ -21,18 +21,8 @@ export interface BatchEntry {
   portions?: number | string;
 }
 
-/** Ligne d'ingrédient (alias de domaine : une base est référencée par `recipeId`). */
-export type BatchIngredient = IngredientLine;
-
-/** Recette de la bibliothèque (forme minimale utilisée par le batch). */
-export interface BatchRecipe {
-  id: string;
-  name?: string;
-  isComponent?: boolean;
-  servings?: number | string;
-  ingredients?: BatchIngredient[];
-  yield?: RecipeYield;
-}
+/** Recette de la bibliothèque lue par le batch. */
+export type BatchRecipe = Pick<SavedRecipe, "id" | "name" | "isComponent" | "servings" | "ingredients" | "yield">;
 
 /** Plat à cuisiner, avec nombre de cuissons déduit du partage de portions. */
 export interface BatchDish {
@@ -136,14 +126,7 @@ export function weekEntries(mealPlan: Record<string, BatchEntry[]> = {}, dates: 
 export interface PrepResolver { (name: string | null | undefined): { id: string } | null }
 
 /** Ingrédient de la base enrichi (catégorie, poids/pièce, image, conseils). */
-export interface PrepDbItem {
-  id: string;
-  name?: string;
-  category?: string;
-  image?: string;
-  gramsPerPiece?: number;
-  tips?: { type?: string; text?: string }[];
-}
+export type PrepDbItem = Pick<IngredientDbItem, "id" | "name" | "category" | "image" | "gramsPerPiece" | "tips">;
 
 /** Un ingrédient à préparer, sommé sur toute la semaine. */
 export interface PrepItem {

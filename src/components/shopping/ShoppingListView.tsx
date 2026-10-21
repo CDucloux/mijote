@@ -3,15 +3,16 @@ import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { ShoppingItemRow } from "./ShoppingItemRow.jsx";
 import { findIngredientMatch, type DbEntry } from "@/lib/food/nameMatcher.js";
 import { resolveQualityRecommendation } from "@/lib/food/qualityRecommendation.js";
-import { buildShoppingSections, type CategoriesConfig } from "@/lib/food/shoppingList.js";
+import { buildShoppingSections } from "@/lib/food/shoppingList.js";
 import type { ShoppingItem, ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import { ShoppingSectionList, ShoppingClearButton } from "./ShoppingSectionList.jsx";
 import { useElasticScroll } from "../../hooks/useElasticScroll.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 
 /** Props de la vue liste active, relayées par `useShopping` via `ShoppingPage`. */
 interface ShoppingListViewProps {
   activeList: ShoppingList;
-  categories: CategoriesConfig;
+  categories: IngredientCategories;
   ingredientDB: DbEntry[];
   catOf: (name: string) => string;
   pending: Set<string>;

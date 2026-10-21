@@ -18,6 +18,7 @@ import { APPLIANCE_LABELS } from "@/lib/utensils/appliances.js";
 import { INGREDIENT_FORMS, normalizePreferredForms } from "@/lib/food/qualityRecommendation.js";
 import { parseCiqualRef } from "@/lib/food/ciqual.js";
 import type { CiqualRef, IngredientNutrition } from "@/lib/types.js";
+import type { TechniqueEntry, TechniqueFields } from "@/lib/recipes/techniques.js";
 import { PRECAUTION_TONES, PRECAUTION_LIMITS, isPrecautionTone } from "@/lib/utensils/usagePrecaution.js";
 import { buildEnvelope, readEnvelope, INGREDIENTS_SCHEMA_VERSION, UTENSILS_SCHEMA_VERSION, TECHNIQUES_SCHEMA_VERSION } from "@/lib/household/dataEnvelope.js";
 
@@ -262,42 +263,14 @@ export function parseTechniquesYaml(text: string): ParseResult<IdentifiedRow> {
   return { items: errors.length ? [] : items, errors };
 }
 
-/** Une relation « ne pas confondre avec ». */
-interface TechniqueConfusion { technique_id: string; distinction?: string }
+/** Technique telle que lue par les exports (toutes les clés facultatives). */
+type TechniqueRow = Partial<TechniqueFields>;
 
-/**
- * Technique (forme minimale utilisée par les exports). Alias de type et non
- * interface : il reste assignable aux entrées de glossaire à clés libres.
- */
-type TechniqueRow = {
-  id?: string;
-  name?: string;
-  category?: string;
-  definition?: string;
-  aliases?: string[];
-  difficulty?: number;
-  source?: string;
-  hierarchy?: { parent: string | null; level?: number };
-  expected_result?: { summary?: string; observable_indicators?: string[] };
-  common_errors?: string[];
-  not_to_be_confused_with?: TechniqueConfusion[];
-};
-
-/** Brouillon d'édition d'un geste (console admin) : mêmes formes que le schema v2,
- *  telles que les produit le formulaire, avant nettoyage pour Firestore. */
-export interface TechniqueDraft {
-  id?: string;
-  name?: string;
-  category?: string;
-  definition?: string;
-  aliases?: string[];
-  difficulty?: number;
-  source?: string;
+/** Brouillon d'édition d'un geste (console admin), tel que le produit le formulaire
+ *  avant nettoyage : le parent de la hiérarchie peut y manquer. */
+export type TechniqueDraft = Omit<TechniqueRow, "hierarchy"> & {
   hierarchy?: { parent?: string | null; level?: number };
-  expected_result?: { summary?: string; observable_indicators?: string[] };
-  common_errors?: string[];
-  not_to_be_confused_with?: TechniqueConfusion[];
-}
+};
 
 /**
  * Construit l'enregistrement Firestore d'un geste à partir d'un brouillon de la
@@ -310,11 +283,11 @@ export interface TechniqueDraft {
  * @param draft - Le brouillon saisi dans l'éditeur de geste.
  * @returns L'enregistrement prêt à écrire dans la base master.
  */
-export function buildTechniqueFromDraft(draft: TechniqueDraft): TechniqueRow & { id: string } {
+export function buildTechniqueFromDraft(draft: TechniqueDraft): TechniqueEntry {
   const name = str(draft.name);
   const definition = str(draft.definition);
   const id = str(draft.id) || slugifyId("tech_", name);
-  const item: TechniqueRow & { id: string } = { id, name, category: draft.category || "preparation", definition };
+  const item: TechniqueEntry = { id, name, category: draft.category || "preparation", definition };
   const aliases = [...new Set((draft.aliases || []).map((a) => str(a).toLowerCase()).filter(Boolean))];
   if (aliases.length) item.aliases = aliases;
   const difficulty = draft.difficulty;

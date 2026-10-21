@@ -5,6 +5,7 @@
  * @module recipes/recipeSort
  */
 import { computeDifficulty } from "@/lib/recipes/difficulty.js";
+import type { SavedRecipe } from "@/lib/types.js";
 
 /** Sens de tri. */
 export type SortDir = "asc" | "desc";
@@ -26,19 +27,8 @@ export interface SortOption {
   dirs: SortDirOption[];
 }
 
-/**
- * Recette minimale exploitée par le tri. Le signataire index autorise à passer
- * l'objet recette complet sans le décrire ici.
- */
-export interface SortRecipe {
-  id: string;
-  name: string;
-  createdAt?: string | number | null;
-  healthScore?: number | null;
-  prepTime?: number | null;
-  cookTime?: number | null;
-  [k: string]: unknown;
-}
+/** Recette lue par le tri : critères comparés et, pour la difficulté, ses ingrédients et étapes. */
+export type SortRecipe = Pick<SavedRecipe, "id" | "name" | "createdAt" | "healthScore" | "prepTime" | "cookTime" | "difficultyOverride" | "ingredients" | "steps">;
 
 /** Libellés parlants côté UI plutôt qu'un « croissant / décroissant » abstrait. */
 export const SORT_OPTIONS: SortOption[] = [
@@ -135,7 +125,7 @@ export interface ComparatorParams {
  */
 export function makeComparator({ sortBy, sortDir, techniques, techIndex, recipes }: ComparatorParams): (a: SortRecipe, b: SortRecipe) => number {
   if (sortBy === "name") {
-    return (a, b) => (sortDir === "asc" ? 1 : -1) * a.name.localeCompare(b.name, "fr");
+    return (a, b) => (sortDir === "asc" ? 1 : -1) * (a.name || "").localeCompare(b.name || "", "fr");
   }
   if (sortBy === "date") {
     return (a, b) => (sortDir === "desc" ? 1 : -1) * byRecent(a, b);

@@ -1,4 +1,4 @@
-import type { CategoriesConfig } from "@/lib/food/shoppingList.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 import type { AggregatedItem } from "@/lib/food/shoppingAggregate.js";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { ShoppingItemRow } from "./ShoppingItemRow.jsx";
@@ -8,7 +8,7 @@ import { useElasticScroll } from "../../hooks/useElasticScroll.js";
 
 interface ShoppingAggregateViewProps {
   aggregated: AggregatedItem[];
-  categories: CategoriesConfig;
+  categories: IngredientCategories;
   pending: Set<string>;
   unchecking: Set<string>;
   onBuy: (agg: AggregatedItem) => void;

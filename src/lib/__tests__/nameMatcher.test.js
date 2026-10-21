@@ -122,3 +122,15 @@ describe("qualificatif « entier/entière » ignoré", () => {
     expect(findIngredientMatch("lait demi-écrémé", db)?.id).toBe("laitde");
   });
 });
+
+describe("contrat générique du rapprochement", () => {
+  it("rend l'entrée de la base telle quelle (mêmes champs, même instance)", () => {
+    const tomate = { id: "tomate", name: "Tomate", category: "vegetable", months: [7, 8] };
+    expect(createIngredientResolver([tomate])("tomates")).toBe(tomate);
+    expect(findIngredientMatch("Tomate", [tomate])).toBe(tomate);
+  });
+  it("ignore une entrée sans nom au lieu de la rendre", () => {
+    expect(findIngredientMatch("tomate", [{ id: "x" }])).toBeNull();
+    expect(resolveLineEntry(undefined, "tomate", [{ id: "x" }])).toBeNull();
+  });
+});

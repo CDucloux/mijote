@@ -15,9 +15,9 @@ import { jarFillColor } from "@/lib/food/jarLook.js";
 import { JarSheet } from "../components/stock/JarSheet.jsx";
 import { useStockLevels } from "../hooks/useStockLevels.js";
 import { recipesUsingIngredient, stockLevelOf } from "@/lib/food/stockLevel.js";
-import type { Resolver } from "@/lib/food/nameMatcher.js";
+import type { IngredientResolver } from "@/lib/food/nameMatcher.js";
 import type { IngredientDbItem, Recipe } from "@/lib/types.js";
-import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 
 // ─── STOCK TAB ────────────────────────────────────────────────────────────────
 // Gestion binaire du stock présentée en « mur d'étagères » : chaque ingrédient est
@@ -41,12 +41,12 @@ interface StockPageProps {
   lowStock?: string[];
   setLowStock: Dispatch<SetStateAction<string[]>>;
   ingredientDB?: IngredientDbItem[];
-  categories?: CategoryMap;
+  categories?: IngredientCategories;
   loading?: boolean;
   /** Bibliothèque, pour « À cuisiner avec » dans le menu d'un bocal. */
   recipes?: Recipe[];
   /** Rapprochement nom de ligne de recette vers fiche (mêmes règles que les filtres). */
-  resolver: Resolver;
+  resolver: IngredientResolver;
   onOpenRecipe: (recipeId: string) => void;
   onOpenIngredient: (ingredientId: string) => void;
   /** Ouvre la bibliothèque filtrée sur l'ingrédient. */

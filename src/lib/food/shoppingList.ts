@@ -8,17 +8,8 @@
  */
 import { findIngredientMatch, type DbEntry } from "@/lib/food/nameMatcher.js";
 import { sortedCategoryEntries, STOCK_CATEGORIES } from "@/constants/categories.js";
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 
-/** Réglages d'affichage d'une catégorie (sous-ensemble typé de la config Master). */
-export interface CategoryConfig {
-  label: string;
-  icon: string;
-  order?: number;
-  color?: string;
-}
-
-/** Configuration des catégories, indexée par clé technique. */
-export type CategoriesConfig = Record<string, CategoryConfig>;
 
 /** Article regroupable : seuls le nom (tri) et l'état coché sont requis ici. */
 export interface Sectionable {
@@ -57,7 +48,7 @@ const byName = (a: Sectionable, b: Sectionable): number => a.name.localeCompare(
  */
 export function buildShoppingSections<T extends Sectionable>(
   items: T[] | null | undefined,
-  categories: CategoriesConfig,
+  categories: IngredientCategories,
   categoryOf: (item: T) => string,
 ): ShoppingSections<T> {
   const all = items || [];
@@ -68,7 +59,7 @@ export function buildShoppingSections<T extends Sectionable>(
     const c = categoryOf(it) || "other";
     (groups[c] = groups[c] || []).push(it);
   }
-  const entries = sortedCategoryEntries(categories) as [string, CategoryConfig][];
+  const entries = sortedCategoryEntries(categories);
   const sections = entries
     .filter(([k]) => groups[k] && groups[k].length)
     .map(([k, c]) => ({ key: k, label: c.label, icon: c.icon, items: groups[k].slice().sort(byName) }));

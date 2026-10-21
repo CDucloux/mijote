@@ -14,10 +14,7 @@ import { DEFAULT_CATEGORIES, sortedCategoryEntries, isFruitVeg } from "../../con
 import { ingredientMonths, isIngredientInSeason, SEASONAL_CATEGORIES, formatMonths } from "@/lib/food/seasonality.js";
 import { NUTRI_RI, MACRO_COLORS } from "../../constants/nutritionDisplay.js";
 import type { IngredientDbItem } from "@/lib/types.js";
-import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
-
-/** Fiche en cours d'édition : copie de travail, validée seulement à l'enregistrement. */
-export type IngredientDraft = IngredientDbItem;
+import type { IngredientCategories } from "@/lib/data/referenceData.js";
 
 /** Nutriment éditable de la fiche (clé de `IngredientNutrition`). */
 type NutrientKey = "calories" | "protein" | "carbs" | "fat" | "saturatedFat" | "sugar" | "omega3" | "fiber" | "salt";
@@ -26,12 +23,12 @@ interface IngredientDetailProps {
   /** Absent si l'identifiant de l'URL ne correspond à aucune fiche. */
   ingredient: IngredientDbItem | undefined;
   ingredientDB: IngredientDbItem[];
-  categories?: CategoryMap;
+  categories?: IngredientCategories;
   isAdmin?: boolean;
   /** Ouvre directement en édition (ingrédient fraîchement créé). */
   autoEdit?: boolean;
   onBack: () => void;
-  onSave?: (draft: IngredientDraft) => void;
+  onSave?: (draft: IngredientDbItem) => void;
   /** Annulation de l'édition : l'appelant supprime un ingrédient neuf jamais nommé. */
   onCancelNew?: (ingredient: IngredientDbItem) => void;
   onDelete?: () => void;
@@ -55,7 +52,7 @@ import { IngredientTipsEditor, IngredientTipsList } from "./IngredientTips.jsx";
 // fraîchement créé). Annuler un ingrédient neuf jamais nommé le supprime.
 export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAULT_CATEGORIES, isAdmin, autoEdit = false, onBack, onSave, onCancelNew, onDelete }: IngredientDetailProps) {
   const [detailOpen, setDetailOpen] = useState(false);
-  const [draft, setDraft] = useState<IngredientDraft | null>(null);
+  const [draft, setDraft] = useState<IngredientDbItem | null>(null);
   const editing = draft !== null;
   const [confirmStatus, setConfirmStatus] = useState(false); // modale de bascule du statut (édition)
 
@@ -84,13 +81,13 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
   }
 
   const CARD = { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" };
-  const up = (patch: Partial<IngredientDraft>) => setDraft(p => p && { ...p, ...patch });
+  const up = (patch: Partial<IngredientDbItem>) => setDraft(p => p && { ...p, ...patch });
   const setNut = (k: NutrientKey, v: string) => up({ nutrition: { ...(draft?.nutrition || {}), isVegetable: isFruitVeg(draft?.category), [k]: v === "" ? undefined : +v } });
   const save = () => { if (draft) onSave?.(draft); setDraft(null); };
   const cancel = () => { onCancelNew?.(ingredient); setDraft(null); };
 
   // Source effective (draft en édition → aperçu live du Nutri-Score et du donut).
-  const src: IngredientDraft = editing ? draft : ingredient;
+  const src: IngredientDbItem = editing ? draft : ingredient;
   const cat = (src.category && categories[src.category]) || DEFAULT_CATEGORIES.other;
   const n = src.nutrition || {};
   const effDB = editing ? [...ingredientDB.filter(d => d.id !== src.id), src] : ingredientDB;

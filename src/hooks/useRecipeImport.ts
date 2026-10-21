@@ -1,11 +1,13 @@
-import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImport.js";
+import { prepareRecipeImport } from "@/lib/recipes/recipeImport.js";
+import type { NutriDbItem } from "@/lib/recipes/nutriscore.js";
 import { importRecipeFromUrl, importRecipeFromImages, importRecipeFromText, importRecipeFromPdf, type ImagePart } from "@/lib/recipes/recipeUrlImport.js";
 import { uploadImage } from "@/lib/firebase/storage.js";
 import { applianceImportInfos, sanitizeStepUtensilParams } from "@/lib/utensils/appliances.js";
 import { GIFT_RECIPE } from "@/lib/onboarding/giftRecipe.js";
 import { canonicalChef } from "@/lib/recipes/chefs.js";
 import { CHEFS } from "@/constants/chefs.js";
-import type { Recipe } from "@/lib/types.js";
+import type { Recipe, UtensilDbItem } from "@/lib/types.js";
+import type { DbEntry } from "@/lib/food/nameMatcher.js";
 
 /** base64 (sans préfixe) → Blob, pour ré-uploader une photo importée vers Storage. */
 function base64ToBlob(b64: string, type: string): Blob {
@@ -17,9 +19,10 @@ function base64ToBlob(b64: string, type: string): Blob {
 
 /** Dépendances : bases de rapprochement + ouverture de l'éditeur sur un brouillon. */
 export interface RecipeImportDeps {
-  ingredientDB: ImportDbItem[];
-  utensilDB: ImportDbItem[];
-  openEditor: (draft: Record<string, unknown>) => void;
+  ingredientDB: NutriDbItem[];
+  /** Ustensiles nommés (vue fusionnée) : leurs noms sont transmis à l'extraction. */
+  utensilDB: (Pick<DbEntry, "id" | "name"> & Pick<UtensilDbItem, "appliance">)[];
+  openEditor: (draft: Recipe) => void;
 }
 
 /**
@@ -32,7 +35,7 @@ export interface RecipeImportDeps {
  */
 export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeImportDeps) {
   // Ids stables sur les items + valeurs par défaut du schéma éditeur.
-  const withItemIds = (recipe: Recipe): Record<string, unknown> => ({
+  const withItemIds = (recipe: Recipe): Recipe => ({
     description: "", collections: [], image: "", cuisine: "", category: "", source: "",
     prepTime: 0, cookTime: 0, servings: 2, ...recipe,
     ingredients: (recipe.ingredients || []).map((i, k) => ({ id: `i${Date.now()}_${k}`, dbId: "", name: "", amount: "", unit: "", ...i })),

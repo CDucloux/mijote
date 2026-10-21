@@ -30,13 +30,26 @@ describe("usePublicRecipeView", () => {
     const withComp = { ...PUB, componentRefs: ["c1"] };
     fetchPublicDocsByIds
       .mockResolvedValueOnce([withComp])                               // le doc principal
-      .mockResolvedValueOnce([{ recipe: { id: "c1", name: "Pâte" } }]); // ses composants
+      .mockResolvedValueOnce([{ pubId: "u1__c1", recipe: { id: "c1", name: "Pâte" } }]); // ses composants
     const { result } = setup({ pathname: "/discover/u1__r1" });
     expect(result.current.docs).toBeUndefined(); // chargement
     await waitFor(() => expect(result.current.docs).toBeTruthy());
-    expect(result.current.docs.pub).toEqual(withComp);
+    expect(result.current.docs.pub).toMatchObject(withComp);
     expect(result.current.docs.components).toEqual([{ id: "c1", name: "Pâte" }]);
     expect(fetchPublicDocsByIds).toHaveBeenNthCalledWith(2, ["u1__c1"]);
+  });
+
+  it("doc et composants validés : un composant malformé est écarté, un doc sans recette est introuvable", async () => {
+    fetchPublicDocsByIds
+      .mockResolvedValueOnce([{ ...PUB, componentRefs: ["c1", "c2"] }])
+      .mockResolvedValueOnce([{ pubId: "u1__c1", recipe: { id: "c1" } }, { recipe: "oups" }]);
+    const { result } = setup({ pathname: "/discover/u1__r1" });
+    await waitFor(() => expect(result.current.docs).toBeTruthy());
+    expect(result.current.docs.components).toEqual([{ id: "c1" }]);
+
+    fetchPublicDocsByIds.mockResolvedValueOnce([{ pubId: "u1__r2" }]);
+    const second = setup({ pathname: "/discover/u1__r2" });
+    await waitFor(() => expect(second.result.current.docs).toBeNull());
   });
 
   it("doc introuvable → docs null", async () => {

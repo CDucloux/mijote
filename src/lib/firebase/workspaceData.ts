@@ -20,31 +20,40 @@ import { metaDoc, recipesCol, type WorkspaceRef } from "@/lib/firebase/paths.js"
 import { userDirDoc } from "@/lib/firebase/userDirectory.js";
 import { isSharedWritesLocked } from "@/lib/firebase/writeLock.js";
 import type { SharedData } from "@/lib/household/householdMigration.js";
-import type { Recipe } from "@/lib/types.js";
+import type { Notebook, MealPlan, Recipe, SavedRecipe } from "@/lib/types.js";
+import { isSavedRecipe } from "@/lib/recipes/savedRecipes.js";
+import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
+import type { PersonalDB } from "@/lib/firebase/masterDb.js";
 import { planRecipeUpserts } from "@/lib/recipes/recipeSync.js";
 import { preferWithin, type PreferResult } from "@/lib/sync/preferWithin.js";
 
 /** Données complètes d'un workspace, telles que lues depuis la structure éclatée. */
 export interface UserData {
-  recipes: DocumentData[];
-  collections: unknown[] | null;
-  mealPlan: Record<string, unknown> | null;
-  shoppingLists: unknown[] | null;
-  stock: unknown[] | null;
-  lowStock: unknown[] | null;
-  userDB: DocumentData | null;
+  recipes: SavedRecipe[];
+  collections: Notebook[] | null;
+  mealPlan: MealPlan | null;
+  shoppingLists: ShoppingList[] | null;
+  stock: string[] | null;
+  lowStock: string[] | null;
+  userDB: PersonalDB | null;
   preferences: DocumentData | null;
 }
+
+/** Ajouts personnels d'un doc `meta/userDB` (listes absentes ou malformées = vides). */
+const personalDbOf = (d: DocumentData): PersonalDB => ({
+  ingredients: Array.isArray(d.ingredients) ? d.ingredients : [],
+  utensils: Array.isArray(d.utensils) ? d.utensils : [],
+});
 
 /** Ne garde que les slices partageables d'un workspace (absents = vides). */
 function toShared(d: UserData): Required<SharedData> {
   return {
-    recipes: (d.recipes || []) as Required<SharedData>["recipes"],
-    collections: (d.collections || []) as Required<SharedData>["collections"],
-    mealPlan: (d.mealPlan || {}) as Required<SharedData>["mealPlan"],
-    shoppingLists: (d.shoppingLists || []) as Required<SharedData>["shoppingLists"],
-    stock: (d.stock || []) as Required<SharedData>["stock"],
-    lowStock: (d.lowStock || []) as Required<SharedData>["lowStock"],
+    recipes: d.recipes || [],
+    collections: d.collections || [],
+    mealPlan: d.mealPlan || {},
+    shoppingLists: d.shoppingLists || [],
+    stock: d.stock || [],
+    lowStock: d.lowStock || [],
   };
 }
 
@@ -135,13 +144,14 @@ async function readUserData(ws: WorkspaceRef, r: Readers): Promise<UserData> {
     r.getDoc(metaDoc(ws, "preferences")),
   ]);
   return {
-    recipes: recipesSnap.docs.map(d => d.data()),
+    // Chaque doc porte son `id` (écrit tel quel) : un doc sans id serait inouvrable.
+    recipes: recipesSnap.docs.map(d => d.data()).filter(isSavedRecipe),
     collections: collectionsSnap.exists() ? (collectionsSnap.data().items || []) : null,
     mealPlan: mealPlanSnap.exists() ? (mealPlanSnap.data().data || {}) : null,
     shoppingLists: shoppingSnap.exists() ? (shoppingSnap.data().items || []) : null,
     stock: stockSnap.exists() ? (stockSnap.data().items || []) : null,
     lowStock: stockSnap.exists() ? (stockSnap.data().low || []) : null,
-    userDB: userDBSnap.exists() ? userDBSnap.data() : null,
+    userDB: userDBSnap.exists() ? personalDbOf(userDBSnap.data()) : null,
     preferences: prefsSnap.exists() ? prefsSnap.data() : null,
   };
 }

@@ -5,21 +5,10 @@
  *
  * @module recipes/recipeActions
  */
-import { computeNutriInfo, buildRecipeIndex, isComponentLine } from "@/lib/recipes/nutriscore.js";
+import { computeNutriInfo, buildRecipeIndex, isComponentLine, type NutriDbItem } from "@/lib/recipes/nutriscore.js";
 import { flattenForShopping, mergeRawLines, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
-import type { Recipe, IngredientLine, Collection } from "@/lib/types.js";
-
-/** Ligne d'ingrédient manipulée par les actions (alias du type de domaine). */
-export type RecipeLine = IngredientLine;
-
-/** Recette manipulée par les actions (alias du type de domaine). */
-export type ActionRecipe = Recipe;
-
-/** Ingrédient de la base (forme minimale). */
-export interface ActionDbItem { id: string; image?: string }
-
-/** Carnet (manuel ou intelligent, alias du type de domaine). */
-export type ActionCollection = Collection;
+import type { Recipe, SavedRecipe, IngredientLine, Notebook } from "@/lib/types.js";
+import type { ShoppingItem } from "@/lib/food/shoppingAggregate.js";
 
 const norm = (s: string | undefined): string => (s || "").toLowerCase().trim();
 
@@ -36,16 +25,16 @@ const norm = (s: string | undefined): string => (s || "").toLowerCase().trim();
  *   (id et `createdAt` ajoutés en création).
  */
 export function prepareRecipeForSave(
-  r: ActionRecipe,
-  { recipes, ingredientDB }: { recipes: ActionRecipe[]; ingredientDB: ActionDbItem[] },
-): { error: string } | { recipe: ActionRecipe } {
+  r: Recipe,
+  { recipes, ingredientDB }: { recipes: Recipe[]; ingredientDB: NutriDbItem[] },
+): { error: string } | { recipe: SavedRecipe } {
   const missingQty = (r.ingredients || []).filter(ing => (ing.name || ing.dbId || ing.recipeId) && !(Number(ing.amount) > 0));
   if (missingQty.length > 0) {
     const names = missingQty.map(i => i.name || "sans nom").join(", ");
     return { error: `Quantité manquante pour : ${names}` };
   }
 
-  const recipesById = buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]);
+  const recipesById = buildRecipeIndex(recipes);
 
   // Règles propres aux composants (préparations de base).
   if (r.isComponent) {
@@ -59,7 +48,7 @@ export function prepareRecipeForSave(
   // valide, et l'unité consommée doit correspondre à l'unité du rendement.
   for (const line of r.ingredients || []) {
     if (!isComponentLine(line)) continue;
-    const comp = recipesById.get(line.recipeId!) as ActionRecipe | undefined;
+    const comp = recipesById.get(line.recipeId!) as Recipe | undefined;
     if (!comp || !comp.isComponent) return { error: `Composant introuvable : "${line.name || line.recipeId}"` };
     if (!(Number(comp.yield?.amount) > 0)) return { error: `Le composant "${comp.name}" n'a pas de rendement valide` };
     if (norm(line.unit) !== norm(comp.yield!.unit as string)) {
@@ -68,13 +57,13 @@ export function prepareRecipeForSave(
   }
 
   const { score, letter } = computeNutriInfo(r.ingredients, ingredientDB, recipesById);
-  const withScore: ActionRecipe = { ...r, healthScore: score, nutriLetter: letter };
-  const isEditing = r.id && recipes.find(x => x.id === r.id);
+  const withScore: Recipe = { ...r, healthScore: score, nutriLetter: letter };
+  const editedId = r.id && recipes.some(x => x.id === r.id) ? r.id : null;
 
-  if (isEditing) {
-    const nameTaken = recipes.some(x => x.id !== r.id && norm(x.name) === norm(r.name));
+  if (editedId) {
+    const nameTaken = recipes.some(x => x.id !== editedId && norm(x.name) === norm(r.name));
     if (nameTaken) return { error: `Une recette nommée "${r.name}" existe déjà` };
-    return { recipe: withScore };
+    return { recipe: { ...withScore, id: editedId } };
   }
 
   const nameTaken = recipes.some(x => norm(x.name) === norm(r.name));
@@ -90,7 +79,7 @@ export function prepareRecipeForSave(
  * @param recipe - Recette à insérer ou remplacer.
  * @returns Une nouvelle liste avec la recette insérée (en tête) ou remplacée sur place.
  */
-export function upsertRecipe(recipes: ActionRecipe[], recipe: ActionRecipe): ActionRecipe[] {
+export function upsertRecipe<T extends Recipe>(recipes: T[], recipe: T): T[] {
   return recipes.some(x => x.id === recipe.id)
     ? recipes.map(x => x.id === recipe.id ? recipe : x)
     : [recipe, ...recipes];
@@ -104,7 +93,7 @@ export function upsertRecipe(recipes: ActionRecipe[], recipe: ActionRecipe): Act
  * @param recipes - Toutes les recettes (pour compter l'appartenance).
  * @returns Les carnets avec leur `count` à jour (carnets intelligents inchangés).
  */
-export function recomputeCollectionCounts(collections: ActionCollection[], recipes: ActionRecipe[]): ActionCollection[] {
+export function recomputeCollectionCounts(collections: Notebook[], recipes: Recipe[]): Notebook[] {
   // Les carnets intelligents (vues de filtres) n'ont pas d'appartenance explicite :
   // leur contenu est calculé à l'affichage. On ne touche qu'aux carnets manuels.
   return collections.map(col => col.kind === "smart" ? col : ({
@@ -113,15 +102,6 @@ export function recomputeCollectionCounts(collections: ActionCollection[], recip
   }));
 }
 
-/** Item de liste de courses produit à partir d'une recette. */
-export interface ShoppingItem {
-  id: string;
-  name?: string;
-  amount: number;
-  unit?: string;
-  image: string;
-  checked: boolean;
-}
 
 /**
  * Construit les items de liste de courses à partir d'une recette. Les composants
@@ -137,10 +117,10 @@ export interface ShoppingItem {
  * @returns Les items de courses cumulés et prêts à ajouter à une liste.
  */
 export function buildShoppingItems(
-  recipe: ActionRecipe,
-  selectedIngredients: RecipeLine[] | null | undefined,
+  recipe: Recipe,
+  selectedIngredients: IngredientLine[] | null | undefined,
   mult: number | undefined,
-  ingredientDB: ActionDbItem[],
+  ingredientDB: NutriDbItem[],
   recipesById: Map<string, ComponentRecipe>,
   stockSet: Set<string>,
 ): ShoppingItem[] {
@@ -148,6 +128,6 @@ export function buildShoppingItems(
   const merged = mergeRawLines(flattenForShopping(ings, recipesById, stockSet));
   return merged.map(ing => {
     const dbItem = ingredientDB.find(d => d.id === ing.dbId);
-    return { id: "si" + Date.now() + Math.random(), name: ing.name, amount: +((Number(ing.amount) || 0) * (mult || 1)).toFixed(2), unit: ing.unit, image: dbItem?.image || ing.image || "", checked: false };
+    return { id: "si" + Date.now() + Math.random(), name: ing.name || "", amount: +((Number(ing.amount) || 0) * (mult || 1)).toFixed(2), unit: ing.unit, image: dbItem?.image || ing.image || "", checked: false };
   });
 }

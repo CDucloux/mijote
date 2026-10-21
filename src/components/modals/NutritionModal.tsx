@@ -121,8 +121,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
   const [basis, setBasis] = useState<string>("portion"); // "portion" | "100g" | "calc"
   const navigate = useNavigate();
   const { isPlus } = useAppShell();
-  // `yield.amount` peut être une chaîne côté Recipe ; buildRecipeIndex ne lit que l'id/les ingrédients.
-  const recipesById = useMemo(() => buildRecipeIndex(recipes as Parameters<typeof buildRecipeIndex>[0]), [recipes]);
+  const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
   const detail = useMemo(() => computeNutritionDetail(recipe.ingredients, ingredientDB, servings, recipesById), [recipe.ingredients, ingredientDB, servings, recipesById]);
   const breakdown = useMemo(() => computeNutriBreakdown(recipe.ingredients, ingredientDB, recipesById), [recipe.ingredients, ingredientDB, recipesById]);
   // Lettre recalculée EN DIRECT (comme le badge d'en-tête), pas la valeur figée à

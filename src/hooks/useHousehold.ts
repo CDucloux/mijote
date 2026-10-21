@@ -27,15 +27,8 @@ let hhCache: { uid: string | null; household: DocumentData | null; invites: Docu
  *
  * @returns `{ household, invites, loading, actions }`.
  */
-/** Sous-ensemble du contexte applicatif consommé par ce hook. */
-interface AppShellSlice {
-  user: { uid: string; email?: string } | null | undefined;
-  notify: (msg: string, type?: string) => void;
-  getSharedData?: () => unknown;
-}
-
 export function useHousehold() {
-  const { user, notify, getSharedData } = useAppShell() as AppShellSlice;
+  const { user, notify, getSharedData } = useAppShell();
   const cached = hhCache.uid && hhCache.uid === user?.uid;
   const [household, setHousehold] = useState<DocumentData | null>(cached ? hhCache.household : null);
   const [invites, setInvites] = useState<DocumentData[]>(cached ? hhCache.invites : []);
@@ -122,7 +115,7 @@ export function useHousehold() {
     creatingRef.current = true;
     setCreating(true);
     try {
-      return await run(() => createHousehold(user!, name, getSharedData?.() as Parameters<typeof createHousehold>[2]), "Création du foyer échouée");
+      return await run(() => createHousehold(user!, name, getSharedData()), "Création du foyer échouée");
     } finally {
       creatingRef.current = false;
       setCreating(false);

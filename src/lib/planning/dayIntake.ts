@@ -11,11 +11,11 @@
  * @module planning/dayIntake
  */
 import { computeNutritionDetail } from "@/lib/recipes/nutriscore.js";
-import type { IngredientLine, RecipeYield } from "@/lib/types.js";
+import type { Recipe } from "@/lib/types.js";
 import { NUTRI_RI } from "@/constants/nutritionDisplay.js";
 
 /** Recette exploitée par le calcul (forme minimale). */
-interface IntakeRecipe { id?: string; servings?: number | string; ingredients?: IngredientLine[]; yield?: RecipeYield }
+type IntakeRecipe = Pick<Recipe, "id" | "servings" | "ingredients" | "yield">;
 /** Base d'ingrédients (valeurs nutritionnelles pour 100 g). */
 type IngredientDB = Parameters<typeof computeNutritionDetail>[1];
 /** Un repas planifié (seul le `recipeId` est requis ici). */

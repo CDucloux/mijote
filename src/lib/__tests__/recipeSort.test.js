@@ -16,6 +16,11 @@ describe("makeComparator", () => {
     expect(sortIds(RECIPES, "date", "asc")).toEqual(["r1000000000000", "r3000000000000", "r2000000000000"]);
   });
 
+  it("tri alphabétique : une recette sans nom ne plante pas et passe en tête (non-régression)", () => {
+    const withUnnamed = [...RECIPES, { id: "r4000000000000", createdAt: "2024-04-01" }];
+    expect(sortIds(withUnnamed, "name", "asc")[0]).toBe("r4000000000000");
+  });
+
   it("trie alphabétiquement dans les deux sens", () => {
     expect(sortIds(RECIPES, "name", "asc")).toEqual(["r2000000000000", "r3000000000000", "r1000000000000"]);
     expect(sortIds(RECIPES, "name", "desc")).toEqual(["r1000000000000", "r3000000000000", "r2000000000000"]);

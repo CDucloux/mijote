@@ -5,9 +5,10 @@ import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../ui/ConfirmDialog.jsx";
 import { AutoResizeTextarea } from "../ui/AutoResizeTextarea.jsx";
-import { addVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots, type HistoryEntry, type HistoryRecipe, type SnapshotDiff, type Snapshot } from "@/lib/recipes/history.js";
+import { addVersion, deleteVersion, nextVersionLabel, snapshotOf, diffSnapshots, type HistoryEntry, type SnapshotDiff, type Snapshot } from "@/lib/recipes/history.js";
 import { RatingPicker, ratingColor } from "../ui/RatingPicker.jsx";
 import { useAppShell } from "../../context/AppShellContext.jsx";
+import type { Recipe } from "@/lib/types.js";
 
 const fmtDate = (iso: string) => {
   try {
@@ -121,7 +122,7 @@ function DiffView({ diff, baseLabel }: { diff: SnapshotDiff; baseLabel: string }
                     <p style={{ fontSize: 12.5, color: "var(--text)", margin: "3px 0 0", lineHeight: 1.5 }}>{step.to}</p>
                   </div>
                 ) : (
-                  <p style={{ fontSize: 12.5, color: "var(--text2)", margin: "3px 0 0", lineHeight: 1.5 }}>{step.description}</p>
+                  <p style={{ fontSize: 12.5, color: "var(--text2)", margin: "3px 0 0", lineHeight: 1.5 }}>{step.text}</p>
                 )}
               </DiffRow>
             );
@@ -133,7 +134,7 @@ function DiffView({ diff, baseLabel }: { diff: SnapshotDiff; baseLabel: string }
 }
 
 // Comparaison d'une version : diff « git » par rapport à une base au choix.
-function VersionDiff({ entry, recipe, onClose }: { entry: HistoryEntry; recipe: HistoryRecipe; onClose: () => void }) {
+function VersionDiff({ entry, recipe, onClose }: { entry: HistoryEntry; recipe: Recipe; onClose: () => void }) {
   const { user } = useAppShell();
   const s: Snapshot = entry.snapshot || {};
 
@@ -188,8 +189,8 @@ function VersionDiff({ entry, recipe, onClose }: { entry: HistoryEntry; recipe: 
 }
 
 interface RecipeJournalProps {
-  recipe: HistoryRecipe;
-  onUpdateRecipe: (recipe: HistoryRecipe) => void;
+  recipe: Recipe;
+  onUpdateRecipe: (recipe: Recipe) => void;
 }
 
 export function RecipeJournal({ recipe, onUpdateRecipe }: RecipeJournalProps) {

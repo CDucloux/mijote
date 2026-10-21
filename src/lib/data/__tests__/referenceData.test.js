@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { parse } from "yaml";
 import { describe, it, expect } from "vitest";
-import { parseCuisines, parseRecipeCategories, parseIngredientCategories, parseNutritionReferences } from "@/lib/data/referenceData.js";
+import { parseCuisines, parseRecipeCategories, parseIngredientCategories, parseNutritionReferences, mergeIngredientCategories } from "@/lib/data/referenceData.js";
 import { sanitizeSources } from "@/lib/sources/recommendedSources.js";
 
 const load = (file) => parse(readFileSync(`data/${file}`, "utf8"));
@@ -92,5 +92,29 @@ describe("shipped data files", () => {
   it("nutrition-references.yaml covers the nutrients the app displays", () => {
     const out = parseNutritionReferences(load("nutrition-references.yaml"));
     for (const key of ["calories", "fat", "saturatedFat", "carbs", "sugar", "fiber", "protein", "salt", "omega3"]) expect(out[key]).toBeGreaterThan(0);
+  });
+});
+
+describe("mergeIngredientCategories", () => {
+  const defaults = {
+    fruit: { label: "Fruits", color: "#e0a23e", icon: "🍎", order: 0 },
+    meat: { label: "Viandes", color: "#e05252", icon: "🥩", order: 1 },
+  };
+  it("applique une surcharge valide sur la catégorie connue", () => {
+    const out = mergeIngredientCategories(defaults, { fruit: { label: "Fruits frais", color: "#46ab5f", icon: "🍐", order: 3 } });
+    expect(out.fruit).toEqual({ label: "Fruits frais", color: "#46ab5f", icon: "🍐", order: 3 });
+    expect(out.meat).toEqual(defaults.meat);
+  });
+  it("écarte les clés inconnues des défauts", () => {
+    expect(mergeIngredientCategories(defaults, { pasta: { label: "Pâtes" } })).not.toHaveProperty("pasta");
+  });
+  it("donne un repli neutre aux champs malformés d'une surcharge", () => {
+    expect(mergeIngredientCategories(defaults, { meat: { label: "Viandes", color: "rouge", icon: 3, order: "x" } }).meat)
+      .toEqual({ label: "Viandes", color: "#9a9490", icon: "📦", order: 1 });
+  });
+  it("sans surcharge exploitable : les défauts tels quels", () => {
+    expect(mergeIngredientCategories(defaults, undefined)).toBe(defaults);
+    expect(mergeIngredientCategories(defaults, {})).toBe(defaults);
+    expect(mergeIngredientCategories(defaults, ["fruit"])).toBe(defaults);
   });
 });

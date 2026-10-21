@@ -9,25 +9,16 @@ import { slotOrder } from "@/constants/mealSlots.js";
 import { aggregateShopping, type ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
 import { itemRole, roleOrder } from "@/lib/planning/composedMeal.js";
-import type { MealItem, Recipe } from "@/lib/types.js";
-
-/** Item de planning (alias de domaine). */
-export type PlanEntry = MealItem;
-
-/** Recette résolue (vignette, nom, temps et catégorie servent à la carte du jour). */
-export type DashRecipe = Recipe;
+import type { IngredientDbItem, MealItem, Recipe } from "@/lib/types.js";
 
 export type { ShoppingList };
 
 /** Ingrédient de la base (forme minimale). */
-export interface DashIngredient {
-  id: string;
-  name?: string;
-}
+export type DashIngredient = Pick<IngredientDbItem, "id" | "name">;
 
 /** Repas planifié enrichi de sa recette résolue. */
-export interface TodayMeal extends PlanEntry {
-  recipe: DashRecipe;
+export interface TodayMeal extends MealItem {
+  recipe: Recipe;
 }
 
 /** Carte « repas du jour » : un repas composé (même créneau et groupe) ou un item seul. */
@@ -59,8 +50,8 @@ export function todayKey(date: Date = new Date()): string {
  * @returns Les repas du jour résolus et triés (repas sans recette exclus).
  */
 export function getTodayMeals(
-  mealPlan: Record<string, PlanEntry[]> = {},
-  recipes: DashRecipe[] = [],
+  mealPlan: Record<string, MealItem[]> = {},
+  recipes: Recipe[] = [],
   key: string = todayKey(),
 ): TodayMeal[] {
   const entries = (mealPlan && mealPlan[key]) || [];
@@ -116,8 +107,8 @@ export function getLowStockNames(lowStock: string[] = [], ingredientDB: DashIngr
 
 /** Entrée agrégée du résumé « Aujourd'hui ». */
 export interface DashboardInput {
-  mealPlan?: Record<string, PlanEntry[]>;
-  recipes?: DashRecipe[];
+  mealPlan?: Record<string, MealItem[]>;
+  recipes?: Recipe[];
   shoppingLists?: ShoppingList[];
   lowStock?: string[];
   ingredientDB?: DbEntry[];

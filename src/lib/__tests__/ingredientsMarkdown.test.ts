@@ -30,7 +30,7 @@ describe("formatIngredientsMarkdown", () => {
   it("remplit une colonne par entrée de la spec", () => {
     const md = formatIngredientsMarkdown([{
       id: "i1", name: "Ail", aliases: ["ail rose", "ail blanc"], months: [7, 8],
-      nutrition: { calories: 131, protein: 0, fat: null }, tips: [{ type: "usage", text: "Dégermer" }],
+      nutrition: { calories: 131, protein: 0, fat: undefined }, tips: [{ type: "usage", text: "Dégermer" }],
     }], []);
     const cells = lines(md).at(-1)!.slice(2, -2).split(" | ");
     expect(cells).toHaveLength(ING_MD_COLUMNS.length);
