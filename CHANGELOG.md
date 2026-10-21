@@ -1,5 +1,22 @@
 # Changelog – Cardamome
 
+## v4.74.0 – Cardamome · Cuisiner à deux
+
+### Cuisiner à deux
+- **Pas à pas partagé dans le foyer** : quand un membre lance une recette, les autres voient « Léa cuisine X · Rejoindre » sur tous les écrans. Une fois ensemble, l'avatar de l'autre glisse sur la barre de progression, « Léa : étape 4 » s'affiche dans l'en-tête, avancer coche l'étape pour les deux et « Terminé ! » clôt la session pour tout le monde (le plat n'est consigné qu'une fois).
+- **Robuste hors ligne** : la jonction est retentée au retour du réseau, et un écran mis en veille n'éjecte plus son binôme : il apparaît estompé avec la mention « écran en veille ». Si c'est toi qui perds le réseau, l'en-tête te prévient.
+- **Notification Android** : la barre de suivi affiche aussi où en est ton binôme.
+
+### Mode cuisine
+- **Sans contour** : encarts de la mise en place et des étapes, astuces et boutons minuteur se dessinent par leur fond et une ombre légère, comme le reste de l'appli.
+
+### Chefs
+- **Jacques Pépin** rejoint la liste des chefs.
+
+### Technique
+- Sessions dans `households/{hid}/cookSessions/{recipeId}` (couvertes par les règles existantes, rien à déployer) ; logique pure dans `src/lib/cookSession/together.ts`, accès dans `src/lib/firebase/cookSessions.ts`, testés.
+- Classe `.cook-panel` partagée pour les encarts du mode cuisine.
+
 ## v4.73.0 – Cardamome · Sans contour
 
 ### Interface épurée

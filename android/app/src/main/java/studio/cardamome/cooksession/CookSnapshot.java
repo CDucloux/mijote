@@ -20,11 +20,13 @@ final class CookSnapshot {
     final long timerEndAt;
     final long timerTotalMs;
     final boolean timerRunning;
+    /** Cuisiner à deux : position de l'autre membre, vide en solo. */
+    final String companion;
 
     private CookSnapshot(String recipeTitle, String imageUrl, String stepLabel, String stepText,
                          int pageIndex, int pageCount, boolean canPrev, boolean canNext,
                          boolean hasTimer, String timerLabel, long timerEndAt, long timerTotalMs,
-                         boolean timerRunning) {
+                         boolean timerRunning, String companion) {
         this.recipeTitle = recipeTitle;
         this.imageUrl = imageUrl;
         this.stepLabel = stepLabel;
@@ -38,6 +40,7 @@ final class CookSnapshot {
         this.timerEndAt = timerEndAt;
         this.timerTotalMs = timerTotalMs;
         this.timerRunning = timerRunning;
+        this.companion = companion;
     }
 
     /** Lit le snapshot depuis les données d'un appel de plugin. */
@@ -63,7 +66,9 @@ final class CookSnapshot {
             timerTotalMs = timer.optLong("totalMs", 0L);
             timerRunning = timer.optBoolean("running", false);
         }
+        String companion = call.getString("companion", "");
         return new CookSnapshot(recipeTitle, imageUrl, stepLabel, stepText, pageIndex, pageCount,
-                canPrev, canNext, hasTimer, timerLabel, timerEndAt, timerTotalMs, timerRunning);
+                canPrev, canNext, hasTimer, timerLabel, timerEndAt, timerTotalMs, timerRunning,
+                companion == null ? "" : companion);
     }
 }

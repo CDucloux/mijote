@@ -96,4 +96,9 @@ describe("buildCookSnapshot", () => {
     const snap = buildCookSnapshot({ ...base, timers: [timer({ endAt: 4200, label: "1 min" })] });
     expect(snap.timer).toEqual({ label: "1 min", endAt: 4200, totalMs: 360000, running: true });
   });
+
+  it("cuisiner à deux : position du binôme reprise, vide en solo", () => {
+    expect(buildCookSnapshot(base).companion).toBe("");
+    expect(buildCookSnapshot({ ...base, companion: " Léa : étape 4 " }).companion).toBe("Léa : étape 4");
+  });
 });

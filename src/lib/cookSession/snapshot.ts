@@ -47,6 +47,8 @@ export interface CookSessionSnapshot {
   canNext: boolean;
   /** Minuteur pilote, ou `null` si aucun minuteur actif. */
   timer: CookSnapshotTimer | null;
+  /** Cuisiner à deux : position de l'autre membre (« Léa : étape 4 »), vide en solo. */
+  companion: string;
 }
 
 /** Page courante du cook mode (miroir minimal de la logique de `pages`). */
@@ -70,6 +72,8 @@ export interface BuildSnapshotArgs {
   stepText: string;
   /** Minuteurs de la session (source : `cookTimers`). */
   timers: CookTimer[];
+  /** Cuisiner à deux : position de l'autre membre, déjà formulée (omise en solo). */
+  companion?: string;
 }
 
 /**
@@ -149,6 +153,7 @@ export function buildCookSnapshot(args: BuildSnapshotArgs): CookSessionSnapshot 
     canPrev: args.stepIdx > 0,
     canNext: args.stepIdx < args.totalSteps - 1,
     timer: pickPilotTimer(args.timers),
+    companion: (args.companion ?? "").trim(),
   };
 }
 

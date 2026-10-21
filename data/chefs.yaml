@@ -24,6 +24,7 @@ chefs:
   - { name: Ferran Adrià, note: "elBulli", wiki: "Ferran Adrià" }
   - { name: Gordon Ramsay, note: "Londres", wiki: "Gordon Ramsay" }
   - { name: Heston Blumenthal, note: "The Fat Duck", wiki: "Heston Blumenthal" }
+  - { name: Jacques Pépin, note: "La Technique, États-Unis", wiki: "Jacques Pépin" }
   - { name: Jamie Oliver, note: "Royaume-Uni", wiki: "Jamie Oliver" }
   - { name: Jiro Ono, note: "Sukiyabashi Jiro, Tokyo", wiki: "Jirō Ono" }
   - { name: Joël Robuchon, note: "Paris", wiki: "Joël Robuchon" }

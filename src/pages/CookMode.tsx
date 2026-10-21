@@ -27,6 +27,8 @@ import { CookSidebar } from "../components/cookMode/CookSidebar.jsx";
 import { CookModeHeader } from "../components/cookMode/CookModeHeader.jsx";
 import { CookIterationSheet } from "../components/cookMode/CookIterationSheet.jsx";
 import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.js";
+import { companionText, cookPageLabel, pageKeyOf, partnerPositions } from "@/lib/cookSession/together.js";
+import { useCookTogether } from "../hooks/useCookTogether.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import type { IngredientLine, Recipe, Utensil, UtensilDbItem } from "@/lib/types.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
@@ -74,26 +76,16 @@ type ConvertTarget = ComponentProps<typeof QuantityConvertSheet>["ing"];
 // - bouton « Réaliser » → CookMode imbriqué sur le composant mis à l'échelle.
 
 function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEFAULT_CATEGORIES, onClose, onCooked, recipesById, stockSet, onUpdateRecipe, isNested = false }: CookModeInnerProps) {
-  const { techniques, notify } = useAppShell();
+  const { techniques, notify, user, householdId } = useAppShell();
   const techIndex = useMemo(() => buildTechniqueIndex(techniques), [techniques]);
   const ingResolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
   const [stepIdx, setStepIdx] = useState(0);
-  const [done, setDone] = useState(false);
+  const [doneHere, setDone] = useState(false);
   // Chrono global : « depuis quand la recette est lancée » (recette principale
-  // uniquement). Gelé une fois la recette terminée.
+  // uniquement). Gelé une fois la recette terminée ; à deux, aligné sur la session.
   const startedAtRef = useRef(Date.now());
   const [elapsed, setElapsed] = useState(0);
-  useEffect(() => {
-    if (isNested || done) return;
-    const iv = setInterval(() => setElapsed(Math.floor((Date.now() - startedAtRef.current) / 1000)), 1000);
-    return () => clearInterval(iv);
-  }, [isNested, done]);
-  // Consigne le plat au journal de cuisine, une seule fois, à l'arrivée sur l'écran
-  // de fin de la recette PRINCIPALE (les bases imbriquées ne comptent pas).
   const cookedLoggedRef = useRef(false);
-  useEffect(() => {
-    if (done && !isNested && !cookedLoggedRef.current && recipe.id) { cookedLoggedRef.current = true; onCooked?.(recipe.id); }
-  }, [done, isNested, onCooked, recipe.id]);
   const [closing, setClosing] = useState(false);
   // Fermeture animée : joue la sortie (fondu + glissé) avant de démonter réellement.
   const requestClose = () => { if (closing) return; setClosing(true); setTimeout(() => onClose(), 280); };
@@ -172,6 +164,25 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   }, [hasOverview, pendingComponents.length, recipe.steps]);
   const totalSteps = pages.length || 1;
   const cur: CookPage = pages[Math.min(stepIdx, pages.length - 1)] || { kind: "overview" };
+  // Cuisiner à deux (foyer) : positions, étapes faites et fin communes.
+  const together = useCookTogether({ householdId, recipe, user, pageKey: pageKeyOf(cur), enabled: !isNested });
+  const done = doneHere || together.finished;
+  useEffect(() => { if (together.startedAt) startedAtRef.current = together.startedAt; }, [together.startedAt]);
+  useEffect(() => {
+    if (isNested || done) return;
+    const iv = setInterval(() => setElapsed(Math.floor((Date.now() - startedAtRef.current) / 1000)), 1000);
+    return () => clearInterval(iv);
+  }, [isNested, done]);
+  // Consigne le plat au journal de cuisine, une seule fois, à l'arrivée sur l'écran
+  // de fin de la recette PRINCIPALE (les bases imbriquées ne comptent pas). À deux,
+  // seul celui qui a terminé le consigne.
+  const cookedByOther = together.finishedBy !== null && together.finishedBy !== user?.uid;
+  useEffect(() => {
+    if (done && !isNested && !cookedByOther && !cookedLoggedRef.current && recipe.id) { cookedLoggedRef.current = true; onCooked?.(recipe.id); }
+  }, [done, isNested, cookedByOther, onCooked, recipe.id]);
+  const pageKeys = useMemo(() => pages.map(pageKeyOf), [pages]);
+  const companions = partnerPositions(pageKeys, together.others)
+    .map(({ participant, index }) => ({ participant, progress: ((index + 1) / totalSteps) * 100, label: cookPageLabel(pages[index]) }));
   const isOverview = cur.kind === "overview";
   const isBases = cur.kind === "bases";
   const step = cur.kind === "step" ? cur.step : null;
@@ -191,7 +202,17 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     setNavDir(next >= stepIdx ? 1 : -1);
     setStepIdx(next);
   };
-  const goNext = () => { if (stepIdx < totalSteps - 1) goTo(stepIdx + 1); };
+  // À deux, quitter une étape vers l'avant la marque faite pour les deux.
+  const goNext = () => {
+    if (stepIdx >= totalSteps - 1) return;
+    if (cur.kind === "step") together.markDone(cur.realIdx);
+    goTo(stepIdx + 1);
+  };
+  const finishCooking = () => {
+    if (cur.kind === "step") together.markDone(cur.realIdx);
+    together.finish();
+    setDone(true);
+  };
   const goPrev = () => goTo(stepIdx - 1);
   // Saute à une étape réelle (index dans recipe.steps) en la retrouvant dans les pages.
   const goToStep = (realStepIdx: number) => {
@@ -230,6 +251,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     stepIdx, totalSteps, realIdx,
     stepText: step?.text || "",
     timers,
+    companion: companions.map(co => companionText(co.participant, co.label)).join(" · "),
   });
   useCookSession({
     active: !isNested && !done && !closing,
@@ -247,7 +269,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       if (e.defaultPrevented || (e.target instanceof Element && e.target.closest("input, textarea, [contenteditable=true]"))) return;
       if (e.key === "ArrowRight") {
         if (stepIdx < totalSteps - 1) goNext();
-        else setDone(true);
+        else finishCooking();
       } else if (e.key === "ArrowLeft") {
         goPrev();
       } else return;
@@ -295,13 +317,13 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       {iterOpen && <CookIterationSheet zIndex={isNested ? 720 : 620} onClose={() => setIterOpen(false)} onSave={saveIteration} />}
 
       <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
-        <CookModeHeader recipeName={recipe.name} isNested={isNested} elapsed={elapsed} progress={progress} onClose={requestClose}
+        <CookModeHeader recipeName={recipe.name} isNested={isNested} elapsed={elapsed} progress={progress} companions={companions} offline={together.offline} onClose={requestClose}
           pageLabel={isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`} />
 
         {/* Main content */}
         <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
           {/* Desktop sidebar */}
-          <CookSidebar pages={pages} stepIdx={stepIdx} onGoTo={goTo} />
+          <CookSidebar pages={pages} stepIdx={stepIdx} onGoTo={goTo} others={together.others} doneSteps={together.doneSteps} />
 
           {/* Step content */}
           <div ref={stepScrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
@@ -338,7 +360,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           </span>
           {stepIdx < totalSteps - 1
             ? <button className="btn btn-primary btn-pill btn-flat" style={{ flex: 1 }} onClick={goNext} disabled={isBases && !allComponentsDone} title="Suivant (flèche →)">Suivant <Icon name="forward" size={16} /></button>
-            : <button className="btn btn-primary btn-pill btn-flat" style={{ flex: 1, background: "var(--ok)" }} onClick={() => setDone(true)}><Icon name="check" size={16} /> Terminé !</button>
+            : <button className="btn btn-primary btn-pill btn-flat" style={{ flex: 1, background: "var(--ok)" }} onClick={finishCooking}><Icon name="check" size={16} /> Terminé !</button>
           }
         </div>
       </div>
