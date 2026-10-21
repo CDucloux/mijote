@@ -1,14 +1,14 @@
 import { useState, useMemo } from "react";
-import { Icon } from "../ui/Icon.jsx";
+import { Icon, type IconName } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { SearchField } from "../ui/SearchField.jsx";
 import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
 import { ElasticScroll } from "../ui/ElasticScroll.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
-import { roleForCategory, roleLabel, type RoleId } from "@/lib/planning/composedMeal.js";
-import { normalizeStr } from "@/lib/food/parseIngredient.js";
-import { suggestSides, type PlannerContext } from "@/lib/planning/mealPlanner.js";
+import { roleLabel, type RoleId } from "@/lib/planning/composedMeal.js";
+import { completeMealSections } from "@/lib/planning/completeMeal.js";
+import type { PlannerContext } from "@/lib/planning/mealPlanner.js";
 import { fmtTime } from "@/lib/format.js";
 import type { Recipe } from "@/lib/types.js";
 import type { NutriLetter } from "../badges/NutriScoreBadge.jsx";
@@ -20,9 +20,22 @@ const COMPLETE_ROLES: { id: RoleId; label: string }[] = [
   { id: "dessert", label: "Dessert" },
 ];
 
+/** En-tête de section de la liste (icône accent, libellé, compteur à droite). */
+function SectionLabel({ icon, label, count, spaced }: { icon: IconName; label: string; count: number; spaced?: boolean }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "0 10px", margin: `${spaced ? 18 : 0}px 0 6px` }}>
+      <Icon name={icon} size={13} color="var(--accent)" />
+      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</span>
+      <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>{count}</span>
+    </div>
+  );
+}
+
 /** Props de la feuille « Compléter le repas ». */
 interface CompleteMealSheetProps {
   base: Recipe | null;
+  /** Toute la bibliothèque, listée sous les suggestions. */
+  recipes: Recipe[];
   eligiblePool: Recipe[];
   suggestCtx: PlannerContext;
   liveNutri: (recipe: Recipe) => NutriLetter | null | undefined;
@@ -32,20 +45,42 @@ interface CompleteMealSheetProps {
 
 /**
  * Feuille « Compléter le repas » : autour d'un plat de base, suggère des recettes de
- * saison (ou filtre la bibliothèque éligible) pour un rôle donné (entrée /
- * accompagnement / dessert). Rôle et recherche sont un état LOCAL. L'ajout est délégué
+ * saison pour un rôle donné (entrée / accompagnement / dessert), puis liste toute la
+ * bibliothèque (rôle demandé en tête) ; la recherche porte sur la bibliothèque entière. Rôle et recherche sont un état LOCAL. L'ajout est délégué
  * au parent via onAttach(recipeId, role).
  */
-export function CompleteMealSheet({ base, eligiblePool, suggestCtx, liveNutri, onAttach, onClose }: CompleteMealSheetProps) {
+export function CompleteMealSheet({ base, recipes, eligiblePool, suggestCtx, liveNutri, onAttach, onClose }: CompleteMealSheetProps) {
   const [completeRole, setCompleteRole] = useState<RoleId>("accompagnement");
   const [completeSearch, setCompleteSearch] = useState("");
-  const q = normalizeStr(completeSearch.trim());
-  const list = useMemo(
-    () => q
-      ? eligiblePool.filter(r => roleForCategory(r.category || "") === completeRole && normalizeStr(r.name).includes(q)).slice(0, 20)
-      : suggestSides(base, eligiblePool, suggestCtx, { role: completeRole, max: 12 }),
-    [q, eligiblePool, completeRole, base, suggestCtx],
+  const q = completeSearch.trim();
+  const { suggestions, library } = useMemo(
+    () => completeMealSections(base, recipes, eligiblePool, suggestCtx, completeRole, completeSearch),
+    [base, recipes, eligiblePool, suggestCtx, completeRole, completeSearch],
   );
+
+  const renderRow = (r: Recipe) => {
+    const total = (r.prepTime || 0) + (r.cookTime || 0);
+    const nIng = r.ingredients?.length || 0;
+    const nutri = liveNutri(r);
+    return (
+      <button key={r.id} onClick={() => onAttach(r.id ?? "", completeRole)} className="complete-row ripple"
+        style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "transparent", borderRadius: 16, border: "none", textAlign: "left", cursor: "pointer" }}>
+        <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            {r.cuisine && <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{r.cuisine}</span>}
+            {total > 0 && <span style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>}
+            {nIng > 0 && <span style={{ fontSize: 11, color: "var(--text3)" }}>{nIng} ingr.</span>}
+            {nutri && <NutriScoreBadge letter={nutri} compact />}
+          </div>
+        </div>
+        <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}>
+          <Icon name="plus" size={17} color="currentColor" />
+        </span>
+      </button>
+    );
+  };
 
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "86dvh" }}>
@@ -84,41 +119,16 @@ export function CompleteMealSheet({ base, eligiblePool, suggestCtx, liveNutri, o
       {/* Recherche standard (loupe clavier mobile, effacement) */}
       <SearchField value={completeSearch} onChange={setCompleteSearch} placeholder={`Rechercher ${roleLabel(completeRole).toLowerCase()}…`} style={{ marginBottom: 16 }} />
 
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-        <Icon name={q ? "search" : "sun"} size={13} color="var(--accent)" />
-        <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.07em" }}>{q ? "Résultats" : "Suggestions de saison"}</span>
-        {list.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>{list.length}</span>}
-      </div>
-
       {/* Hauteur fixe (et non max) : la feuille garde sa taille quand la recherche filtre. */}
       <ElasticScroll max={64} style={{ height: "46vh", margin: "0 -10px", padding: "0 0 4px" }} contentStyle={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        {list.map(r => {
-          const total = (r.prepTime || 0) + (r.cookTime || 0);
-          const nIng = r.ingredients?.length || 0;
-          const nutri = liveNutri(r);
-          return (
-            <button key={r.id} onClick={() => onAttach(r.id ?? "", completeRole)} className="complete-row ripple"
-              style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "transparent", borderRadius: 16, border: "none", textAlign: "left", cursor: "pointer" }}>
-              <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  {r.cuisine && <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text2)", background: "var(--surface2)", borderRadius: 6, padding: "2px 7px" }}>{r.cuisine}</span>}
-                  {total > 0 && <span style={{ fontSize: 11, color: "var(--text3)", display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="clock" size={11} color="var(--text3)" /> {fmtTime(total)}</span>}
-                  {nIng > 0 && <span style={{ fontSize: 11, color: "var(--text3)" }}>{nIng} ingr.</span>}
-                  {nutri && <NutriScoreBadge letter={nutri} compact />}
-                </div>
-              </div>
-              <span className="complete-add" style={{ width: 34, height: 34, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}>
-                <Icon name="plus" size={17} color="currentColor" />
-              </span>
-            </button>
-          );
-        })}
-        {list.length === 0 && (
+        {suggestions.length > 0 && <SectionLabel icon="sun" label="Suggestions de saison" count={suggestions.length} />}
+        {suggestions.map(renderRow)}
+        {library.length > 0 && <SectionLabel icon={q ? "search" : "book"} label={q ? "Résultats" : "Ta bibliothèque"} count={library.length} spaced={suggestions.length > 0} />}
+        {library.map(renderRow)}
+        {suggestions.length + library.length === 0 && (
           <div style={{ textAlign: "center", padding: "28px 20px", color: "var(--text3)" }}>
             <EmptyArt name="loupe" size={78} style={{ margin: "0 auto 8px" }} />
-            <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Aucune recette « {roleLabel(completeRole).toLowerCase()} » {q ? "ne correspond à ta recherche" : "disponible pour l'instant"}.</p>
+            <p style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0 }}>Aucune recette {q ? "ne correspond à ta recherche" : "dans ta bibliothèque"}.</p>
           </div>
         )}
       </ElasticScroll>
