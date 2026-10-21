@@ -559,6 +559,14 @@ select {
   box-shadow: inset 0 0 0 1.5px rgba(var(--accent-rgb), 0.4);
 }
 
+/* Option d'un contrôle segmenté à pastille glissante : couleur de repos ici, la
+   couleur active reste inline (propre à chaque option). Au survol desktop, le texte
+   d'une option inactive se réchauffe légèrement (cf. `.imp-seg`). */
+.seg-opt { color: var(--text3); transition: color 0.3s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .seg-opt:not(.on):hover { color: var(--text2); transition-duration: 0.15s; }
+}
+
 /* Listes déroulantes : on remplace le chevron natif (collé au bord, variable selon
    l'OS) par un chevron maison nettement détaché du bord et réservé par un padding
    droit. Couleur = --text3 par thème (le chevron ne peut pas hériter de currentColor

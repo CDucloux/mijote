@@ -78,12 +78,11 @@ export function AddRecipeSheet({ date, initialSlot, lockSlot, recipes, liveNutri
           {MEAL_SLOTS.map(s => {
             const active = slot === s.id;
             return (
-              <button key={s.id} onClick={() => setSlot(s.id)}
+              <button key={s.id} onClick={() => setSlot(s.id)} className={`seg-opt${active ? " on" : ""}`}
                 style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, border: "none", cursor: "pointer",
-                  background: "transparent", color: active ? s.text : "var(--text3)",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                  transition: "color 0.3s ease" }}>
-                <Icon name={s.icon as IconName} size={15} weight="duotone" color={active ? s.text : "var(--text3)"} />{s.label}
+                  background: "transparent", color: active ? s.text : undefined,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                <Icon name={s.icon as IconName} size={15} weight="duotone" color="currentColor" />{s.label}
               </button>
             );
           })}

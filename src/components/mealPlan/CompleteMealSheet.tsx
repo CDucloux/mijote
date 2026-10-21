@@ -72,10 +72,9 @@ export function CompleteMealSheet({ base, eligiblePool, suggestCtx, liveNutri, o
         {COMPLETE_ROLES.map(r => {
           const active = completeRole === r.id;
           return (
-            <button key={r.id} onClick={() => setCompleteRole(r.id)}
+            <button key={r.id} onClick={() => setCompleteRole(r.id)} className={`seg-opt${active ? " on" : ""}`}
               style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, cursor: "pointer", border: "none",
-                background: "transparent", color: active ? "var(--accent)" : "var(--text3)",
-                transition: "color 0.3s ease" }}>
+                background: "transparent", color: active ? "var(--accent)" : undefined }}>
               {r.label}
             </button>
           );
