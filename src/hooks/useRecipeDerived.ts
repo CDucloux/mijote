@@ -1,17 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createIngredientResolver, type IngredientResolver } from "@/lib/food/nameMatcher.js";
-import { isRecipeInSeason } from "@/lib/food/seasonality.js";
-import { isRecipeVegan } from "@/lib/food/dietary.js";
-import { computeNutriInfo, buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
+import { buildRecipeIndex } from "@/lib/recipes/nutriscore.js";
+import { createRecipeDerivedCache, type RecipeDerived } from "@/lib/recipes/recipeDerived.js";
 import type { IngredientDbItem, SavedRecipe } from "@/lib/types.js";
-
-/** Données dérivées mémoïsées pour une recette. */
-export interface RecipeDerived {
-  inSeason: boolean;
-  vegan: boolean;
-  nutriLetter: string | null | undefined;
-  healthScore: number | undefined;
-}
 
 /** Résultat du hook : résolveur d'ingrédients, index des recettes et données dérivées. */
 export interface UseRecipeDerivedResult {
@@ -37,20 +28,14 @@ export interface UseRecipeDerivedResult {
 export function useRecipeDerived(recipes: SavedRecipe[], ingredientDB: IngredientDbItem[] | null | undefined): UseRecipeDerivedResult {
   const resolver = useMemo(() => createIngredientResolver(ingredientDB), [ingredientDB]);
   const recipesById = useMemo(() => buildRecipeIndex(recipes), [recipes]);
-  const seasonVeganById = useMemo(() => {
-    const m = new Map<string, RecipeDerived>();
-    const db = ingredientDB || [];
-    for (const r of recipes) {
-      if (r.id == null) continue;
-      const nutri = computeNutriInfo(r.ingredients, db, recipesById);
-      m.set(r.id, {
-        inSeason: isRecipeInSeason(r, resolver),
-        vegan: isRecipeVegan(r, resolver, { recipes }),
-        nutriLetter: nutri.letter ?? r.nutriLetter,
-        healthScore: nutri.letter ? nutri.score : r.healthScore,
-      });
-    }
-    return m;
-  }, [recipes, resolver, ingredientDB, recipesById]);
+  // Cache par objet recette (cf. createRecipeDerivedCache) : une bascule de carnet
+  // ne recalcule que la recette touchée, plus toute la bibliothèque.
+  // Repli mémoïsé : un `[]` neuf à chaque rendu viderait le cache à chaque passage.
+  const db = useMemo(() => ingredientDB || [], [ingredientDB]);
+  const [deriveAll] = useState(() => createRecipeDerivedCache());
+  const seasonVeganById = useMemo(
+    () => deriveAll({ recipes, resolver, ingredientDB: db, recipesById }),
+    [deriveAll, recipes, resolver, db, recipesById],
+  );
   return { resolver, recipesById, seasonVeganById };
 }

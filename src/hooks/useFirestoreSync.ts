@@ -20,6 +20,7 @@ import { normalizePreferences } from "@/constants/preferences.js";
 import { soloWorkspace, householdWorkspace, type Workspace } from "@/lib/household/workspace.js";
 import { mergeShared, type SharedData } from "@/lib/household/householdMigration.js";
 import { isSavedRecipe } from "@/lib/recipes/savedRecipes.js";
+import { reuseUnchanged } from "@/lib/recipes/recipeSync.js";
 import type { SyncStatus } from "../context/AppShellContext.jsx";
 import type { Dispatch, SetStateAction } from "react";
 import type { Notebook, MealPlan, Recipe, SavedRecipe } from "@/lib/types.js";
@@ -600,7 +601,9 @@ export function useFirestoreSync({
       const remote = snap.docs.map(d => d.data()).filter(isSavedRecipe);
       recipeSyncMap.current = mapOf(remote);
       recipesSigRef.current = JSON.stringify(remote);
-      setRecipes(remote);
+      // Partage structurel : l'écho de notre propre écriture ne recrée pas toute la
+      // bibliothèque (sinon recalcul de tous les dérivés par recette à chaque bascule).
+      setRecipes(prev => reuseUnchanged(prev, remote));
     }));
     const metaSub = <T,>(name: string, fromSnap: (d: DocumentData) => T, apply: (v: T) => void): Unsubscribe => onSnapshot(metaDoc(ws, name), snap => {
       if (snap.metadata.hasPendingWrites) return;

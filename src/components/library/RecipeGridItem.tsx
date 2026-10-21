@@ -3,7 +3,7 @@ import { RecipeCard } from "../recipe/RecipeCard.jsx";
 import type { useLongPress } from "../../hooks/useLongPress.js";
 import { asNutriLetter } from "@/lib/recipes/nutriscore.js";
 import type { SavedRecipe } from "@/lib/types.js";
-import type { RecipeDerived } from "../../hooks/useRecipeDerived.js";
+import type { RecipeDerived } from "@/lib/recipes/recipeDerived.js";
 
 type LongPress = ReturnType<typeof useLongPress>;
 
