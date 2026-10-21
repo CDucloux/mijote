@@ -86,7 +86,7 @@ export function NewRecipeSheet({ onClose, onManual }: NewRecipeSheetProps) {
           ))}
         </div>
 
-        <button type="button" className="nr-manual" onClick={goManual}>
+        <button type="button" className="nr-manual hover-neutral" onClick={goManual}>
           <span className="nr-manual__ic"><Icon name="edit" size={17} color="var(--text2)" /></span>
           <span className="nr-manual__txt"><b>Écrire la recette moi-même</b><small>Ingrédients et étapes, à la main</small></span>
           <span className="nr-manual__go"><Icon name="forward" size={15} color="currentColor" /></span>

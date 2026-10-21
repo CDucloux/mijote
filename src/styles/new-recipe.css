@@ -28,8 +28,8 @@
   align-items: center;
   gap: 8px;
   height: 54px;
-  padding: 0 7px 0 15px;
-  border-radius: 16px;
+  padding: 0 7px 0 18px;
+  border-radius: 999px;
   background: var(--surface2);
 }
 .nr-link__field {
@@ -65,9 +65,9 @@
 .nr-link__paste {
   flex-shrink: 0;
   height: 40px;
-  padding: 0 16px;
+  padding: 0 20px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 999px;
   background: var(--accent);
   color: #fff;
   font-family: var(--ff-body);
@@ -103,15 +103,16 @@
 .nr-strip b { font-size: 13.5px; font-weight: 600; }
 .nr-strip small { font-size: 11px; color: var(--text3); }
 
-/* Écriture manuelle : ligne sous un filet, sans carte. */
+/* Écriture manuelle : ligne sans carte ni filet, détachée par le blanc ; au survol
+   desktop, voile neutre arrondi (hover-neutral) qui déborde des marges du contenu. */
 .nr-manual {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 22px;
-  padding: 14px 4px 2px;
+  margin: 18px -10px 0;
+  padding: 10px;
   border: 0;
-  border-top: 1px solid var(--border);
+  border-radius: 18px;
   background: none;
   color: var(--text);
   font-family: var(--ff-body);
@@ -124,6 +125,7 @@
   height: 38px;
   border-radius: 999px;
   border: none;
+  background: var(--surface2);
   display: grid;
   place-items: center;
 }
