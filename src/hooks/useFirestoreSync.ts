@@ -5,7 +5,7 @@ import { auth, db } from "@/lib/firebase/firebase.js";
 import { reportError, logEvent, setObservabilityUser } from "@/lib/observability/observability.js";
 import { metaDoc, recipesCol, type WorkspaceRef } from "@/lib/firebase/paths.js";
 import { upsertOwnDirectoryEntry } from "@/lib/firebase/userDirectory.js";
-import { loadMasterDB, subscribeMasterDB, type MasterDB } from "@/lib/firebase/masterDb.js";
+import { loadMasterDB, subscribeMasterDB, type MasterDB, type PersonalDB } from "@/lib/firebase/masterDb.js";
 import {
   migrateLegacyDoc, syncRecipes,
   loadSharedData, loadUserDataFast, loadSharedDataFast, writeSharedData, deleteSharedRecipe,
@@ -19,27 +19,33 @@ import { DEFAULT_CATEGORIES } from "@/constants/categories.js";
 import { normalizePreferences } from "@/constants/preferences.js";
 import { soloWorkspace, householdWorkspace, type Workspace } from "@/lib/household/workspace.js";
 import { mergeShared, type SharedData } from "@/lib/household/householdMigration.js";
-import type { Recipe } from "@/lib/types.js";
+import { isSavedRecipe } from "@/lib/recipes/savedRecipes.js";
+import type { SyncStatus } from "../context/AppShellContext.jsx";
+import type { Dispatch, SetStateAction } from "react";
+import type { Collection, MealPlan, Recipe, SavedRecipe } from "@/lib/types.js";
+import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
+import type { Preferences } from "@/constants/preferences.js";
+
 
 /** Slices partagés (recettes, carnets, planning, listes, stock), formes opaques. */
 interface SharedSlices {
-  recipes?: Recipe[] | null;
-  collections?: unknown[] | null;
-  mealPlan?: Record<string, unknown> | null;
-  shoppingLists?: unknown[] | null;
-  stock?: unknown[] | null;
-  lowStock?: unknown[] | null;
+  recipes?: SavedRecipe[] | null;
+  collections?: Collection[] | null;
+  mealPlan?: MealPlan | null;
+  shoppingLists?: ShoppingList[] | null;
+  stock?: string[] | null;
+  lowStock?: string[] | null;
 }
 
 /** Données de bootstrap (workspace solo/foyer), recettes garanties, reste optionnel. */
 interface BootData {
-  recipes: DocumentData[];
-  collections?: unknown[] | null;
-  mealPlan?: Record<string, unknown> | null;
-  shoppingLists?: unknown[] | null;
-  stock?: unknown[] | null;
-  lowStock?: unknown[] | null;
-  userDB?: DocumentData | null;
+  recipes: SavedRecipe[];
+  collections?: Collection[] | null;
+  mealPlan?: MealPlan | null;
+  shoppingLists?: ShoppingList[] | null;
+  stock?: string[] | null;
+  lowStock?: string[] | null;
+  userDB?: PersonalDB | null;
   preferences?: DocumentData | null;
 }
 
@@ -60,26 +66,26 @@ export interface FirestoreSyncDeps {
   user: User | null;
   setUser: (u: User | null) => void;
   isAdmin: boolean;
-  setSyncStatus: (s: string) => void;
+  setSyncStatus: (s: SyncStatus) => void;
   householdPointer: HouseholdPointer | null | undefined;
-  recipes: Recipe[];
-  setRecipes: (v: Recipe[]) => void;
-  collections: unknown[];
-  setCollections: (v: unknown[]) => void;
-  mealPlan: Record<string, unknown>;
-  setMealPlan: (v: Record<string, unknown>) => void;
-  shoppingLists: unknown[];
-  setShoppingLists: (v: unknown[]) => void;
-  stock: unknown[];
-  setStock: (v: unknown[]) => void;
-  lowStock: unknown[];
-  setLowStock: (v: unknown[]) => void;
-  preferences: unknown;
-  setPreferences: (v: unknown) => void;
-  masterDB: MasterLike;
-  setMasterDB: (v: MasterLike) => void;
-  userDB: unknown;
-  setUserDB: (v: unknown) => void;
+  recipes: SavedRecipe[];
+  setRecipes: Dispatch<SetStateAction<SavedRecipe[]>>;
+  collections: Collection[];
+  setCollections: Dispatch<SetStateAction<Collection[]>>;
+  mealPlan: MealPlan;
+  setMealPlan: Dispatch<SetStateAction<MealPlan>>;
+  shoppingLists: ShoppingList[];
+  setShoppingLists: Dispatch<SetStateAction<ShoppingList[]>>;
+  stock: string[];
+  setStock: Dispatch<SetStateAction<string[]>>;
+  lowStock: string[];
+  setLowStock: Dispatch<SetStateAction<string[]>>;
+  preferences: Preferences;
+  setPreferences: Dispatch<SetStateAction<Preferences>>;
+  masterDB: MasterDB;
+  setMasterDB: Dispatch<SetStateAction<MasterDB>>;
+  userDB: PersonalDB;
+  setUserDB: Dispatch<SetStateAction<PersonalDB>>;
 }
 
 const mapOf = (recipes: DocumentData[] | null | undefined): Map<string, Recipe> => {
@@ -591,24 +597,24 @@ export function useFirestoreSync({
       if (hydrationTimer.current) { clearTimeout(hydrationTimer.current); hydrationTimer.current = null; }
       setSharedHydrating(false);
       if (snap.metadata.fromCache && snap.empty) return; // ne pas écraser des données valides avec un cache vide
-      const remote = snap.docs.map(d => d.data());
+      const remote = snap.docs.map(d => d.data()).filter(isSavedRecipe);
       recipeSyncMap.current = mapOf(remote);
       recipesSigRef.current = JSON.stringify(remote);
       setRecipes(remote);
     }));
-    const metaSub = (name: string, fromSnap: (d: DocumentData) => unknown, apply: (v: never) => void): Unsubscribe => onSnapshot(metaDoc(ws, name), snap => {
+    const metaSub = <T,>(name: string, fromSnap: (d: DocumentData) => T, apply: (v: T) => void): Unsubscribe => onSnapshot(metaDoc(ws, name), snap => {
       if (snap.metadata.hasPendingWrites) return;
       if (snap.metadata.fromCache && !snap.exists()) return; // cache absent : ne pas réinitialiser
       const val = fromSnap(snap.exists() ? snap.data() : {});
       const sig = JSON.stringify(val);
       if (metaSigRef.current[name] === sig) return;
       metaSigRef.current[name] = sig;
-      apply(val as never);
+      apply(val);
     });
-    unsubs.push(metaSub("collections", d => d.items || [], setCollections as (v: never) => void));
-    unsubs.push(metaSub("mealPlan", d => d.data || {}, setMealPlan as (v: never) => void));
-    unsubs.push(metaSub("shoppingLists", d => d.items || [], setShoppingLists as (v: never) => void));
-    unsubs.push(metaSub("stock", d => ({ items: d.items || [], low: d.low || [] }), ((v: { items: unknown[]; low: unknown[] }) => { setStock(v.items); setLowStock(v.low); }) as (v: never) => void));
+    unsubs.push(metaSub<Collection[]>("collections", d => d.items || [], setCollections));
+    unsubs.push(metaSub<MealPlan>("mealPlan", d => d.data || {}, setMealPlan));
+    unsubs.push(metaSub<ShoppingList[]>("shoppingLists", d => d.items || [], setShoppingLists));
+    unsubs.push(metaSub<{ items: string[]; low: string[] }>("stock", d => ({ items: d.items || [], low: d.low || [] }), v => { setStock(v.items); setLowStock(v.low); }));
     return () => unsubs.forEach(u => u());
   }, [user, loadedHid]); // eslint-disable-line react-hooks/exhaustive-deps
 

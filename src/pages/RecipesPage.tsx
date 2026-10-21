@@ -26,7 +26,8 @@ import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 import { busyFloor } from "@/lib/ui/busyFloor.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
-import type { SavedRecipe } from "@/lib/types.js";
+import type { Recipe, SavedRecipe } from "@/lib/types.js";
+import { isSavedRecipe } from "@/lib/recipes/savedRecipes.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useLS } from "../hooks/useLS.js";
 import { useLongPress } from "../hooks/useLongPress.js";
@@ -36,7 +37,7 @@ import { useLibraryPaging, RECIPES_PAGE } from "../hooks/useLibraryPaging.js";
 import type { UseRecipeDerivedResult } from "../hooks/useRecipeDerived.js";
 
 interface RecipesPageProps {
-  recipes: SavedRecipe[];
+  recipes: Recipe[];
   collections: Notebook[];
   ingredientDB?: DbEntry[] | null;
   /** Dérivés coûteux (saison, vegan, Nutri-Score), calculés dans App qui ne se démonte pas. */
@@ -68,8 +69,9 @@ const ingredientFilterOf = (state: unknown): string | null =>
   state && typeof state === "object" && "ingredientFilter" in state && typeof state.ingredientFilter === "string" ? state.ingredientFilter : null;
 
 /** Bibliothèque « Mes Recettes » : recherche, filtres, tri, carnets et grille paginée. */
-export function RecipesPage({ recipes, collections, ingredientDB, recipeDerived, loading = false, onSelect, onNewRecipe, onSearchCommunity, onEditRecipe, onDeleteRecipe, onDuplicate, onAddToShopping, onToggleCollection, onPlanRecipe, onShareRecipe, setCollections, setTab }: RecipesPageProps) {
+export function RecipesPage({ recipes: allRecipes, collections, ingredientDB, recipeDerived, loading = false, onSelect, onNewRecipe, onSearchCommunity, onEditRecipe, onDeleteRecipe, onDuplicate, onAddToShopping, onToggleCollection, onPlanRecipe, onShareRecipe, setCollections, setTab }: RecipesPageProps) {
   const { techniques } = useAppShell();
+  const recipes = useMemo(() => allRecipes.filter(isSavedRecipe), [allRecipes]);
   const [search, setSearch] = useState("");
   const [booting, setBooting] = useState(() => !skeletonSeen && recipes.length > 0);
   useEffect(() => {

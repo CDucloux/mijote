@@ -29,6 +29,9 @@ export interface IngredientCategory {
   order: number;
 }
 
+/** Table des catégories d'ingrédients, indexée par clé technique. */
+export type IngredientCategories = Record<string, IngredientCategory>;
+
 /** Les deux familles de types de recette. */
 export interface RecipeCategorySets {
   /** Rôle dans le repas, pour les recettes courantes. */
@@ -118,6 +121,21 @@ export function parseIngredientCategories(raw: unknown): Record<string, Ingredie
     };
   });
   return out;
+}
+
+/**
+ * Catégories personnalisées par l'admin (doc `master/categories`) appliquées sur les
+ * défauts : chaque surcharge est validée comme une catégorie du fichier, et seules
+ * les clés connues des défauts sont gardées (une clé inconnue n'aurait aucun rayon).
+ *
+ * @param defaults - Catégories par défaut.
+ * @param overrides - Surcharges lues dans Firestore, non fiables.
+ * @returns Les catégories fusionnées, ou les défauts si aucune surcharge exploitable.
+ */
+export function mergeIngredientCategories(defaults: IngredientCategories, overrides: unknown): IngredientCategories {
+  if (!isRecord(overrides) || !Object.keys(overrides).length) return defaults;
+  const merged = parseIngredientCategories({ categories: { ...defaults, ...overrides } });
+  return Object.fromEntries(Object.entries(merged).filter(([key]) => key in defaults));
 }
 
 /**

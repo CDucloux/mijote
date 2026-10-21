@@ -7,7 +7,8 @@
  */
 import { computeNutriInfo, buildRecipeIndex, isComponentLine } from "@/lib/recipes/nutriscore.js";
 import { flattenForShopping, mergeRawLines, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
-import type { Recipe, IngredientLine, Collection } from "@/lib/types.js";
+import type { Recipe, SavedRecipe, IngredientLine, Collection } from "@/lib/types.js";
+import type { ShoppingItem } from "@/lib/food/shoppingAggregate.js";
 
 /** Ligne d'ingrédient manipulée par les actions (alias du type de domaine). */
 export type RecipeLine = IngredientLine;
@@ -38,7 +39,7 @@ const norm = (s: string | undefined): string => (s || "").toLowerCase().trim();
 export function prepareRecipeForSave(
   r: ActionRecipe,
   { recipes, ingredientDB }: { recipes: ActionRecipe[]; ingredientDB: ActionDbItem[] },
-): { error: string } | { recipe: ActionRecipe } {
+): { error: string } | { recipe: SavedRecipe } {
   const missingQty = (r.ingredients || []).filter(ing => (ing.name || ing.dbId || ing.recipeId) && !(Number(ing.amount) > 0));
   if (missingQty.length > 0) {
     const names = missingQty.map(i => i.name || "sans nom").join(", ");
@@ -69,12 +70,12 @@ export function prepareRecipeForSave(
 
   const { score, letter } = computeNutriInfo(r.ingredients, ingredientDB, recipesById);
   const withScore: ActionRecipe = { ...r, healthScore: score, nutriLetter: letter };
-  const isEditing = r.id && recipes.find(x => x.id === r.id);
+  const editedId = r.id && recipes.some(x => x.id === r.id) ? r.id : null;
 
-  if (isEditing) {
-    const nameTaken = recipes.some(x => x.id !== r.id && norm(x.name) === norm(r.name));
+  if (editedId) {
+    const nameTaken = recipes.some(x => x.id !== editedId && norm(x.name) === norm(r.name));
     if (nameTaken) return { error: `Une recette nommée "${r.name}" existe déjà` };
-    return { recipe: withScore };
+    return { recipe: { ...withScore, id: editedId } };
   }
 
   const nameTaken = recipes.some(x => norm(x.name) === norm(r.name));
@@ -90,7 +91,7 @@ export function prepareRecipeForSave(
  * @param recipe - Recette à insérer ou remplacer.
  * @returns Une nouvelle liste avec la recette insérée (en tête) ou remplacée sur place.
  */
-export function upsertRecipe(recipes: ActionRecipe[], recipe: ActionRecipe): ActionRecipe[] {
+export function upsertRecipe<T extends ActionRecipe>(recipes: T[], recipe: T): T[] {
   return recipes.some(x => x.id === recipe.id)
     ? recipes.map(x => x.id === recipe.id ? recipe : x)
     : [recipe, ...recipes];
@@ -113,15 +114,6 @@ export function recomputeCollectionCounts(collections: ActionCollection[], recip
   }));
 }
 
-/** Item de liste de courses produit à partir d'une recette. */
-export interface ShoppingItem {
-  id: string;
-  name?: string;
-  amount: number;
-  unit?: string;
-  image: string;
-  checked: boolean;
-}
 
 /**
  * Construit les items de liste de courses à partir d'une recette. Les composants
@@ -148,6 +140,6 @@ export function buildShoppingItems(
   const merged = mergeRawLines(flattenForShopping(ings, recipesById, stockSet));
   return merged.map(ing => {
     const dbItem = ingredientDB.find(d => d.id === ing.dbId);
-    return { id: "si" + Date.now() + Math.random(), name: ing.name, amount: +((Number(ing.amount) || 0) * (mult || 1)).toFixed(2), unit: ing.unit, image: dbItem?.image || ing.image || "", checked: false };
+    return { id: "si" + Date.now() + Math.random(), name: ing.name || "", amount: +((Number(ing.amount) || 0) * (mult || 1)).toFixed(2), unit: ing.unit, image: dbItem?.image || ing.image || "", checked: false };
   });
 }

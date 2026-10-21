@@ -10,7 +10,7 @@ import { validateRecipeSchema } from "@/lib/recipes/recipeSchema.js";
 import { buildNameMatcher } from "@/lib/food/nameMatcher.js";
 import { computeNutriInfo } from "@/lib/recipes/nutriscore.js";
 import { parseCut } from "@/lib/recipes/decoupe.js";
-import type { Recipe } from "@/lib/types.js";
+import type { Recipe, SavedRecipe } from "@/lib/types.js";
 
 /** Recette importée (alias du type de domaine). */
 export type ImportRecipe = Recipe;
@@ -20,7 +20,7 @@ export interface ImportDbItem { id: string; name: string; aliases?: string[]; [k
 
 /** Résultat d'un import réussi. */
 export interface ImportResult {
-  prepared: ImportRecipe[];
+  prepared: SavedRecipe[];
   linked: number;
   rejected: number;
 }

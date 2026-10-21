@@ -19,7 +19,7 @@ function base64ToBlob(b64: string, type: string): Blob {
 export interface RecipeImportDeps {
   ingredientDB: ImportDbItem[];
   utensilDB: ImportDbItem[];
-  openEditor: (draft: Record<string, unknown>) => void;
+  openEditor: (draft: Recipe) => void;
 }
 
 /**
@@ -32,7 +32,7 @@ export interface RecipeImportDeps {
  */
 export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeImportDeps) {
   // Ids stables sur les items + valeurs par défaut du schéma éditeur.
-  const withItemIds = (recipe: Recipe): Record<string, unknown> => ({
+  const withItemIds = (recipe: Recipe): Recipe => ({
     description: "", collections: [], image: "", cuisine: "", category: "", source: "",
     prepTime: 0, cookTime: 0, servings: 2, ...recipe,
     ingredients: (recipe.ingredients || []).map((i, k) => ({ id: `i${Date.now()}_${k}`, dbId: "", name: "", amount: "", unit: "", ...i })),

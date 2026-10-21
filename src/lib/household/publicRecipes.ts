@@ -24,8 +24,8 @@ export type PubRecipe = Recipe & {
 /** Utilisateur auteur (forme minimale). */
 export interface PubUser {
   uid: string;
-  displayName?: string;
-  photoURL?: string;
+  displayName?: string | null;
+  photoURL?: string | null;
 }
 
 /** Ingrédient de la base (forme minimale). */

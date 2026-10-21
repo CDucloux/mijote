@@ -9,15 +9,7 @@ import { DEFAULT_FILTERS, filtersEqual, matchesFilters, matchesRecipeSearch, typ
 import type { Collection, Recipe } from "@/lib/types.js";
 
 /** Carnet tel que lu et écrit par la bibliothèque. */
-export interface Notebook extends Collection {
-  name?: string;
-  color?: string;
-  icon?: string;
-  /** Vue de filtres d'un carnet intelligent. */
-  filters?: Partial<RecipeFilters>;
-  /** Recherche d'un carnet intelligent. */
-  search?: string;
-}
+export type Notebook = Collection;
 
 /** Brouillon de la feuille de création / modification d'un carnet. */
 export interface NotebookDraft {

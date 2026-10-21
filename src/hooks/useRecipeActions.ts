@@ -4,13 +4,13 @@ import { recomputeCollectionCounts } from "@/lib/recipes/recipeActions.js";
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { newGroupId, roleForCategory } from "@/lib/planning/composedMeal.js";
 import { DEFAULT_PREFERENCES, type Preferences } from "../constants/preferences.js";
-import type { Recipe, Collection, MealPlan } from "@/lib/types.js";
+import type { Recipe, SavedRecipe, Collection, MealPlan } from "@/lib/types.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
 
 /** Dépendances injectées (état de l'app + setters + notify/navigate). */
 export interface RecipeActionsDeps {
-  recipes: Recipe[];
-  setRecipes: Dispatch<SetStateAction<Recipe[]>>;
+  recipes: SavedRecipe[];
+  setRecipes: Dispatch<SetStateAction<SavedRecipe[]>>;
   setCollections: Dispatch<SetStateAction<Collection[]>>;
   setMealPlan: Dispatch<SetStateAction<MealPlan>>;
   setPreferences: Dispatch<SetStateAction<Preferences>>;
@@ -72,7 +72,7 @@ export function useRecipeActions({ recipes, setRecipes, setCollections, setMealP
   // Copie privée (sans lien public), nom suffixée, en tête de liste.
   const duplicateRecipe = useCallback((recipe: Recipe) => {
     if (!guardQuota()) return;
-    const copy: Recipe = { ...recipe, id: "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: `${recipe.name} (copie)`, createdAt: Date.now(), updatedAt: Date.now() };
+    const copy: SavedRecipe = { ...recipe, id: "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: `${recipe.name} (copie)`, createdAt: Date.now(), updatedAt: Date.now() };
     delete copy.visibility; delete copy.publicId; delete copy.clonedFrom;
     setRecipes(prev => {
       const next = [copy, ...prev];

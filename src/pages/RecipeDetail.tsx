@@ -40,7 +40,7 @@ import type { DbEntry } from "@/lib/food/nameMatcher.js";
 import type { CategoryMap } from "@/lib/cookSession/misEnPlace.js";
 import type { HistoryRecipe } from "@/lib/recipes/history.js";
 import type { IngredientLine, Recipe, UtensilDbItem } from "@/lib/types.js";
-import type { ColoredCollection } from "../components/recipeDetail/CollectionsSheet.js";
+import type { Collection } from "@/lib/types.js";
 import type { MenuItem } from "../components/recipeDetail/HeroMenu.js";
 
 interface RecipeDetailProps {
@@ -62,7 +62,7 @@ interface RecipeDetailProps {
   ingredientDB: DbEntry[];
   utensilDB: UtensilDbItem[];
   categories?: CategoryMap;
-  collections?: ColoredCollection[];
+  collections?: Collection[];
   onToggleCollection?: (recipeId: string | undefined, collectionId: string) => void;
   onUpdateRecipe?: (recipe: HistoryRecipe) => void;
   onCooked?: (recipeId: string) => void;

@@ -7,25 +7,17 @@ import { prepareRecipeImport, type ImportDbItem } from "@/lib/recipes/recipeImpo
 import { canAddRecipes, FREE_RECIPE_LIMIT } from "@/lib/recipes/plan.js";
 import { deleteImageByUrl } from "@/lib/firebase/storage.js";
 import { printRecipe, type PdfRecipe } from "@/lib/recipes/recipePdf.js";
-import type { Recipe, IngredientLine, Collection } from "@/lib/types.js";
+import type { Recipe, SavedRecipe, IngredientLine, Collection } from "@/lib/types.js";
+import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { ActivityInput } from "@/lib/notifications/activity.js";
 import type { ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
 import { exportTextFile } from "@/lib/ui/fileExport.js";
 import { reportError } from "@/lib/observability/observability.js";
 
-/** Liste de courses (forme minimale manipulée ici). */
-export interface ShoppingList {
-  id: string;
-  name?: string;
-  type?: string;
-  recipeId?: string;
-  items: unknown[];
-}
-
 /** Dépendances injectées (état de l'app + setters + notify/navigate). */
 export interface RecipeCrudDeps {
-  recipes: Recipe[];
-  setRecipes: Dispatch<SetStateAction<Recipe[]>>;
+  recipes: SavedRecipe[];
+  setRecipes: Dispatch<SetStateAction<SavedRecipe[]>>;
   setCollections: Dispatch<SetStateAction<Collection[]>>;
   setEditingRecipe: (r: Recipe | null) => void;
   shoppingLists: ShoppingList[];
@@ -124,7 +116,7 @@ export function useRecipeCrud({
     const existing = shoppingLists.find(l => l.type === "recipe" && l.recipeId === recipe.id);
     const listId = existing ? existing.id : "sl" + Date.now();
     setShoppingLists(prev => {
-      if (prev.find(l => l.id === listId)) return prev.map(l => l.id === listId ? { ...l, items: [...l.items, ...items] } : l);
+      if (prev.find(l => l.id === listId)) return prev.map(l => l.id === listId ? { ...l, items: [...(l.items || []), ...items] } : l);
       return [...prev, { id: listId, name: recipe.name, type: "recipe", recipeId: recipe.id, items }];
     });
     notify(`${items.length} ingrédient(s) ajoutés aux courses`);

@@ -7,6 +7,7 @@
  *
  * @module types
  */
+import type { RecipeFilters } from "@/lib/recipes/recipeFilters.js";
 
 /** Rendement d'une préparation de base (« pour 500 g », « pour 2 pots »…). */
 export interface RecipeYield {
@@ -188,12 +189,19 @@ export interface Recipe {
 /** Recette enregistrée (bibliothèque) : toujours identifiée. */
 export type SavedRecipe = Recipe & { id: string };
 
-/** Carnet de recettes (manuel ou intelligent). */
+/** Carnet de recettes : manuel (appartenance explicite) ou intelligent (`kind: "smart"`, vue de filtres). */
 export interface Collection {
   id: string;
   name?: string;
   kind?: string;
   count?: number;
+  color?: string;
+  /** Picto choisi par l'utilisateur (emoji). */
+  icon?: string;
+  /** Vue de filtres d'un carnet intelligent. */
+  filters?: Partial<RecipeFilters>;
+  /** Recherche d'un carnet intelligent. */
+  search?: string;
   [k: string]: unknown;
 }
 
