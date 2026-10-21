@@ -1743,19 +1743,17 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
   color: var(--text);
   background: var(--surface2);
-  border: 1px solid var(--border);
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  border: none;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
 .timer-btn:active { transform: scale(0.96); }
 .timer-btn-accent {
   color: var(--accent);
   background: rgba(var(--accent-rgb), 0.12);
-  border-color: rgba(var(--accent-rgb), 0.35);
 }
 .timer-btn-stop {
   color: var(--red);
   background: rgba(224, 82, 82, 0.1);
-  border-color: rgba(224, 82, 82, 0.3);
 }
 
 @keyframes timerPulse {
@@ -1794,7 +1792,7 @@ html.light .sheet-sticky-head::after {
   background: var(--surface); border: none;
   box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.45);
   font-size: 12.5px; font-weight: 600; color: var(--text);
-  transition: border-color 0.15s ease, transform 0.1s ease;
+  transition: transform 0.1s ease;
 }
 .cook-timers-toggle:active { transform: scale(0.98); }
 .cook-timers-count {
@@ -1810,9 +1808,9 @@ html.light .sheet-sticky-head::after {
 .cook-timer-chip {
   display: flex; align-items: center; gap: 8px; align-self: stretch;
   padding: 7px 11px; border-radius: 12px; cursor: pointer; text-align: left;
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--surface); border: none;
   box-shadow: 0 6px 18px -12px rgba(0, 0, 0, 0.4);
-  transition: border-color 0.15s ease, transform 0.1s ease;
+  transition: transform 0.1s ease;
 }
 .cook-timer-chip:active { transform: scale(0.98); }
 .cook-timer-chip .t { font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
