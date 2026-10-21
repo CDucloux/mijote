@@ -20,7 +20,7 @@ export function StepTip({ tip, size = "sm", style }: StepTipProps) {
       background: "rgba(91,156,246,0.10)",
       borderRadius: 12, padding: lg ? "12px 15px" : "10px 13px", ...style,
     }}>
-      <span style={{ width: chip, height: chip, borderRadius: 9, flexShrink: 0, background: "var(--blue)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 8px -2px rgba(91,156,246,0.6)" }}>
+      <span style={{ width: chip, height: chip, borderRadius: 9, flexShrink: 0, background: "var(--blue)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Icon name="bulb" size={lg ? 17 : 15} color="#fff" />
       </span>
       <p style={{ fontSize: lg ? 15 : 13, color: "var(--text2)", lineHeight: 1.5, margin: 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{tip}</p>
