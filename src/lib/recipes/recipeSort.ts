@@ -32,7 +32,7 @@ export interface SortOption {
  */
 export interface SortRecipe {
   id: string;
-  name: string;
+  name?: string;
   createdAt?: string | number | null;
   healthScore?: number | null;
   prepTime?: number | null;
@@ -135,7 +135,7 @@ export interface ComparatorParams {
  */
 export function makeComparator({ sortBy, sortDir, techniques, techIndex, recipes }: ComparatorParams): (a: SortRecipe, b: SortRecipe) => number {
   if (sortBy === "name") {
-    return (a, b) => (sortDir === "asc" ? 1 : -1) * a.name.localeCompare(b.name, "fr");
+    return (a, b) => (sortDir === "asc" ? 1 : -1) * (a.name || "").localeCompare(b.name || "", "fr");
   }
   if (sortBy === "date") {
     return (a, b) => (sortDir === "desc" ? 1 : -1) * byRecent(a, b);

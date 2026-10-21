@@ -185,6 +185,9 @@ export interface Recipe {
   [k: string]: unknown;
 }
 
+/** Recette enregistrée (bibliothèque) : toujours identifiée. */
+export type SavedRecipe = Recipe & { id: string };
+
 /** Carnet de recettes (manuel ou intelligent). */
 export interface Collection {
   id: string;
