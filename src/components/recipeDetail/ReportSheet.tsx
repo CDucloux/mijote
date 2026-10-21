@@ -1,15 +1,7 @@
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+import { REPORT_REASONS } from "../../constants/reportReasons.js";
 
-// Motifs de signalement d'une recette publique (modération), avec un exemple concret
-// pour lever l'hésitation entre deux motifs voisins.
-const REPORT_REASONS = [
-  { id: "copyright", label: "Droit d'auteur ou plagiat", hint: "Recette ou photo reprise sans l'accord de son auteur" },
-  { id: "photo", label: "Photo inappropriée", hint: "Image choquante, trompeuse ou sans rapport avec le plat" },
-  { id: "offensive", label: "Contenu offensant ou dangereux", hint: "Propos haineux, pratique risquée pour la santé" },
-  { id: "spam", label: "Spam ou hors-sujet", hint: "Publicité, liens douteux, ce n'est pas une recette" },
-  { id: "other", label: "Autre chose", hint: "Explique-nous en quelques mots juste en dessous" },
-];
 
 /**
  * Feuille de signalement d'une recette publique (droit d'auteur, photo inappropriée…).

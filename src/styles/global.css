@@ -5359,6 +5359,15 @@ html.light .sheet-sticky-head::after {
 .dash-grid { display: grid; gap: 26px; align-items: start; }
 .dash-col { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
 .dash-surface { background: var(--float-surface); box-shadow: var(--float-shadow); border-radius: 20px; }
+/* Modération : une colonne en mobile (action destructive pleine largeur), grille
+   de cartes au large (action alignée à droite). */
+.mod-grid { display: grid; gap: 14px; align-items: start; }
+.mod-head { display: flex; align-items: center; gap: 12px; }
+.mod-remove { align-self: stretch; }
+@media (min-width: 900px) {
+  .mod-grid { grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 18px; }
+  .mod-remove { align-self: flex-end; }
+}
 @media (min-width: 900px) {
   .dash-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; }
 }
