@@ -317,10 +317,9 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
             <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 14px" }}>Efface définitivement des données de ton espace. Ces actions sont irréversibles.</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {PURGE_OPTIONS.map(o => (
-                <button key={o.scope} onClick={() => setPurgeScope(o)} className="pressable"
+                <button key={o.scope} onClick={() => setPurgeScope(o)} className="pressable hover-danger purge-btn" data-grave={o.danger ? "" : undefined}
                   style={{ flex: isDesktop ? "0 1 auto" : "1 1 calc(50% - 4px)", padding: "9px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
-                    background: o.danger ? "rgba(224,82,82,0.14)" : "var(--surface)", color: o.danger ? "var(--red)" : "var(--text2)",
-                    border: "none" }}>
+                    background: o.danger ? "rgba(224,82,82,0.14)" : "var(--surface)", border: "none" }}>
                   {o.label}
                 </button>
               ))}
