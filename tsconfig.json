@@ -12,10 +12,9 @@
        Sans baseUrl : les chemins de `paths` sont résolus relativement à ce tsconfig. */
     "paths": { "@/*": ["./src/*"] },
 
-    /* Cohabitation .js / .ts : on autorise le JS mais on ne le type-check PAS.
-       On durcit fichier par fichier en migrant vers .ts. */
-    "allowJs": true,
-    "checkJs": false,
+    /* Tout en TypeScript : aucun .js/.jsx applicatif (les tests .js hérités
+       tournent sous Vitest, hors type-check). */
+    "allowJs": false,
 
     /* Rigueur sur le TS (le neuf naît strict). */
     "strict": true,
