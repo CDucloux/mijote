@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon } from "../ui/Icon.jsx";
 import { StickySheetHeader } from "../ui/StickySheetHeader.jsx";
+import { LedgerRow, LedgerHeading } from "../ui/Ledger.jsx";
 import { capitalize } from "../../lib/format.js";
 import { DIFFICULTY_LABEL, difficultyColor, type DifficultyExplain, type Workload } from "@/lib/recipes/difficulty.js";
 
@@ -21,21 +21,6 @@ function Gauge({ level, color }: { level: number; color: string }) {
     </div>
   );
 }
-
-// Ligne du ticket : intitulé + précision à gauche, valeur alignée à droite.
-function LedgerRow({ title, hint, value, muted = false }: { title: ReactNode; hint?: ReactNode; value: ReactNode; muted?: boolean }) {
-  return (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 16, padding: "11px 0" }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: muted ? "var(--text3)" : "var(--text)", lineHeight: 1.35 }}>{title}</div>
-        {hint && <div style={{ fontSize: 12.5, color: "var(--text3)", marginTop: 2, lineHeight: 1.4 }}>{hint}</div>}
-      </div>
-      <div style={{ flexShrink: 0, fontSize: 15, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: muted ? "var(--text3)" : "var(--text)" }}>{value}</div>
-    </div>
-  );
-}
-
-const HEADING = { fontSize: 13, fontWeight: 650, color: "var(--text2)", margin: "0 0 4px" } as const;
 
 interface DifficultyModalProps {
   data?: DifficultyExplain | null;
@@ -79,7 +64,7 @@ export function DifficultyModal({ data, workload, onClose }: DifficultyModalProp
           </p>
 
           {/* Le ticket : chaque ligne qui compose la note, puis le total. */}
-          <div style={HEADING}>Le calcul</div>
+          <LedgerHeading>Le calcul</LedgerHeading>
           <LedgerRow title={data.drivers.join(", ")} hint="Geste le plus exigeant" value={`niveau ${data.base}`} />
           {data.mods.map((m, i) => (
             <LedgerRow key={i} muted={!m.applied} title={capitalize(m.detail)}
@@ -97,7 +82,7 @@ export function DifficultyModal({ data, workload, onClose }: DifficultyModalProp
           {/* Gestes repérés : les pastilles traduisent le niveau propre à chaque geste. */}
           {data.techniques.length > 0 && (
             <div style={{ marginTop: 30 }}>
-              <div style={{ ...HEADING, marginBottom: 10 }}>{data.techniques.length} geste{data.techniques.length > 1 ? "s" : ""} repéré{data.techniques.length > 1 ? "s" : ""} dans les étapes</div>
+              <LedgerHeading style={{ marginBottom: 10 }}>{data.techniques.length} geste{data.techniques.length > 1 ? "s" : ""} repéré{data.techniques.length > 1 ? "s" : ""} dans les étapes</LedgerHeading>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {data.techniques.map(tech => (
                   <span key={tech.id} title={tech.inherited ? "Vient d'une préparation de base" : undefined}
@@ -118,7 +103,7 @@ export function DifficultyModal({ data, workload, onClose }: DifficultyModalProp
       {/* Charge de travail : la longueur de la recette, comptée à part de la note. */}
       {workload && (
         <div style={{ marginTop: 30 }}>
-          <div style={HEADING}>Charge de travail</div>
+          <LedgerHeading>Charge de travail</LedgerHeading>
           <LedgerRow title={workload.label} hint="Le nombre d'étapes, compté à part : une recette longue n'est pas plus technique." value={`${workload.steps} étape${workload.steps > 1 ? "s" : ""}`} />
         </div>
       )}
