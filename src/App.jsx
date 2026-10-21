@@ -32,6 +32,7 @@ import { usePublicRecipes } from "./hooks/usePublicRecipes.js";
 import { useAccount } from "./hooks/useAccount.js";
 import { pageTitle } from "./lib/ui/pageTitle.js";
 import { AppToast } from "./components/layout/AppToast.jsx";
+import { CookTogetherBanner } from "./components/cookMode/CookTogetherBanner.jsx";
 import { useRecipeActions } from "./hooks/useRecipeActions.js";
 import { useDiscoverReturnAnchor } from "./hooks/useDiscoverReturnAnchor.js";
 import { useDetailDismiss } from "./hooks/useDetailDismiss.js";
@@ -295,8 +296,8 @@ function AppInner({ user, isDark, toggleTheme }) {
     setPreferences(p => ({ ...p, giftImportUsed: true }));
   }, [setPreferences]);
   const shellValue = useMemo(
-    () => ({ user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, giftImportUsed, markGiftImportUsed, ...stableApi }),
-    [user, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, giftImportUsed, markGiftImportUsed, stableApi]
+    () => ({ user, householdId: householdPointer?.id || null, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, giftImportUsed, markGiftImportUsed, ...stableApi }),
+    [user, householdPointer?.id, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, giftImportUsed, markGiftImportUsed, stableApi]
   );
 
   // Recettes, opérations cœur (sauvegarde, suppression, courses, import/export, PDF).
@@ -582,6 +583,8 @@ function AppInner({ user, isDark, toggleTheme }) {
           <div className="rotate-guard__hint">Cardamome est pensé pour le mode portrait. Remets ton écran à la verticale pour continuer.</div>
         </div>
         {notification && <AppToast notification={notification} leaving={notifLeaving} isDesktop={isDesktop} />}
+        {/* Cuisiner à deux : un autre membre du foyer a lancé un pas à pas. */}
+        {!cookModeRoute && !isEditing && <CookTogetherBanner isDesktop={isDesktop} onJoin={(id) => navigate(`/recipes/${id}/cookmode`)} />}
         {isDesktop ? (
           <>
             {/* Les pages légales s'affichent en plein écran : la sidebar y est superflue. */}

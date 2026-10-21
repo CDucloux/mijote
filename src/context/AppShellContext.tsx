@@ -20,6 +20,8 @@ type DbRow = Record<string, unknown>;
  */
 export interface AppShell {
   user: User | null;
+  /** Foyer actif (null en solo) : porte les fonctions partagées, comme cuisiner à deux. */
+  householdId: string | null;
   syncStatus: SyncStatus;
   isDark: boolean;
   notify: (message: string, type?: string) => void;
