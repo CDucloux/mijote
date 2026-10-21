@@ -4914,13 +4914,22 @@ html.light .sheet-sticky-head::after {
 .cook-step-link { background: rgba(var(--accent-rgb), 0.10); }
 .cook-step-link:active { background: rgba(var(--accent-rgb), 0.20); }
 
-/* Bouton « Minuteur N min » (mentions de temps d'une étape) : fond et liseré épice
-   pilotés en CSS (et non inline) pour un survol desktop qui appuie le tabac et le
-   liseré. */
+/* Bouton « Minuteur N min » (mentions de temps d'une étape) : fond épice piloté en
+   CSS (et non inline) pour un survol desktop qui appuie le tabac. */
 .cook-timer-btn {
   background: rgba(var(--spice-rgb), 0.13);
-  border: 1px solid rgba(var(--spice-rgb), 0.38);
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  border: none;
+  transition: background-color 0.15s ease;
+}
+
+/* Encarts du mode cuisine (mise en place, ingrédients et ustensiles d'une étape) :
+   dessinés par leur fond et l'ombre flottante partagée, sans contour. */
+.cook-panel {
+  background: var(--float-surface);
+  box-shadow: var(--float-shadow);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
 }
 .cook-timer-btn:active { background: rgba(var(--spice-rgb), 0.22); }
 

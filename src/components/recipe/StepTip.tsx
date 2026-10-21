@@ -17,7 +17,7 @@ export function StepTip({ tip, size = "sm", style }: StepTipProps) {
   return (
     <div style={{
       display: "flex", gap: 11, alignItems: "center",
-      background: "rgba(91,156,246,0.10)", border: "1px solid rgba(91,156,246,0.26)",
+      background: "rgba(91,156,246,0.10)",
       borderRadius: 12, padding: lg ? "12px 15px" : "10px 13px", ...style,
     }}>
       <span style={{ width: chip, height: chip, borderRadius: 9, flexShrink: 0, background: "var(--blue)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 8px -2px rgba(91,156,246,0.6)" }}>

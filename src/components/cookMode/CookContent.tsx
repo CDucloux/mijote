@@ -95,7 +95,7 @@ export function CookContent(props: CookContentProps) {
     return (
       <div key={ing.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {isComp
-          ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(var(--accent-rgb),0.1)", border: "1.5px solid rgba(var(--accent-rgb),0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={22} /></span>
+          ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(var(--accent-rgb),0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><BaseIcon size={22} /></span>
           : <IngImage src={imgSrc} alt={displayName} size={42} />
         }
         <span style={{ flex: 1, fontSize: 14, color: isComp ? "var(--accent)" : "var(--text)", fontWeight: isComp ? 600 : 400 }}>{capitalize(displayName)}</span>
@@ -131,7 +131,7 @@ export function CookContent(props: CookContentProps) {
         </span>
         <span style={{ position: "relative", flexShrink: 0, display: "inline-flex", opacity: gathered ? 0.5 : 1, transition: "opacity 0.15s" }}>
           {isComp
-            ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(var(--accent-rgb),0.1)", border: "1.5px solid rgba(var(--accent-rgb),0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
+            ? <span style={{ width: 42, height: 42, borderRadius: 10, background: "rgba(var(--accent-rgb),0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}><BaseIcon size={22} /></span>
             : <IngImage src={imgSrc} alt={displayName} size={42} />
           }
           {!isComp && !gathered && convOf(ing, amount) && <ConvertBadge onClick={() => openConvert(ing, amount)} size={18} />}
@@ -207,7 +207,7 @@ export function CookContent(props: CookContentProps) {
           Rassemble tous les ingrédients aux bonnes quantités et sors les ustensiles nécessaires avant de te lancer.
         </p>
         {overviewIngs.length > 0 && (
-          <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
+          <div className="cook-panel">
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Ingrédients</span>
               {checkedIngIds.size > 0 && (
@@ -245,7 +245,7 @@ export function CookContent(props: CookContentProps) {
           </div>
         )}
         {overviewUts.length > 0 && (
-          <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
+          <div className="cook-panel">
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Ustensiles</span>
               {checkedUtIds.size > 0 && (
@@ -270,7 +270,7 @@ export function CookContent(props: CookContentProps) {
           </div>
         )}
         {postesDecoupe.length > 0 && (
-          <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
+          <div className="cook-panel">
             {/* Hauteur fixe : le badge (1/1) apparaît au cochage sans réhausser
                 l'en-tête ; marge alignée sur la carte « Ingrédients ». */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, height: 18, marginBottom: 12 }}>
@@ -364,7 +364,7 @@ export function CookContent(props: CookContentProps) {
       {step.tip && <StepTip tip={step.tip} size="lg" style={{ marginBottom: 20 }} />}
 
       {linkedIngs.length > 0 && (
-        <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
+        <div className="cook-panel">
           <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Pour cette étape</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {linkedIngs.map(renderIngLine)}
@@ -373,7 +373,7 @@ export function CookContent(props: CookContentProps) {
       )}
 
       {linkedUts.length > 0 && (
-        <div style={{ background: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 20, border: "1px solid var(--border)" }}>
+        <div className="cook-panel">
           <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Ustensiles</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {linkedUts.map(u => {
