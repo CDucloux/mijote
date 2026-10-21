@@ -2,6 +2,7 @@ import { useState, useRef, type Dispatch, type ReactNode, type SetStateAction } 
 import { useNavigate } from "react-router-dom";
 import type { User } from "firebase/auth";
 import { Icon, type IconName } from "../components/ui/Icon.jsx";
+import { ProfileAvatar } from "../components/user/ProfileAvatar.jsx";
 import { SwipeableSheet } from "../components/ui/SwipeableSheet.jsx";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog.jsx";
 import { CookingHeatmap } from "../components/user/CookingHeatmap.jsx";
@@ -24,7 +25,8 @@ import type { Recipe } from "@/lib/types.js";
 // Page dédiée (accès depuis le menu avatar) : identité, plan, activité cuisine
 // (heatmap façon GitHub) et zone de danger (purges + suppression de compte).
 
-const CARD = { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18 };
+// Carte flottante sans bordure : surface + ombre légère, comme la barre de recherche.
+const CARD = { background: "var(--float-surface)", boxShadow: "var(--float-shadow)", borderRadius: 18 };
 
 // En-tête de section : petite pastille d'icône teintée + titre.
 interface SectionTitleProps {
@@ -131,11 +133,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
           {/* ── Carte identité ── */}
           <div style={{ ...CARD, padding: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
-              <div style={{ position: "relative", flexShrink: 0, borderRadius: "50%", padding: 3, background: isPlus ? "linear-gradient(135deg, var(--accent), #f0c060)" : "var(--border)" }}>
-                {user?.photoURL
-                  ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover", display: "block", border: "3px solid var(--surface)" }} />
-                  : <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "grid", placeItems: "center", fontSize: 26, fontWeight: 600, border: "3px solid var(--surface)" }}>{(currentName || "?")[0].toUpperCase()}</div>}
-              </div>
+              <ProfileAvatar photoURL={user?.photoURL} name={currentName} size={76} ring={3} gapColor="var(--float-surface)" isPlus={!!isPlus} />
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentName || "Sans nom"}</div>
                 {user?.email && <div style={{ fontSize: 12.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{user.email}</div>}
@@ -149,10 +147,10 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
             </div>
 
             {/* Nom d'affichage (inline, sous l'identité) */}
-            <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+            <div style={{ marginTop: 20 }}>
               <div className="field-label" style={{ marginBottom: 8 }}>Nom d'affichage</div>
               <div style={{ display: "flex", gap: 8 }}>
-                <input className="field-input" style={{ flex: 1, background: "var(--surface2)" }} placeholder={user?.displayName || "Ton prénom"}
+                <input className="field-input field-bare" style={{ flex: 1, borderRadius: 999, padding: "11px 18px" }} placeholder={user?.displayName || "Ton prénom"}
                   value={nameInput ?? currentName}
                   onChange={e => setNameInput(e.target.value)}
                   onFocus={() => { if (!editing) setNameInput(currentName); }}
@@ -169,7 +167,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
           <div>
             <SectionTitle icon="sparkle">Ton plan</SectionTitle>
             <div style={{ ...CARD, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14,
-              ...(isPlus ? { background: "linear-gradient(135deg, rgba(var(--accent-rgb),0.08), rgba(240,192,96,0.06))", borderColor: "rgba(var(--accent-rgb),0.3)" } : {}) }}>
+              }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 15.5, fontWeight: 600, color: "var(--text)" }}>{isPlus ? "Cardamome+" : "Plan gratuit"}</span>
@@ -186,7 +184,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                   </div>
                 )}
               </div>
-              <button className="btn btn-pill" style={{ flexShrink: 0, fontSize: 13, alignSelf: isPlus ? "center" : "flex-start", background: isPlus ? "var(--surface)" : "var(--accent)", color: isPlus ? "var(--text)" : "#fff", border: isPlus ? "1px solid var(--border)" : "none", boxShadow: isPlus ? "none" : undefined }} onClick={() => navigate("/plan")}>
+              <button className="btn btn-pill" style={{ flexShrink: 0, fontSize: 13, alignSelf: isPlus ? "center" : "flex-start", background: isPlus ? "var(--surface2)" : "var(--accent)", color: isPlus ? "var(--text)" : "#fff", border: "none", boxShadow: isPlus ? "none" : undefined }} onClick={() => navigate("/plan")}>
                 {isPlus ? "Gérer" : "Découvrir"}
               </button>
             </div>
@@ -227,7 +225,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                   {DIETS.map(d => {
                     const active = prefs.diet === d.id;
                     return (
-                      <button key={d.id} className="pressable" onClick={() => setPref({ diet: d.id })} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 500, cursor: "pointer", background: active ? "var(--accent)" : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: `1px solid ${active ? "transparent" : "var(--border)"}` }}>
+                      <button key={d.id} className="pressable" onClick={() => setPref({ diet: d.id })} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 500, cursor: "pointer", background: active ? "var(--accent)" : "var(--surface2)", color: active ? "#fff" : "var(--text2)", border: "none" }}>
                         <span style={{ fontSize: 15, lineHeight: 1 }}>{d.emoji}</span>{d.label}
                       </button>
                     );
@@ -242,7 +240,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                   {COMMON_ALLERGENS.map(a => {
                     const active = (prefs.allergens || []).includes(a);
                     return (
-                      <button key={a} className="pressable" onClick={() => togglePref("allergens", a)} style={{ padding: "7px 13px", borderRadius: 22, fontSize: 13, fontWeight: 500, cursor: "pointer", background: active ? "rgba(224,82,82,0.16)" : "var(--surface2)", color: active ? "var(--red)" : "var(--text2)", border: `1px solid ${active ? "rgba(224,82,82,0.5)" : "var(--border)"}` }}>
+                      <button key={a} className="pressable" onClick={() => togglePref("allergens", a)} style={{ padding: "7px 13px", borderRadius: 22, fontSize: 13, fontWeight: 500, cursor: "pointer", background: active ? "rgba(224,82,82,0.16)" : "var(--surface2)", color: active ? "var(--red)" : "var(--text2)", border: "none" }}>
                         {active ? "✕ " : ""}{a}
                       </button>
                     );
@@ -257,7 +255,7 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
                   {sortedCategoryEntries(categories).map(([key, cat]) => {
                     const active = (prefs.excludedCategories || []).includes(key);
                     return (
-                      <button key={key} className="pressable" onClick={() => togglePref("excludedCategories", key)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: active ? cat.color + "26" : "var(--surface2)", color: active ? cat.color : "var(--text2)", border: `1px solid ${active ? cat.color + "88" : "var(--border)"}` }}>
+                      <button key={key} className="pressable" onClick={() => togglePref("excludedCategories", key)} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 22, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: active ? cat.color + "26" : "var(--surface2)", color: active ? cat.color : "var(--text2)", border: "none" }}>
                         <span style={{ fontSize: 14, lineHeight: 1 }}>{cat.icon}</span>{cat.label}
                       </button>
                     );
@@ -314,22 +312,21 @@ export function ProfilePage({ user, preferences = DEFAULT_PREFERENCES, setPrefer
           </div>
 
           {/* ── Zone de danger ── */}
-          <div style={{ borderRadius: 18, border: "1px solid rgba(224,82,82,0.28)", background: "rgba(224,82,82,0.035)", padding: 18, marginTop: 6 }}>
+          <div style={{ borderRadius: 18, background: "rgba(224,82,82,0.06)", padding: 18, marginTop: 6 }}>
             <SectionTitle icon="warning" color="var(--red)" tint="rgba(224,82,82,0.12)">Zone de danger</SectionTitle>
             <p style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 14px" }}>Efface définitivement des données de ton espace. Ces actions sont irréversibles.</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {PURGE_OPTIONS.map(o => (
-                <button key={o.scope} onClick={() => setPurgeScope(o)} className="pressable"
+                <button key={o.scope} onClick={() => setPurgeScope(o)} className="pressable hover-danger purge-btn" data-grave={o.danger ? "" : undefined}
                   style={{ flex: isDesktop ? "0 1 auto" : "1 1 calc(50% - 4px)", padding: "9px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
-                    background: o.danger ? "rgba(224,82,82,0.12)" : "var(--surface)", color: o.danger ? "var(--red)" : "var(--text2)",
-                    border: `1px solid ${o.danger ? "rgba(224,82,82,0.45)" : "var(--border)"}` }}>
+                    background: o.danger ? "rgba(224,82,82,0.14)" : "var(--surface)", border: "none" }}>
                   {o.label}
                 </button>
               ))}
             </div>
             {onDeleteAccount && (
               <>
-                <div style={{ height: 1, background: "rgba(224,82,82,0.2)", margin: "16px 0 14px" }} />
+                <div style={{ height: 18 }} />
                 <div style={{ fontSize: 12.5, color: "var(--text2)", lineHeight: 1.5, marginBottom: 12 }}>
                   <strong style={{ color: "var(--text)" }}>Supprimer mon compte</strong> : efface ton compte et toutes tes données (recettes, carnets, planning, courses, stock, préférences). Définitif.
                 </div>

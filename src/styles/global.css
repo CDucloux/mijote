@@ -559,6 +559,22 @@ select {
   box-shadow: inset 0 0 0 1.5px rgba(var(--accent-rgb), 0.4);
 }
 
+/* Actions de purge (zone de danger du profil) : au survol desktop, toutes virent au
+   rouge (voile + libellé) ; « Tout effacer », plus grave, rougit plus franchement. */
+.purge-btn { color: var(--text2); transition: color 0.15s ease; }
+.purge-btn[data-grave] { color: var(--red); --veil-max: 24%; }
+@media (hover: hover) and (pointer: fine) {
+  .purge-btn:hover { color: var(--red); }
+}
+
+/* Option d'un contrôle segmenté à pastille glissante : couleur de repos ici, la
+   couleur active reste inline (propre à chaque option). Au survol desktop, le texte
+   d'une option inactive se réchauffe légèrement (cf. `.imp-seg`). */
+.seg-opt { color: var(--text3); transition: color 0.3s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .seg-opt:not(.on):hover { color: var(--text2); transition-duration: 0.15s; }
+}
+
 /* Listes déroulantes : on remplace le chevron natif (collé au bord, variable selon
    l'OS) par un chevron maison nettement détaché du bord et réservé par un padding
    droit. Couleur = --text3 par thème (le chevron ne peut pas hériter de currentColor
@@ -866,6 +882,14 @@ html.light select.field-input {
 .btn-danger {
   background: rgba(var(--red-rgb), 0.15);
   color: var(--red);
+  border: none;
+}
+
+/* Action destructive PRINCIPALE d'un écran (envoyer un signalement) : rouge plein,
+   l'élément le plus contrasté ; `.btn-danger` (teinté) reste pour le secondaire. */
+.btn-danger-solid {
+  background: var(--red);
+  color: #fff;
   border: none;
 }
 
@@ -5330,7 +5354,23 @@ html.light .sheet-sticky-head::after {
 /* Dashboard de la console admin : cartes actionnables. Survol neutre (voile
    d'un cran porté par une ombre interne, l'inline gardant fond et bordure),
    chevron qui s'affirme et glisse de 2px vers la destination. Légende : soulignée. */
-.dash-card { transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+/* Tableau de bord admin : surfaces flottantes sans bordure ; une colonne en mobile,
+   deux au large (avancement + bases | à compléter). */
+.dash-grid { display: grid; gap: 26px; align-items: start; }
+.dash-col { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+.dash-surface { background: var(--float-surface); box-shadow: var(--float-shadow); border-radius: 20px; }
+/* Modération : une colonne en mobile (action destructive pleine largeur), grille
+   de cartes au large (action alignée à droite). */
+.mod-grid { display: grid; gap: 14px; align-items: start; }
+.mod-head { display: flex; align-items: center; gap: 12px; }
+.mod-remove { align-self: stretch; }
+@media (min-width: 900px) {
+  .mod-grid { grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr)); gap: 18px; }
+  .mod-remove { align-self: flex-end; }
+}
+@media (min-width: 900px) {
+  .dash-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; }
+}
 .dash-chevron { display: inline-flex; color: var(--text3); transition: color 0.15s ease, transform 0.15s ease; }
 @media (hover: hover) and (pointer: fine) {
   .dash-card:hover .dash-chevron { color: var(--text2); transform: translateX(2px); }

@@ -365,6 +365,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       {composeFor && (
         <CompleteMealSheet
           base={(composeFor.baseRecipeId && recipesById.get(composeFor.baseRecipeId)) || null}
+          recipes={recipes}
           eligiblePool={eligiblePool}
           suggestCtx={suggestCtx}
           liveNutri={liveNutri}

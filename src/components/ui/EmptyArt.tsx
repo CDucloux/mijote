@@ -161,6 +161,26 @@ const ARTS: Record<string, ReactNode> = {
       <circle className="ink-accent" cx="60" cy="87" r="4.2" fill="var(--accent)" />
     </>
   ),
+  // Fanion au repos : mât effilé planté au sol, toile qui retombe mollement sans
+  // vent (lavis + contour, un pli au trait fin), pommeau du mât en accent chaud.
+  // Personne ne l'a levé : état vide de la modération (« aucun signalement »).
+  fanion: (
+    <>
+      <g className="ink-body" fill="currentColor">
+        {/* ombre au sol */}
+        <ellipse cx="52" cy="96" rx="20" ry="3" opacity="0.1" />
+        {/* mât : tige pleine, à peine plus large au pied */}
+        <path d="M47.2 24 L50.2 24 L51.4 95 L45.6 95 Z" />
+        {/* toile : lavis puis contour, elle pend sans vent */}
+        <path opacity="0.07" d="M50 29 C61 27 72 31 82 29 C79 40 75 50 69 58 C63 54 56 54 50 56 Z" />
+        <path fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" d="M50 29 C61 27 72 31 82 29 C79 40 75 50 69 58 C63 54 56 54 50 56" />
+        {/* pli de la toile */}
+        <path fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" d="M60 31 C64 38 65 45 63 53" />
+      </g>
+      {/* accent unique : le pommeau du mât */}
+      <circle className="ink-accent" cx="48.7" cy="20" r="4.2" fill="var(--accent)" />
+    </>
+  ),
   // Deux planches de rangement VIDES (équerres aux extrémités, lavis d'épaisseur),
   // et une petite étiquette qui pend de la planche haute (accent chaud) : le placard
   // est prêt mais rien n'y est rangé. État vide du stock (« aucun article en stock »).
@@ -244,7 +264,7 @@ const ARTS: Record<string, ReactNode> = {
 };
 
 interface EmptyArtProps {
-  /** Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `etagere`, `cloche`, `service`, `liste`, `bibliotheque`). */
+  /** Croquis à afficher (`casserole`, `panier`, `assiette`, `loupe`, `bocal`, `etagere`, `cloche`, `fanion`, `service`, `liste`, `bibliotheque`). */
   name?: string;
   /** Côté du carré de rendu en pixels (viewBox interne fixe). */
   size?: number;

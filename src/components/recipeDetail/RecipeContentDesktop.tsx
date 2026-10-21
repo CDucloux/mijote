@@ -172,7 +172,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }: R
               // Timeline : nœud numéroté (dégradé) relié par un rail vertical, contenu à droite.
               <div key={step.id} style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-                  <span style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-strong))", color: "#fff", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 600, boxShadow: "0 3px 8px -2px rgba(var(--accent-rgb),0.5)", flexShrink: 0 }}>{num}</span>
+                  <span style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 600, flexShrink: 0 }}>{num}</span>
                   {!lastInRun && <span style={{ flex: 1, width: 2, background: "var(--border)", borderRadius: 1, marginTop: 6, minHeight: 10 }} />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0, paddingTop: 5, paddingBottom: lastInRun ? 2 : 28 }}>

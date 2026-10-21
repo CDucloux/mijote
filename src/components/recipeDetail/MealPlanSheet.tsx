@@ -31,7 +31,7 @@ export function MealPlanSheet({ mealDate, setMealDate, mealSlot, setMealSlot, on
 
       <div style={{ marginBottom: 18 }}>
         <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 9 }}>Date</span>
-        <input type="date" className="field-input" value={mealDate} onChange={e => setMealDate(e.target.value)} />
+        <input type="date" className="field-input field-bare" value={mealDate} onChange={e => setMealDate(e.target.value)} />
       </div>
 
       <div style={{ marginBottom: 22 }}>
@@ -47,11 +47,10 @@ export function MealPlanSheet({ mealDate, setMealDate, mealSlot, setMealSlot, on
           {MEAL_SLOTS.map(s => {
             const active = mealSlot === s.id;
             return (
-              <button key={s.id} onClick={() => setMealSlot(s.id)}
+              <button key={s.id} onClick={() => setMealSlot(s.id)} className={`seg-opt${active ? " on" : ""}`}
                 style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, border: "none", cursor: "pointer",
-                  background: "transparent", color: active ? s.text : "var(--text3)",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                  transition: "color 0.3s ease" }}>
+                  background: "transparent", color: active ? s.text : undefined,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                 <Icon name={s.icon as IconName} size={16} color="currentColor" />{s.label}
               </button>
             );

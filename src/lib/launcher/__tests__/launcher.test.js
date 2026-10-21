@@ -91,6 +91,11 @@ describe("buildWidgetSnapshot", () => {
     expect(snap.shopping.items.map(i => i.name)).toEqual(["Riz", "Cèpes"]);
     expect(snap.shopping.items[0]).toMatchObject({ key: "n:riz", refs: [{ listId: "l1", itemId: "0" }] });
   });
+  it("capitalise le nom des articles, comme l'onglet Courses (non-régression)", () => {
+    const items = [{ id: "a", name: "sucre en poudre" }, { id: "b", name: "" }];
+    const snap = buildWidgetSnapshot({ shoppingLists: [{ id: "l1", items }], date: at(10) });
+    expect(snap.shopping.items[0].name).toBe("Sucre en poudre");
+  });
   it("plafonne la liste sans plafonner le compteur", () => {
     const items = Array.from({ length: WIDGET_ITEMS + 5 }, (_, i) => ({ id: String(i), name: `Article ${i}` }));
     const snap = buildWidgetSnapshot({ shoppingLists: [{ id: "l1", items }], date: at(10) });

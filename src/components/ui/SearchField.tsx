@@ -16,7 +16,7 @@ interface SearchFieldProps {
 export function SearchField({ value, onChange, placeholder = "Rechercher…", autoFocus = false, style }: SearchFieldProps) {
   return (
     <div style={{ position: "relative", ...style }}>
-      <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", pointerEvents: "none" }}>
+      <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", pointerEvents: "none" }}>
         <Icon name="search" size={16} color="var(--text3)" />
       </span>
       <input
@@ -29,10 +29,10 @@ export function SearchField({ value, onChange, placeholder = "Rechercher…", au
         autoFocus={autoFocus}
         onChange={e => onChange(e.target.value)}
         onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); } }}
-        style={{ paddingLeft: 42, paddingRight: value ? 40 : 16, background: "var(--surface)", borderRadius: 13, height: 46 }}
+        style={{ paddingLeft: 44, paddingRight: value ? 42 : 18, height: 48 }}
       />
       {value && (
-        <button onClick={() => onChange("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}>
+        <button onClick={() => onChange("")} aria-label="Effacer la recherche" className="search-clear-btn" style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)" }}>
           <Icon name="close" size={13} />
         </button>
       )}

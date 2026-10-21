@@ -15,7 +15,7 @@ import { isRecipeVegan } from "@/lib/food/dietary.js";
 import { categoryLabel, categoryEmoji } from "@/constants/recipeCategories.js";
 import { cuisineEmoji, normalizeCuisine } from "@/constants/cuisines.js";
 import { DIFFICULTY_LABEL, computeDifficulty } from "@/lib/recipes/difficulty.js";
-import { fmtQtyUnit } from "@/lib/format.js";
+import { capitalize, fmtQtyUnit } from "@/lib/format.js";
 import { outboundSourceHref, sourceHost } from "@/lib/sources/outboundLink.js";
 import { Capacitor } from "@capacitor/core";
 import { Printer } from "@bcyesil/capacitor-plugin-printer";
@@ -118,7 +118,7 @@ export function buildRecipePdfHtml(recipe: Recipe, { ingredientDB = [], utensilD
       : (imgOrEmoji ? `<span class="pill-img"><img src="${imgOrEmoji}" alt="" /></span>` : `<span class="pill-img"></span>`);
     return `<span class="pill${isComp ? " pill-comp" : ""}">
       ${imgHtml}
-      <span class="pill-name">${name}</span>
+      <span class="pill-name">${capitalize(name)}</span>
       ${qty ? `<span class="pill-qty">${qty}</span>` : ""}
     </span>`;
   };

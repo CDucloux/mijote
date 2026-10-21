@@ -28,15 +28,23 @@ interface GlyphProps extends Omit<SVGProps<SVGSVGElement>, "color"> {
 
 type IconGlyph = ComponentType<GlyphProps>;
 
-// Cuillère (à café / à soupe) : Phosphor n'en fournit pas. Silhouette pleine dans
-// le repère 256 de Phosphor pour épouser le poids « regular » du reste du set.
+// Cuillère (à café / à soupe) : Phosphor n'en fournit pas. Dessinée EN CONTOUR
+// dans le repère 256 de Phosphor (trait de 16 = poids « regular », extrémités
+// rondes) pour épouser le reste du set ; les autres poids suivent la même échelle.
 // Volontairement une CUILLÈRE (cuilleron ovale + manche fin), pas une louche.
-function Spoon({ size = 20, color = "currentColor", weight, ...rest }: GlyphProps) {
-  void weight; // le prop de poids Phosphor n'a pas de sens pour ce tracé unique
+const SPOON_STROKE: Record<IconWeight, number> = { thin: 8, light: 12, regular: 16, bold: 24, fill: 16, duotone: 16 };
+function Spoon({ size = 20, color = "currentColor", weight = "regular", ...rest }: GlyphProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 256 256" fill={color} xmlns="http://www.w3.org/2000/svg" {...rest}>
+    <svg width={size} height={size} viewBox="0 0 256 256" fill="none" stroke={color} strokeWidth={SPOON_STROKE[weight]} strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg" {...rest}>
       {/* Orientée à 135° (cuilleron en haut à gauche, manche vers le bas à droite) */}
-      <path transform="rotate(135 128 128)" d="M128 24c-28 0-50 27-50 62 0 27 13 49 33 58v76a17 17 0 0 0 34 0v-76c20-9 33-31 33-58 0-35-22-62-50-62Z" />
+      <g transform="rotate(135 128 128)">
+        {/* Contour continu : cuilleron qui se resserre en col, manche qui s'élargit
+            jusqu'à un bout arrondi (comme les manches dessinés de Phosphor). */}
+        <path fill={weight === "fill" || weight === "duotone" ? color : "none"} fillOpacity={weight === "duotone" ? 0.2 : 1}
+          d="M120 130C97 125 82 105 82 80C82 50 102 26 128 26C154 26 174 50 174 80C174 105 159 125 136 130L141 210A13 13 0 0 1 115 210Z" />
+        {/* Reflet dans le cuilleron */}
+        {weight !== "fill" && <path d="M106 70C108 56 116 47 127 45" />}
+      </g>
     </svg>
   );
 }

@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
-import { fmtQtyUnit } from "../../lib/format.js";
+import { capitalize, fmtQtyUnit } from "../../lib/format.js";
 import type { IngredientLine } from "@/lib/types.js";
 
 /** Ingrédient aplati pour la feuille de courses (clé locale `_fid` ajoutée par le parent). */
@@ -43,23 +43,22 @@ export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, i
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexShrink: 0 }}>
         <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{selectedIngs.length} / {flatIngs.length} sélectionné{selectedIngs.length > 1 ? "s" : ""}</span>
         <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={() => setSelectedIngs(flatIngs.map(fi => fi._fid))} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "rgba(var(--accent-rgb),0.10)", color: "var(--accent)" }}>Tout cocher</button>
-          <button onClick={() => setSelectedIngs([])} style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "var(--surface2)", color: "var(--text3)" }}>Tout décocher</button>
+          <button className="hover-tint" onClick={() => setSelectedIngs(flatIngs.map(fi => fi._fid))} style={{ border: "none", fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "rgba(var(--accent-rgb),0.10)", color: "var(--accent)" }}>Tout cocher</button>
+          <button className="hover-neutral" onClick={() => setSelectedIngs([])} style={{ border: "none", fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, cursor: "pointer", background: "var(--surface2)", color: "var(--text3)" }}>Tout décocher</button>
         </div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 7, overflowY: "auto", WebkitOverflowScrolling: "touch", flex: 1, minHeight: 0, marginBottom: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 2, overflowY: "auto", WebkitOverflowScrolling: "touch", flex: 1, minHeight: 0, margin: "0 -10px 16px" }}>
         {flatIngs.map(ing => {
           const selected = selectedIngs.includes(ing._fid);
           const inStock = isInStock(ing);
           const low = isLowStock(ing);
           return (
             <button key={ing._fid} onClick={() => setSelectedIngs(prev => selected ? prev.filter(x => x !== ing._fid) : [...prev, ing._fid])}
-              className="pressable"
+              className="pressable hover-neutral"
               style={{
-                display: "flex", alignItems: "center", gap: 12, padding: "10px 13px", borderRadius: 14, flexShrink: 0,
-                background: selected ? "rgba(var(--accent-rgb),0.10)" : "var(--surface2)",
-                border: `1.5px solid ${selected ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`,
-                textAlign: "left", transition: "background 0.15s, border-color 0.15s"
+                display: "flex", alignItems: "center", gap: 12, padding: "10px", borderRadius: 14, flexShrink: 0,
+                background: selected ? "rgba(var(--accent-rgb),0.08)" : "transparent", border: "none",
+                textAlign: "left", cursor: "pointer", transition: "background-color 0.15s ease"
               }}>
               <div style={{
                 width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
@@ -72,7 +71,7 @@ export function ShoppingSelectSheet({ flatIngs, selectedIngs, setSelectedIngs, i
               <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={30} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{ing.name}</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>{capitalize(ing.name)}</span>
                   <span style={{ fontSize: 12, color: "var(--text2)" }}>{fmtQtyUnit(Number(ing.amount ?? 0) * mult, ing.unit)}</span>
                   {inStock && (
                     <span style={{

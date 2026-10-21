@@ -8,7 +8,7 @@
  */
 import { SLOT_BY_ID } from "@/constants/mealSlots.js";
 import { aggregateShopping, type Contributor } from "@/lib/food/shoppingAggregate.js";
-import { fmtTime } from "@/lib/format.js";
+import { capitalize, fmtTime } from "@/lib/format.js";
 import { countShoppingTodo, getTodayMeals, todayKey } from "@/lib/planning/dashboard.js";
 import type { LauncherInput } from "./shortcuts.js";
 
@@ -97,6 +97,6 @@ export function buildWidgetSnapshot({ mealPlan, recipes = [], shoppingLists = []
   const items = aggregateShopping(shoppingLists, ingredientDB)
     .filter(a => !a.checked)
     .slice(0, WIDGET_ITEMS)
-    .map(a => ({ key: a.key, name: a.name, qty: a.qtyDisplay, refs: a.contributors }));
+    .map(a => ({ key: a.key, name: capitalize(a.name), qty: a.qtyDisplay, refs: a.contributors }));
   return { days, shopping: { remaining: countShoppingTodo(shoppingLists, ingredientDB), items } };
 }

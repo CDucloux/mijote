@@ -91,9 +91,9 @@ export function AddItemSheet({ activeList, ingredientDB, onClose, onAddItem, onA
           transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)",
         }} />
         {[{ label: "Article", val: false }, { label: "Coller une liste", val: true }].map(({ label, val }) => (
-          <button key={label} onClick={() => setListMode(val)}
+          <button key={label} onClick={() => setListMode(val)} className={`seg-opt${listMode === val ? " on" : ""}`}
             style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, border: "none", cursor: "pointer",
-              background: "transparent", color: listMode === val ? "var(--accent)" : "var(--text3)", transition: "color 0.3s ease" }}>
+              background: "transparent", color: listMode === val ? "var(--accent)" : undefined }}>
             {label}
           </button>
         ))}

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../ui/Icon.jsx";
 import type { IconName } from "../ui/Icon.jsx";
+import { ProfileAvatar } from "./ProfileAvatar.jsx";
 import { useOnline } from "../../hooks/useOnline.js";
 import { useAppShell } from "../../context/AppShellContext.jsx";
 import { AboutModal } from "../modals/AboutModal.jsx";
@@ -132,11 +133,7 @@ export function UserAvatar() {
   return (
     <div style={{ position: "relative", flexShrink: 0 }}>
       <button ref={btnRef} className="ripple ripple-light" onClick={() => { if (useDrawer) { setConfirmSignOut(false); setOpen(true); } else if (open) { closeThen(); } else { setConfirmSignOut(false); openDropdown(); } }} style={{ position: "relative", padding: 0, border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }} aria-label="Mon compte">
-        {/* Anneau orange = abonné Cardamome+ (sinon bordure neutre). */}
-        {user.photoURL
-          ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" style={{ width: 38, height: 38, borderRadius: "50%", display: "block", border: `2px solid ${isPlus ? "var(--accent)" : "var(--border)"}` }} />
-          : <div style={{ width: 38, height: 38, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, color: "#fff", border: `2px solid ${isPlus ? "var(--accent)" : "transparent"}` }}>{(user.displayName || "?")[0].toUpperCase()}</div>
-        }
+        <ProfileAvatar photoURL={user.photoURL} name={user.displayName} size={38} isPlus={!!isPlus} />
       </button>
       {/* Pastille de sync HORS du bouton (sinon le clip circulaire du ripple la masque). */}
       <span style={{ position: "absolute", bottom: 0, right: 0, width: 11, height: 11, borderRadius: "50%", background: syncColor, border: "2px solid var(--bg)", display: showDot ? "block" : "none", pointerEvents: "none" }} />

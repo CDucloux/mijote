@@ -1,5 +1,41 @@
 # Changelog – Cardamome
 
+## v4.76.0 – Cardamome · Feuilles épurées, carnets fluides
+
+### Planning
+- **Ajouter une recette / Compléter le repas** : recherche en pilule qui se détache de la feuille, lignes de recettes sans bordure (voile au survol), et la feuille garde sa taille pendant la frappe au lieu de se contracter.
+- **Compléter le repas** : sous les suggestions de saison, toute la bibliothèque est listée (rôle demandé en tête) et la recherche porte sur toutes les recettes.
+- **Ajouter au planning** : date sans bordure ; au survol desktop, les options inactives des contrôles segmentés (repas, rôle, mode d'ajout aux courses, base nutritionnelle) se réchauffent légèrement.
+
+### Fiche recette
+- **Carnets** : seuls les carnets manuels sont proposés (les intelligents se remplissent tout seuls), dans une feuille repensée : picto et nombre de recettes, case qui se coche avec rebond, état vide illustré. Fiche et bibliothèque partagent désormais la même feuille.
+- **Signaler une recette** : liste de motifs épurée avec un exemple pour chacun, envoi en bouton rouge plein.
+- **Préparation de base** : la feuille liste les sept familles (pâte, sirop et marinade manquaient) et reprend le langage de la feuille Difficulté.
+- **Ajouter aux courses** : ingrédients capitalisés, lignes sans bordure et survol desktop.
+- **Étapes** : plus de halo ni de dégradé sur les pastilles de numéro et d'astuce.
+
+### Profil et compte
+- **Anneau Cardamome+** : l'avatar de l'en-tête et de la feuille compte reprend l'anneau vert-or de la page profil.
+- **Page profil sans bordures** : cartes flottantes, pastilles et zone de danger sans liseré ; au survol, les purges virent au rouge, « Tout effacer » plus franchement.
+
+### Console admin
+- **Tableau de bord** repensé : avancement des ingrédients en grand avec barre validés / en cours, bases master regroupées, « à compléter » en liste avec barre de complétude. Deux colonnes sur desktop, une sur mobile.
+- **Modération** repensée : volume en attente en tête, une carte par recette, motif lisible, note mise en avant, état vide illustré.
+
+### Partout
+- **Nouvelle recette** : champ lien et « Coller » en pilules, survol de « Écrire la recette moi-même ».
+- **Chef** : la feuille ne se contracte plus pendant la recherche.
+- **Icône cuillère** redessinée en contour, au poids des autres icônes.
+- **Écran d'erreur** au standard de l'appli : croquis, « Recharger » et « Revenir à l'accueil », et un mail de contact pré-rempli avec le détail de l'erreur.
+
+### Corrections
+- **Lenteur au rangement dans un carnet** : chaque bascule recalculait Nutri-Score, vegan et saison de toute la bibliothèque, deux fois. Seule la recette touchée est désormais recalculée.
+- **Ingrédients capitalisés** dans le widget courses Android et l'export PDF, comme sur la fiche.
+
+### Technique
+- Partage structurel des snapshots de recettes (`reuseUnchanged`, `sameJson`) et cache des dérivés par recette (`createRecipeDerivedCache`), testés.
+- Nouveaux partagés : `ProfileAvatar`, `Ledger` (lignes de ticket), `constants/reportReasons.ts`, croquis `fanion` ; `CollectionsSheet` supprimé au profit de `NotebookPickerSheet`.
+
 ## v4.75.0 – Cardamome · Minuteurs à deux
 
 ### Cuisiner à deux

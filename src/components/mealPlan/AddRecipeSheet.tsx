@@ -78,12 +78,11 @@ export function AddRecipeSheet({ date, initialSlot, lockSlot, recipes, liveNutri
           {MEAL_SLOTS.map(s => {
             const active = slot === s.id;
             return (
-              <button key={s.id} onClick={() => setSlot(s.id)}
+              <button key={s.id} onClick={() => setSlot(s.id)} className={`seg-opt${active ? " on" : ""}`}
                 style={{ position: "relative", zIndex: 1, flex: 1, padding: "9px 4px", borderRadius: 10, fontSize: 12.5, fontWeight: 600, border: "none", cursor: "pointer",
-                  background: "transparent", color: active ? s.text : "var(--text3)",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                  transition: "color 0.3s ease" }}>
-                <Icon name={s.icon as IconName} size={15} weight="duotone" color={active ? s.text : "var(--text3)"} />{s.label}
+                  background: "transparent", color: active ? s.text : undefined,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                <Icon name={s.icon as IconName} size={15} weight="duotone" color="currentColor" />{s.label}
               </button>
             );
           })}
@@ -99,7 +98,8 @@ export function AddRecipeSheet({ date, initialSlot, lockSlot, recipes, liveNutri
           {filtered.length > 0 && <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>{filtered.length}</span>}
         </div>
 
-        <ElasticScroll max={64} style={{ maxHeight: "46vh", margin: "0 -2px", padding: "2px 2px 4px" }} contentStyle={{ display: "flex", flexDirection: "column", gap: 9 }}>
+        {/* Hauteur fixe (et non max) : la feuille garde sa taille quand la recherche filtre. */}
+        <ElasticScroll max={64} style={{ height: "46vh", margin: "0 -10px", padding: "0 0 4px" }} contentStyle={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {filtered.map(r => {
             const total = (r.prepTime || 0) + (r.cookTime || 0);
             const nIng = r.ingredients?.length || 0;
@@ -107,7 +107,7 @@ export function AddRecipeSheet({ date, initialSlot, lockSlot, recipes, liveNutri
             const added = addedId === r.id;
             return (
               <button key={r.id} onClick={() => confirm(r, close)} disabled={!!addedId} className="complete-row ripple"
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: `1px solid ${added ? "rgba(var(--ok-rgb),0.5)" : "var(--border)"}`, textAlign: "left", cursor: addedId ? "default" : "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.25s ease, box-shadow 0.2s ease", opacity: addedId && !added ? 0.55 : 1 }}>
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: added ? "rgba(var(--ok-rgb),0.1)" : "transparent", borderRadius: 16, border: "none", textAlign: "left", cursor: addedId ? "default" : "pointer", transition: "background-color 0.25s ease, opacity 0.25s ease", opacity: addedId && !added ? 0.55 : 1 }}>
                 <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>

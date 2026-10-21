@@ -23,7 +23,7 @@ import { ReportSheet } from "../components/recipeDetail/ReportSheet.jsx";
 import { PublishSheet } from "../components/recipeDetail/PublishSheet.jsx";
 import { CloneConfirmSheet } from "../components/recipeDetail/CloneConfirmSheet.jsx";
 import { ShareSheet } from "../components/recipeDetail/ShareSheet.jsx";
-import { CollectionsSheet } from "../components/recipeDetail/CollectionsSheet.jsx";
+import { NotebookPickerSheet } from "../components/library/NotebookPickerSheet.jsx";
 import { RecipeAttribution } from "../components/recipeDetail/RecipeAttribution.jsx";
 import { RecipeActionDock } from "../components/recipeDetail/RecipeActionDock.jsx";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
@@ -373,7 +373,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
       {showBaseInfo && <BaseInfoModal onClose={() => setShowBaseInfo(false)} />}
       {showDifficulty && <DifficultyModal data={difficultyExplain} workload={workloadOf(recipe)} onClose={() => setShowDifficulty(false)} />}
       {showCollModal && onToggleCollection && (
-        <CollectionsSheet recipe={recipe} collections={collections} onToggle={onToggleCollection} onClose={() => setShowCollModal(false)} />
+        <NotebookPickerSheet recipe={recipe} notebooks={collections || []} onToggle={onToggleCollection} onClose={() => setShowCollModal(false)} />
       )}
     </div>
   );

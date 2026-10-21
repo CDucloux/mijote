@@ -206,7 +206,7 @@ export function NutritionModal({ recipe, recipes = [], ingredientDB, servings, o
               transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)",
             }} />
             {opts.map(([id, lbl]) => (
-              <button key={id} onClick={() => setBasis(id)} style={{ position: "relative", zIndex: 1, flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: "transparent", color: basis === id ? "var(--text)" : "var(--text3)", transition: "color 0.3s ease" }}>
+              <button key={id} onClick={() => setBasis(id)} className={`seg-opt${basis === id ? " on" : ""}`} style={{ position: "relative", zIndex: 1, flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4, padding: "7px 0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer", background: "transparent", color: basis === id ? "var(--text)" : undefined }}>
                 {id === "calc" && !isPlus && <Icon name="lock" size={11} color="currentColor" />}{lbl}
               </button>
             ))}

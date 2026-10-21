@@ -1,10 +1,14 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { reportError } from "../../lib/observability/observability.js";
-import { CONTACT_EMAIL, CONTACT_MAILTO } from "../../constants/contact.js";
+import { CONTACT_MAILTO } from "../../constants/contact.js";
+import { EmptyArt } from "./EmptyArt.jsx";
+import { Icon } from "./Icon.jsx";
 
 interface ErrorBoundaryProps {
   children?: ReactNode;
+  /** Accueil de la zone courante (vitrine ou appli) : la frontière vit hors du routeur. */
+  homeHref?: string;
 }
 
 interface ErrorBoundaryState {
@@ -12,7 +16,9 @@ interface ErrorBoundaryState {
 }
 
 // Filet de sécurité global : un throw au render ne doit pas laisser un écran
-// blanc (surtout en PWA / hors-ligne). On affiche un repli sobre avec recharge.
+// blanc (surtout en PWA / hors-ligne). Le repli s'affiche SUR PLACE, sans
+// redirection : l'URL reste celle de la page fautive, donc « Recharger » la
+// retente telle quelle (une route d'erreur dédiée rechargerait l'erreur).
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
@@ -29,29 +35,32 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   render() {
-    if (!this.state.error) return this.props.children;
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    const homeHref = this.props.homeHref ?? "/";
+    // Le mail de contact embarque la page et le message d'erreur : le support part
+    // d'un vrai indice plutôt que d'un « ça ne marche pas ».
+    const mailto = `${CONTACT_MAILTO}&body=${encodeURIComponent(`Page : ${window.location.href}\nErreur : ${error.message}\n\nCe que je faisais : `)}`;
     return (
-      <div style={{
-        minHeight: "100dvh", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center", gap: 14,
-        padding: 32, textAlign: "center", background: "var(--bg, #1a1714)", color: "var(--text, #f2efe9)",
-        fontFamily: "system-ui, sans-serif",
-      }}>
-        <div style={{ fontSize: 40, lineHeight: 1 }}>🍲</div>
-        <h1 style={{ fontFamily: "Georgia, serif", fontSize: 22, fontWeight: 600, margin: 0 }}>Oups, un grain de sel…</h1>
-        <p style={{ fontSize: 14, opacity: 0.7, maxWidth: 320, lineHeight: 1.5, margin: 0 }}>
-          Une erreur inattendue est survenue. Tes données sont en sécurité - recharge l'application pour continuer.
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          style={{ marginTop: 6, padding: "11px 22px", borderRadius: 12, border: "none", cursor: "pointer", background: "#6e9a3f", color: "#fff", fontSize: 14, fontWeight: 600 }}>
-          Recharger
-        </button>
-        <p style={{ fontSize: 12.5, opacity: 0.55, margin: "10px 0 0", lineHeight: 1.5 }}>
-          Le problème persiste ? Écris-nous à{" "}
-          <a href={CONTACT_MAILTO} style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: 3 }}>{CONTACT_EMAIL}</a>
-        </p>
-      </div>
+      <main style={{ minHeight: "100dvh", display: "grid", placeItems: "center", padding: "32px 24px", background: "var(--bg, #0f110d)", color: "var(--text, #eef1e7)", fontFamily: "var(--ff-body, system-ui, sans-serif)" }}>
+        <div style={{ width: "100%", maxWidth: 440 }}>
+          <EmptyArt name="casserole" size={112} style={{ marginLeft: -10, marginBottom: 10 }} />
+          <h1 style={{ fontFamily: "var(--ff-display, Georgia, serif)", fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>Oups, un grain de sel dans la recette</h1>
+          <p style={{ fontSize: 15, color: "var(--text2)", lineHeight: 1.6, margin: "12px 0 0", maxWidth: "52ch" }}>
+            Quelque chose a accroché de notre côté. Tes recettes et tes listes sont en sécurité : recharge la page pour reprendre où tu en étais.
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 26 }}>
+            <button className="btn btn-primary btn-pill btn-flat" style={{ padding: "12px 24px", fontSize: 14.5, fontWeight: 600 }} onClick={() => window.location.reload()}>
+              <Icon name="refresh" size={16} color="currentColor" /> Recharger
+            </button>
+            <a className="btn btn-ghost btn-pill" href={homeHref} style={{ padding: "12px 22px", fontSize: 14.5, fontWeight: 600, textDecoration: "none" }}>Revenir à l'accueil</a>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5, margin: "34px 0 0" }}>
+            Ça recommence ?{" "}
+            <a href={mailto} style={{ color: "var(--text2)", fontWeight: 600, textDecoration: "underline", textUnderlineOffset: 3 }}>Préviens-nous</a>, le détail de l'erreur est déjà dans le mail.
+          </p>
+        </div>
+      </main>
     );
   }
 }

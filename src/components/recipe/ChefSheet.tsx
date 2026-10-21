@@ -47,8 +47,9 @@ export function ChefSheet({ value = "", onChange, onClose }: ChefSheetProps) {
   const shown = (offList ? [offList, ...CHEFS] : CHEFS)
     .filter(chef => !q || normalizeStr(`${chef.name} ${chef.note ?? ""}`).includes(q));
 
+  // Hauteur fixe (et non max) : la feuille garde sa taille quand la recherche filtre.
   return (
-    <SwipeableSheet onClose={onClose} hideHandle style={{ paddingTop: 0 }}>
+    <SwipeableSheet onClose={onClose} hideHandle style={{ paddingTop: 0, height: "86dvh" }}>
       {(close) => (
       <>
       <StickySheetHeader>

@@ -135,3 +135,10 @@ describe("buildRecipePdfHtml – marque et drapeaux", () => {
     expect(footer).toContain('Cardam<span class="dot">o</span>me<span class="dot">·</span>');
   });
 });
+
+describe("buildRecipePdfHtml – noms d'ingrédients", () => {
+  it("capitalise la première lettre, comme sur la fiche (non-régression)", () => {
+    const html = buildRecipePdfHtml({ name: "X", ingredients: [{ name: "sucre en poudre", amount: 10, unit: "g" }] }, { ingredientDB: DB });
+    expect(html).toContain('<span class="pill-name">Sucre en poudre</span>');
+  });
+});

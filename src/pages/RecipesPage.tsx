@@ -280,7 +280,7 @@ export function RecipesPage({ recipes: allRecipes, collections, ingredientDB, re
       )}
 
       {pickFor && (
-        <NotebookPickerSheet recipe={recipes.find(r => r.id === pickFor.id) || pickFor} notebooks={collections.filter(c => !isSmartNotebook(c))}
+        <NotebookPickerSheet recipe={recipes.find(r => r.id === pickFor.id) || pickFor} notebooks={collections}
           onToggle={(recipeId, notebookId) => onToggleCollection?.(recipeId, notebookId)} onClose={() => setPickFor(null)} />
       )}
 

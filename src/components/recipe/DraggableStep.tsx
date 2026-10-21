@@ -89,7 +89,7 @@ function DraggableStepBase({ step, index, total, ingredients, utensils, recipes,
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           {isDraggable && <span {...handleProps} style={{ ...handleProps.style, display: "flex", color: "var(--text3)" }}><Icon name="drag" size={16} color="var(--text3)" /></span>}
-          <span style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-strong))", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 600, color: "#fff", boxShadow: "0 2px 6px -1px rgba(var(--accent-rgb),0.5)", flexShrink: 0 }}>{index + 1}</span>
+          <span style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--accent)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 600, color: "#fff", flexShrink: 0 }}>{index + 1}</span>
           {!isDraggable && <MoveArrows index={index} total={total} onMove={onMove} />}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

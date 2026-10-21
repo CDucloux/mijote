@@ -1,14 +1,7 @@
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+import { REPORT_REASONS } from "../../constants/reportReasons.js";
 
-// Motifs de signalement d'une recette publique (modération).
-const REPORT_REASONS = [
-  { id: "copyright", label: "Droit d'auteur / plagiat" },
-  { id: "photo", label: "Photo inappropriée" },
-  { id: "offensive", label: "Contenu offensant ou dangereux" },
-  { id: "spam", label: "Spam ou hors-sujet" },
-  { id: "other", label: "Autre" },
-];
 
 /**
  * Feuille de signalement d'une recette publique (droit d'auteur, photo inappropriée…).
@@ -28,35 +21,40 @@ export function ReportSheet({ reportReason, setReportReason, reportNote, setRepo
   return (
     <SwipeableSheet onClose={onClose}>
       {(close) => (<>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-          <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, background: "rgba(224,82,82,0.14)", display: "grid", placeItems: "center" }}><Icon name="flag" size={19} color="var(--red)" /></span>
-          <div>
-            <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, margin: 0 }}>Signaler cette recette</h3>
-            <p style={{ fontSize: 12, color: "var(--text3)", margin: "2px 0 0" }}>Pourquoi ne respecte-t-elle pas les conditions ?</p>
-          </div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "14px 0" }}>
+        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Signaler cette recette</h3>
+        <p style={{ fontSize: 13, color: "var(--text3)", margin: "4px 0 16px" }}>Qu'est-ce qui pose problème ?</p>
+
+        {/* Liste radio sans cartes : seule l'option choisie prend un fond. Marge négative
+            pour aligner les pastilles radio sur le titre malgré le padding des lignes. */}
+        <div role="radiogroup" aria-label="Motif du signalement" style={{ display: "flex", flexDirection: "column", gap: 2, margin: "0 -12px 14px" }}>
           {REPORT_REASONS.map(r => {
             const on = reportReason === r.id;
             return (
-              <button key={r.id} className="ripple" onClick={() => setReportReason(r.id)}
-                style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 13px", borderRadius: 13, cursor: "pointer", textAlign: "left",
-                  background: on ? "rgba(224,82,82,0.08)" : "var(--surface2)", border: `1px solid ${on ? "rgba(224,82,82,0.45)" : "var(--border)"}` }}>
-                <span style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", border: `2px solid ${on ? "var(--red)" : "var(--border)"}`, background: on ? "var(--red)" : "transparent" }}>
-                  {on && <Icon name="check" size={11} color="#fff" />}
+              <button key={r.id} role="radio" aria-checked={on} className="ripple hover-neutral" onClick={() => setReportReason(r.id)}
+                style={{ display: "flex", alignItems: "center", gap: 13, padding: "10px 12px", borderRadius: 14, border: "none", cursor: "pointer", textAlign: "left",
+                  background: on ? "var(--surface2)" : "transparent", transition: "background-color 0.2s ease" }}>
+                {/* Radio : l'anneau s'épaissit jusqu'à ne laisser qu'un point (transition de bordure). */}
+                <span aria-hidden="true" style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, boxSizing: "border-box",
+                  border: on ? "6px solid var(--red)" : "1.5px solid var(--text3)", background: "var(--surface)",
+                  transition: "border-width 0.18s cubic-bezier(0.34,1.56,0.64,1), border-color 0.18s ease" }} />
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)", lineHeight: 1.3 }}>{r.label}</span>
+                  <span style={{ display: "block", fontSize: 12, color: "var(--text3)", lineHeight: 1.4, marginTop: 1 }}>{r.hint}</span>
                 </span>
-                <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{r.label}</span>
               </button>
             );
           })}
         </div>
+
         <textarea value={reportNote} onChange={e => setReportNote(e.target.value)} rows={2} maxLength={400}
-          placeholder="Précisions (optionnel)…" className="field-input" style={{ resize: "none", marginBottom: 14 }} />
-        <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn btn-ghost btn-pill" style={{ flex: 1 }} onClick={() => close()}><Icon name="undo" size={15} /> Annuler</button>
-          <button className="btn btn-danger btn-pill" style={{ flex: 1 }} disabled={!reportReason}
+          placeholder={reportReason === "other" ? "Dis-nous ce qui ne va pas…" : "Un détail qui nous aiderait ? (facultatif)"}
+          className="field-input field-bare" style={{ resize: "none", borderRadius: 16, marginBottom: 18 }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button className="btn btn-ghost btn-pill" style={{ background: "transparent", padding: "12px 18px" }} onClick={() => close()}>Annuler</button>
+          <button className="btn btn-danger-solid btn-pill btn-flat" style={{ flex: 1, padding: "12px 18px" }} disabled={!reportReason}
             onClick={() => close(() => { onClose(); onReport?.(reportReason, reportNote.trim()); })}>
-            <Icon name="flag" size={15} /> Signaler
+            <Icon name="flag" size={15} /> Envoyer le signalement
           </button>
         </div>
       </>)}
