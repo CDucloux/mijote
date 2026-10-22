@@ -561,13 +561,11 @@ select {
 
 /* Éditeur de carnet : pastilles de couleur et icônes. La pastille choisie porte
    un anneau plein de sa couleur ; au survol desktop, une pastille inactive en
-   esquisse un à mi-teinte, et l'icône survolée se soulève légèrement. */
+   esquisse un à mi-teinte (l'icône, elle, prend le voile neutre). */
 .nb-swatch { transition: box-shadow 0.15s ease, transform 0.15s ease; }
 .nb-swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--swatch); }
-.nb-ico > span { display: inline-block; transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1); }
 @media (hover: hover) and (pointer: fine) {
   .nb-swatch[aria-pressed="false"]:hover { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px color-mix(in srgb, var(--swatch) 45%, transparent); }
-  .nb-ico:hover > span { transform: scale(1.12); }
 }
 
 /* Actions de purge (zone de danger du profil) : au survol desktop, toutes virent au

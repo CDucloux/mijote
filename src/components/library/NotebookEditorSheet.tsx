@@ -82,11 +82,11 @@ export function NotebookEditorSheet({ draft, setDraft, smartCount, onEditFilters
           {NOTEBOOK_ICONS.map(ico => {
             const on = draft.icon === ico;
             return (
-              <button key={ico} onClick={() => patch({ icon: ico })} aria-pressed={on} className="pressable hover-neutral nb-ico"
+              <button key={ico} onClick={() => patch({ icon: ico })} aria-pressed={on} className="pressable hover-neutral"
                 style={{ aspectRatio: "1/1", borderRadius: 12, fontSize: 21, display: "grid", placeItems: "center", cursor: "pointer",
                   background: on ? draft.color + "22" : "var(--surface2)",
                   border: `2px solid ${on ? draft.color : "transparent"}`,
-                  transition: "background 0.15s ease, border-color 0.15s ease" }}><span>{ico}</span></button>
+                  transition: "background 0.15s ease, border-color 0.15s ease" }}>{ico}</button>
             );
           })}
         </div>
