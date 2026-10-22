@@ -3,6 +3,7 @@ import type { CSSProperties, Dispatch, ReactNode, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { IngImage } from "../ui/Img.jsx";
+import { SearchField } from "../ui/SearchField.jsx";
 import { cuisineEmoji } from "../../constants/cuisines.js";
 import { RECIPE_CATEGORIES, BASE_CATEGORIES, BASE_CATEGORY_IDS } from "../../constants/recipeCategories.js";
 import { DIFFICULTY_LABEL, difficultyColor } from "@/lib/recipes/difficulty.js";
@@ -89,7 +90,7 @@ function IngredientPicker({ ingredientDB, selected, setFilters }: { ingredientDB
           })}
         </div>
       )}
-      <input className="field-input field-bare" placeholder="Rechercher un ingrédient…" value={q} onChange={e => setQ(e.target.value)} />
+      <SearchField value={q} onChange={setQ} placeholder="Rechercher un ingrédient…" />
       {matches.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 8 }}>
           {matches.map(ing => (
