@@ -40,11 +40,11 @@ export function NotebookEditorSheet({ draft, setDraft, smartCount, onEditFilters
       {(close) => (<>
         {/* Titre et nature du carnet restent visibles pendant le défilement. */}
         <StickySheetHeader>
-        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: draft.editing ? "4px 0 14px" : "4px 0 16px" }}>{title}</h3>
+        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: draft.editing ? "4px 0 0" : "4px 0 16px" }}>{title}</h3>
 
         {/* Nature du carnet (création seulement) : contrôle segmenté à pastille glissante. */}
         {!draft.editing && (
-          <div role="radiogroup" aria-label="Type de carnet" style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 999, marginBottom: 14 }}>
+          <div role="radiogroup" aria-label="Type de carnet" style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 999 }}>
             <div aria-hidden="true" style={{ position: "absolute", top: 4, bottom: 4, left: 4, width: "calc((100% - 8px) / 2)", background: "var(--surface)", borderRadius: 999, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
               transform: `translateX(${draft.smart ? "100%" : "0"})`, transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)" }} />
             {([[false, "Manuel", "book"], [true, "Intelligent", "sparkle"]] as const).map(([smart, label, icon]) => {
