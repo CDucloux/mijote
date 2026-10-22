@@ -631,8 +631,10 @@ html.light select.field-input {
   background: var(--surface2);
   box-shadow: none;
 }
+/* Pas d'anneau accent au focus dans une feuille : le curseur et le clavier
+   suffisent à signaler la saisie, le halo vert alourdissait la pilule. */
 .recipe-search.recipe-search--filled:focus {
-  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16);
+  box-shadow: none;
 }
 /* `type="search"` : on masque la croix native (WebKit), on a notre propre
    bouton d'effacement. */
