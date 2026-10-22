@@ -257,7 +257,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], used
         <div style={{ display: "flex", gap: 8 }}>
           {["A", "B", "C", "D", "E"].map(l => {
             const on = filters.nutriMax === l;
-            return <button key={l} onClick={() => set({ nutriMax: on ? null : l })} className="ripple" style={{ flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 14, fontWeight: 800, cursor: "pointer", background: on ? NUTRI[l] : "var(--surface2)", color: on ? "#fff" : "var(--text3)", border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{l}</button>;
+            return <button key={l} onClick={() => set({ nutriMax: on ? null : l })} aria-pressed={on} className={`ripple nutri-opt${on ? " on" : " hover-tint"}`} style={{ "--tint": NUTRI[l], flex: 1, padding: "10px 0", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", border: "none", background: on ? NUTRI[l] : "var(--surface2)", color: on ? "#fff" : undefined } as CSSProperties}>{l}</button>;
           })}
         </div>
       </Group>
