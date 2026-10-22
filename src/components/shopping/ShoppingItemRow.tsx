@@ -83,7 +83,7 @@ export function ShoppingItemRow({ item, striking, unstriking, onBuy, onDelete, i
         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
         style={{
           position: "relative", display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px",
-          background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
+          background: "var(--surface)", border: "none", borderRadius: 12,
           opacity: exiting ? 0 : (unstriking ? 1 : (item.checked ? 0.55 : (striking ? 0 : 1))),
           transform: exiting
             ? "translateX(-110%)"

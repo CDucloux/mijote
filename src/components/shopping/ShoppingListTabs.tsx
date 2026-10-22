@@ -29,12 +29,11 @@ export function ShoppingListTabs({ shoppingLists, hasAgg, allMode, effectiveId, 
       {hasAgg && (() => {
         const aggChecked = aggregated.filter(a => a.checked).length;
         return (
-          <button onClick={onSelectAll} className="slide-up ripple"
+          <button onClick={onSelectAll} className={`slide-up ripple${allMode ? "" : " float-pill"}`}
             style={{
               flexShrink: 0, display: "flex", alignItems: "center", gap: 6, height: 34, boxSizing: "border-box", padding: "0 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
-              background: allMode ? "var(--accent)" : "var(--surface)",
-              color: allMode ? "#fff" : "var(--accent)",
-              border: `1px solid ${allMode ? "transparent" : "rgba(var(--accent-rgb),0.5)"}`
+              background: allMode ? "var(--accent)" : undefined,
+              color: allMode ? "#fff" : "var(--accent)", border: "none",
             }}>
             <Icon name="grid" size={12} color={allMode ? "#fff" : "var(--accent)"} />
             Toutes les courses
