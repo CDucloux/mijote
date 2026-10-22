@@ -119,7 +119,7 @@ export function NotebookEditorSheet({ draft, setDraft, smartCount, onEditFilters
           <div style={{ marginBottom: 22, paddingTop: 4 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <span className="field-label" style={{ margin: 0 }}>Filtres de la vue</span>
-              <button onClick={onEditFilters} className="pressable" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 600, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+              <button onClick={onEditFilters} className="pressable hover-tint" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 600, color: "var(--accent)", background: "none", border: "none", cursor: "pointer", padding: "5px 11px", margin: "-5px -11px -5px 0", borderRadius: 999 }}>
                 <Icon name="edit" size={13} color="var(--accent)" /> Modifier
               </button>
             </div>
