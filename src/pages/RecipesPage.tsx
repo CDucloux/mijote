@@ -19,7 +19,7 @@ import { CUISINES } from "../constants/cuisines.js";
 import { SORT_OPTIONS, DEFAULT_SORT_KEY, defaultDirFor, makeComparator, type SortDir, type SortKey } from "@/lib/recipes/recipeSort.js";
 import { DEFAULT_FILTERS, activeFilterCount, matchesFilters, matchesRecipeSearch, collectChefs, type RecipeFilters } from "@/lib/recipes/recipeFilters.js";
 import {
-  blankNotebookDraft, isSmartNotebook, countNotebook, isSmartViewActive, reorderNotebooks,
+  blankNotebookDraft, setDraftKind, isSmartNotebook, countNotebook, isSmartViewActive, reorderNotebooks,
   shiftNotebook, createNotebook, applyNotebookEdit, type NotebookDraft,
 } from "@/lib/recipes/notebooks.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
@@ -120,6 +120,9 @@ export function RecipesPage({ recipes: allRecipes, collections, ingredientDB, re
   const [confirmDelete, setConfirmDelete] = useState<PendingDelete | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [editingSmartId, setEditingSmartId] = useState<string | null>(null);
+  // Brouillon de NOUVEAU carnet intelligent mis de côté pendant le choix de ses
+  // filtres : la feuille de filtres le rend (nom, couleur, icône intacts).
+  const [parkedDraft, setParkedDraft] = useState<NotebookDraft | null>(null);
   const longPress = useLongPress();
   const { wasLongPress } = longPress;
   const [hideNotebooks, setHideNotebooks] = useLS("mijote_hideCarnets", false);
@@ -205,10 +208,10 @@ export function RecipesPage({ recipes: allRecipes, collections, ingredientDB, re
           resultCount={recipes.length > 0 ? filtered.length : null} />
       </div>
       {filterOpen && (
-        <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); }} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
+        <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); if (parkedDraft) { setDraft(parkedDraft); setParkedDraft(null); } }} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
           {(close) => (
             <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} usedChefs={usedChefs} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => close()}
-              alreadySaved={!editingSmartId && collections.some(c => isSmartNotebook(c) && smartActive(c))}
+              alreadySaved={!editingSmartId && !parkedDraft && collections.some(c => isSmartNotebook(c) && smartActive(c))}
               updatingCarnetName={editingSmartId ? collections.find(c => c.id === editingSmartId)?.name : null}
               onSaveAsCarnet={() => {
                 const done = () => { setFilterOpen(false); setEditingSmartId(null); };
@@ -216,7 +219,9 @@ export function RecipesPage({ recipes: allRecipes, collections, ingredientDB, re
                   setCollections(prev => prev.map(c => c.id === editingSmartId ? { ...c, filters: { ...DEFAULT_FILTERS, ...filters }, search: search.trim() } : c));
                   close(done);
                 } else {
-                  close(() => { done(); setDraft(blankNotebookDraft({ smart: true, filters: { ...filters }, search })); });
+                  const base = parkedDraft ?? blankNotebookDraft();
+                  setParkedDraft(null);
+                  close(() => { done(); setDraft({ ...base, smart: true, filters: { ...filters }, search }); });
                 }
               }} />
           )}
@@ -296,7 +301,12 @@ export function RecipesPage({ recipes: allRecipes, collections, ingredientDB, re
       {draft && (
         <NotebookEditorSheet draft={draft} setDraft={setDraft}
           smartCount={draft.smart ? countNotebook({ id: "", kind: "smart", filters: draft.filters, search: draft.search }, recipes, matchCtx) : 0}
-          onEditFilters={() => { if (draft.id) editNotebookFilters({ id: draft.id, filters: draft.filters, search: draft.search }); setDraft(null); }}
+          onEditFilters={() => {
+            if (draft.id) editNotebookFilters({ id: draft.id, filters: draft.filters, search: draft.search });
+            else { setParkedDraft(draft); showView({ id: "", filters: draft.filters, search: draft.search }); setFilterOpen(true); }
+            setDraft(null);
+          }}
+          onKindChange={smart => setDraft(d => (d ? setDraftKind(d, smart, { filters, search }) : d))}
           onSave={saveDraft} onClose={() => setDraft(null)} />
       )}
     </div>

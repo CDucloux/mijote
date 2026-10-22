@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   blankNotebookDraft, isSmartNotebook, notebookMatches, countNotebook, isSmartViewActive,
-  reorderNotebooks, shiftNotebook, createNotebook, applyNotebookEdit, DEFAULT_NOTEBOOK_COLOR,
+  reorderNotebooks, shiftNotebook, createNotebook, applyNotebookEdit, setDraftKind, DEFAULT_NOTEBOOK_COLOR,
 } from "@/lib/recipes/notebooks.js";
 import type { Notebook } from "@/lib/types.js";
 import { DEFAULT_FILTERS } from "@/lib/recipes/recipeFilters.js";
@@ -92,5 +92,29 @@ describe("applyNotebookEdit", () => {
     const out = applyNotebookEdit([manual, smart], { id: "c2", name: " Tartes fines ", color: "#5b9cf6", icon: "🍰", editing: true, kind: "manual" });
     expect(out[0]).toBe(manual);
     expect(out[1]).toEqual({ ...smart, name: "Tartes fines", color: "#5b9cf6", icon: "🍰" });
+  });
+});
+
+describe("setDraftKind", () => {
+  const view = { filters: { cuisines: ["Italienne"] }, search: "pâtes" };
+
+  it("passe en intelligent avec la vue courante, en gardant nom / couleur / icône", () => {
+    const draft = blankNotebookDraft({ name: "Rapides", color: "#e05252", icon: "🍝" });
+    const smart = setDraftKind(draft, true, view);
+    expect(smart).toMatchObject({ name: "Rapides", color: "#e05252", icon: "🍝", smart: true, search: "pâtes" });
+    expect(smart.filters).toEqual(view.filters);
+    expect(smart.filters).not.toBe(view.filters);
+  });
+
+  it("repasse en manuel en oubliant la vue", () => {
+    const back = setDraftKind(setDraftKind(blankNotebookDraft({ name: "X" }), true, view), false, view);
+    expect(back).toMatchObject({ name: "X", smart: false });
+    expect(back.filters).toBeUndefined();
+    expect(back.search).toBeUndefined();
+  });
+
+  it("ne change jamais la nature d'un carnet existant", () => {
+    const editing = blankNotebookDraft({ editing: true, id: "c1", kind: "manual" });
+    expect(setDraftKind(editing, true, view)).toBe(editing);
   });
 });

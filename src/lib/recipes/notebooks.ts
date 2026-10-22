@@ -40,6 +40,24 @@ export function blankNotebookDraft(over: Partial<NotebookDraft> = {}): NotebookD
 }
 
 /**
+ * Bascule un brouillon de NOUVEAU carnet entre manuel et intelligent. Passé en
+ * intelligent, il part de la vue de la bibliothèque à l'écran (filtres + recherche),
+ * le point de départ le plus naturel ; repassé en manuel, il oublie sa vue. Nom,
+ * couleur et icône sont conservés. Un carnet existant ne change jamais de nature.
+ *
+ * @param draft - Brouillon en cours.
+ * @param smart - `true` pour un carnet intelligent.
+ * @param view - Vue courante de la bibliothèque.
+ * @returns Le brouillon basculé (ou inchangé s'il s'agit d'une modification).
+ */
+export function setDraftKind(draft: NotebookDraft, smart: boolean, view: { filters: Partial<RecipeFilters>; search: string }): NotebookDraft {
+  if (draft.editing) return draft;
+  return smart
+    ? { ...draft, smart: true, filters: { ...view.filters }, search: view.search }
+    : { ...draft, smart: false, filters: undefined, search: undefined };
+}
+
+/**
  * Le carnet est-il intelligent (vue de filtres) plutôt que manuel ?
  *
  * @param notebook - Carnet (ou brouillon) à tester.
