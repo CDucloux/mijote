@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
 import type { Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
-import { Img } from "../ui/Img.jsx";
-import { RecipePlaceholder } from "../recipe/RecipePlaceholder.jsx";
+import { RecipeImage } from "../recipe/RecipePlaceholder.jsx";
 import { HeroMenu } from "./HeroMenu.jsx";
 import { RecipeCredits } from "./RecipeCredits.jsx";
 import type { MenuItem } from "./HeroMenu.jsx";
@@ -32,7 +31,7 @@ interface RecipeHeroDesktopProps {
 export function RecipeHeroDesktop({ recipe, handleBack, publicMode, onEdit, onExportPDF, reportAvailable, adminDeleteAvailable, onOpenReport, onOpenAdminDelete, menuItems, attribution, badges }: RecipeHeroDesktopProps) {
   return (
     <div className="recipe-hero-desktop" style={{ position: "relative", height: 160, flexShrink: 0, color: "#fff" }}>
-      <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={72} style={{ width: "100%", height: "100%" }} />} />
+      <RecipeImage recipe={recipe} fontSize={72} />
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,transparent 35%,rgba(14,14,15,0.82) 100%)" }} />
       <button onClick={handleBack} className="hero-back ripple ripple-light" style={{ position: "absolute", top: 16, left: 16, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><Icon name="back" size={18} /></button>
       {publicMode && (onExportPDF || reportAvailable || adminDeleteAvailable) && (

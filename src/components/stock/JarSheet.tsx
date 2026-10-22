@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon } from "../ui/Icon.jsx";
-import { IngImage, Img } from "../ui/Img.jsx";
+import { IngImage } from "../ui/Img.jsx";
+import { RecipeImage } from "../recipe/RecipePlaceholder.jsx";
 import { fmtTime } from "@/lib/format.js";
 import type { StockLevel, RecipeUsingIngredient } from "@/lib/food/stockLevel.js";
 import type { IngredientDbItem } from "@/lib/types.js";
@@ -86,7 +87,7 @@ export function JarSheet({ ingredient, level, shelfLabel, fillColor, recipes, on
                 return (
                   <li key={recipe.id}>
                     <button type="button" className="jsheet-rec" onClick={() => { if (recipeId) leaveThen(() => onOpenRecipe(recipeId)); }}>
-                      <Img src={recipe.image} alt="" style={{ width: 46, height: 46, borderRadius: 12, flexShrink: 0 }} />
+                      <RecipeImage recipe={recipe} alt="" fontSize={21} style={{ width: 46, height: 46, borderRadius: 12, flexShrink: 0 }} />
                       <span className="jsheet-rec-txt">
                         <b>{recipe.name}</b>
                         <small data-ready={missing.length === 0 || undefined}>

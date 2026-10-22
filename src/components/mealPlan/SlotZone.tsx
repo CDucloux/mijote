@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "../ui/Icon.jsx";
 import type { IconName } from "../ui/Icon.jsx";
-import { Img } from "../ui/Img.jsx";
+import { RecipeImage } from "../recipe/RecipePlaceholder.jsx";
 import { MEAL_SLOTS, SLOT_BY_ID } from "../../constants/mealSlots.js";
 import { mealsForSlot, itemRole, roleLabel, platNeedsSide, type SlotGroup, type RoleId } from "@/lib/planning/composedMeal.js";
 import type { MealPlan, Recipe } from "@/lib/types.js";
@@ -106,7 +106,7 @@ export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTa
                   onPointerDown={e => startLongPress(e, () => onOpenItemMenu({ date, idx: globalIdx, slot, recipeId: item.recipeId }))}
                   onPointerMove={moveLongPress} onPointerUp={cancelLongPress} onPointerLeave={cancelLongPress} onPointerCancel={cancelLongPress}
                   style={{ display: "flex", alignItems: "center", gap: 8, cursor: "grab", borderRadius: 8 }}>
-                  <div style={{ width: composed ? 38 : 46, height: composed ? 38 : 46, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+                  <div style={{ width: composed ? 38 : 46, height: composed ? 38 : 46, borderRadius: 9, overflow: "hidden", flexShrink: 0 }}><RecipeImage recipe={r} fontSize={composed ? 17 : 21} /></div>
                   <button onClick={() => { if (wasLongPress()) return; onSelectRecipe(r.id ?? "", date); }} style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
                     <div style={{ fontSize: 9.5, fontWeight: 600, color: MP_SLOT_TEXT[slot] }}>{label}</div>

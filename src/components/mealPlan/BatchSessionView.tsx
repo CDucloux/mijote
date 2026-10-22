@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import type { IconName } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
+import { RecipeImage } from "../recipe/RecipePlaceholder.jsx";
 import { fmtQtyUnit } from "@/lib/format.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { DEFAULT_CATEGORIES } from "../../constants/categories.js";
@@ -189,7 +190,7 @@ export function BatchSessionView({ weekLabel, batch, miseEnPlace, cookingGroups,
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {batch.dishes.map(d => (
               <button key={d.recipe.id} onClick={() => { onSelectRecipe(d.recipe.id); }} className="complete-row" style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "var(--surface)", borderRadius: 16, border: "1px solid var(--border)", textAlign: "left", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={(d.recipe as { image?: string }).image} alt={d.recipe.name} style={{ width: "100%", height: "100%" }} /></div>
+                <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><RecipeImage recipe={d.recipe} fontSize={22} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 4 }}>{d.recipe.name}</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Icon, type IconName } from "../ui/Icon.jsx";
-import { Img } from "../ui/Img.jsx";
+import { RecipeImage } from "../recipe/RecipePlaceholder.jsx";
 import { SearchField } from "../ui/SearchField.jsx";
 import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
@@ -65,7 +65,7 @@ export function CompleteMealSheet({ base, recipes, eligiblePool, suggestCtx, liv
     return (
       <button key={r.id} onClick={() => onAttach(r.id ?? "", completeRole)} className="complete-row ripple"
         style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: "transparent", borderRadius: 16, border: "none", textAlign: "left", cursor: "pointer" }}>
-        <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+        <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><RecipeImage recipe={r} fontSize={24} /></div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -87,7 +87,7 @@ export function CompleteMealSheet({ base, recipes, eligiblePool, suggestCtx, liv
       {/* En-tête : vignette du plat de base + titre contextuel */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
         <div style={{ width: 46, height: 46, borderRadius: 13, overflow: "hidden", flexShrink: 0, background: "var(--surface2)", display: "grid", placeItems: "center" }}>
-          {base?.image ? <Img src={base.image} alt={base.name} style={{ width: "100%", height: "100%" }} /> : <Icon name="plus" size={20} color="var(--accent)" />}
+          {base?.image ? <RecipeImage recipe={base} fontSize={24} /> : <Icon name="plus" size={20} color="var(--accent)" />}
         </div>
         <div style={{ minWidth: 0 }}>
           <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 19, fontWeight: 700, letterSpacing: "-0.01em", margin: 0 }}>Compléter le repas</h3>

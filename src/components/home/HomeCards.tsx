@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Icon, type IconName } from "../ui/Icon.jsx";
-import { Img } from "../ui/Img.jsx";
+import { RecipeImage } from "../recipe/RecipePlaceholder.jsx";
 import { NewRecipeSheet } from "../recipe/NewRecipeButton.jsx";
 import { SLOT_BY_ID } from "../../constants/mealSlots.js";
 import { fmtTime } from "@/lib/format.js";
@@ -191,7 +191,7 @@ export function TodayMealRow({ card, index, onOpen }: TodayMealRowProps) {
         padding: "12px 14px", borderRadius: 18, cursor: "pointer", overflow: "hidden",
       }}>
       <div style={{ width: 70, height: 70, borderRadius: 14, overflow: "hidden", flexShrink: 0, boxShadow: "0 3px 10px rgba(0,0,0,0.14)" }}>
-        <Img src={m.recipe.image} alt={m.recipe.name} style={{ width: "100%", height: "100%" }} />
+        <RecipeImage recipe={m.recipe} fontSize={30} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <span style={{

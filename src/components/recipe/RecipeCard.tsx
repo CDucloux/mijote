@@ -1,12 +1,11 @@
 import { useState, type CSSProperties, type MouseEvent, type SyntheticEvent } from "react";
 import type { Recipe } from "@/lib/types.js";
-import { Img } from "../ui/Img.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { BaseInfoModal } from "../modals/BaseInfoModal.jsx";
 import { Icon } from "../ui/Icon.jsx";
 import { NutriScoreBadge, type NutriLetter } from "../badges/NutriScoreBadge.jsx";
 import { asNutriLetter } from "@/lib/recipes/nutriscore.js";
-import { RecipePlaceholder } from "./RecipePlaceholder.jsx";
+import { RecipeImage } from "./RecipePlaceholder.jsx";
 import { VeganBadge, SeasonBadge } from "../badges/Badges.jsx";
 import { fmtTime } from "../../lib/format.js";
 
@@ -37,7 +36,7 @@ export function RecipeCard({ recipe, onClick, style, inSeason = false, vegan = f
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(e); } }}
       style={{ width: "100%", display: "block", background: "var(--surface)", borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--border)", textAlign: "left", boxShadow: "0 6px 16px -10px rgba(120,70,30,0.20)", cursor: "pointer", ...style }}>
       <div className="recipe-card-thumb" style={{ width: "100%", aspectRatio: "16/10", position: "relative" }}>
-        <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} style={{ width: "100%", height: "100%" }} />} />
+        <RecipeImage recipe={recipe} />
         {onToggleFavorite && (
           <button className="fav-heart ripple ripple-light" data-ripple-light="1"
             onClick={e => { e.stopPropagation(); onToggleFavorite(e); }}
