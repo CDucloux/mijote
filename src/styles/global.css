@@ -633,8 +633,11 @@ html.light select.field-input {
   box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16), var(--float-shadow);
 }
 /* Variante remplie, pour les feuilles (fond déjà en surface) : un champ blanc sans
-   bordure s'y dissoudrait, c'est le cran de surface qui le pose. */
-.recipe-search.recipe-search--filled {
+   bordure s'y dissoudrait, c'est le cran de surface qui le pose. Doublée en thème
+   clair : `html.light .recipe-search` (fond blanc des barres de page) est plus
+   spécifique et effaçait sinon la pilule sur la feuille blanche. */
+.recipe-search.recipe-search--filled,
+html.light .recipe-search.recipe-search--filled {
   background: var(--surface2);
   box-shadow: none;
 }
