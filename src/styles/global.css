@@ -3004,7 +3004,7 @@ html.light .sheet-sticky-head::after {
   .editor-tab:not(.active):hover { color: var(--text2); }
 
   /* Ligne de choix (compléter le repas, ajouter au planning, assigner une base) :
-     voile et liseré neutres via interactions.css ; le « + » s'allume en accent. */
+     voile neutre seul (sans liseré, comme les lignes de courses) ; le « + » s'allume en accent. */
   .complete-row:hover .complete-add {
     background: var(--accent);
     color: #fff;
