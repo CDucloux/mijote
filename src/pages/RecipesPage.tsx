@@ -211,19 +211,23 @@ export function RecipesPage({ recipes: allRecipes, collections, ingredientDB, re
         <SwipeableSheet onClose={() => { setFilterOpen(false); setEditingSmartId(null); if (parkedDraft) { setDraft(parkedDraft); setParkedDraft(null); } }} hideHandle style={{ maxHeight: "90dvh", paddingTop: 0, paddingBottom: 0 }}>
           {(close) => (
             <RecipeFilterSheet filters={filters} setFilters={setFilters} usedCuisines={usedCuisines} usedChefs={usedChefs} ingredientDB={ingredientDB || []} resultCount={filtered.length} onClose={() => close()}
-              alreadySaved={!editingSmartId && !parkedDraft && collections.some(c => isSmartNotebook(c) && smartActive(c))}
-              updatingCarnetName={editingSmartId ? collections.find(c => c.id === editingSmartId)?.name : null}
-              onSaveAsCarnet={() => {
-                const done = () => { setFilterOpen(false); setEditingSmartId(null); };
-                if (editingSmartId) {
-                  setCollections(prev => prev.map(c => c.id === editingSmartId ? { ...c, filters: { ...DEFAULT_FILTERS, ...filters }, search: search.trim() } : c));
-                  close(done);
-                } else {
-                  const base = parkedDraft ?? blankNotebookDraft();
-                  setParkedDraft(null);
-                  close(() => { done(); setDraft({ ...base, smart: true, filters: { ...filters }, search }); });
-                }
-              }} />
+              carnetAction={editingSmartId || parkedDraft ? {
+                label: editingSmartId
+                  ? `Mettre à jour « ${collections.find(c => c.id === editingSmartId)?.name || "le carnet"} »`
+                  : `Utiliser pour « ${parkedDraft?.name.trim() || "Nouveau carnet"} »`,
+                hint: editingSmartId ? "Remplacer les filtres du carnet" : "Revenir à la création du carnet",
+                onApply: () => {
+                  const done = () => { setFilterOpen(false); setEditingSmartId(null); };
+                  if (editingSmartId) {
+                    setCollections(prev => prev.map(c => c.id === editingSmartId ? { ...c, filters: { ...DEFAULT_FILTERS, ...filters }, search: search.trim() } : c));
+                    close(done);
+                  } else {
+                    const base = parkedDraft ?? blankNotebookDraft();
+                    setParkedDraft(null);
+                    close(() => { done(); setDraft({ ...base, smart: true, filters: { ...filters }, search }); });
+                  }
+                },
+              } : null} />
           )}
         </SwipeableSheet>
       )}

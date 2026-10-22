@@ -120,12 +120,11 @@ interface RecipeFilterSheetProps {
   ingredientDB?: DbEntry[];
   resultCount?: number;
   onClose: () => void;
-  onSaveAsCarnet?: () => void;
-  alreadySaved?: boolean;
-  updatingCarnetName?: string | null;
+  /** Feuille ouverte depuis un carnet intelligent : applique la vue à ce carnet. */
+  carnetAction?: { label: string; hint: string; onApply: () => void } | null;
 }
 
-export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], usedChefs = [], ingredientDB = [], resultCount = 0, onClose, onSaveAsCarnet, alreadySaved = false, updatingCarnetName = null }: RecipeFilterSheetProps) {
+export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], usedChefs = [], ingredientDB = [], resultCount = 0, onClose, carnetAction = null }: RecipeFilterSheetProps) {
   const set = (patch: Partial<RecipeFilters>) => setFilters(f => ({ ...f, ...patch }));
   const toggleCuisine = (label: string) => setFilters(f => ({
     ...f, cuisines: f.cuisines.includes(label) ? f.cuisines.filter(c => c !== label) : [...f.cuisines, label],
@@ -294,26 +293,21 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], used
         <button className="btn btn-primary" style={{ width: "100%", borderRadius: 30, padding: "14px 0", fontSize: 14.5, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={onClose}>
           <Icon name="search" size={17} color="#fff" /> Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
         </button>
-        {/* Enregistrer / mettre à jour la vue comme carnet (bibliothèque perso) */}
-        {onSaveAsCarnet && nActive > 0 && (
-          alreadySaved && !updatingCarnetName ? (
-            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: "var(--ok)", padding: "4px 0" }}>
-              <Icon name="check" size={15} color="var(--ok)" /> Vue enregistrée comme carnet
-            </div>
-          ) : (
-            <button onClick={onSaveAsCarnet} className="pressable save-carnet-btn" style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 11px", borderRadius: 16, cursor: "pointer", textAlign: "left" }}>
-              <span className="save-carnet-icon" style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "var(--accent)", boxShadow: "0 4px 12px -4px rgba(var(--accent-rgb),0.6)" }}>
-                <Icon name={updatingCarnetName ? "check" : "book"} size={17} color="#fff" />
-              </span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{updatingCarnetName ? `Mettre à jour « ${updatingCarnetName} »` : "Enregistrer comme carnet"}</span>
-                <span style={{ display: "block", fontSize: 11.5, color: "var(--text2)", marginTop: 1 }}>{updatingCarnetName ? "Remplacer les filtres du carnet" : "Retrouve cette sélection en un tap"}</span>
-              </span>
-              <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.14)" }}>
-                <Icon name={updatingCarnetName ? "forward" : "plus"} size={15} color="var(--accent)" />
-              </span>
-            </button>
-          )
+        {/* Ouverte depuis un carnet intelligent (création ou modification) : renvoie la
+            vue au carnet. La création d'un carnet se fait dans la feuille « Nouveau carnet ». */}
+        {carnetAction && (
+          <button onClick={carnetAction.onApply} className="pressable save-carnet-btn" style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 11px", borderRadius: 16, cursor: "pointer", textAlign: "left" }}>
+            <span className="save-carnet-icon" style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "var(--accent)" }}>
+              <Icon name="check" size={17} color="#fff" />
+            </span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{carnetAction.label}</span>
+              <span style={{ display: "block", fontSize: 11.5, color: "var(--text2)", marginTop: 1 }}>{carnetAction.hint}</span>
+            </span>
+            <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.14)" }}>
+              <Icon name="forward" size={15} color="var(--accent)" />
+            </span>
+          </button>
         )}
       </div>
     </div>
