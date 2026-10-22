@@ -5444,3 +5444,16 @@ html.light .sheet-sticky-head::after {
 @media (prefers-reduced-motion: reduce) {
   .ing-img-reveal { transition: opacity 0.15s linear; }
 }
+
+/* Pill « Réinitialiser » des filtres : se replie vers la gauche quand plus aucun
+   filtre n'est actif, le CTA voisin s'élargit dans le même mouvement. */
+.reset-pill {
+  max-width: 0; padding: 0; margin-right: 0; opacity: 0; pointer-events: none;
+  transition: max-width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), padding 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), margin-right 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
+}
+.reset-pill.on { max-width: 180px; padding: 0 18px 0 15px; margin-right: 8px; opacity: 1; pointer-events: auto; transition-delay: 0s, 0s, 0s, 0.08s; }
+.reset-pill svg { transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.reset-pill:not(.on) svg { transform: rotate(-200deg); }
+@media (prefers-reduced-motion: reduce) {
+  .reset-pill, .reset-pill svg { transition: none; }
+}

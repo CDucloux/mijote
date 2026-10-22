@@ -290,12 +290,10 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], used
       {/* CTA, pied plein, sans liseré, jusqu'au bas de la feuille */}
       <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "10px 20px calc(16px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 10 }}>
         {/* Réinitialiser vit à côté du CTA : les deux agissent sur le résultat, à portée de pouce. */}
-        <div style={{ display: "flex", gap: 8 }}>
-          {nActive > 0 && (
-            <button onClick={reset} className="pressable hover-neutral" style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "0 18px 0 15px", borderRadius: 30, border: "none", background: "var(--surface2)", color: "var(--text)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              <Icon name="reset" size={16} color="currentColor" /> Réinitialiser
-            </button>
-          )}
+        <div style={{ display: "flex" }}>
+          <button onClick={reset} className={`ripple hover-neutral reset-pill${nActive > 0 ? " on" : ""}`} aria-hidden={nActive === 0} tabIndex={nActive > 0 ? 0 : -1} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 30, border: "none", background: "var(--surface2)", color: "var(--text)", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", cursor: "pointer" }}>
+            <Icon name="reset" size={16} color="currentColor" /> Réinitialiser
+          </button>
           <button className="btn btn-primary" style={{ flex: 1, minWidth: 0, borderRadius: 30, padding: "14px 0", fontSize: 14.5, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={onClose}>
             <Icon name="search" size={17} color="#fff" /> Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
           </button>
