@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Icon } from "../ui/Icon.jsx";
+import { UtImage } from "./StepPills.jsx";
 import { UTENSIL_CATEGORIES } from "@/lib/household/dataYaml.js";
 import { useElasticScroll } from "../../hooks/useElasticScroll.js";
 import { useIsDesktop } from "../../hooks/useIsDesktop.js";
@@ -33,11 +34,7 @@ function UtensilGrid({ list, selectedIds, onGridClick }: { list: UtensilDbItem[]
                 <Icon name="check" size={10} color="#fff" />
               </div>
             )}
-            <div style={{ width: 56, height: 56, borderRadius: 12, background: "#fff", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid rgba(0,0,0,0.06)" }}>
-              {d.image
-                ? <img src={d.image} alt={d.name} style={{ width: "82%", height: "82%", objectFit: "contain" }} referrerPolicy="no-referrer" loading="lazy" />
-                : <Icon name="photo" size={22} color="#b3afaa" />}
-            </div>
+            <UtImage src={d.image} alt={d.name} size={56} radius={12} border />
             <span style={{ fontSize: 11, fontWeight: 500, color: on ? "var(--accent)" : "var(--text2)", textAlign: "center", lineHeight: 1.3, wordBreak: "break-word" }}>{d.name}</span>
           </button>
         );
@@ -100,11 +97,7 @@ export function UtensilPicker({ utensilDB, selected, onChange }: UtensilPickerPr
             return (
               <div key={u.id} className="slide-up" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 10px 5px 5px", borderRadius: 30, background: active ? "var(--accent)" : "rgba(var(--accent-rgb),0.12)", cursor: "pointer" }}
                 onClick={() => setReplacing(active ? null : u.id ?? null)} title="Remplacer cet ustensile">
-                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#fff", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {db?.image
-                    ? <img src={db.image} alt={u.name} style={{ width: "82%", height: "82%", objectFit: "contain" }} referrerPolicy="no-referrer" loading="lazy" />
-                    : <Icon name="photo" size={12} color="#b3afaa" />}
-                </div>
+                <UtImage src={db?.image} alt={u.name} size={26} />
                 <span style={{ fontSize: 12, fontWeight: 600, color: active ? "#fff" : "var(--accent)" }}>{u.name}</span>
                 <button onClick={e => { e.stopPropagation(); if (active) setReplacing(null); toggle({ id: u.dbId, name: u.name }); }} style={{ display: "flex", alignItems: "center", opacity: 0.7 }}>
                   <Icon name="close" size={12} color={active ? "#fff" : "var(--accent)"} />

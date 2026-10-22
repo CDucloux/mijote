@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { Img, IngImage } from "../ui/Img.jsx";
+import { UtImage } from "../recipe/StepPills.jsx";
 import { StepTip } from "../recipe/StepTip.jsx";
 import { TechniqueText } from "../recipe/TechniqueText.jsx";
 import { ConvertBadge } from "../ingredient/QuantityConvertSheet.jsx";
@@ -260,7 +261,7 @@ export function CookContent(props: CookContentProps) {
                 return (
                   <button key={u.id} type="button" onClick={() => toggleUtChecked(u.id)} className="pressable"
                     style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: gathered ? "rgba(var(--ok-rgb),0.12)" : "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: gathered ? "var(--ok)" : "var(--text)", cursor: "pointer", textDecoration: gathered ? "line-through" : "none" }}>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0, opacity: gathered ? 0.6 : 1 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" }} /></div>
+                    <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} style={{ opacity: gathered ? 0.6 : 1 }} />
                     {gathered && <Icon name="check" size={11} color="var(--ok)" />}
                     {u.name}
                   </button>
@@ -381,7 +382,7 @@ export function CookContent(props: CookContentProps) {
               const prec = getUtPrecaution(u);
               return (
               <span key={u.id} onClick={prec ? () => setPrecSheet({ name: u.name, prec }) : undefined} className={prec ? "pressable" : undefined} style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: "var(--surface2)", borderRadius: 20, padding: prec ? "5px 30px 5px 5px" : "5px 12px 5px 5px", fontWeight: 500, color: "var(--text)", cursor: prec ? "pointer" : "default" }}>
-                <div style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "#fff", flexShrink: 0 }}><Img src={getUtImage(u.dbId, u.name)} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" }} /></div>
+                <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} />
                 {u.name}
                 {detail && <span style={{ color: "var(--text3)", fontWeight: 400 }}>{detail}</span>}
                 {prec && <PrecautionInfoBadge tone={prec.tone} style={{ top: "50%", right: 6, transform: "translateY(-50%)", width: 20, height: 20 }} />}
