@@ -2,6 +2,7 @@ import { useCallback, type CSSProperties, type Dispatch, type SetStateAction } f
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { NotebookCover } from "./NotebookCover.jsx";
+import { StickySheetHeader } from "../ui/StickySheetHeader.jsx";
 import { activeFilterCount, summarizeFilters, DEFAULT_FILTERS } from "@/lib/recipes/recipeFilters.js";
 import { NOTEBOOK_COLORS, NOTEBOOK_ICONS, type NotebookDraft } from "@/lib/recipes/notebooks.js";
 
@@ -35,13 +36,15 @@ export function NotebookEditorSheet({ draft, setDraft, smartCount, onEditFilters
   const title = draft.editing ? "Modifier le carnet" : "Nouveau carnet";
 
   return (
-    <SwipeableSheet onClose={onClose}>
+    <SwipeableSheet onClose={onClose} hideHandle style={{ paddingTop: 0 }}>
       {(close) => (<>
-        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 16 }}>{title}</h3>
+        {/* Titre et nature du carnet restent visibles pendant le défilement. */}
+        <StickySheetHeader>
+        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", margin: draft.editing ? "4px 0 14px" : "4px 0 16px" }}>{title}</h3>
 
         {/* Nature du carnet (création seulement) : contrôle segmenté à pastille glissante. */}
         {!draft.editing && (
-          <div role="radiogroup" aria-label="Type de carnet" style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 999, marginBottom: 20 }}>
+          <div role="radiogroup" aria-label="Type de carnet" style={{ position: "relative", display: "flex", padding: 4, background: "var(--surface2)", borderRadius: 999, marginBottom: 14 }}>
             <div aria-hidden="true" style={{ position: "absolute", top: 4, bottom: 4, left: 4, width: "calc((100% - 8px) / 2)", background: "var(--surface)", borderRadius: 999, boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
               transform: `translateX(${draft.smart ? "100%" : "0"})`, transition: "transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)" }} />
             {([[false, "Manuel", "book"], [true, "Intelligent", "sparkle"]] as const).map(([smart, label, icon]) => {
@@ -55,8 +58,9 @@ export function NotebookEditorSheet({ draft, setDraft, smartCount, onEditFilters
             })}
           </div>
         )}
+        </StickySheetHeader>
 
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "center", margin: "6px 0 20px" }}>
           <div style={{ width: 122, position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 0 0 1px var(--border)", animation: "popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}>
             <NotebookCover color={draft.color} icon={draft.icon} lineGap={23} spine={10} iconSize={40} />
             <div style={{ padding: "8px 10px 10px", background: "var(--surface)", borderTop: `1px solid ${draft.color}22` }}>
