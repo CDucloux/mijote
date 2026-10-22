@@ -92,12 +92,15 @@ function IngredientPicker({ ingredientDB, selected, setFilters }: { ingredientDB
       )}
       <SearchField value={q} onChange={setQ} placeholder="Rechercher un ingrédient…" />
       {matches.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, margin: "10px -8px 0" }}>
           {matches.map(ing => (
-            <button key={ing.id} onClick={() => { toggle(ing.id); setQ(""); }} className="ripple" style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "7px 8px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
-              <span style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={30} /></span>
-              <span style={{ fontSize: 13.5, color: "var(--text)" }}>{ing.name}</span>
-              <span style={{ marginLeft: "auto", display: "inline-flex" }}><Icon name="plus" size={15} color="var(--text3)" /></span>
+            <button key={ing.id} onClick={() => { toggle(ing.id); setQ(""); }} className="ripple complete-row" style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 8, borderRadius: 14, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+              <span style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={36} /></span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 500, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ing.name}</span>
+              {/* « + » en pastille teintée, qui passe en accent plein au survol (cf. .complete-row). */}
+              <span className="complete-add" style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}>
+                <Icon name="plus" size={15} color="currentColor" />
+              </span>
             </button>
           ))}
         </div>
