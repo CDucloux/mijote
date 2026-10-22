@@ -6,6 +6,7 @@
 // est faite par le LLM (voir index.ts) ; ce module met en forme son résultat.
 
 import { fillStepGroupGaps } from "./stepGroups.js";
+import { linkCutBowl } from "./cutBowl.js";
 
 // ── Types (les payloads LLM sont volontairement lâches : JSON externe non fiable)
 
@@ -453,8 +454,10 @@ export function filterUtensilsToKnown(utensils: DraftUtensil[], knownNames: stri
 
 // Assemble le brouillon FINAL au schéma Cardamome : ids stables sur ingrédients/
 // ustensiles, et liaison ingrédients↔étapes + ustensiles↔étapes (par nom explicite
-// fourni par le LLM, complété par détection dans le texte de l'étape).
-export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
+// fourni par le LLM, complété par détection dans le texte de l'étape). Les étapes
+// de découpe reçoivent ensuite leur bol de réserve (cf. `linkCutBowl`), pris dans
+// `knownUtensils` (base master) s'il manque à la recette.
+export function assignIdsAndLink(d: Partial<Intermediate>, knownUtensils: readonly string[] = []): Recipe {
   const ingredients: RecipeIngredient[] = (d.ingredients || []).map((i, k) => {
     // Unité implicite (pièce) : on la retire ; sinon on conserve le singulier
     // canonique dans `unit` mais on écrit le pluriel accordé dans `_raw`.
@@ -550,7 +553,7 @@ export function assignIdsAndLink(d: Partial<Intermediate>): Recipe {
     recipe.isComponent = true;
     recipe.yield = validateYield(d.yield);
   }
-  return recipe;
+  return linkCutBowl(recipe, knownUtensils);
 }
 
 // Images décoratives / techniques à ignorer (logo, avatar, icône, pixel, svg…).
