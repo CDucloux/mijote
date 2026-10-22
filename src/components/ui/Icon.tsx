@@ -12,7 +12,7 @@ import {
   Star, User, Lightbulb, ArrowSquareOut, Leaf, FileText, Receipt, EnvelopeSimple, Package,
   WifiSlash, ClockCounterClockwise, Eraser, ArrowsLeftRight, ArrowsDownUp, Pause, Play,
   Stop, DotsThreeVertical, DotsThree, Info, Eye, EyeSlash, Heart, Globe, Lock, Scales,
-  AndroidLogo, AppleLogo, Camera, ClipboardText, ArrowClockwise, CircleNotch, Bell,
+  AndroidLogo, AppleLogo, Camera, ClipboardText, ArrowClockwise, ArrowCounterClockwise, CircleNotch, Bell,
   Question, Lightning, Knife, BowlSteam, Gift, ChefHat,
 } from "@phosphor-icons/react";
 import type { IconWeight } from "@phosphor-icons/react";
@@ -176,6 +176,7 @@ const ICONS = {
   apple: AppleLogo,
   camera: Camera,
   refresh: ArrowClockwise,
+  reset: ArrowCounterClockwise,
   spinner: CircleNotch,
   help: Question,
   bolt: Lightning,
