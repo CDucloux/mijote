@@ -559,6 +559,29 @@ select {
   box-shadow: inset 0 0 0 1.5px rgba(var(--accent-rgb), 0.4);
 }
 
+/* Lettres Nutri-Score (filtres) : au survol desktop, une lettre inactive prend
+   la teinte de SA couleur (voile hover-tint via --tint, libellé coloré). */
+.nutri-opt { color: var(--text3); transition: color 0.15s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .nutri-opt:not(.on):hover { color: var(--tint); }
+}
+
+/* Pastille d'ingrédient retenu (filtres) : la croix vit dans un rond qui se
+   dessine au survol desktop de la pastille, l'affordance de retrait. */
+.ing-chip-x { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--accent); transition: background-color 0.15s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .ing-chip:hover .ing-chip-x { background: rgba(var(--accent-rgb), 0.2); }
+}
+
+/* Éditeur de carnet : pastilles de couleur et icônes. La pastille choisie porte
+   un anneau plein de sa couleur ; au survol desktop, une pastille inactive en
+   esquisse un à mi-teinte (l'icône, elle, prend le voile neutre). */
+.nb-swatch { transition: box-shadow 0.15s ease, transform 0.15s ease; }
+.nb-swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--swatch); }
+@media (hover: hover) and (pointer: fine) {
+  .nb-swatch[aria-pressed="false"]:hover { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px color-mix(in srgb, var(--swatch) 45%, transparent); }
+}
+
 /* Actions de purge (zone de danger du profil) : au survol desktop, toutes virent au
    rouge (voile + libellé) ; « Tout effacer », plus grave, rougit plus franchement. */
 .purge-btn { color: var(--text2); transition: color 0.15s ease; }
@@ -617,13 +640,18 @@ html.light select.field-input {
   box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16), var(--float-shadow);
 }
 /* Variante remplie, pour les feuilles (fond déjà en surface) : un champ blanc sans
-   bordure s'y dissoudrait, c'est le cran de surface qui le pose. */
-.recipe-search.recipe-search--filled {
+   bordure s'y dissoudrait, c'est le cran de surface qui le pose. Doublée en thème
+   clair : `html.light .recipe-search` (fond blanc des barres de page) est plus
+   spécifique et effaçait sinon la pilule sur la feuille blanche. */
+.recipe-search.recipe-search--filled,
+html.light .recipe-search.recipe-search--filled {
   background: var(--surface2);
   box-shadow: none;
 }
+/* Pas d'anneau accent au focus dans une feuille : le curseur et le clavier
+   suffisent à signaler la saisie, le halo vert alourdissait la pilule. */
 .recipe-search.recipe-search--filled:focus {
-  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16);
+  box-shadow: none;
 }
 /* `type="search"` : on masque la croix native (WebKit), on a notre propre
    bouton d'effacement. */
@@ -2976,7 +3004,7 @@ html.light .sheet-sticky-head::after {
   .editor-tab:not(.active):hover { color: var(--text2); }
 
   /* Ligne de choix (compléter le repas, ajouter au planning, assigner une base) :
-     voile et liseré neutres via interactions.css ; le « + » s'allume en accent. */
+     voile neutre seul (sans liseré, comme les lignes de courses) ; le « + » s'allume en accent. */
   .complete-row:hover .complete-add {
     background: var(--accent);
     color: #fff;
@@ -5415,4 +5443,17 @@ html.light .sheet-sticky-head::after {
 @keyframes ing-spinner-in { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .ing-img-reveal { transition: opacity 0.15s linear; }
+}
+
+/* Pill « Réinitialiser » des filtres : se replie vers la gauche quand plus aucun
+   filtre n'est actif, le CTA voisin s'élargit dans le même mouvement. */
+.reset-pill {
+  max-width: 0; padding: 0; margin-right: 0; opacity: 0; pointer-events: none;
+  transition: max-width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), padding 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), margin-right 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease;
+}
+.reset-pill.on { max-width: 180px; padding: 0 18px 0 15px; margin-right: 8px; opacity: 1; pointer-events: auto; transition-delay: 0s, 0s, 0s, 0.08s; }
+.reset-pill svg { transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.reset-pill:not(.on) svg { transform: rotate(-200deg); }
+@media (prefers-reduced-motion: reduce) {
+  .reset-pill, .reset-pill svg { transition: none; }
 }

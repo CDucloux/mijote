@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { Img } from "../ui/Img.jsx";
 
 // Placeholder de recette sans photo : fond très sombre (quasi noir chaud) avec un
 // halo terracotta ou vert en bas, et l'initiale en police d'affichage façon titre
@@ -31,4 +32,18 @@ export function RecipePlaceholder({ name, style, fontSize = 54 }: RecipePlacehol
       <span style={{ fontFamily: "var(--ff-display)", fontSize, fontWeight: 700, lineHeight: 1, color: "rgba(255,255,255,0.9)", letterSpacing: "-0.02em", textShadow: "0 3px 16px rgba(0,0,0,0.45)" }}>{initial}</span>
     </div>
   );
+}
+
+interface RecipeImageProps {
+  recipe: { image?: string | null; name?: string };
+  /** Taille de l'initiale du placeholder (px). */
+  fontSize?: number;
+  style?: CSSProperties;
+  alt?: string;
+}
+
+// Photo de recette avec le placeholder signature en repli (sans photo, en chargement
+// ou en échec), pour qu'aucune vignette de recette ne retombe sur l'icône « photo ».
+export function RecipeImage({ recipe, fontSize, style = { width: "100%", height: "100%" }, alt = recipe.name }: RecipeImageProps) {
+  return <Img src={recipe.image || undefined} alt={alt} style={style} fallback={<RecipePlaceholder name={recipe.name} fontSize={fontSize} style={style} />} />;
 }

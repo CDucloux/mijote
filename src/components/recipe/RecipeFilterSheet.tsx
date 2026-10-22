@@ -3,6 +3,7 @@ import type { CSSProperties, Dispatch, ReactNode, SetStateAction } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { IngImage } from "../ui/Img.jsx";
+import { SearchField } from "../ui/SearchField.jsx";
 import { cuisineEmoji } from "../../constants/cuisines.js";
 import { RECIPE_CATEGORIES, BASE_CATEGORIES, BASE_CATEGORY_IDS } from "../../constants/recipeCategories.js";
 import { DIFFICULTY_LABEL, difficultyColor } from "@/lib/recipes/difficulty.js";
@@ -80,23 +81,28 @@ function IngredientPicker({ ingredientDB, selected, setFilters }: { ingredientDB
             const ing = byId.get(id);
             if (!ing) return null;
             return (
-              <button key={id} onClick={() => toggle(id)} className="ripple" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px 5px 5px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: "rgba(var(--accent-rgb),0.16)", color: "var(--accent)" }}>
+              <button key={id} onClick={() => toggle(id)} className="ripple ing-chip" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 5px 5px 5px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: "rgba(var(--accent-rgb),0.16)", color: "var(--accent)" }}>
                 <span style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "var(--surface)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={22} /></span>
                 {ing.name}
-                <Icon name="close" size={12} color="var(--accent)" />
+                <span className="ing-chip-x"><Icon name="close" size={12} color="currentColor" /></span>
               </button>
             );
           })}
         </div>
       )}
-      <input className="field-input field-bare" placeholder="Rechercher un ingrédient…" value={q} onChange={e => setQ(e.target.value)} />
+      <SearchField value={q} onChange={setQ} placeholder="Rechercher un ingrédient…" />
       {matches.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 10 }}>
+          {/* Pas de marge négative : la section repliable rogne (overflow hidden) tout
+              ce qui dépasse, y compris le liseré de survol des lignes. */}
           {matches.map(ing => (
-            <button key={ing.id} onClick={() => { toggle(ing.id); setQ(""); }} className="ripple" style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "7px 8px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
-              <span style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={30} /></span>
-              <span style={{ fontSize: 13.5, color: "var(--text)" }}>{ing.name}</span>
-              <span style={{ marginLeft: "auto", display: "inline-flex" }}><Icon name="plus" size={15} color="var(--text3)" /></span>
+            <button key={ing.id} onClick={() => { toggle(ing.id); setQ(""); }} className="ripple complete-row" style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 8, borderRadius: 14, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+              <span style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={36} /></span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 500, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ing.name}</span>
+              {/* « + » en pastille teintée, qui passe en accent plein au survol (cf. .complete-row). */}
+              <span className="complete-add" style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)" }}>
+                <Icon name="plus" size={15} color="currentColor" />
+              </span>
             </button>
           ))}
         </div>
@@ -114,12 +120,11 @@ interface RecipeFilterSheetProps {
   ingredientDB?: DbEntry[];
   resultCount?: number;
   onClose: () => void;
-  onSaveAsCarnet?: () => void;
-  alreadySaved?: boolean;
-  updatingCarnetName?: string | null;
+  /** Feuille ouverte depuis un carnet intelligent : applique la vue à ce carnet. */
+  carnetAction?: { label: string; hint: string; onApply: () => void } | null;
 }
 
-export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], usedChefs = [], ingredientDB = [], resultCount = 0, onClose, onSaveAsCarnet, alreadySaved = false, updatingCarnetName = null }: RecipeFilterSheetProps) {
+export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], usedChefs = [], ingredientDB = [], resultCount = 0, onClose, carnetAction = null }: RecipeFilterSheetProps) {
   const set = (patch: Partial<RecipeFilters>) => setFilters(f => ({ ...f, ...patch }));
   const toggleCuisine = (label: string) => setFilters(f => ({
     ...f, cuisines: f.cuisines.includes(label) ? f.cuisines.filter(c => c !== label) : [...f.cuisines, label],
@@ -148,7 +153,6 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], used
       <div style={{ position: "sticky", top: 0, zIndex: 5, display: "flex", alignItems: "center", gap: 10, background: "var(--surface)", margin: "0 -20px 10px", padding: "18px 20px 12px", borderBottom: "1px solid var(--border)" }}>
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}><path d="M3 5h18M6 12h12M10 19h4" stroke="var(--text)" strokeWidth="2" strokeLinecap="round" /></svg>
         <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, margin: 0, lineHeight: 1 }}>Tous les filtres</h2>
-        {nActive > 0 && <button onClick={reset} style={{ alignSelf: "center", background: "none", border: "none", color: "var(--accent)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0, lineHeight: 1 }}>Réinitialiser</button>}
         <button onClick={onClose} aria-label="Fermer" className="icon-btn-soft ripple" style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", background: "none", border: "none", display: "grid", placeItems: "center", cursor: "pointer" }}><Icon name="close" size={15} color="var(--text2)" /></button>
       </div>
 
@@ -252,7 +256,7 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], used
         <div style={{ display: "flex", gap: 8 }}>
           {["A", "B", "C", "D", "E"].map(l => {
             const on = filters.nutriMax === l;
-            return <button key={l} onClick={() => set({ nutriMax: on ? null : l })} className="ripple" style={{ flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 14, fontWeight: 800, cursor: "pointer", background: on ? NUTRI[l] : "var(--surface2)", color: on ? "#fff" : "var(--text3)", border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{l}</button>;
+            return <button key={l} onClick={() => set({ nutriMax: on ? null : l })} aria-pressed={on} className={`ripple nutri-opt${on ? " on" : " hover-tint"}`} style={{ "--tint": NUTRI[l], flex: 1, padding: "10px 0", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", border: "none", background: on ? NUTRI[l] : "var(--surface2)", color: on ? "#fff" : undefined } as CSSProperties}>{l}</button>;
           })}
         </div>
       </Group>
@@ -285,29 +289,30 @@ export function RecipeFilterSheet({ filters, setFilters, usedCuisines = [], used
 
       {/* CTA, pied plein, sans liseré, jusqu'au bas de la feuille */}
       <div style={{ position: "sticky", bottom: 0, background: "var(--surface)", margin: "6px -20px 0", padding: "10px 20px calc(16px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 10 }}>
-        <button className="btn btn-primary" style={{ width: "100%", borderRadius: 30, padding: "14px 0", fontSize: 14.5, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={onClose}>
-          <Icon name="search" size={17} color="#fff" /> Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
-        </button>
-        {/* Enregistrer / mettre à jour la vue comme carnet (bibliothèque perso) */}
-        {onSaveAsCarnet && nActive > 0 && (
-          alreadySaved && !updatingCarnetName ? (
-            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: "var(--ok)", padding: "4px 0" }}>
-              <Icon name="check" size={15} color="var(--ok)" /> Vue enregistrée comme carnet
-            </div>
-          ) : (
-            <button onClick={onSaveAsCarnet} className="pressable save-carnet-btn" style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 11px", borderRadius: 16, cursor: "pointer", textAlign: "left" }}>
-              <span className="save-carnet-icon" style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "var(--accent)", boxShadow: "0 4px 12px -4px rgba(var(--accent-rgb),0.6)" }}>
-                <Icon name={updatingCarnetName ? "check" : "book"} size={17} color="#fff" />
-              </span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{updatingCarnetName ? `Mettre à jour « ${updatingCarnetName} »` : "Enregistrer comme carnet"}</span>
-                <span style={{ display: "block", fontSize: 11.5, color: "var(--text2)", marginTop: 1 }}>{updatingCarnetName ? "Remplacer les filtres du carnet" : "Retrouve cette sélection en un tap"}</span>
-              </span>
-              <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.14)" }}>
-                <Icon name={updatingCarnetName ? "forward" : "plus"} size={15} color="var(--accent)" />
-              </span>
-            </button>
-          )
+        {/* Réinitialiser vit à côté du CTA : les deux agissent sur le résultat, à portée de pouce. */}
+        <div style={{ display: "flex" }}>
+          <button onClick={reset} className={`ripple hover-neutral reset-pill${nActive > 0 ? " on" : ""}`} aria-hidden={nActive === 0} tabIndex={nActive > 0 ? 0 : -1} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, borderRadius: 30, border: "none", background: "var(--surface2)", color: "var(--text)", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", cursor: "pointer" }}>
+            <Icon name="reset" size={16} color="currentColor" /> Réinitialiser
+          </button>
+          <button className="btn btn-primary" style={{ flex: 1, minWidth: 0, borderRadius: 30, padding: "14px 0", fontSize: 14.5, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }} onClick={onClose}>
+            <Icon name="search" size={17} color="#fff" /> Voir {resultCount} recette{resultCount > 1 ? "s" : ""}
+          </button>
+        </div>
+        {/* Ouverte depuis un carnet intelligent (création ou modification) : renvoie la
+            vue au carnet. La création d'un carnet se fait dans la feuille « Nouveau carnet ». */}
+        {carnetAction && (
+          <button onClick={carnetAction.onApply} className="pressable save-carnet-btn" style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 11px", borderRadius: 16, cursor: "pointer", textAlign: "left" }}>
+            <span className="save-carnet-icon" style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "var(--accent)" }}>
+              <Icon name="check" size={17} color="#fff" />
+            </span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{carnetAction.label}</span>
+              <span style={{ display: "block", fontSize: 11.5, color: "var(--text2)", marginTop: 1 }}>{carnetAction.hint}</span>
+            </span>
+            <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.14)" }}>
+              <Icon name="forward" size={15} color="var(--accent)" />
+            </span>
+          </button>
         )}
       </div>
     </div>

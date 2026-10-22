@@ -24,6 +24,7 @@ La dette technique est l'ennemi. Chaque changement doit **réduire ou maintenir*
 ## 3. Frontend : UI/UX ULTRA SLEEK & MODERNE, standard designer 2026
 L'interface doit avoir le niveau d'un **produit conçu par un designer UI/UX senior en 2026** : épurée, cohérente, raffinée.
 - **Pills > boutons carrés/moches.** Formes arrondies, coins doux, hiérarchie visuelle claire.
+- **Borderless par défaut.** Pas de bordure `1px solid var(--border)` autour des lignes, cartes, champs ou pastilles : un élément se détache par un **niveau de surface** (`--surface2` dans une feuille, `--float-surface` + `--float-shadow` sur le fond de page) ou par le blanc. Le survol desktop passe par les classes partagées de `interactions.css` (`hover-neutral`, `hover-tint`…), voile sans liseré. Une bordure ne subsiste que si elle porte un état (focus clavier, contrôle de case/radio, zone de dépôt).
 - **Tokens de design** (`var(--…)`) plutôt que des couleurs en dur ; réutiliser les primitives existantes.
 - Micro-interactions natives (ripple mobile, pressable, transitions douces), respect du thème sombre/clair et des safe-areas.
 - Jamais de rendu « brut » ou d'état vide non soigné : squelettes/spinners pendant le chargement, états vides travaillés.

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import type { IconName } from "../ui/Icon.jsx";
-import { Img } from "../ui/Img.jsx";
+import { RecipeImage } from "../recipe/RecipePlaceholder.jsx";
 import { SearchField } from "../ui/SearchField.jsx";
 import { NutriScoreBadge } from "../badges/NutriScoreBadge.jsx";
 import type { NutriLetter } from "../badges/NutriScoreBadge.jsx";
@@ -108,7 +108,7 @@ export function AddRecipeSheet({ date, initialSlot, lockSlot, recipes, liveNutri
             return (
               <button key={r.id} onClick={() => confirm(r, close)} disabled={!!addedId} className="complete-row ripple"
                 style={{ display: "flex", alignItems: "center", gap: 12, padding: 10, background: added ? "rgba(var(--ok-rgb),0.1)" : "transparent", borderRadius: 16, border: "none", textAlign: "left", cursor: addedId ? "default" : "pointer", transition: "background-color 0.25s ease, opacity 0.25s ease", opacity: addedId && !added ? 0.55 : 1 }}>
-                <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><Img src={r.image} alt={r.name} style={{ width: "100%", height: "100%" }} /></div>
+                <div style={{ width: 54, height: 54, borderRadius: 12, overflow: "hidden", flexShrink: 0 }}><RecipeImage recipe={r} fontSize={24} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>{r.name}</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

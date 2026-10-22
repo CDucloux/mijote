@@ -498,7 +498,7 @@ export const importRecipeFromUrl = onCall(
       // jamais l'image principale du plat.
       const pageImages = imageUrlsInText(text);
       for (const s of inter.steps) s.image = (s.image && s.image !== ogImage && pageImages.has(s.image)) ? s.image : "";
-      const recipe = assignIdsAndLink(inter);
+      const recipe = assignIdsAndLink(inter, knownUtensils);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur cette page.");
       const result = { recipe, method: "llm" };
       await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
@@ -548,7 +548,7 @@ export const importRecipeFromImages = onCall(
       inter.image = "";
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // pas d'URL d'image exploitable depuis une photo
-      const recipe = assignIdsAndLink(inter);
+      const recipe = assignIdsAndLink(inter, knownUtensils);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée sur la photo.");
       const result = { recipe, method: "image", coverIndex };
       await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
@@ -591,7 +591,7 @@ export const importRecipeFromText = onCall(
       inter.image = "";
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un texte collé
-      const recipe = assignIdsAndLink(inter);
+      const recipe = assignIdsAndLink(inter, knownUtensils);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée dans ce texte.");
       const result = { recipe, method: "text" };
       await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });
@@ -633,7 +633,7 @@ export const importRecipeFromPdf = onCall(
       inter.image = "";
       inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
       for (const s of inter.steps) s.image = ""; // aucune URL d'image dans un PDF texte
-      const recipe = assignIdsAndLink(inter);
+      const recipe = assignIdsAndLink(inter, knownUtensils);
       if (!recipe.name || !recipe.ingredients.length) throw new HttpsError("not-found", "Aucune recette détectée dans ce PDF.");
       const result = { recipe, method: "pdf" };
       await writeImportCache(request.auth.uid, requestId, result).catch(() => { /* best-effort */ });

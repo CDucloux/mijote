@@ -1,5 +1,23 @@
 # Changelog – Cardamome
 
+## v4.77.0 – Cardamome · Bols de découpe, courses sans bordure
+
+### Import de recettes
+- **Un bol par étape de découpe** : toute étape qui taille un ingrédient (ou se fait sur la planche) reçoit un bol pour réserver la découpe. Le modèle est guidé dans ce sens, et une règle le garantit quand il l'oublie (bol de la base master, jamais inventé). Actif après déploiement des Cloud Functions.
+
+### Filtres et carnets
+- **Réinitialiser** : pilule avec icône, à côté de « Voir N recettes », qui se replie en douceur quand plus aucun filtre n'est actif.
+- **Nutri-Score** : lettres sans bordure, teintées de leur couleur au survol.
+- **Ingrédients** : recherche en pilule, suggestions en lignes au survol cohérent, croix des pastilles cerclée au survol.
+- **Carnets** : un carnet intelligent se crée depuis « Nouveau carnet » (plus depuis les filtres) ; éditeur avec nom sans bordure, titre et choix Manuel / Intelligent collants, survol des couleurs et icônes sans rebond ; plus de halo sur la pastille de compte.
+
+### Partout
+- **Vignettes sans photo** : le placeholder à initiale remplace l'icône photo (planning, accueil, batch cooking, bocal, ajout de recette).
+- **Images d'ustensiles** : anneau de chargement puis fondu, comme les ingrédients.
+- **Courses sans bordure** : lignes d'articles, onglet « Toutes les courses » et réglage de liste.
+- **Lignes de choix** (ajouter une recette, compléter le repas) : survol en voile seul, sans liseré.
+- **Recherche dans les feuilles** : plus d'anneau vert au focus, et de nouveau visible en thème clair.
+
 ## v4.76.0 – Cardamome · Feuilles épurées, carnets fluides
 
 ### Planning

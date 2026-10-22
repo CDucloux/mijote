@@ -72,7 +72,7 @@ export function NotebooksRow({ notebooks, countOf, isActive, hidden, onToggleHid
                 style={{ flexShrink: 0, width: 134, padding: 0, border: "none", background: "transparent", cursor: "grab", borderRadius: 14, opacity: dragId === nb.id ? 0.4 : 1 }}>
                 <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: active ? `0 0 0 2px ${color}` : "none" }}>
                   <NotebookCover color={color} icon={nb.icon || DEFAULT_NOTEBOOK_ICON}>
-                    <div style={{ position: "absolute", top: 8, right: 8, minWidth: 22, height: 22, borderRadius: 11, background: count ? color : "var(--surface3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: count ? "#fff" : "var(--text3)", padding: "0 6px", boxShadow: count ? `0 2px 6px -1px ${color}99` : "none" }}>{count}</div>
+                    <div style={{ position: "absolute", top: 8, right: 8, minWidth: 22, height: 22, borderRadius: 11, background: count ? color : "var(--surface3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: count ? "#fff" : "var(--text3)", padding: "0 6px" }}>{count}</div>
                   </NotebookCover>
                   <div style={{ padding: "9px 11px 11px", background: "var(--surface)", borderTop: `1px solid ${color}22` }}>
                     <div style={{ fontFamily: "var(--ff-display)", fontSize: 15, fontWeight: 700, textAlign: "left", letterSpacing: "-0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{nb.name}</div>

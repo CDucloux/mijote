@@ -1,8 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { Recipe } from "@/lib/types.js";
 import { Icon } from "../ui/Icon.jsx";
-import { Img } from "../ui/Img.jsx";
-import { RecipePlaceholder } from "../recipe/RecipePlaceholder.jsx";
+import { RecipeImage } from "../recipe/RecipePlaceholder.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 
 type CircleKind = "accent" | "brand" | "neutral";
@@ -51,7 +50,7 @@ export function ShareSheet({ recipe, publicUrl, shareText, onCopyLink, onNativeS
       {/* Aperçu type carte de la recette */}
       <div style={{ display: "flex", alignItems: "center", gap: 13, padding: 11, borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "0 4px 14px rgba(0,0,0,0.06)", marginBottom: 20 }}>
         <div style={{ width: 66, height: 66, borderRadius: 14, overflow: "hidden", flexShrink: 0, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}>
-          <Img src={recipe.image} alt={recipe.name} style={{ width: "100%", height: "100%" }} fallback={<RecipePlaceholder name={recipe.name} fontSize={30} style={{ width: "100%", height: "100%" }} />} />
+          <RecipeImage recipe={recipe} fontSize={30} />
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontFamily: "var(--ff-display)", fontSize: 16, fontWeight: 700, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{recipe.name}</div>

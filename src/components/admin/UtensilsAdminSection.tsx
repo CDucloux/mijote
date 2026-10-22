@@ -1,4 +1,4 @@
-import { Img } from "../ui/Img.jsx";
+import { UtImage } from "../recipe/StepPills.jsx";
 import { MasterBadge, RowActions } from "./AdminPrimitives.jsx";
 import { BaseImportExport } from "./BaseImportExport.jsx";
 import { UTENSIL_CATEGORIES } from "@/lib/household/dataYaml.js";
@@ -35,7 +35,7 @@ export function UtensilsAdminSection({ utensilDB, isAdmin, onEdit, onDelete, tra
             <div className="config-ut-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {list.map((item, ui) => (
                 <div key={item.id} className="slide-up" style={{ background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)", padding: 12, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, animationDelay: `${ui * 0.03}s` }}>
-                  <div style={{ width: 50, height: 50, borderRadius: 10, overflow: "hidden", background: "#fff", display: "grid", placeItems: "center" }}><Img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 5, boxSizing: "border-box" }} /></div>
+                  <UtImage src={item.image} alt={item.name} size={50} radius={10} />
                   <span style={{ fontSize: 13, fontWeight: 500, textAlign: "center" }}>{item.name}</span>
                   <div style={{ display: "flex", gap: 8 }}>
                     {item._ro ? <MasterBadge /> : <RowActions onEdit={() => onEdit(item)} onDelete={() => onDelete(item)} />}

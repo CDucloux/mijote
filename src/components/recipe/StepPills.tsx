@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
-import { Img, IngImage } from "../ui/Img.jsx";
+import { IngImage } from "../ui/Img.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { useImageState } from "../../hooks/useImageState.js";
 import { fmtQtyUnit } from "../../lib/format.js";
 
 // Pastilles (chips ingrédient / ustensile), extraites des styles inline répétés
@@ -38,14 +40,25 @@ interface UtImageProps {
   size?: number;
   radius?: number | string;
   border?: boolean;
+  /** Styles du conteneur (ex. opacité d'un ustensile déjà rassemblé). */
+  style?: CSSProperties;
 }
 
 // Image d'ustensile : détourée (contain) sur pastille blanche. Réutilisée partout
-// où un ustensile s'affiche (pastilles d'étapes, listes).
-export function UtImage({ src, alt, size = 22, radius = "50%", border = false }: UtImageProps) {
+// où un ustensile s'affiche (pastilles d'étapes, listes, sélecteur, admin). Même
+// chargement que IngImage : anneau différé, puis fondu d'opacité à l'arrivée.
+export function UtImage({ src, alt, size = 22, radius = "50%", border = false, style }: UtImageProps) {
+  const { loaded, err, imgRef, onLoad, onError } = useImageState(src);
   return (
-    <span style={{ width: size, height: size, borderRadius: radius, overflow: "hidden", background: "#fff", flexShrink: 0, display: "inline-flex", border: border ? "1px solid rgba(0,0,0,0.08)" : undefined, boxSizing: "border-box" }}>
-      <Img src={src} alt={alt} style={utImgStyle} />
+    <span style={{ position: "relative", width: size, height: size, borderRadius: radius, overflow: "hidden", background: "#fff", flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", border: border ? "1px solid rgba(0,0,0,0.08)" : undefined, boxSizing: "border-box", ...style }}>
+      {src && !err && !loaded && (
+        <span className="ing-img-spinner" role="status" aria-label="Chargement"
+          style={{ width: Math.max(10, Math.round(size * 0.4)), height: Math.max(10, Math.round(size * 0.4)) }} />
+      )}
+      {src && !err
+        ? <img ref={imgRef} src={src} alt={alt || ""} onLoad={onLoad} onError={onError} referrerPolicy="no-referrer"
+          loading="lazy" decoding="async" className="ing-img-reveal" data-loaded={loaded ? "1" : undefined} style={utImgStyle} />
+        : <Icon name="photo" size={Math.round(size * 0.42)} color="#b3afaa" />}
     </span>
   );
 }
