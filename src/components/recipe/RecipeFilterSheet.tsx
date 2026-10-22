@@ -81,10 +81,10 @@ function IngredientPicker({ ingredientDB, selected, setFilters }: { ingredientDB
             const ing = byId.get(id);
             if (!ing) return null;
             return (
-              <button key={id} onClick={() => toggle(id)} className="ripple" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 9px 5px 5px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: "rgba(var(--accent-rgb),0.16)", color: "var(--accent)" }}>
+              <button key={id} onClick={() => toggle(id)} className="ripple ing-chip" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 5px 5px 5px", borderRadius: 20, fontSize: 12.5, fontWeight: 500, cursor: "pointer", background: "rgba(var(--accent-rgb),0.16)", color: "var(--accent)" }}>
                 <span style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", background: "var(--surface)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={22} /></span>
                 {ing.name}
-                <Icon name="close" size={12} color="var(--accent)" />
+                <span className="ing-chip-x"><Icon name="close" size={12} color="currentColor" /></span>
               </button>
             );
           })}
