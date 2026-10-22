@@ -92,7 +92,9 @@ function IngredientPicker({ ingredientDB, selected, setFilters }: { ingredientDB
       )}
       <SearchField value={q} onChange={setQ} placeholder="Rechercher un ingrédient…" />
       {matches.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, margin: "10px -8px 0" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 10 }}>
+          {/* Pas de marge négative : la section repliable rogne (overflow hidden) tout
+              ce qui dépasse, y compris le liseré de survol des lignes. */}
           {matches.map(ing => (
             <button key={ing.id} onClick={() => { toggle(ing.id); setQ(""); }} className="ripple complete-row" style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 8, borderRadius: 14, background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
               <span style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", background: "var(--surface2)", display: "grid", placeItems: "center", flexShrink: 0 }}><IngImage src={ing.image} alt={ing.name} size={36} /></span>
