@@ -61,7 +61,7 @@ export function NotebookEditorSheet({ draft, setDraft, smartCount, onEditFilters
 
         <div style={{ marginBottom: 16 }}>
           <div className="field-label" style={{ marginBottom: 7 }}>Nom</div>
-          <input className="field-input" placeholder={draft.smart ? "ex: Desserts rapides" : "ex: Recettes de Mamie"} value={draft.name} ref={focusNoScroll} onChange={e => patch({ name: e.target.value })} />
+          <input className="field-input field-bare" placeholder={draft.smart ? "ex: Desserts rapides" : "ex: Recettes de Mamie"} value={draft.name} ref={focusNoScroll} onChange={e => patch({ name: e.target.value })} />
         </div>
 
         <div className="field-label" style={{ marginBottom: 9 }}>Couleur</div>
@@ -69,9 +69,8 @@ export function NotebookEditorSheet({ draft, setDraft, smartCount, onEditFilters
           {NOTEBOOK_COLORS.map(c => {
             const on = draft.color === c;
             return (
-              <button key={c} onClick={() => patch({ color: c })} aria-label={`Couleur ${c}`} className="pressable"
-                style={{ width: 34, height: 34, borderRadius: "50%", background: c, border: "none", cursor: "pointer", display: "grid", placeItems: "center",
-                  boxShadow: on ? `0 0 0 2px var(--surface), 0 0 0 4px ${c}` : "none", transition: "box-shadow 0.15s ease" }}>
+              <button key={c} onClick={() => patch({ color: c })} aria-label={`Couleur ${c}`} aria-pressed={on} className="pressable nb-swatch"
+                style={{ "--swatch": c, width: 34, height: 34, borderRadius: "50%", background: c, border: "none", cursor: "pointer", display: "grid", placeItems: "center" } as CSSProperties}>
                 {on && <Icon name="check" size={16} color="#fff" />}
               </button>
             );
@@ -83,12 +82,11 @@ export function NotebookEditorSheet({ draft, setDraft, smartCount, onEditFilters
           {NOTEBOOK_ICONS.map(ico => {
             const on = draft.icon === ico;
             return (
-              <button key={ico} onClick={() => patch({ icon: ico })} className="pressable"
+              <button key={ico} onClick={() => patch({ icon: ico })} aria-pressed={on} className="pressable hover-neutral nb-ico"
                 style={{ aspectRatio: "1/1", borderRadius: 12, fontSize: 21, display: "grid", placeItems: "center", cursor: "pointer",
                   background: on ? draft.color + "22" : "var(--surface2)",
                   border: `2px solid ${on ? draft.color : "transparent"}`,
-                  boxShadow: on ? `0 4px 12px -4px ${draft.color}88` : "none",
-                  transition: "background 0.15s ease, border-color 0.15s ease" }}>{ico}</button>
+                  transition: "background 0.15s ease, border-color 0.15s ease" }}><span>{ico}</span></button>
             );
           })}
         </div>
