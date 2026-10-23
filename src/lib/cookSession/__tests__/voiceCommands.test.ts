@@ -154,8 +154,12 @@ describe("astuce et fin de recette", () => {
     expect(parseVoiceCommand("recette terminée")).toEqual({ kind: "finish" });
     expect(parseVoiceTail("voilà c'est bon recette terminée").command).toEqual({ kind: "finish" });
   });
-  it("ne termine pas sur « terminé » seul", () => {
-    expect(parseVoiceCommand("terminé")).toBeNull();
+  it("termine sur « terminé » seul", () => {
+    expect(parseVoiceCommand("terminé")).toEqual({ kind: "finish" });
+    expect(parseVoiceCommand("c'est terminé")).toEqual({ kind: "finish" });
+  });
+  it("ne termine pas sur « terminée » lu dans l'étape", () => {
+    expect(parseVoiceTail("une fois la cuisson terminée", 0, "Étape 4. Une fois la cuisson terminée, servir.").command).toBeNull();
   });
   it("lit l'astuce, ou dit qu'il n'y en a pas", () => {
     expect(tipSpeech(" Ne pas trop remuer. ")).toBe("Astuce de l'étape : Ne pas trop remuer.");
@@ -230,5 +234,27 @@ describe("aide des commandes vocales", () => {
     expect(parseVoiceCommand("commandes vocales")).toEqual({ kind: "help" });
     expect(parseVoiceCommand("aide")).toEqual({ kind: "help" });
     expect(parseVoiceCommand("ferme")).toEqual({ kind: "close" });
+  });
+});
+
+describe("aller à une étape", () => {
+  it("reconnaît le numéro en chiffres ou en lettres", () => {
+    expect(parseVoiceCommand("étape 3")).toEqual({ kind: "goto", step: 3 });
+    expect(parseVoiceCommand("va à l'étape deux")).toEqual({ kind: "goto", step: 2 });
+    expect(parseVoiceCommand("étape une")).toEqual({ kind: "goto", step: 1 });
+    expect(parseVoiceCommand("première étape")).toBeNull();
+    expect(parseVoiceCommand("étape dix sept")).toEqual({ kind: "goto", step: 17 });
+    expect(parseVoiceCommand("étape 12")).toEqual({ kind: "goto", step: 12 });
+  });
+  it("laisse « étape suivante » à la navigation", () => {
+    expect(parseVoiceCommand("étape suivante")).toEqual({ kind: "next" });
+  });
+  it("ignore « étape » sans numéro valide", () => {
+    expect(parseVoiceCommand("étape")).toBeNull();
+    expect(parseVoiceCommand("étape 0")).toBeNull();
+  });
+  it("ignore l'annonce « Étape 3 » de la lecture captée par le micro", () => {
+    expect(parseVoiceTail("étape 3 faire revenir", 0, "Étape 3. Faire revenir les oignons.").command).toBeNull();
+    expect(parseVoiceTail("étape 5", 0, "Étape 3. Faire revenir les oignons.").command).toEqual({ kind: "goto", step: 5 });
   });
 });

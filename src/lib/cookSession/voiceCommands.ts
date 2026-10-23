@@ -26,6 +26,7 @@ export type VoiceCommand =
   | { kind: "tip" }
   | { kind: "technique"; query?: string }
   | { kind: "finish" }
+  | { kind: "goto"; step: number }
   | { kind: "silence" }
   | { kind: "readOff" }
   | { kind: "readOn" }
@@ -40,8 +41,8 @@ export const MAX_COMMAND_WORDS = 6;
 // Ordre = priorité : « pause le minuteur » met en pause, il n'en lance pas un nouveau.
 // Une entrée peut tenir en plusieurs mots (« mise en place »). « arrête » est exclu :
 // trop fréquent dans une cuisine pour couper un minuteur.
-const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
-  ["finish", ["recette terminee", "recette finie", "recette fini"]],
+const VOCABULARY: readonly [Exclude<VoiceCommand["kind"], "goto">, readonly string[]][] = [
+  ["finish", ["termine", "terminee", "recette finie", "recette fini"]],
   ["help", ["commandes", "commande vocale", "commandes vocales", "aide"]],
   ["close", ["ferme", "fermer"]],
   ["readOff", ["lecture off", "lecture of", "lecture coupee"]],
@@ -58,6 +59,20 @@ const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
   ["prev", ["precedent", "precedente", "retour", "reviens", "arriere"]],
   ["next", ["suivant", "suivante", "ensuite", "continue", "continuer"]],
 ];
+
+/** Nombres dits en toutes lettres (la dictée rend souvent « étape un », « étape deux »). */
+const NUMBER_WORDS: Record<string, number> = {
+  un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9, dix: 10,
+  onze: 11, douze: 12, treize: 13, quatorze: 14, quinze: 15, seize: 16, dix_sept: 17, dix_huit: 18, dix_neuf: 19, vingt: 20,
+};
+
+/** Numéro d'étape dit (« 3 », « trois », « premiere »), ou `null`. */
+function stepNumber(word: string | undefined): number | null {
+  if (!word) return null;
+  if (/^\d{1,2}$/.test(word)) return Number(word);
+  if (word === "premiere" || word === "1ere") return 1;
+  return NUMBER_WORDS[word] ?? null;
+}
 
 /** Mots de liaison ignorés après « technique » (« technique du monter », « technique pour… »). */
 const FILLER = new Set(["de", "du", "des", "la", "le", "les", "l", "d", "pour", "sur"]);
@@ -77,6 +92,15 @@ const wordsOf = (text: string | null | undefined): string[] =>
 export function parseVoiceCommand(transcript: string | null | undefined, ignoredWords?: ReadonlySet<string>): VoiceCommand | null {
   const words = wordsOf(transcript);
   if (words.length === 0 || words.length > MAX_COMMAND_WORDS) return null;
+  // « étape 3 » : aller à une étape. Passe avant « étape suivante » (sans numéro).
+  // Les nombres composés (« dix sept ») sont recollés pour la table.
+  for (let i = 0; i < words.length - 1; i++) {
+    if (words[i] !== "etape") continue;
+    const composed = words[i + 1] === "dix" && words[i + 2] ? stepNumber(`dix_${words[i + 2]}`) : null;
+    const step = composed ?? stepNumber(words[i + 1]);
+    const echoed = ignoredWords?.has("etape") && ignoredWords.has(words[i + 1] ?? "");
+    if (step !== null && step > 0 && !echoed) return { kind: "goto", step };
+  }
   const said = ` ${words.join(" ")} `;
   const heardKeyword = (keyword: string): boolean =>
     said.includes(` ${keyword} `) && !keyword.split(" ").every(word => ignoredWords?.has(word));
@@ -171,7 +195,8 @@ export const VOICE_HELP: readonly VoiceHelpGroup[] = [
       { say: "Suivant", also: ["ensuite", "continue"], does: "Page suivante", kind: "next" },
       { say: "Précédent", also: ["retour"], does: "Page précédente", kind: "prev" },
       { say: "Mise en place", does: "Ingrédients, ustensiles et découpes", kind: "overview" },
-      { say: "Recette terminée", does: "Terminer la recette", kind: "finish" },
+      { say: "Étape 3", does: "Aller à l'étape dite", kind: "goto" },
+      { say: "Terminé", also: ["recette terminée"], does: "Terminer la recette", kind: "finish" },
     ],
   },
   {

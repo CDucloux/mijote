@@ -2,7 +2,7 @@
  * Branche le mode mains libres sur le pas à pas : chaque page est lue à voix
  * haute en arrivant dessus, et les commandes vocales (« suivant », « précédent »,
  * « mise en place », « répète », « astuce », « technique », « silence », « lecture off / on »,
- * « minuteur », « pause », « reprends », « stop », « recette terminée », « commandes »)
+ * « étape 3 », « minuteur », « pause », « reprends », « stop », « terminé », « commandes »)
  * pilotent la
  * navigation et les minuteurs.
  *
@@ -31,8 +31,12 @@ export interface UseCookVoiceOptions {
   tip?: string | null;
   /** Gestes du glossaire cités dans l'étape, lus sur « technique ». */
   techniques: readonly TechniqueEntry[];
-  /** Termine la recette (« recette terminée »). */
+  /** Termine la recette (« terminé »). */
   onFinish: () => void;
+  /** Nombre d'étapes de la recette : borne « étape N ». */
+  stepCount: number;
+  /** Va à l'étape réelle `index` (base 0), déjà bornée. */
+  onGotoStep: (index: number) => void;
   /** Retour à la mise en place ; rend `false` si la recette n'en a pas. */
   onOverview: () => boolean;
   /** Lance un minuteur (durée dite, sinon celle de l'étape) ; rend la durée lancée, ou `null`. */
@@ -50,7 +54,7 @@ export interface UseCookVoiceOptions {
  * @param options - Page courante, actions de navigation et de minuteur, cf. {@link UseCookVoiceOptions}.
  * @returns L'état du mode et sa bascule, cf. {@link UseVoiceControlResult}.
  */
-export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, onNext, onPrev, onOverview, onTimer, onTimerAction, onHelp, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
+export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, stepCount, onGotoStep, onNext, onPrev, onOverview, onTimer, onTimerAction, onHelp, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
   // Lecture automatique de chaque page (« lecture off / on ») : retenue d'une recette à l'autre.
   const [autoRead, setAutoRead] = useLS("rf_cookVoiceAutoRead", true);
   const speechRef = useRef(speech);
@@ -78,6 +82,10 @@ export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, onNex
         const on = command.kind === "readOn";
         setAutoRead(on);
         voice.speak(on ? "Lecture des étapes relancée." : "Lecture des étapes coupée.");
+      }
+      else if (command.kind === "goto") {
+        if (command.step <= stepCount) onGotoStep(command.step - 1);
+        else voice.speak(stepCount > 0 ? `Cette recette n'a que ${stepCount} étape${stepCount > 1 ? "s" : ""}.` : "Cette recette n'a pas d'étapes.");
       }
       else if (command.kind === "finish") {
         // Graphie phonétique, jamais affichée : les synthèses vocales ratent la liaison
