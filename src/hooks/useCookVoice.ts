@@ -1,7 +1,7 @@
 /**
  * Branche le mode mains libres sur le pas à pas : chaque page est lue à voix
  * haute en arrivant dessus, et les commandes vocales (« suivant », « précédent »,
- * « mise en place », « répète », « astuce », « silence », « lecture off / on »,
+ * « mise en place », « répète », « astuce », « technique », « silence », « lecture off / on »,
  * « minuteur », « pause », « reprends », « stop », « recette terminée ») pilotent la
  * navigation et les minuteurs.
  *
@@ -12,7 +12,8 @@ import { useVoiceControl, type UseVoiceControlResult } from "./useVoiceControl.j
 import { useLS } from "./useLS.js";
 import type { StepDuration } from "@/lib/planning/stepTimers.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
-import { tipSpeech, type TimerAction } from "@/lib/cookSession/voiceCommands.js";
+import { techniqueSpeech, tipSpeech, type TimerAction } from "@/lib/cookSession/voiceCommands.js";
+import type { TechniqueEntry } from "@/lib/recipes/techniques.js";
 
 const TIMER_DONE: Record<TimerAction, string> = { pause: "en pause", resume: "repris", stop: "arrêté" };
 const NO_TIMER: Record<TimerAction, string> = { pause: "Aucun minuteur en marche.", resume: "Aucun minuteur en pause.", stop: "Aucun minuteur à arrêter." };
@@ -27,6 +28,8 @@ export interface UseCookVoiceOptions {
   onPrev: () => void;
   /** Astuce de la page courante, lue sur « astuce ». */
   tip?: string | null;
+  /** Gestes du glossaire cités dans l'étape, lus sur « technique ». */
+  techniques: readonly TechniqueEntry[];
   /** Termine la recette (« recette terminée »). */
   onFinish: () => void;
   /** Retour à la mise en place ; rend `false` si la recette n'en a pas. */
@@ -44,13 +47,14 @@ export interface UseCookVoiceOptions {
  * @param options - Page courante, actions de navigation et de minuteur, cf. {@link UseCookVoiceOptions}.
  * @returns L'état du mode et sa bascule, cf. {@link UseVoiceControlResult}.
  */
-export function useCookVoice({ speech, pageKey, tip, onFinish, onNext, onPrev, onOverview, onTimer, onTimerAction, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
+export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, onNext, onPrev, onOverview, onTimer, onTimerAction, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
   // Lecture automatique de chaque page (« lecture off / on ») : retenue d'une recette à l'autre.
   const [autoRead, setAutoRead] = useLS("rf_cookVoiceAutoRead", true);
   const speechRef = useRef(speech);
   const tipRef = useRef(tip);
+  const techniquesRef = useRef(techniques);
   const autoReadRef = useRef(autoRead);
-  useEffect(() => { speechRef.current = speech; tipRef.current = tip; autoReadRef.current = autoRead; });
+  useEffect(() => { speechRef.current = speech; tipRef.current = tip; techniquesRef.current = techniques; autoReadRef.current = autoRead; });
 
   const voice = useVoiceControl({
     paused,
@@ -60,6 +64,7 @@ export function useCookVoice({ speech, pageKey, tip, onFinish, onNext, onPrev, o
       else if (command.kind === "prev") onPrev();
       else if (command.kind === "repeat") voice.speak(speechRef.current);
       else if (command.kind === "tip") voice.speak(tipSpeech(tipRef.current));
+      else if (command.kind === "technique") voice.speak(techniqueSpeech(techniquesRef.current, command.query));
       else if (command.kind === "silence") voice.hush();
       else if (command.kind === "readOff" || command.kind === "readOn") {
         const on = command.kind === "readOn";

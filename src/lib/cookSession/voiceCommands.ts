@@ -12,6 +12,7 @@
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { parseDurations, type StepDuration } from "@/lib/planning/stepTimers.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
+import { annotateText, type TechniqueEntry, type TechniqueIndex } from "@/lib/recipes/techniques.js";
 
 /** Action vocale sur un minuteur déjà lancé. */
 export type TimerAction = "pause" | "resume" | "stop";
@@ -23,6 +24,7 @@ export type VoiceCommand =
   | { kind: "repeat" }
   | { kind: "overview" }
   | { kind: "tip" }
+  | { kind: "technique"; query?: string }
   | { kind: "finish" }
   | { kind: "silence" }
   | { kind: "readOff" }
@@ -47,10 +49,14 @@ const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
   ["timer", ["minuteur", "minuterie", "chrono", "timer"]],
   ["overview", ["mise en place"]],
   ["tip", ["astuce"]],
+  ["technique", ["technique", "techniques"]],
   ["repeat", ["repete", "repetes", "repeter", "relis", "relire", "redis", "redire"]],
   ["prev", ["precedent", "precedente", "retour", "reviens", "arriere"]],
   ["next", ["suivant", "suivante", "ensuite", "continue", "continuer"]],
 ];
+
+/** Mots de liaison ignorés après « technique » (« technique du monter », « technique pour… »). */
+const FILLER = new Set(["de", "du", "des", "la", "le", "les", "l", "d", "pour", "sur"]);
 
 const wordsOf = (text: string | null | undefined): string[] =>
   normalizeStr(text).replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
@@ -72,6 +78,12 @@ export function parseVoiceCommand(transcript: string | null | undefined, ignored
     said.includes(` ${keyword} `) && !keyword.split(" ").every(word => ignoredWords?.has(word));
   for (const [kind, keywords] of VOCABULARY) {
     if (!keywords.some(heardKeyword)) continue;
+    if (kind === "technique") {
+      // « technique monter » : les mots qui suivent nomment le geste voulu.
+      const at = words.findIndex(word => word.startsWith("technique"));
+      const query = words.slice(at + 1).filter(word => !FILLER.has(word)).join(" ");
+      return query ? { kind, query } : { kind };
+    }
     if (kind !== "timer") return { kind };
     const duration = parseDurations(words.join(" "))[0];
     return duration ? { kind, duration } : { kind };
@@ -149,6 +161,61 @@ const lowerFirst = (text: string): string => text.charAt(0).toLowerCase() + text
 export function tipSpeech(tip: string | null | undefined): string {
   const text = tip?.trim();
   return text ? `Astuce de l'étape : ${text}` : "Pas d'astuce pour cette étape.";
+}
+
+/**
+ * Gestes du glossaire cités dans le texte d'une étape, dans l'ordre, sans doublon.
+ * @param text - Texte de l'étape.
+ * @param index - Glossaire indexé (cf. `buildTechniqueIndex`).
+ * @returns Les techniques repérées.
+ */
+export function stepTechniques(text: string | null | undefined, index: TechniqueIndex | null | undefined): TechniqueEntry[] {
+  const seen = new Set<string>();
+  const found: TechniqueEntry[] = [];
+  for (const segment of annotateText(text, index)) {
+    if (!segment.tech || seen.has(segment.tech.id)) continue;
+    seen.add(segment.tech.id);
+    found.push(segment.tech);
+  }
+  return found;
+}
+
+const sentence = (text: string): string => (/[.!?…]$/.test(text) ? text : `${text}.`);
+const techniqueName = (technique: TechniqueEntry): string => technique.name?.trim() || technique.id;
+
+function describeTechnique(technique: TechniqueEntry): string {
+  const parts = [`${techniqueName(technique)}.`];
+  const definition = technique.definition?.trim();
+  const expected = technique.expected_result?.summary?.trim();
+  if (definition) parts.push(sentence(definition));
+  if (expected) parts.push(`Résultat attendu : ${sentence(lowerFirst(expected))}`);
+  return parts.join(" ");
+}
+
+/**
+ * Réponse à « technique » : la définition et le résultat attendu du geste de
+ * l'étape. Avec plusieurs gestes, on les énumère et on invite à en nommer un
+ * (« technique monter ») plutôt que de tout lire d'une traite, trop long à
+ * écouter les mains occupées.
+ * @param techniques - Techniques de l'étape (cf. {@link stepTechniques}).
+ * @param query - Geste nommé après « technique », s'il y en a un.
+ * @returns La phrase à lire.
+ */
+export function techniqueSpeech(techniques: readonly TechniqueEntry[], query?: string): string {
+  if (techniques.length === 0) return "Pas de technique repérée dans cette étape.";
+  if (query) {
+    const wanted = wordsOf(query).join(" ");
+    const match = techniques.find(technique =>
+      [techniqueName(technique), ...(technique.aliases ?? [])].some(label => {
+        const name = wordsOf(label).join(" ");
+        return name !== "" && (name.includes(wanted) || wanted.includes(name));
+      }));
+    if (match) return describeTechnique(match);
+  }
+  const [only] = techniques;
+  if (techniques.length === 1 && only) return describeTechnique(only);
+  const names = techniques.map(techniqueName);
+  return `${techniques.length} techniques dans cette étape : ${listFr(names)}. Dis par exemple : technique ${names[0]}.`;
 }
 
 /**

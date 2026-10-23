@@ -30,7 +30,7 @@ import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.
 import { companionText, cookPageLabel, pageKeyOf, partnerPositions } from "@/lib/cookSession/together.js";
 import { useCookTogether } from "../hooks/useCookTogether.js";
 import { useCookVoice } from "../hooks/useCookVoice.js";
-import { cookPageSpeech, voiceTimerTarget } from "@/lib/cookSession/voiceCommands.js";
+import { cookPageSpeech, stepTechniques, voiceTimerTarget } from "@/lib/cookSession/voiceCommands.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import type { IngredientLine, Recipe, Utensil, UtensilDbItem } from "@/lib/types.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
@@ -288,6 +288,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   }, [subCook, done, iterOpen, closing, stepIdx, totalSteps, isBases, allComponentsDone]);
 
   const stepDurations = useMemo(() => (step ? parseDurations(step.text) : []), [step]);
+  const currentTechniques = useMemo(() => stepTechniques(step?.text, techIndex), [step, techIndex]);
   const timerLabel = realIdx >= 0 ? `Étape ${realIdx + 1}` : isOverview ? "Mise en place" : "Bases";
 
   // Mains libres : la page est lue en arrivant dessus, la voix pilote la navigation
@@ -299,6 +300,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     speech: pageSpeech,
     pageKey: stepIdx,
     tip: step?.tip,
+    techniques: currentTechniques,
     onFinish: finishCooking,
     onNext: () => (stepIdx < totalSteps - 1 ? goNext() : finishCooking()),
     onPrev: goPrev,

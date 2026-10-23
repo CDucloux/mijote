@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech } from "@/lib/cookSession/voiceCommands.js";
+import { buildTechniqueIndex, type TechniqueEntry } from "@/lib/recipes/techniques.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
 
 describe("parseVoiceCommand", () => {
@@ -178,5 +179,41 @@ describe("silence et lecture automatique", () => {
   });
   it("ignore sa propre confirmation lue à voix haute", () => {
     expect(parseVoiceTail("lecture des étapes coupée", 0, "Lecture des étapes coupée.").command).toBeNull();
+  });
+});
+
+describe("technique de l'étape", () => {
+  const monter: TechniqueEntry = { id: "monter", name: "Monter en neige", aliases: ["monter les blancs"], definition: "Battre des blancs d'œufs pour y incorporer de l'air", expected_result: { summary: "Des blancs fermes qui tiennent au fouet." } };
+  const incorporer: TechniqueEntry = { id: "incorporer", name: "Incorporer", definition: "Mélanger délicatement sans casser la préparation." };
+  const index = buildTechniqueIndex([monter, incorporer]);
+
+  it("reconnaît « technique », seul ou suivi du geste", () => {
+    expect(parseVoiceCommand("technique")).toEqual({ kind: "technique" });
+    expect(parseVoiceCommand("technique monter")).toEqual({ kind: "technique", query: "monter" });
+    expect(parseVoiceCommand("la technique pour incorporer")).toEqual({ kind: "technique", query: "incorporer" });
+  });
+  it("repère les gestes de l'étape, dans l'ordre et sans doublon", () => {
+    const found = stepTechniques("Monter en neige les blancs, puis incorporer. Incorporer encore.", index);
+    expect(found.map(t => t.id)).toEqual(["monter", "incorporer"]);
+    expect(stepTechniques("Servir chaud.", index)).toEqual([]);
+    expect(stepTechniques(null, index)).toEqual([]);
+  });
+  it("lit la définition et le résultat attendu d'un geste unique", () => {
+    expect(techniqueSpeech([monter])).toBe("Monter en neige. Battre des blancs d'œufs pour y incorporer de l'air. Résultat attendu : des blancs fermes qui tiennent au fouet.");
+    expect(techniqueSpeech([incorporer])).toBe("Incorporer. Mélanger délicatement sans casser la préparation.");
+  });
+  it("énumère plusieurs gestes et invite à en nommer un", () => {
+    expect(techniqueSpeech([monter, incorporer])).toBe("2 techniques dans cette étape : Monter en neige et Incorporer. Dis par exemple : technique Monter en neige.");
+  });
+  it("lit le geste nommé, par son nom, un alias ou un mot du nom", () => {
+    expect(techniqueSpeech([monter, incorporer], "incorporer")).toMatch(/^Incorporer\./);
+    expect(techniqueSpeech([monter, incorporer], "monter")).toMatch(/^Monter en neige\./);
+    expect(techniqueSpeech([monter, incorporer], "monter les blancs")).toMatch(/^Monter en neige\./);
+  });
+  it("retombe sur la liste si le geste nommé n'est pas dans l'étape", () => {
+    expect(techniqueSpeech([monter, incorporer], "flamber")).toMatch(/^2 techniques/);
+  });
+  it("le dit quand l'étape n'a aucune technique", () => {
+    expect(techniqueSpeech([])).toBe("Pas de technique repérée dans cette étape.");
   });
 });
