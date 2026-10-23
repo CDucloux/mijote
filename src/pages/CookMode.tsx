@@ -30,7 +30,7 @@ import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.
 import { companionText, cookPageLabel, pageKeyOf, partnerPositions } from "@/lib/cookSession/together.js";
 import { useCookTogether } from "../hooks/useCookTogether.js";
 import { useCookVoice } from "../hooks/useCookVoice.js";
-import { cookPageSpeech } from "@/lib/cookSession/voiceCommands.js";
+import { cookPageSpeech, voiceTimerTarget } from "@/lib/cookSession/voiceCommands.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import type { IngredientLine, Recipe, Utensil, UtensilDbItem } from "@/lib/types.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
@@ -303,6 +303,11 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       const duration = said ?? stepDurations[0];
       if (duration) addTimer(duration, stepIdx, timerLabel);
       return duration ?? null;
+    },
+    onTimerAction: action => {
+      const target = voiceTimerTarget(timers, action);
+      if (target) (action === "stop" ? removeTimer : toggleTimer)(target.id);
+      return target;
     },
     notify,
     paused: !!subCook || done || iterOpen || closing,

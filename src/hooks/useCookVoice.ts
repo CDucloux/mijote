@@ -1,13 +1,19 @@
 /**
  * Branche le mode mains libres sur le pas à pas : chaque page est lue à voix
- * haute en arrivant dessus, et les commandes « suivant », « précédent »,
- * « répète » et « minuteur » pilotent la navigation et les minuteurs.
+ * haute en arrivant dessus, et les commandes vocales (« suivant », « précédent »,
+ * « répète », « minuteur », « pause », « reprends », « stop ») pilotent la
+ * navigation et les minuteurs.
  *
  * @module useCookVoice
  */
 import { useEffect, useRef } from "react";
 import { useVoiceControl, type UseVoiceControlResult } from "./useVoiceControl.js";
 import type { StepDuration } from "@/lib/planning/stepTimers.js";
+import type { CookTimer } from "@/lib/planning/cookTimers.js";
+import type { TimerAction } from "@/lib/cookSession/voiceCommands.js";
+
+const TIMER_DONE: Record<TimerAction, string> = { pause: "en pause", resume: "repris", stop: "arrêté" };
+const NO_TIMER: Record<TimerAction, string> = { pause: "Aucun minuteur en marche.", resume: "Aucun minuteur en pause.", stop: "Aucun minuteur à arrêter." };
 
 /** Options de {@link useCookVoice}. */
 export interface UseCookVoiceOptions {
@@ -19,6 +25,8 @@ export interface UseCookVoiceOptions {
   onPrev: () => void;
   /** Lance un minuteur (durée dite, sinon celle de l'étape) ; rend la durée lancée, ou `null`. */
   onTimer: (duration?: StepDuration) => StepDuration | null;
+  /** Met en pause, reprend ou arrête un minuteur ; rend le minuteur visé, ou `null`. */
+  onTimerAction: (action: TimerAction) => CookTimer | null;
   notify?: (message: string) => void;
   paused: boolean;
 }
@@ -28,7 +36,7 @@ export interface UseCookVoiceOptions {
  * @param options - Page courante, actions de navigation et de minuteur, cf. {@link UseCookVoiceOptions}.
  * @returns L'état du mode et sa bascule, cf. {@link UseVoiceControlResult}.
  */
-export function useCookVoice({ speech, pageKey, onNext, onPrev, onTimer, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
+export function useCookVoice({ speech, pageKey, onNext, onPrev, onTimer, onTimerAction, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
   const speechRef = useRef(speech);
   useEffect(() => { speechRef.current = speech; });
 
@@ -39,7 +47,10 @@ export function useCookVoice({ speech, pageKey, onNext, onPrev, onTimer, notify,
       if (command.kind === "next") onNext();
       else if (command.kind === "prev") onPrev();
       else if (command.kind === "repeat") voice.speak(speechRef.current);
-      else {
+      else if (command.kind !== "timer") {
+        const timer = onTimerAction(command.kind);
+        voice.speak(timer ? `Minuteur de ${timer.label} ${TIMER_DONE[command.kind]}.` : NO_TIMER[command.kind]);
+      } else {
         const started = onTimer(command.duration);
         voice.speak(started ? `Minuteur de ${started.label} lancé.` : "Pas de durée dans cette étape. Dis par exemple : minuteur 5 minutes.");
       }
@@ -53,7 +64,7 @@ export function useCookVoice({ speech, pageKey, onNext, onPrev, onTimer, notify,
 
   const wasActive = useRef(false);
   useEffect(() => {
-    if (active && !wasActive.current) notify?.("Mains libres : dis « suivant », « répète » ou « minuteur »");
+    if (active && !wasActive.current) notify?.("Mains libres : « suivant », « répète », « minuteur », « pause », « stop »");
     wasActive.current = active;
   }, [active, notify]);
 

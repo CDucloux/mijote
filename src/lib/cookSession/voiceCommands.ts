@@ -11,18 +11,27 @@
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { parseDurations, type StepDuration } from "@/lib/planning/stepTimers.js";
+import type { CookTimer } from "@/lib/planning/cookTimers.js";
+
+/** Action vocale sur un minuteur déjà lancé. */
+export type TimerAction = "pause" | "resume" | "stop";
 
 /** Commande vocale reconnue. `duration` : durée dite avec « minuteur », sinon absente. */
 export type VoiceCommand =
   | { kind: "next" }
   | { kind: "prev" }
   | { kind: "repeat" }
-  | { kind: "timer"; duration?: StepDuration };
+  | { kind: "timer"; duration?: StepDuration }
+  | { kind: TimerAction };
 
 /** Nombre de mots examinés : une phrase courte, ou la fin d'une dictée plus longue. */
 export const MAX_COMMAND_WORDS = 6;
 
+// Ordre = priorité : « pause le minuteur » met en pause, il n'en lance pas un nouveau.
 const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
+  ["stop", ["stop", "stoppe", "arrete", "arreter"]],
+  ["pause", ["pause"]],
+  ["resume", ["reprends", "reprendre", "reprise"]],
   ["timer", ["minuteur", "minuterie", "chrono", "timer"]],
   ["repeat", ["repete", "repetes", "repeter", "relis", "relire", "redis", "redire"]],
   ["prev", ["precedent", "precedente", "retour", "reviens", "arriere"]],
@@ -34,7 +43,8 @@ const wordsOf = (text: string | null | undefined): string[] =>
 
 /**
  * Commande portée par une phrase transcrite, ou `null` si elle n'en contient pas.
- * Le minuteur est cherché en premier : « minuteur suivant » ne doit pas tourner la page.
+ * Les actions sur un minuteur passent avant son lancement, et le minuteur avant la
+ * navigation : « stop minuteur » arrête, « minuteur suivant » ne tourne pas la page.
  * @param transcript - Phrase reconnue par la dictée (casse, accents et ponctuation indifférents).
  * @param ignoredWords - Mots-clés à ne pas prendre en compte (ceux du texte en cours de lecture).
  * @returns La commande, ou `null` (phrase vide, trop longue, ou sans mot-clé).
@@ -78,6 +88,29 @@ export function parseVoiceTail(transcript: string | null | undefined, fromWord =
   const fresh = words.slice(Math.max(0, fromWord)).slice(-MAX_COMMAND_WORDS);
   const ignored = spoken ? new Set(wordsOf(spoken)) : undefined;
   return { command: parseVoiceCommand(fresh.join(" "), ignored), words: words.length };
+}
+
+const soonest = (timers: readonly CookTimer[], remaining: (timer: CookTimer) => number): CookTimer | null =>
+  timers.reduce<CookTimer | null>((best, timer) => (best === null || remaining(timer) < remaining(best) ? timer : best), null);
+
+/**
+ * Minuteur visé par une action vocale, quand on ne le nomme pas.
+ *
+ * « pause » vise le minuteur en marche le plus proche de sonner, « reprends » le
+ * minuteur en pause le plus proche de la fin. « stop » coupe d'abord un minuteur
+ * qui sonne, sinon le plus proche de sonner, sinon un minuteur en pause.
+ * @param timers - Minuteurs de la session.
+ * @param action - Action dite.
+ * @returns Le minuteur visé, ou `null` s'il n'y en a aucun de concerné.
+ */
+export function voiceTimerTarget(timers: readonly CookTimer[], action: TimerAction): CookTimer | null {
+  const running = timers.filter(timer => timer.running && !timer.done && timer.endAt != null);
+  const paused = timers.filter(timer => !timer.running && !timer.done);
+  const pilot = soonest(running, timer => timer.endAt ?? Infinity);
+  const nextPaused = soonest(paused, timer => timer.remainingMs);
+  if (action === "pause") return pilot;
+  if (action === "resume") return nextPaused;
+  return timers.find(timer => timer.done) ?? pilot ?? nextPaused;
 }
 
 /** Page du pas à pas à lire à voix haute (sous-ensemble de la page du mode cuisine). */

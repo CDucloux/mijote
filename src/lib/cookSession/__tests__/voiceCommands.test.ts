@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { parseVoiceCommand, parseVoiceTail, cookPageSpeech } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, voiceTimerTarget } from "@/lib/cookSession/voiceCommands.js";
+import type { CookTimer } from "@/lib/planning/cookTimers.js";
 
 describe("parseVoiceCommand", () => {
   it("reconnaît les trois commandes et le retour, sans casse ni accents", () => {
@@ -74,5 +75,47 @@ describe("parseVoiceTail", () => {
     expect(parseVoiceTail("")).toEqual({ command: null, words: 0 });
     expect(parseVoiceTail(null)).toEqual({ command: null, words: 0 });
     expect(parseVoiceTail("suivant", 1)).toEqual({ command: null, words: 1 });
+  });
+});
+
+describe("commandes de minuteur", () => {
+  it("reconnaît pause, reprise et stop", () => {
+    expect(parseVoiceCommand("pause")).toEqual({ kind: "pause" });
+    expect(parseVoiceCommand("reprends")).toEqual({ kind: "resume" });
+    expect(parseVoiceCommand("stop")).toEqual({ kind: "stop" });
+    expect(parseVoiceCommand("arrête")).toEqual({ kind: "stop" });
+  });
+  it("fait passer l'action avant le lancement d'un minuteur", () => {
+    expect(parseVoiceCommand("pause le minuteur")).toEqual({ kind: "pause" });
+    expect(parseVoiceCommand("stop minuteur")).toEqual({ kind: "stop" });
+    expect(parseVoiceCommand("reprends le minuteur")).toEqual({ kind: "resume" });
+  });
+});
+
+describe("voiceTimerTarget", () => {
+  const timer = (id: string, patch: Partial<CookTimer>): CookTimer => ({
+    id, label: id, totalSec: 600, running: true, endAt: 10_000, remainingMs: 0, done: false, stepIdx: 0, stepLabel: "Étape 1", ...patch,
+  });
+  const soon = timer("soon", { endAt: 5_000 });
+  const late = timer("late", { endAt: 9_000 });
+  const pausedShort = timer("pausedShort", { running: false, endAt: null, remainingMs: 30_000 });
+  const pausedLong = timer("pausedLong", { running: false, endAt: null, remainingMs: 90_000 });
+  const ringing = timer("ringing", { running: false, done: true, endAt: null });
+
+  it("met en pause le minuteur en marche le plus proche de sonner", () => {
+    expect(voiceTimerTarget([late, soon, pausedShort], "pause")?.id).toBe("soon");
+  });
+  it("reprend le minuteur en pause le plus proche de la fin", () => {
+    expect(voiceTimerTarget([pausedLong, pausedShort, soon], "resume")?.id).toBe("pausedShort");
+  });
+  it("arrête d'abord celui qui sonne, puis celui en marche, puis celui en pause", () => {
+    expect(voiceTimerTarget([soon, ringing, pausedShort], "stop")?.id).toBe("ringing");
+    expect(voiceTimerTarget([late, soon, pausedShort], "stop")?.id).toBe("soon");
+    expect(voiceTimerTarget([pausedLong, pausedShort], "stop")?.id).toBe("pausedShort");
+  });
+  it("rend null quand aucun minuteur n'est concerné", () => {
+    expect(voiceTimerTarget([], "stop")).toBeNull();
+    expect(voiceTimerTarget([pausedShort], "pause")).toBeNull();
+    expect(voiceTimerTarget([soon, ringing], "resume")).toBeNull();
   });
 });

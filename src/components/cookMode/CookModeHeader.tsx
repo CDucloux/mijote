@@ -57,7 +57,7 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
         </div>
         {voice && (
           <button className={`cook-voice-btn${voice.active ? " on" : ""}`} onClick={voice.toggle} aria-pressed={voice.active}
-            title={voice.active ? "Couper le mode mains libres" : "Mains libres : « suivant », « répète », « minuteur »"}
+            title={voice.active ? "Couper le mode mains libres" : "Mains libres : « suivant », « répète », « minuteur », « pause », « stop »"}
             aria-label={voice.active ? "Couper le mode mains libres" : "Activer le mode mains libres"}>
             <Icon name="mic" size={18} weight={voice.active ? "fill" : "regular"} />
           </button>
