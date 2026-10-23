@@ -162,3 +162,21 @@ describe("astuce et fin de recette", () => {
     expect(tipSpeech(undefined)).toBe("Pas d'astuce pour cette étape.");
   });
 });
+
+describe("silence et lecture automatique", () => {
+  it("reconnaît « silence » et « chut »", () => {
+    expect(parseVoiceCommand("silence")).toEqual({ kind: "silence" });
+    expect(parseVoiceCommand("chut !")).toEqual({ kind: "silence" });
+  });
+  it("reconnaît « lecture off » et « lecture on », y compris mal transcrits", () => {
+    expect(parseVoiceCommand("lecture off")).toEqual({ kind: "readOff" });
+    expect(parseVoiceCommand("Lecture of")).toEqual({ kind: "readOff" });
+    expect(parseVoiceCommand("lecture on")).toEqual({ kind: "readOn" });
+  });
+  it("ne réagit pas à « lecture » seul", () => {
+    expect(parseVoiceCommand("lecture")).toBeNull();
+  });
+  it("ignore sa propre confirmation lue à voix haute", () => {
+    expect(parseVoiceTail("lecture des étapes coupée", 0, "Lecture des étapes coupée.").command).toBeNull();
+  });
+});

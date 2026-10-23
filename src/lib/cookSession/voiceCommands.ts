@@ -24,6 +24,9 @@ export type VoiceCommand =
   | { kind: "overview" }
   | { kind: "tip" }
   | { kind: "finish" }
+  | { kind: "silence" }
+  | { kind: "readOff" }
+  | { kind: "readOn" }
   | { kind: "timer"; duration?: StepDuration }
   | { kind: TimerAction };
 
@@ -35,6 +38,9 @@ export const MAX_COMMAND_WORDS = 6;
 // trop fréquent dans une cuisine pour couper un minuteur.
 const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
   ["finish", ["recette terminee", "recette finie", "recette fini"]],
+  ["readOff", ["lecture off", "lecture of", "lecture coupee"]],
+  ["readOn", ["lecture on", "lecture activee"]],
+  ["silence", ["silence", "chut"]],
   ["stop", ["stop", "stoppe"]],
   ["pause", ["pause"]],
   ["resume", ["reprends", "reprendre", "reprise"]],

@@ -83,6 +83,8 @@ export interface UseVoiceControlResult {
   toggle: () => void;
   /** Lit un texte à voix haute (interrompt la lecture en cours). */
   speak: (text: string) => void;
+  /** Coupe la lecture en cours. */
+  hush: () => void;
 }
 
 /**
@@ -261,10 +263,14 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     synth.speak(utterance);
   }, [supported]);
 
+  const hush = useCallback(() => {
+    if (supported) window.speechSynthesis.cancel();
+  }, [supported]);
+
   const toggle = useCallback(() => {
     if (supported) setActive(on => !on);
     else onErrorRef.current?.("Le mode mains libres a besoin de Chrome, Edge ou Safari.");
   }, [supported]);
 
-  return { supported, active, heard: active ? heard : null, status: active ? status : null, toggle, speak };
+  return { supported, active, heard: active ? heard : null, status: active ? status : null, toggle, speak, hush };
 }

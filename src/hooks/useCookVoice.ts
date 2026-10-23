@@ -1,14 +1,15 @@
 /**
  * Branche le mode mains libres sur le pas à pas : chaque page est lue à voix
  * haute en arrivant dessus, et les commandes vocales (« suivant », « précédent »,
- * « mise en place », « répète », « astuce », « minuteur », « pause », « reprends »,
- * « stop », « recette terminée ») pilotent la
+ * « mise en place », « répète », « astuce », « silence », « lecture off / on »,
+ * « minuteur », « pause », « reprends », « stop », « recette terminée ») pilotent la
  * navigation et les minuteurs.
  *
  * @module useCookVoice
  */
 import { useEffect, useRef } from "react";
 import { useVoiceControl, type UseVoiceControlResult } from "./useVoiceControl.js";
+import { useLS } from "./useLS.js";
 import type { StepDuration } from "@/lib/planning/stepTimers.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
 import { tipSpeech, type TimerAction } from "@/lib/cookSession/voiceCommands.js";
@@ -44,9 +45,12 @@ export interface UseCookVoiceOptions {
  * @returns L'état du mode et sa bascule, cf. {@link UseVoiceControlResult}.
  */
 export function useCookVoice({ speech, pageKey, tip, onFinish, onNext, onPrev, onOverview, onTimer, onTimerAction, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
+  // Lecture automatique de chaque page (« lecture off / on ») : retenue d'une recette à l'autre.
+  const [autoRead, setAutoRead] = useLS("rf_cookVoiceAutoRead", true);
   const speechRef = useRef(speech);
   const tipRef = useRef(tip);
-  useEffect(() => { speechRef.current = speech; tipRef.current = tip; });
+  const autoReadRef = useRef(autoRead);
+  useEffect(() => { speechRef.current = speech; tipRef.current = tip; autoReadRef.current = autoRead; });
 
   const voice = useVoiceControl({
     paused,
@@ -56,6 +60,12 @@ export function useCookVoice({ speech, pageKey, tip, onFinish, onNext, onPrev, o
       else if (command.kind === "prev") onPrev();
       else if (command.kind === "repeat") voice.speak(speechRef.current);
       else if (command.kind === "tip") voice.speak(tipSpeech(tipRef.current));
+      else if (command.kind === "silence") voice.hush();
+      else if (command.kind === "readOff" || command.kind === "readOn") {
+        const on = command.kind === "readOn";
+        setAutoRead(on);
+        voice.speak(on ? "Lecture des étapes relancée." : "Lecture des étapes coupée.");
+      }
       else if (command.kind === "finish") {
         // Graphie phonétique, jamais affichée : les synthèses vocales ratent la liaison
         // de « bon appétit » (« bon | appétit »), on écrit ce qui doit s'entendre.
@@ -76,8 +86,9 @@ export function useCookVoice({ speech, pageKey, tip, onFinish, onNext, onPrev, o
   });
 
   const { active, speak } = voice;
+  // Lu via une ref : rebasculer « lecture on » ne relit pas la page (la confirmation suffit).
   useEffect(() => {
-    if (active && !paused) speak(speechRef.current);
+    if (active && !paused && autoReadRef.current) speak(speechRef.current);
   }, [active, paused, pageKey, speak]);
 
   const wasActive = useRef(false);
