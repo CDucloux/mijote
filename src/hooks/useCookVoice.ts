@@ -57,7 +57,9 @@ export function useCookVoice({ speech, pageKey, tip, onFinish, onNext, onPrev, o
       else if (command.kind === "repeat") voice.speak(speechRef.current);
       else if (command.kind === "tip") voice.speak(tipSpeech(tipRef.current));
       else if (command.kind === "finish") {
-        voice.speak("Recette terminée. Bon appétit !");
+        // Graphie phonétique, jamais affichée : les synthèses vocales ratent la liaison
+        // de « bon appétit » (« bon | appétit »), on écrit ce qui doit s'entendre.
+        voice.speak("Recette terminée. Bonne appétit !");
         onFinish();
       }
       else if (command.kind === "overview") {
