@@ -201,6 +201,7 @@ export function TodayMealRow({ card, index, onOpen }: TodayMealRowProps) {
           color: slot?.text || "var(--text2)",
           marginBottom: 6,
         }}>
+          <Icon name={(slot?.icon ?? "utensils") as IconName} size={12} weight="fill" color="currentColor" />
           {slot?.today || "Au menu"}
         </span>
         <div style={{ fontSize: 15, fontWeight: 600, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.recipe.name}</div>
