@@ -29,7 +29,9 @@ export function ConsoleHeader({ section, onSection, pendingReports }: ConsoleHea
         </div>
         <UserAvatar />
       </div>
-      <OverscrollRow stretch style={{ gap: 6 }}>
+      {/* Le défilement horizontal rogne aussi à la verticale : la rangée s'étend sous
+          les marges (négatives) pour laisser l'ombre des pastilles respirer. */}
+      <OverscrollRow stretch outerStyle={{ margin: "-6px -20px -8px", padding: "6px 20px 8px" }} style={{ gap: 6 }}>
         {SECTIONS.map(([s, label, ic]) => {
           const active = section === s;
           return (
