@@ -39,11 +39,11 @@ interface CutPillProps {
 function CutPill({ forme, active, withGlyph, onPick }: CutPillProps) {
   const { name, hint } = CUT_GUIDE[forme];
   return (
-    <button type="button" className="tap ripple" onClick={() => onPick(forme)} aria-pressed={active}
+    <button type="button" className={`tap ripple ${active ? "ripple-light hover-deepen" : "hover-neutral"}`} onClick={() => onPick(forme)} aria-pressed={active}
       style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: withGlyph ? "9px 15px 9px 11px" : "9px 15px", borderRadius: 999, fontSize: 13.5, cursor: "pointer",
         background: active ? "var(--accent)" : "var(--surface2)",
         color: active ? "#fff" : "var(--text)",
-        border: active ? "1px solid var(--accent)" : "1px solid var(--border)" }}>
+        border: "none", transition: "background-color 0.18s ease, color 0.18s ease" }}>
       {withGlyph && <CutFamilyGlyph family={familyOf(forme)} size={17} color={active ? "#fff" : "var(--accent)"} />}
       <span style={{ fontWeight: 650 }}>{name}</span>
       <span style={{ fontWeight: 500, opacity: active ? 0.82 : 1, color: active ? "inherit" : "var(--text3)" }}>{hint}</span>
@@ -91,10 +91,10 @@ export function CutSheet({ name, category, cut, onChange, onClose }: CutSheetPro
       </div>
 
       {/* Toutes les formes, rangées par résultat, derrière un dépli. */}
-      <button type="button" className="pressable" onClick={() => setShowAll(v => !v)} aria-expanded={showAll}
-        style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 14, padding: "6px 2px", background: "none", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 650, color: "var(--accent)" }}>
+      <button type="button" className="ripple hover-tint" onClick={() => setShowAll(v => !v)} aria-expanded={showAll}
+        style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, marginLeft: -12, padding: "7px 12px", borderRadius: 999, background: "none", border: "none", cursor: "pointer", fontSize: 13.5, fontWeight: 650, color: "var(--accent)" }}>
         {showAll ? "Masquer les autres découpes" : "Toutes les découpes"}
-        <Icon name={showAll ? "chevronUp" : "chevronDown"} size={14} color="var(--accent)" />
+        <Icon name="chevronDown" size={14} color="var(--accent)" style={{ transition: "transform 0.25s ease", transform: showAll ? "rotate(180deg)" : "none" }} />
       </button>
       {showAll && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 10 }}>
@@ -113,7 +113,7 @@ export function CutSheet({ name, category, cut, onChange, onClose }: CutSheetPro
 
       {/* Résultat attendu : ce qu'on obtient sur la planche, puis la taille. */}
       {forme && guide && (
-        <div style={{ marginTop: 26, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
+        <div style={{ marginTop: 28 }}>
           <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
             <span style={{ width: 52, height: 52, borderRadius: 16, flexShrink: 0, background: "rgba(var(--accent-rgb),0.12)", display: "grid", placeItems: "center" }}>
               <CutFamilyGlyph family={familyOf(forme)} size={30} color="var(--accent)" />
@@ -132,10 +132,10 @@ export function CutSheet({ name, category, cut, onChange, onClose }: CutSheetPro
                 {CALIBRES.map(([v, l]) => {
                   const active = calibre === v;
                   return (
-                    <button key={v} type="button" className="tap ripple" onClick={() => pickCalibre(v)} aria-pressed={active}
-                      style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "9px 0", borderRadius: 14, cursor: "pointer",
-                        background: active ? "rgba(var(--accent-rgb),0.14)" : "var(--surface2)",
-                        border: active ? "1px solid var(--accent)" : "1px solid var(--border)" }}>
+                    <button key={v} type="button" className={`tap ripple ${active ? "hover-tint" : "hover-neutral"}`} onClick={() => pickCalibre(v)} aria-pressed={active}
+                      style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "10px 0", borderRadius: 16, cursor: "pointer",
+                        background: active ? "rgba(var(--accent-rgb),0.16)" : "var(--surface2)",
+                        border: "none", transition: "background-color 0.18s ease" }}>
                       <span style={{ fontSize: 14, fontWeight: 650, color: active ? "var(--accent)" : "var(--text2)" }}>{l}</span>
                       <span style={{ fontSize: 12, fontWeight: 500, color: active ? "var(--accent)" : "var(--text3)" }}>{guide.sizes?.[v]}</span>
                     </button>
@@ -146,8 +146,8 @@ export function CutSheet({ name, category, cut, onChange, onClose }: CutSheetPro
           )}
 
           {/* Retrait de la découpe : présent seulement s'il y a quelque chose à retirer. */}
-          <button type="button" className="pressable" onClick={() => close(() => onChange(null))}
-            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, width: "100%", marginTop: 22, padding: "12px 0", borderRadius: 14, fontSize: 13.5, fontWeight: 600, cursor: "pointer", color: "var(--red)", background: "rgba(var(--red-rgb),0.08)", border: "none" }}>
+          <button type="button" className="ripple hover-danger" onClick={() => close(() => onChange(null))}
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, width: "100%", marginTop: 22, padding: "12px 0", borderRadius: 999, fontSize: 13.5, fontWeight: 600, cursor: "pointer", color: "var(--red)", background: "rgba(var(--red-rgb),0.08)", border: "none" }}>
             <Icon name="trash" size={15} color="var(--red)" /> Retirer la découpe
           </button>
         </div>

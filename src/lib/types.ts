@@ -36,6 +36,7 @@ export type FormeDecoupe =
   | "quartier"
   | "rape"
   | "hache"
+  | "concasse"
   | "chiffonade";
 
 /** Calibre grossier d'une découpe (pas de millimètres : inexploitable et source d'hallucination LLM). */
