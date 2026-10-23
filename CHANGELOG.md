@@ -1,5 +1,30 @@
 # Changelog – Cardamome
 
+## v4.78.0 – Cardamome · Accueil en deux colonnes, console repensée
+
+### Accueil
+- **Desktop en deux colonnes** : le prochain repas domine en héros (grande photo, créneau lisible, services du repas, « Voir la recette » et « Cuisiner » qui ouvre le mode cuisine), les repas suivants en lignes, puis la semaine en un coup d'œil (un point par créneau, créneaux libres d'ici dimanche). Le rail réunit l'ingrédient du moment, les courses et le stock à suivre, et une section « Mon foyer ». Mobile inchangé.
+- **Créneau du repas** : la bonne icône devant « Ce midi », « Ce soir » (soleil, lune).
+- **Ingrédient du moment** : frise de saison en aplat ambre (fin du dégradé et du halo), bouton « Découvrir » sans liseré, titre sans icône.
+- **Foyer** : dissoudre ou quitter un foyer ne laisse plus l'app bloquée sur l'écran de chargement.
+
+### Console admin
+- **Ingrédients, Ustensiles, Techniques** sur un même gabarit en deux volets : recherche et catégories à gauche (volet repliable, ordre des catégories d'ingrédients par glisser-déposer), fiches en grille à droite avec onglets de suivi (Sans photo, Sans nutrition, Sans difficulté…). Une ligne = une action ; la suppression passe dans la feuille d'édition.
+- **Menu « Base »** : export YAML / Markdown et import YAML dans une feuille dédiée, à la place des blocs en pied de section.
+- Bandeau « Mode admin » retiré, fiches ustensile et geste sans bordure, ombre des onglets de section non rognée.
+
+### Découpes
+- **Concassé** : nouvelle découpe (éclats grossiers) dans « Hachés, concassés, râpés », proposée en tête pour les noix, noisettes, amandes… Reconnue à l'import après déploiement des Cloud Functions.
+- **Feuille de découpe** sans bordure, survols partagés, dépli en pilule à chevron animé.
+
+### Import intelligent
+- Onglets dans l'ordre Lien, Texte, Photo, PDF ; champs, zones de dépôt, sources et conseils sans bordure.
+- **Coller depuis le presse-papiers** : survol et onde ; dans l'app Android, collage direct sans la bulle « Coller » du système.
+
+### Partout
+- **Sans bordure** : éditeur de recette (lignes d'ingrédients, étapes, steppers, préparation de base, « Nouvelle section » en pilule), sélecteur d'ustensiles, « Générer la semaine », squelette de la bibliothèque, zone d'import YAML, fiche ingrédient et badges photo.
+- **Lint plus rapide** : cache ESLint, relances en une seconde.
+
 ## v4.77.0 – Cardamome · Bols de découpe, courses sans bordure
 
 ### Import de recettes
