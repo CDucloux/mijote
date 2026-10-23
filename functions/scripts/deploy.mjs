@@ -8,8 +8,8 @@
 // second essai. FUNCTIONS_DISCOVERY_TIMEOUT (en secondes) le relève.
 import { spawnSync } from "node:child_process";
 
-// Une seule chaîne de commande : `shell` résout firebase.cmd sous Windows.
-const command = ["firebase deploy --only functions", ...process.argv.slice(2)].join(" ");
+// Une seule chaîne de commande : `shell` résout npx.cmd sous Windows.
+const command = ["npx firebase deploy --only functions", ...process.argv.slice(2)].join(" ");
 const { status } = spawnSync(command, {
   stdio: "inherit",
   shell: true,
