@@ -22,7 +22,7 @@ interface OverlayBadgeProps {
 
 export function OverlayBadge({ icon, label, bg, title, ariaLabel, glass = false }: OverlayBadgeProps) {
   return (
-    <span title={title || label} aria-label={ariaLabel || label} style={{ display: "inline-flex", alignItems: "center", gap: 4, borderRadius: 20, background: bg, border: "1px solid rgba(255,255,255,0.3)", ...(glass ? GLASS : FLAT) }}>
+    <span title={title || label} aria-label={ariaLabel || label} style={{ display: "inline-flex", alignItems: "center", gap: 4, borderRadius: 20, background: bg, border: "none", ...(glass ? GLASS : FLAT) }}>
       <Icon name={icon} size={11} color="#fff" />
       <span style={LABEL}>{label}</span>
     </span>
