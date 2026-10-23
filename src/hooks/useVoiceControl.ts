@@ -6,13 +6,14 @@
  * disponible dans Chrome, Edge et Safari, absente de Firefox et de la WebView
  * Android de l'app installée. `supported` le dit ; sans support, la bascule
  * explique pourquoi au lieu d'activer le mode.
- * Pendant la lecture à voix haute, l'écoute est coupée pour que le micro
- * n'entende pas la synthèse et ne la prenne pas pour une commande.
+ * Le micro reste ouvert pendant la lecture à voix haute (on peut l'interrompre
+ * d'un « suivant ») : ce qu'il capte de la synthèse elle-même est filtré
+ * (`isSpeechEcho`) pour ne pas être pris pour une commande.
  *
  * @module useVoiceControl
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { parseVoiceCommand, type VoiceCommand } from "@/lib/cookSession/voiceCommands.js";
+import { isSpeechEcho, parseVoiceCommand, type VoiceCommand } from "@/lib/cookSession/voiceCommands.js";
 
 // La Web Speech API n'est pas typée par lib.dom : on décrit le strict nécessaire.
 interface RecognitionAlternative { transcript: string }
@@ -34,6 +35,10 @@ type RecognitionCtor = new () => Recognition;
 const LANG = "fr-FR";
 /** Une même commande répétée dans ce délai est ignorée (doublon de dictée). */
 const DUPLICATE_MS = 1200;
+/** Après la lecture, le micro peut encore rendre un écho pendant ce délai (latence de dictée). */
+const ECHO_GRACE_MS = 2000;
+/** Durée d'affichage de la dernière phrase entendue. */
+const HEARD_MS = 3000;
 
 function recognitionCtor(): RecognitionCtor | null {
   if (typeof window === "undefined") return null;
@@ -57,6 +62,8 @@ export interface UseVoiceControlResult {
   supported: boolean;
   /** Le mode mains libres est activé. */
   active: boolean;
+  /** Dernière phrase entendue (quelques secondes), pour montrer ce qui a été compris. */
+  heard: string | null;
   toggle: () => void;
   /** Lit un texte à voix haute (interrompt la lecture en cours). */
   speak: (text: string) => void;
@@ -70,9 +77,15 @@ export interface UseVoiceControlResult {
 export function useVoiceControl({ onCommand, onError, paused = false }: UseVoiceControlOptions): UseVoiceControlResult {
   const [supported] = useState(() => recognitionCtor() !== null && typeof window !== "undefined" && "speechSynthesis" in window);
   const [active, setActive] = useState(false);
+  const [heard, setHeard] = useState<string | null>(null);
   const recognitionRef = useRef<Recognition | null>(null);
-  const speakingRef = useRef(false);
+  const runningRef = useRef(false);
   const lastRef = useRef({ kind: "", at: 0 });
+  // Lecture en cours : texte lu et dernier instant où la synthèse parlait. On ne
+  // s'appuie pas sur `onend` de la synthèse, que Chrome omet sur les textes longs.
+  const spokenRef = useRef({ text: "", lastAt: 0 });
+  // Retient la phrase lue : Chrome oublie l'énoncé (et sa fin) s'il est ramassé par le GC.
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   // Rappels lus au moment de l'événement : la reconnaissance vit plus longtemps qu'un rendu.
   const onCommandRef = useRef(onCommand);
   const onErrorRef = useRef(onError);
@@ -85,8 +98,13 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
 
   const listen = useCallback(() => {
     const recognition = recognitionRef.current;
-    if (!recognition || !listeningRef.current || speakingRef.current) return;
-    try { recognition.start(); } catch { /* déjà en écoute */ }
+    if (!recognition || !listeningRef.current || runningRef.current) return;
+    try {
+      recognition.start();
+      runningRef.current = true;
+    } catch {
+      // Déjà lancée, ou en cours d'arrêt : son `onend` la relancera.
+    }
   }, []);
 
   useEffect(() => {
@@ -101,7 +119,12 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (!result?.isFinal) continue;
-        const command = parseVoiceCommand(result[0].transcript);
+        const transcript = result[0].transcript.trim();
+        const spoken = spokenRef.current;
+        const reading = window.speechSynthesis.speaking || Date.now() - spoken.lastAt < ECHO_GRACE_MS;
+        if (reading && isSpeechEcho(transcript, spoken.text)) continue;
+        setHeard(transcript);
+        const command = parseVoiceCommand(transcript);
         if (!command) continue;
         const now = Date.now();
         if (command.kind === lastRef.current.kind && now - lastRef.current.at < DUPLICATE_MS) continue;
@@ -119,23 +142,40 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
       }
     };
     // La dictée s'arrête d'elle-même après un silence : on la relance tant que le mode est actif.
-    recognition.onend = () => { setTimeout(listen, 250); };
+    recognition.onend = () => {
+      runningRef.current = false;
+      setTimeout(listen, 250);
+    };
     recognitionRef.current = recognition;
     listen();
+    // Suit la synthèse vocale pour dater la fin de la lecture (filtre d'écho).
+    const poll = setInterval(() => {
+      if (window.speechSynthesis.speaking) spokenRef.current.lastAt = Date.now();
+    }, 250);
     return () => {
+      clearInterval(poll);
       recognition.onend = null;
       recognition.abort();
+      runningRef.current = false;
       recognitionRef.current = null;
       window.speechSynthesis.cancel();
-      speakingRef.current = false;
     };
   }, [active, listen]);
 
   useEffect(() => {
     if (!active) return;
-    if (paused) recognitionRef.current?.abort();
-    else listen();
+    if (paused) {
+      recognitionRef.current?.abort();
+      window.speechSynthesis.cancel();
+    } else listen();
   }, [active, paused, listen]);
+
+  // Dernière phrase entendue, affichée un court instant (l'utilisateur voit ce qui a été compris).
+  useEffect(() => {
+    if (heard === null) return;
+    const timer = setTimeout(() => setHeard(null), HEARD_MS);
+    return () => clearTimeout(timer);
+  }, [heard]);
 
   // Écran maintenu allumé tant que le mode est actif (re-demandé au retour au premier plan).
   useEffect(() => {
@@ -161,18 +201,15 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     utterance.lang = LANG;
     const voice = synth.getVoices().find(v => v.lang.toLowerCase().startsWith("fr"));
     if (voice) utterance.voice = voice;
-    const resume = () => { speakingRef.current = false; listen(); };
-    utterance.onend = resume;
-    utterance.onerror = resume;
-    speakingRef.current = true;
-    recognitionRef.current?.abort();
+    utteranceRef.current = utterance;
+    spokenRef.current = { text, lastAt: Date.now() };
     synth.speak(utterance);
-  }, [supported, listen]);
+  }, [supported]);
 
   const toggle = useCallback(() => {
     if (supported) setActive(on => !on);
     else onErrorRef.current?.("Le mode mains libres a besoin de Chrome, Edge ou Safari.");
   }, [supported]);
 
-  return { supported, active, toggle, speak };
+  return { supported, active, heard: active ? heard : null, toggle, speak };
 }

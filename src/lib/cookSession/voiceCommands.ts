@@ -36,7 +36,7 @@ const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
  * @returns La commande, ou `null` (phrase vide, trop longue, ou sans mot-clé).
  */
 export function parseVoiceCommand(transcript: string | null | undefined): VoiceCommand | null {
-  const words = normalizeStr(transcript).replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+  const words = normalizedWords(transcript).split(" ").filter(Boolean);
   if (words.length === 0 || words.length > MAX_COMMAND_WORDS) return null;
   const said = new Set(words);
   for (const [kind, keywords] of VOCABULARY) {
@@ -46,6 +46,22 @@ export function parseVoiceCommand(transcript: string | null | undefined): VoiceC
     return duration ? { kind, duration } : { kind };
   }
   return null;
+}
+
+const normalizedWords = (text: string | null | undefined): string =>
+  normalizeStr(text).replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean).join(" ");
+
+/**
+ * Vrai si une phrase entendue n'est que l'écho de la lecture à voix haute : le
+ * micro reste ouvert pendant la lecture (pour qu'on puisse l'interrompre d'un
+ * « suivant »), il capte donc aussi la synthèse vocale.
+ * @param transcript - Phrase reconnue pendant (ou juste après) la lecture.
+ * @param spoken - Texte en cours de lecture.
+ * @returns `true` si la phrase figure telle quelle dans le texte lu.
+ */
+export function isSpeechEcho(transcript: string | null | undefined, spoken: string | null | undefined): boolean {
+  const heard = normalizedWords(transcript);
+  return heard !== "" && ` ${normalizedWords(spoken)} `.includes(` ${heard} `);
 }
 
 /** Page du pas à pas à lire à voix haute (sous-ensemble de la page du mode cuisine). */

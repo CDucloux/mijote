@@ -28,7 +28,7 @@ interface CookModeHeaderProps {
   offline?: boolean;
   onClose: () => void;
   /** Mode mains libres : bouton micro (sans support, il explique au clic). */
-  voice?: { supported: boolean; active: boolean; toggle: () => void };
+  voice?: { supported: boolean; active: boolean; heard: string | null; toggle: () => void };
 }
 
 /** En-tête du pas à pas : fermeture, titre, page courante, chrono global et progression. */
@@ -45,7 +45,7 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
             {recipeName}
           </div>
           <div style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {pageLabel}
+            {voice?.heard ? <span style={{ color: "var(--accent)" }}>« {voice.heard} »</span> : pageLabel}
             {offline
               ? <span style={{ color: "var(--text2)" }}> · Hors ligne : ton binôme ne te voit plus</span>
               : companions.map(c => <span key={c.participant.uid} style={{ color: "var(--text2)" }}> · {companionText(c.participant, c.label)}</span>)}

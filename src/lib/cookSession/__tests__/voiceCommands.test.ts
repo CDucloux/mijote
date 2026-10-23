@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseVoiceCommand, cookPageSpeech } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceCommand, cookPageSpeech, isSpeechEcho } from "@/lib/cookSession/voiceCommands.js";
 
 describe("parseVoiceCommand", () => {
   it("reconnaît les trois commandes et le retour, sans casse ni accents", () => {
@@ -49,5 +49,25 @@ describe("cookPageSpeech", () => {
     expect(cookPageSpeech({ kind: "step", number: 2, total: 5, text: " Faire fondre le beurre. " })).toBe("Étape 2. Faire fondre le beurre.");
     expect(cookPageSpeech({ kind: "step", number: 5, total: 5, text: "Servir." })).toBe("Étape 5, la dernière. Servir.");
     expect(cookPageSpeech({ kind: "step", number: 1, total: 3, text: "" })).toBe("Étape 1.");
+  });
+});
+
+describe("isSpeechEcho", () => {
+  const spoken = "Étape 4. Ajouter la pâte et passer à l'étape suivante après 2 minutes.";
+  it("reconnaît un fragment du texte lu, sans casse ni accents", () => {
+    expect(isSpeechEcho("l'étape suivante", spoken)).toBe(true);
+    expect(isSpeechEcho("ETAPE 4", spoken)).toBe(true);
+  });
+  it("laisse passer une commande absente du texte lu", () => {
+    expect(isSpeechEcho("répète", spoken)).toBe(false);
+    expect(isSpeechEcho("suivant", spoken)).toBe(false);
+  });
+  it("ne prend pas un mot partiel pour un écho", () => {
+    expect(isSpeechEcho("ape", spoken)).toBe(false);
+  });
+  it("rend false sur une entrée vide", () => {
+    expect(isSpeechEcho("", spoken)).toBe(false);
+    expect(isSpeechEcho("suivant", "")).toBe(false);
+    expect(isSpeechEcho(null, null)).toBe(false);
   });
 });
