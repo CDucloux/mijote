@@ -32,7 +32,7 @@ function YamlImport({ onText, warn }: YamlImportProps) {
         onChange={e => { read(e.target.files?.[0]); e.target.value = ""; }} />
       {/* Styles dans `.yaml-drop` (global.css) : survol desktop et glisser-déposer
           (`data-over`) y partagent la même teinte, impossible en style inline. */}
-      <div className="yaml-drop ripple ripple-accent" data-over={over || undefined} role="button" tabIndex={0}
+      <div className="yaml-drop ripple" data-over={over || undefined} role="button" tabIndex={0}
         onDragOver={e => { e.preventDefault(); setOver(true); }}
         onDragLeave={() => setOver(false)}
         onDrop={e => { e.preventDefault(); setOver(false); read(Array.from(e.dataTransfer.files).find(f => /\.(ya?ml|txt)$/i.test(f.name))); }}

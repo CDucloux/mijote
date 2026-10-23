@@ -137,7 +137,7 @@ html.light, .light {
    inline). Spécificité nulle : un `:focus-visible` posé ailleurs garde la main. ── */
 :where(
   .hover-ring, .ut-pill-clickable, .timer-btn,
-  .yaml-drop:not([data-over]), .field-picker, .lp-next,
+  .field-picker, .lp-next,
   .ing-hover, .spotlight-explore, .save-carnet-btn, .convert-reset
 ) {
   outline: 1px solid color-mix(in srgb, var(--ring-color, var(--hover-ring)) calc(var(--veil-on, 0) * 100%), transparent);

@@ -5303,11 +5303,11 @@ html.light .sheet-sticky-head::after {
   justify-content: center;
   gap: 10px;
   padding: 28px 20px;
-  border-radius: 12px;
-  border: 1.5px dashed var(--border);
+  border-radius: 16px;
+  border: none;
   background: var(--surface2);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 .yaml-drop-icon {
   display: inline-flex;
@@ -5315,10 +5315,10 @@ html.light .sheet-sticky-head::after {
   transition: color 0.15s ease;
 }
 .yaml-drop-title { color: var(--text); }
+/* Fichier survolant la zone : seul état qui mérite un liseré (cf. CLAUDE.md, borderless). */
 .yaml-drop[data-over] {
-  border-style: solid;
-  border-color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.06);
+  background: rgba(var(--accent-rgb), 0.08);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 .yaml-drop[data-over] .yaml-drop-icon { color: var(--accent); }
 .yaml-drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
