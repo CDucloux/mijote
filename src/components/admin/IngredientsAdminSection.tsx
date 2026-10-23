@@ -1,36 +1,43 @@
-import { useState } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { IngImage } from "../ui/Img.jsx";
+import { SearchField } from "../ui/SearchField.jsx";
 import { IngredientStatusBadge } from "../badges/IngredientStatusBadge.jsx";
 import { UnderlineTabs } from "../ui/UnderlineTabs.jsx";
-import { AdminCollapse, CollapseChevron, MasterBadge, AddPill } from "./AdminPrimitives.jsx";
+import { MasterBadge } from "./AdminPrimitives.jsx";
 import { BaseImportExport } from "./BaseImportExport.jsx";
+import { IngredientCategoryNav } from "./IngredientCategoryNav.jsx";
 import { countTrackingFilters, matchesTrackingFilter } from "@/lib/food/ingredientTracking.js";
 import type { IngredientTrackingFilter } from "@/lib/food/ingredientTracking.js";
+import { countByCategory, groupAdminIngredients } from "@/lib/food/ingredientAdminView.js";
 import { sortedCategoryEntries } from "@/constants/categories.js";
 import type { IngredientDbItem } from "@/lib/types.js";
 import type { IngredientCategory } from "@/lib/data/referenceData.js";
 import type { BaseTransfer } from "../../hooks/useMasterImports.js";
 
-function IngredientRowButton({ item, first, onOpen }: { item: IngredientDbItem; first: boolean; onOpen: () => void }) {
+// Ce qu'il reste à rédiger sur une fiche, en sous-titre de sa ligne.
+function rowHint(item: IngredientDbItem): { text: string; done: boolean } {
+  const gaps = [matchesTrackingFilter(item, "no-image") && "photo", matchesTrackingFilter(item, "no-nutrition") && "nutrition"].filter(Boolean);
+  if (item.status === "validated") return { text: "Validé", done: true };
+  return { text: gaps.length ? `Sans ${gaps.join(" ni ")}` : "En cours de rédaction", done: false };
+}
+
+function IngredientRow({ item, onOpen }: { item: IngredientDbItem; onOpen: () => void }) {
+  const hint = rowHint(item);
   return (
-    <button onClick={onOpen} title="Voir la fiche" className="ing-row-btn ripple hover-neutral" style={{
-      width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
-      borderTop: first ? "none" : "1px solid var(--border)",
-      background: "var(--surface)", textAlign: "left", cursor: "pointer", border: "none",
+    <button onClick={onOpen} title="Ouvrir la fiche" className="ripple hover-neutral dash-card" style={{
+      width: "100%", minWidth: 0, display: "flex", alignItems: "center", gap: 12, padding: "9px 12px 9px 10px",
+      borderRadius: 14, border: "none", background: "transparent", textAlign: "left", cursor: "pointer",
     }}>
       <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
         <IngImage src={item.image} alt={item.name} size={42} />
-        <IngredientStatusBadge status={item.status} />
+        <IngredientStatusBadge status={item.status} size={16} ring="var(--float-surface)" />
       </span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--accent)", marginTop: 2, fontWeight: 600 }}>
-          <Icon name="fileText" size={10} color="var(--accent)" /> Découvrir la fiche
-        </div>
-      </div>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name || "Sans nom"}</span>
+        <span style={{ display: "block", fontSize: 12, color: hint.done ? "var(--ok)" : "var(--text3)", marginTop: 2 }}>{hint.text}</span>
+      </span>
       {item._ro === true && <MasterBadge />}
-      <Icon name="forward" size={14} color="var(--text3)" />
+      <span className="dash-chevron"><Icon name="forward" size={14} color="currentColor" /></span>
     </button>
   );
 }
@@ -41,8 +48,11 @@ interface IngredientsAdminSectionProps {
   isAdmin: boolean;
   filter: IngredientTrackingFilter | null;
   onFilter: (filter: IngredientTrackingFilter | null) => void;
-  openCats: Record<string, boolean>;
-  onToggleCat: (key: string) => void;
+  /** Catégorie affichée, `null` pour toutes. */
+  category: string | null;
+  onCategory: (category: string | null) => void;
+  search: string;
+  onSearch: (search: string) => void;
   onReorder: (fromKey: string, toKey: string) => void;
   onCreate: (categoryKey: string) => void;
   onOpen: (id: string) => void;
@@ -50,75 +60,84 @@ interface IngredientsAdminSectionProps {
 }
 
 /**
- * Section « Ingrédients » : catégories repliables (réordonnables par glisser-déposer
- * côté admin), filtre de suivi éditorial, et import / export de la base.
+ * Section « Ingrédients » : au large, deux volets (recherche, catégories et
+ * outils de la base à gauche ; fiches de la sélection à droite), une colonne en
+ * mobile. Filtre de suivi éditorial piloté aussi par le tableau de bord.
  */
-export function IngredientsAdminSection({ ingredientDB, categories, isAdmin, filter, onFilter, openCats, onToggleCat, onReorder, onCreate, onOpen, transfer }: IngredientsAdminSectionProps) {
-  const [dragCat, setDragCat] = useState<string | null>(null); // catégorie en cours de glisser
-  const [overCat, setOverCat] = useState<string | null>(null); // cible de dépôt survolée
+export function IngredientsAdminSection({ ingredientDB, categories, isAdmin, filter, onFilter, category, onCategory, search, onSearch, onReorder, onCreate, onOpen, transfer }: IngredientsAdminSectionProps) {
   const counts = countTrackingFilters(ingredientDB);
   const filters: [IngredientTrackingFilter | null, string, number][] = [[null, "Tous", counts.all], ["draft", "En cours", counts.draft], ["validated", "Validés", counts.validated], ["no-image", "Sans photo", counts["no-image"]], ["no-nutrition", "Sans nutrition", counts["no-nutrition"]]];
-  const endDrag = () => { setDragCat(null); setOverCat(null); };
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {/* Filtre de suivi (piloté aussi par le dashboard) */}
-      <div style={{ marginBottom: 4 }}>
-        <UnderlineTabs label="Filtrer les ingrédients" value={filter} onChange={onFilter}
-          tabs={filters.map(([value, label, count]) => ({ value, label, count }))} />
-      </div>
-      {sortedCategoryEntries(categories).map(([catKey, cat], ci) => {
-        const catIngs = ingredientDB.filter(d => d.category === catKey && matchesTrackingFilter(d, filter))
-          .sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr", { sensitivity: "base" }));
-        if (filter && catIngs.length === 0) return null; // sous filtre : on masque les catégories vides
-        const isOpen = filter ? true : !!openCats[catKey];
-        const dropTarget = overCat === catKey && dragCat !== null && dragCat !== catKey;
-        return (
-          <div key={catKey} className="slide-up"
-            draggable={isAdmin}
-            onDragStart={isAdmin ? (e) => { setDragCat(catKey); e.dataTransfer.effectAllowed = "move"; } : undefined}
-            onDragOver={isAdmin ? (e) => { e.preventDefault(); if (catKey !== overCat) setOverCat(catKey); } : undefined}
-            onDragLeave={isAdmin ? () => { if (overCat === catKey) setOverCat(null); } : undefined}
-            onDrop={isAdmin ? (e) => { e.preventDefault(); if (dragCat && dragCat !== catKey) onReorder(dragCat, catKey); endDrag(); } : undefined}
-            onDragEnd={isAdmin ? endDrag : undefined}
-            style={{
-              background: "var(--surface)", borderRadius: 14, overflow: "hidden",
-              border: `1px solid ${dropTarget ? "var(--accent)" : "var(--border)"}`,
-              opacity: dragCat === catKey ? 0.4 : 1,
-              boxShadow: dropTarget ? "0 0 0 2px var(--accent)" : "none",
-              transition: "border-color 0.15s, box-shadow 0.15s, opacity 0.15s",
-              animationDelay: `${ci * 0.04}s`,
-            }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px" }}>
-              {isAdmin && (
-                <span style={{ cursor: "grab", color: "var(--text3)", display: "flex", flexShrink: 0, touchAction: "none" }} title="Glisser pour réordonner">
-                  <Icon name="drag" size={16} color="var(--text3)" />
-                </span>
-              )}
-              <button onClick={() => onToggleCat(catKey)} className="ripple" style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, textAlign: "left", padding: 6, margin: -6, borderRadius: 10 }}>
-                <span style={{ fontSize: 20 }}>{cat.icon}</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{cat.label}</div>
-                  <div style={{ fontSize: 11, color: "var(--text3)" }}>{catIngs.length} ingrédient{catIngs.length !== 1 ? "s" : ""} · <code style={{ fontSize: 10, background: "var(--surface2)", borderRadius: 4, padding: "1px 4px" }}>{catKey}</code></div>
-                </div>
-                <CollapseChevron open={isOpen} />
-              </button>
-              {isAdmin && <AddPill onClick={() => onCreate(catKey)} />}
-            </div>
-            <AdminCollapse open={isOpen}>
-              <div style={{ borderTop: "1px solid var(--border)" }}>
-                {catIngs.length === 0 && (
-                  <div style={{ padding: "12px 16px", fontSize: 13, color: "var(--text3)", fontStyle: "italic" }}>
-                    Aucun ingrédient dans cette catégorie.
-                  </div>
-                )}
-                {catIngs.map((item, i) => <IngredientRowButton key={item.id} item={item} first={i === 0} onOpen={() => onOpen(item.id)} />)}
-              </div>
-            </AdminCollapse>
-          </div>
-        );
-      })}
+  const order = sortedCategoryEntries(categories).map(([key]) => key);
+  const groups = groupAdminIngredients(ingredientDB, order, { category, filter, search });
+  const shown = groups.reduce((n, g) => n + g.items.length, 0);
+  const selected = category !== null ? categories[category] : undefined;
 
-      {isAdmin && <BaseImportExport count={ingredientDB.length} noun="ingrédient" {...transfer} />}
+  return (
+    <div className="slide-up ing-admin">
+      <aside className="ing-admin-aside">
+        <SearchField value={search} onChange={onSearch} placeholder="Rechercher un ingrédient" />
+        <IngredientCategoryNav categories={categories} counts={countByCategory(ingredientDB, filter)} total={filter ? counts[filter] : counts.all}
+          value={category} onChange={onCategory} onReorder={isAdmin ? onReorder : undefined} />
+        {isAdmin && <div className="ing-admin-tools"><BaseImportExport count={ingredientDB.length} noun="ingrédient" {...transfer} /></div>}
+      </aside>
+
+      <section style={{ minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
+          <div style={{ minWidth: 0 }}>
+            <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 28, fontWeight: 650, letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0, display: "flex", alignItems: "center", gap: 10 }}>
+              {selected && <span style={{ fontSize: 24 }}>{selected.icon}</span>}
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selected?.label ?? "Tous les ingrédients"}</span>
+            </h2>
+            <div style={{ fontSize: 13, color: "var(--text3)", marginTop: 4, fontVariantNumeric: "tabular-nums" }}>
+              {shown} fiche{shown > 1 ? "s" : ""}{search.trim() ? ` pour « ${search.trim()} »` : ""}
+            </div>
+          </div>
+          {isAdmin && category !== null && (
+            <button className="btn btn-primary btn-pill" onClick={() => onCreate(category)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", fontSize: 13 }}>
+              <Icon name="plus" size={14} /> Ajouter
+            </button>
+          )}
+        </div>
+        <div style={{ marginBottom: 18 }}>
+          <UnderlineTabs label="Filtrer les ingrédients" value={filter} onChange={onFilter}
+            tabs={filters.map(([value, label, count]) => ({ value, label, count }))} />
+        </div>
+
+        {groups.length === 0 ? (
+          <div style={{ padding: "36px 4px", color: "var(--text3)", fontSize: 14, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--text)", marginBottom: 4 }}>
+              {search.trim() ? "Rien ne correspond à cette recherche" : filter ? "Rien à reprendre ici" : "Cette catégorie est encore vide"}
+            </div>
+            {search.trim() ? "Essaie un autre nom, ou un alias." : filter ? "Toutes les fiches de cette sélection sont à jour." : "Ajoute une première fiche pour la remplir."}
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            {groups.map(group => {
+              const cat = categories[group.category];
+              return (
+                <div key={group.category}>
+                  {category === null && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 4px 10px" }}>
+                      {cat && <span style={{ fontSize: 16 }}>{cat.icon}</span>}
+                      <span style={{ fontSize: 14, fontWeight: 650, color: "var(--text)" }}>{cat?.label ?? (group.category || "Sans catégorie")}</span>
+                      <span style={{ fontSize: 13, color: "var(--text3)", fontVariantNumeric: "tabular-nums" }}>{group.items.length}</span>
+                      {isAdmin && cat && (
+                        <button className="icon-btn-soft ripple" onClick={() => onCreate(group.category)} title={`Ajouter dans ${cat.label}`}
+                          style={{ marginLeft: "auto", width: 30, height: 30, borderRadius: "50%", display: "grid", placeItems: "center", border: "none", background: "transparent", cursor: "pointer" }}>
+                          <Icon name="plus" size={15} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  <div className="dash-surface ing-admin-grid">
+                    {group.items.map(item => <IngredientRow key={item.id} item={item} onOpen={() => onOpen(item.id)} />)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

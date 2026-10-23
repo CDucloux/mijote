@@ -38,7 +38,8 @@ type PendingDelete =
 
 const DELETE_NOUN: Record<PendingDelete["type"], string> = { ing: "l'ingrédient", ut: "l'ustensile", tech: "le geste" };
 
-const BASE_NOUN: Partial<Record<ConsoleSection, string>> = { ingredients: "ingrédient", ustensiles: "ustensile", techniques: "technique" };
+// Ingrédients : le volet de droite affiche déjà son effectif, pas de compteur en en-tête.
+const BASE_NOUN: Partial<Record<ConsoleSection, string>> = { ustensiles: "ustensile", techniques: "technique" };
 
 interface ConfigPageProps {
   ingredientDB: IngredientDbItem[];
@@ -91,15 +92,16 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   }, [configSectionParam]); // eslint-disable-line react-hooks/exhaustive-deps
   // Filtre actif de la liste d'ingrédients (piloté par le dashboard).
   const [ingFilter, setIngFilter] = useState<IngredientTrackingFilter | null>(null);
-  const gotoSection = (s: ConsoleSection, filter: IngredientTrackingFilter | null = null) => { setIngFilter(filter); setSection(s); };
+  // Catégorie et recherche de la liste : gardées ici pour survivre à l'aller-retour vers une fiche.
+  const [ingCategory, setIngCategory] = useState<string | null>(null);
+  const [ingSearch, setIngSearch] = useState("");
+  const gotoSection = (s: ConsoleSection, filter: IngredientTrackingFilter | null = null) => { setIngFilter(filter); setIngCategory(null); setSection(s); };
   const [newIngId, setNewIngId] = useState<string | null>(null); // brouillon d'ingrédient à ouvrir en édition
   const [editUt, setEditUt] = useState<UtensilDbItem | null>(null);
   const [editTech, setEditTech] = useState<TechniqueDraft | null>(null);
   const [confirmDel, setConfirmDel] = useState<PendingDelete | null>(null);
   // Groupes dépliés : gardés ici pour survivre à l'aller-retour vers une fiche.
-  const [openCats, setOpenCats] = useState<Record<string, boolean>>({});
   const [openTechCats, setOpenTechCats] = useState<Record<string, boolean>>({});
-  const toggleCat = (k: string) => setOpenCats(p => ({ ...p, [k]: !p[k] }));
   const toggleTechCat = (k: string) => setOpenTechCats(p => ({ ...p, [k]: !p[k] }));
 
   const moderation = useModerationReports(isAdmin);
@@ -157,7 +159,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
 
   const baseNoun = BASE_NOUN[section];
   const baseCount = baseNoun
-    ? { noun: baseNoun, count: section === "ingredients" ? ingredientDB.length : section === "ustensiles" ? utensilDB.length : techniques.length }
+    ? { noun: baseNoun, count: section === "ustensiles" ? utensilDB.length : techniques.length }
     : null;
   const detailIngredient = ingDetailId ? ingredientDB.find(d => d.id === ingDetailId) : undefined;
 
@@ -180,7 +182,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         </div>
       ) : (
         <>
-          <ConsoleHeader section={section} onSection={s => gotoSection(s)} isAdmin={isAdmin} pendingReports={moderation.reports.length} baseCount={baseCount} />
+          <ConsoleHeader section={section} onSection={s => gotoSection(s)} pendingReports={moderation.reports.length} baseCount={baseCount} />
 
           <div ref={sectionScrollRef} onScroll={e => { savedScrollTop.current = e.currentTarget.scrollTop; }} style={{ flex: 1, overflowY: "auto", padding: "16px 20px var(--page-pad-b)" }}>
             {section === "dashboard" && (
@@ -189,7 +191,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
             )}
             {section === "ingredients" && (
               <IngredientsAdminSection ingredientDB={ingredientDB} categories={categories} isAdmin={isAdmin}
-                filter={ingFilter} onFilter={setIngFilter} openCats={openCats} onToggleCat={toggleCat}
+                filter={ingFilter} onFilter={setIngFilter} category={ingCategory} onCategory={setIngCategory} search={ingSearch} onSearch={setIngSearch}
                 onReorder={moveCategory} onCreate={createIngredient}
                 onOpen={id => navigate(`/admin/ingredients/${encodeURIComponent(id)}`)} transfer={transfers.ingredients} />
             )}

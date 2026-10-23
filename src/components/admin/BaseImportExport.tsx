@@ -55,7 +55,7 @@ interface BaseImportExportProps {
   onImportYaml: (text: string) => void;
 }
 
-const CARD = { background: "var(--surface)", borderRadius: 14, padding: 16, border: "1px solid var(--border)" };
+const CARD = { background: "var(--float-surface)", boxShadow: "var(--float-shadow)", borderRadius: 20, padding: 18 };
 
 // Bloc réutilisable Export/Import YAML+Markdown d'une base master (ingrédients,
 // ustensiles, techniques) : rendu et espacement IDENTIQUES quelle que soit la
@@ -64,8 +64,8 @@ export function BaseImportExport({ count, noun, exportTitle = "Exporter la base"
   return (
     <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 6 }}>
       <div style={CARD}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-          <div style={{ minWidth: 0 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <div style={{ minWidth: 0, flex: "1 1 200px" }}>
             <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>{exportTitle}</h3>
             <p style={{ fontSize: 12, color: "var(--text2)" }}>{count} {noun}{count > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
           </div>

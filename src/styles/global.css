@@ -5405,6 +5405,54 @@ html.light .sheet-sticky-head::after {
   .dash-legend:hover > span:last-child { text-decoration: underline; text-underline-offset: 3px; }
 }
 
+/* Console > Ingrédients : une colonne en mobile (recherche, pastilles de
+   catégorie défilantes, fiches, outils de la base en bas) ; au large, deux volets,
+   navigation à gauche et fiches en grille à droite. Sans bordure : les
+   fiches et la navigation flottent sur la surface `--float-surface`. */
+.ing-admin { display: flex; flex-direction: column; gap: 22px; }
+.ing-admin-aside { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ing-admin-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 4px; }
+.ing-cats { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 2px 20px 4px; }
+.ing-cats::-webkit-scrollbar { display: none; }
+.ing-cat {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px 8px 11px; border: none; border-radius: 999px; cursor: pointer;
+  background: var(--float-surface); box-shadow: var(--float-shadow);
+  color: var(--text2); font-size: 13px; font-weight: 600; white-space: nowrap; text-align: left;
+  transition: background-color 0.18s ease, color 0.18s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+.ing-cat-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; }
+.ing-cat-count { font-size: 12px; font-weight: 500; color: var(--text3); font-variant-numeric: tabular-nums; }
+.ing-cat-grip { display: none; }
+.ing-cat[data-active] { background: var(--accent); color: #fff; }
+.ing-cat[data-active] .ing-cat-count { color: rgba(255, 255, 255, 0.75); }
+.ing-cat[data-empty]:not([data-active]) { opacity: 0.55; }
+.ing-admin-tools { order: 9; }
+@media (min-width: 640px) {
+  .ing-admin-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+}
+@media (min-width: 900px) {
+  .ing-admin { display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 32px; align-items: start; }
+  .ing-admin-aside { gap: 18px; }
+  .ing-admin-tools { order: 0; }
+  .ing-cats {
+    flex-direction: column; gap: 1px; overflow: visible; margin: 0; padding: 4px;
+    background: var(--float-surface); box-shadow: var(--float-shadow); border-radius: 20px;
+  }
+  .ing-cat { display: flex; width: 100%; gap: 10px; padding: 9px 12px; border-radius: 14px; background: transparent; box-shadow: none; font-size: 14px; font-weight: 500; color: var(--text); }
+  .ing-cat-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* Sélection : aplat d'un cran + trait d'accent, plus discret qu'un fond plein dans une liste. */
+  .ing-cat[data-active] { background: var(--surface2); color: var(--text); font-weight: 650; }
+  .ing-cat[data-active] .ing-cat-count { color: var(--accent); font-weight: 650; }
+  .ing-cat[draggable="true"] { cursor: pointer; }
+  .ing-cat-grip { display: inline-flex; width: 0; overflow: hidden; color: var(--text3); cursor: grab; transition: width 0.15s ease; }
+  .ing-cat[data-drop] { box-shadow: inset 0 0 0 2px var(--accent); }
+  .ing-cat[data-dragging] { opacity: 0.4; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .ing-cat[draggable="true"]:hover .ing-cat-grip { width: 14px; }
+}
+
 /* Lien vers la source (hero de la fiche) : au survol desktop, un trait fin se
    dessine sous le domaine, de gauche à droite (dégradé plein dont la largeur
    s'anime, plutôt que text-decoration qui ne se transitionne pas). */
