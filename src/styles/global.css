@@ -3084,6 +3084,74 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
 }
 
+/* Aide des commandes vocales (VoiceCommandsSheet) : une carte par usage, et un
+   tableau à deux colonnes alignées, sans filet entre les lignes. La phrase à dire est en serif, comme une
+   réplique ; les variantes sont de petites étiquettes sous la description. */
+.voice-help__head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.voice-help__badge {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+}
+.voice-help__title {
+  font-family: var(--ff-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--text);
+}
+.voice-help__lede { font-size: 13px; color: var(--text3); margin: 2px 0 0; }
+.voice-help__group + .voice-help__group { margin-top: 18px; }
+.voice-help__group-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.voice-help__table {
+  margin: 0;
+  padding: 6px 0;
+  border-radius: 18px;
+  background: var(--surface2);
+}
+.voice-help__row {
+  display: grid;
+  grid-template-columns: minmax(118px, 36%) 1fr;
+  align-items: baseline;
+  gap: 14px;
+  padding: 10px 16px;
+}
+.voice-help__say {
+  font-family: var(--ff-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.voice-help__does { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--text2); }
+.voice-help__also { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.voice-help__alias {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (max-width: 360px) {
+  .voice-help__row { grid-template-columns: 1fr; gap: 2px; }
+}
+
 /* Micro du mode mains libres (en-tête du pas à pas). Allumé : pastille accent, et
    une onde qui s'étend pour dire que le micro écoute. */
 .cook-voice-btn {

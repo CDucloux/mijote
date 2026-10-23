@@ -219,9 +219,11 @@ describe("technique de l'étape", () => {
 });
 
 describe("aide des commandes vocales", () => {
-  it("chaque phrase de l'aide déclenche la commande annoncée", () => {
+  it("chaque phrase de l'aide, variantes comprises, déclenche la commande annoncée", () => {
     for (const entry of VOICE_HELP.flatMap(group => group.entries)) {
-      expect(parseVoiceCommand(entry.say)?.kind, entry.say).toBe(entry.kind);
+      for (const phrase of [entry.say, ...(entry.also ?? [])]) {
+        expect(parseVoiceCommand(phrase)?.kind, phrase).toBe(entry.kind);
+      }
     }
   });
   it("reconnaît « commandes », « commandes vocales », « aide » et « ferme »", () => {

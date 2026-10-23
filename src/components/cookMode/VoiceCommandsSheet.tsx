@@ -7,33 +7,39 @@ interface VoiceCommandsSheetProps {
   zIndex?: number;
 }
 
-/** Aide du mode mains libres : toutes les commandes vocales, par usage. */
+/**
+ * Aide du mode mains libres : une carte par usage, et dans chacune un tableau
+ * aligné « ce qu'on dit » / « ce que ça fait », variantes en petites étiquettes.
+ */
 export function VoiceCommandsSheet({ onClose, zIndex }: VoiceCommandsSheetProps) {
   return (
     <SwipeableSheet onClose={onClose} zIndex={zIndex}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-        <span aria-hidden="true" style={{ flexShrink: 0, width: 42, height: 42, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "grid", placeItems: "center" }}>
-          <Icon name="mic" size={20} weight="fill" />
-        </span>
-        <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", margin: 0, color: "var(--text)" }}>Commandes vocales</h3>
-      </div>
-      <p style={{ fontSize: 13.5, color: "var(--text3)", lineHeight: 1.5, margin: "0 0 20px" }}>
-        Parle normalement, la commande peut finir une phrase. « Ferme » pour revenir à la recette.
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+      <div className="voice-help">
+        <header className="voice-help__head">
+          <span className="voice-help__badge" aria-hidden="true"><Icon name="mic" size={20} weight="fill" /></span>
+          <div>
+            <h3 className="voice-help__title">Commandes vocales</h3>
+            <p className="voice-help__lede">Parle normalement : la commande peut finir une phrase.</p>
+          </div>
+        </header>
         {VOICE_HELP.map(group => (
-          <section key={group.title}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>{group.title}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <section key={group.title} className="voice-help__group" aria-label={group.title}>
+            <h4 className="voice-help__group-title"><Icon name={group.icon} size={14} />{group.title}</h4>
+            <dl className="voice-help__table">
               {group.entries.map(entry => (
-                <div key={entry.say} style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-                  <span style={{ flexShrink: 0, padding: "4px 11px", borderRadius: 999, background: "color-mix(in srgb, var(--accent) 13%, transparent)", color: "var(--accent)", fontSize: 13.5, fontWeight: 600, whiteSpace: "nowrap" }}>
-                    « {entry.say} »
-                  </span>
-                  <span style={{ fontSize: 13.5, color: "var(--text2)", lineHeight: 1.45 }}>{entry.does}</span>
+                <div key={entry.say} className="voice-help__row">
+                  <dt className="voice-help__say">{entry.say}</dt>
+                  <dd className="voice-help__does">
+                    {entry.does}
+                    {entry.also && (
+                      <span className="voice-help__also">
+                        {entry.also.map(alias => <span key={alias} className="voice-help__alias">{alias}</span>)}
+                      </span>
+                    )}
+                  </dd>
                 </div>
               ))}
-            </div>
+            </dl>
           </section>
         ))}
       </div>

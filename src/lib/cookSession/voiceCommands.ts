@@ -146,9 +146,11 @@ export function voiceTimerTarget(timers: readonly CookTimer[], action: TimerActi
   return timers.find(timer => timer.done) ?? pilot ?? nextPaused;
 }
 
-/** Une commande de l'aide : ce qu'on dit, ce que ça fait, et la commande reconnue. */
+/** Une commande de l'aide : ce qu'on dit, ses variantes, ce que ça fait, et la commande reconnue. */
 export interface VoiceHelpEntry {
   say: string;
+  /** Autres façons de le dire. */
+  also?: readonly string[];
   does: string;
   kind: VoiceCommand["kind"];
 }
@@ -156,6 +158,7 @@ export interface VoiceHelpEntry {
 /** Groupe de commandes de l'aide (« Naviguer », « Minuteurs »…). */
 export interface VoiceHelpGroup {
   title: string;
+  icon: "swap" | "speaker" | "clock" | "help";
   entries: readonly VoiceHelpEntry[];
 }
 
@@ -163,39 +166,42 @@ export interface VoiceHelpGroup {
 export const VOICE_HELP: readonly VoiceHelpGroup[] = [
   {
     title: "Naviguer",
+    icon: "swap",
     entries: [
-      { say: "Suivant", does: "Page suivante. Aussi « ensuite », « continue ».", kind: "next" },
-      { say: "Précédent", does: "Page précédente. Aussi « retour ».", kind: "prev" },
-      { say: "Mise en place", does: "Revenir aux ingrédients, ustensiles et découpes.", kind: "overview" },
-      { say: "Recette terminée", does: "Terminer la recette.", kind: "finish" },
+      { say: "Suivant", also: ["ensuite", "continue"], does: "Page suivante", kind: "next" },
+      { say: "Précédent", also: ["retour"], does: "Page précédente", kind: "prev" },
+      { say: "Mise en place", does: "Ingrédients, ustensiles et découpes", kind: "overview" },
+      { say: "Recette terminée", does: "Terminer la recette", kind: "finish" },
     ],
   },
   {
     title: "Écouter",
+    icon: "speaker",
     entries: [
-      { say: "Répète", does: "Relire la page.", kind: "repeat" },
-      { say: "Astuce", does: "Lire l'astuce de l'étape.", kind: "tip" },
-      { say: "Technique", does: "Expliquer le geste de l'étape. « Technique monter » pour en choisir un.", kind: "technique" },
-      { say: "Silence", does: "Couper la lecture en cours. Aussi « chut ».", kind: "silence" },
-      { say: "Lecture off", does: "Ne plus lire les étapes en tournant la page.", kind: "readOff" },
-      { say: "Lecture on", does: "Relire les étapes en tournant la page.", kind: "readOn" },
+      { say: "Répète", does: "Relire la page", kind: "repeat" },
+      { say: "Astuce", does: "Lire l'astuce de l'étape", kind: "tip" },
+      { say: "Technique", also: ["technique monter"], does: "Expliquer le geste de l'étape", kind: "technique" },
+      { say: "Silence", also: ["chut"], does: "Couper la lecture en cours", kind: "silence" },
+      { say: "Lecture off", does: "Ne plus lire les étapes", kind: "readOff" },
+      { say: "Lecture on", does: "Lire à nouveau les étapes", kind: "readOn" },
     ],
   },
   {
     title: "Minuteurs",
+    icon: "clock",
     entries: [
-      { say: "Minuteur", does: "Lancer le minuteur de l'étape.", kind: "timer" },
-      { say: "Minuteur 10 minutes", does: "Lancer un minuteur de la durée dite.", kind: "timer" },
-      { say: "Pause", does: "Mettre en pause le minuteur qui sonnera le plus tôt.", kind: "pause" },
-      { say: "Reprends", does: "Relancer le minuteur en pause.", kind: "resume" },
-      { say: "Stop", does: "Couper le minuteur qui sonne, sinon le prochain.", kind: "stop" },
+      { say: "Minuteur", also: ["minuteur 10 minutes"], does: "Lancer le minuteur de l'étape, ou la durée dite", kind: "timer" },
+      { say: "Pause", does: "Mettre en pause le prochain à sonner", kind: "pause" },
+      { say: "Reprends", does: "Relancer le minuteur en pause", kind: "resume" },
+      { say: "Stop", does: "Couper celui qui sonne, sinon le prochain", kind: "stop" },
     ],
   },
   {
     title: "Aide",
+    icon: "help",
     entries: [
-      { say: "Commandes", does: "Afficher cette page. Aussi « aide ».", kind: "help" },
-      { say: "Ferme", does: "Fermer cette page.", kind: "close" },
+      { say: "Commandes", also: ["aide"], does: "Afficher cette page", kind: "help" },
+      { say: "Ferme", does: "Revenir à la recette", kind: "close" },
     ],
   },
 ];
