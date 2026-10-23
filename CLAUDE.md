@@ -63,12 +63,12 @@ Deux principes qui font vraiment basculer :
 ## 6. Qualité avant de finir (checks proportionnels au diff)
 Ne PAS tout relancer à chaque petite modif : c'est overkill et `vite build` (lent, sortie très verbeuse) coûte cher en tokens pour rien sur un petit changement. On lance **uniquement ce que le diff peut casser** :
 - **CSS uniquement** : rien d'automatique (eslint ne lint pas le CSS, `tsc` ne le voit pas, une erreur CSS ne casse quasi jamais le build). Raisonner sur le CSS. Au pire un `vite build` en fin de session si gros remaniement de styles.
-- **JSX/UI sans logique métier** : `tsc --noEmit` + `npm run lint`. Pas de build.
+- **UI `.tsx` sans logique métier** : `tsc --noEmit` + `npm run lint`. Pas de build.
 - **`src/lib/` ou `functions/src/`** : `tsc --noEmit` + `npm test` (au moins la zone touchée, avec les nouveaux tests) + `npm run lint`.
 - **Imports transverses, dépendances, config Vite/TS** : ajouter `vite build` (c'est là qu'il attrape vraiment quelque chose : chaîne d'imports/bundling).
 
 Règles transverses :
-- `npm run lint` → **0 erreur** dès qu'on touche du JS/JSX/TS (`no-unused-vars` est une ERREUR ; les warnings `react-hooks/*` pré-existants sont tolérés).
+- `npm run lint` → **0 erreur** dès qu'on touche du TS/TSX ou un test `.js` (`no-unused-vars` est une ERREUR ; les warnings `react-hooks/*` pré-existants sont tolérés).
 - `tsc --noEmit` est quasi gratuit et silencieux quand c'est vert : c'est le gardien par défaut dès qu'on touche du TS/TSX.
 - **La checklist COMPLÈTE (`npm run lint` + `tsc --noEmit` + `vite build` + `npm test`) est obligatoire et non négociable à la MEP** (cf. §7) et avant tout merge vers `main` : là, c'est le dernier filet avant prod.
 
