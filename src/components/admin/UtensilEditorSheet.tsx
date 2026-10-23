@@ -3,6 +3,7 @@ import { Icon } from "../ui/Icon.jsx";
 import { Img } from "../ui/Img.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { SheetIdentityHeader } from "../ui/SheetIdentityHeader.jsx";
+import { SheetDeleteButton } from "./AdminPrimitives.jsx";
 import { ImageUpload } from "../ui/ImageUpload.jsx";
 import { UTENSIL_CATEGORIES } from "@/lib/household/dataYaml.js";
 import { APPLIANCE_LABELS, isApplianceKey } from "@/lib/utensils/appliances.js";
@@ -30,13 +31,15 @@ interface UtensilEditorSheetProps {
   isAdmin: boolean;
   onClose: () => void;
   onSave: (draft: UtensilDbItem) => void;
+  /** Ustensile existant : suppression (la feuille se ferme avant la confirmation). */
+  onDelete?: () => void;
 }
 
 /**
  * Éditeur d'un ustensile : même en-tête que la feuille de geste ; la photo, posée
  * sur blanc comme dans la grille, tient lieu d'icône une fois choisie.
  */
-export function UtensilEditorSheet({ initial, isAdmin, onClose, onSave }: UtensilEditorSheetProps) {
+export function UtensilEditorSheet({ initial, isAdmin, onClose, onSave, onDelete }: UtensilEditorSheetProps) {
   const [draft, setDraft] = useState<UtensilDbItem>(initial);
   const patch = (p: Partial<UtensilDbItem>) => setDraft(d => ({ ...d, ...p }));
   // Brouillon : titre et description peuvent rester vides le temps de la saisie.
@@ -76,6 +79,7 @@ export function UtensilEditorSheet({ initial, isAdmin, onClose, onSave }: Utensi
         <ImageUpload value={draft.image} onChange={v => patch({ image: v })} style={{ marginBottom: 14, height: 100 }} pathPrefix={isAdmin ? "master/utensils" : "utensils"} />
         <PrecautionFields value={precaution} onChange={p => setPrecaution(cur => ({ ...cur, ...p }))} />
         <div style={{ display: "flex", gap: 10 }}>
+          {onDelete && <SheetDeleteButton onClick={() => close(onDelete)} />}
           <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="undo" size={15} /> Annuler</button>
           <button className="btn btn-primary" style={{ flex: 1 }} onClick={save}><Icon name="save" size={15} /> Sauvegarder</button>
         </div>

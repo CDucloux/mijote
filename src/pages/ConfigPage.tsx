@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import type { ComponentProps, Dispatch, SetStateAction } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Icon } from "../components/ui/Icon.jsx";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog.jsx";
 import { ImportResultDialog } from "../components/admin/ImportResultDialog.jsx";
 import { IngredientDetail } from "../components/ingredient/IngredientDetail.jsx";
@@ -10,9 +9,10 @@ import { SourcesAdmin } from "../components/admin/SourcesAdmin.jsx";
 import { ConsoleHeader } from "../components/admin/ConsoleHeader.jsx";
 import { IngredientsAdminSection } from "../components/admin/IngredientsAdminSection.jsx";
 import { UtensilsAdminSection } from "../components/admin/UtensilsAdminSection.jsx";
+import type { UtensilListView } from "../components/admin/UtensilsAdminSection.jsx";
 import { TechniquesAdminSection } from "../components/admin/TechniquesAdminSection.jsx";
+import type { TechniqueListView } from "../components/admin/TechniquesAdminSection.jsx";
 import { ModerationSection } from "../components/admin/ModerationSection.jsx";
-import { BaseMenu } from "../components/admin/BaseMenu.jsx";
 import { TechniqueEditorSheet } from "../components/admin/TechniqueEditorSheet.jsx";
 import { UtensilEditorSheet } from "../components/admin/UtensilEditorSheet.jsx";
 import { useMasterImports } from "../hooks/useMasterImports.js";
@@ -39,8 +39,6 @@ type PendingDelete =
 
 const DELETE_NOUN: Record<PendingDelete["type"], string> = { ing: "l'ingrédient", ut: "l'ustensile", tech: "le geste" };
 
-// Ingrédients : le volet de droite affiche déjà son effectif, pas de compteur en en-tête.
-const BASE_NOUN: Partial<Record<ConsoleSection, string>> = { ustensiles: "ustensile", techniques: "technique" };
 
 interface ConfigPageProps {
   ingredientDB: IngredientDbItem[];
@@ -96,14 +94,19 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   // Catégorie et recherche de la liste : gardées ici pour survivre à l'aller-retour vers une fiche.
   const [ingCategory, setIngCategory] = useState<string | null>(null);
   const [ingSearch, setIngSearch] = useState("");
-  const gotoSection = (s: ConsoleSection, filter: IngredientTrackingFilter | null = null) => { setIngFilter(filter); setIngCategory(null); setSection(s); };
+  const [utView, setUtView] = useState<UtensilListView>({ category: null, search: "", filter: null });
+  const [techView, setTechView] = useState<TechniqueListView>({ category: null, search: "", filter: null });
+  // Depuis le tableau de bord : la section s'ouvre sur toutes les catégories, filtre éventuel appliqué.
+  const gotoSection = (s: ConsoleSection, filter: IngredientTrackingFilter | null = null) => {
+    setIngFilter(filter); setIngCategory(null);
+    if (s === "ustensiles") setUtView(v => ({ ...v, category: null, filter: filter === "no-image" ? "no-image" : null }));
+    setSection(s);
+  };
   const [newIngId, setNewIngId] = useState<string | null>(null); // brouillon d'ingrédient à ouvrir en édition
   const [editUt, setEditUt] = useState<UtensilDbItem | null>(null);
   const [editTech, setEditTech] = useState<TechniqueDraft | null>(null);
   const [confirmDel, setConfirmDel] = useState<PendingDelete | null>(null);
   // Groupes dépliés : gardés ici pour survivre à l'aller-retour vers une fiche.
-  const [openTechCats, setOpenTechCats] = useState<Record<string, boolean>>({});
-  const toggleTechCat = (k: string) => setOpenTechCats(p => ({ ...p, [k]: !p[k] }));
 
   const moderation = useModerationReports(isAdmin);
   const transfers = useMasterImports({ ingredientDB, setIngredientDB, utensilDB, setUtensilDB, techniques, setTechniques, categories });
@@ -158,10 +161,9 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
 
   const moveCategory = (fromKey: string, toKey: string) => setCategories(prev => reorderCategories(prev, fromKey, toKey) ?? prev);
 
-  const baseNoun = BASE_NOUN[section];
-  const baseCount = baseNoun
-    ? { noun: baseNoun, count: section === "ustensiles" ? utensilDB.length : techniques.length }
-    : null;
+  // Entrées existantes en cours d'édition (suppression proposée dans leur feuille).
+  const editUtEntry = editUt?.id ? utensilDB.find(d => d.id === editUt.id) : undefined;
+  const editTechEntry = editTech?.id ? techniques.find(t => t.id === editTech.id) : undefined;
   const detailIngredient = ingDetailId ? ingredientDB.find(d => d.id === ingDetailId) : undefined;
 
   return (
@@ -183,10 +185,7 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         </div>
       ) : (
         <>
-          <ConsoleHeader section={section} onSection={s => gotoSection(s)} pendingReports={moderation.reports.length} baseCount={baseCount}
-            actions={isAdmin && baseCount && (section === "ustensiles"
-              ? <BaseMenu count={baseCount.count} noun={baseCount.noun} {...transfers.utensils} />
-              : section === "techniques" ? <BaseMenu count={baseCount.count} noun={baseCount.noun} importTitle="Importer le glossaire" {...transfers.techniques} /> : null)} />
+          <ConsoleHeader section={section} onSection={s => gotoSection(s)} pendingReports={moderation.reports.length} />
 
           <div ref={sectionScrollRef} onScroll={e => { savedScrollTop.current = e.currentTarget.scrollTop; }} style={{ flex: 1, overflowY: "auto", padding: "16px 20px var(--page-pad-b)" }}>
             {section === "dashboard" && (
@@ -200,30 +199,25 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                 onOpen={id => navigate(`/admin/ingredients/${encodeURIComponent(id)}`)} transfer={transfers.ingredients} />
             )}
             {section === "ustensiles" && (
-              <UtensilsAdminSection utensilDB={utensilDB}
-                onEdit={item => setEditUt({ ...item })} onDelete={item => setConfirmDel({ type: "ut", item })} />
+              <UtensilsAdminSection utensilDB={utensilDB} isAdmin={isAdmin} view={utView} onView={patch => setUtView(v => ({ ...v, ...patch }))}
+                onCreate={catKey => setEditUt({ id: "", name: "", category: catKey, appliance: "", image: "" })}
+                onEdit={item => setEditUt({ ...item })} transfer={transfers.utensils} />
             )}
             {section === "techniques" && (
-              <TechniquesAdminSection techniques={techniques} isAdmin={isAdmin} openCats={openTechCats} onToggleCat={toggleTechCat}
+              <TechniquesAdminSection techniques={techniques} isAdmin={isAdmin} view={techView} onView={patch => setTechView(v => ({ ...v, ...patch }))}
                 onCreate={catKey => setEditTech({ id: "", name: "", category: catKey, definition: "", aliases: [], difficulty: undefined, source: "" })}
-                onEdit={t => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })}
-                onDelete={item => setConfirmDel({ type: "tech", item })} />
+                onEdit={t => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })} transfer={transfers.techniques} />
             )}
             {section === "sources" && <SourcesAdmin sources={sources} setSources={setSources} isAdmin={isAdmin} />}
             {section === "modération" && <ModerationSection {...moderation} />}
           </div>
-          {/* FAB « + » flottant pour ajouter un ustensile (comme les listes de courses libres) */}
-          {isAdmin && section === "ustensiles" && (
-            <button onClick={() => setEditUt({ id: "", name: "", category: "divers", appliance: "", image: "" })} title="Nouvel ustensile" className="pressable"
-              style={{ position: "absolute", bottom: 16, right: 16, width: 52, height: 52, borderRadius: "50%", background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 18px -4px rgba(0,0,0,0.45)", zIndex: 50, border: "none", cursor: "pointer" }}>
-              <Icon name="plus" size={22} color="#fff" />
-            </button>
-          )}
         </>
       )}
 
-      {editTech && <TechniqueEditorSheet initial={editTech} techniques={techniques} onClose={() => setEditTech(null)} onSave={saveTech} />}
-      {editUt && <UtensilEditorSheet initial={editUt} isAdmin={isAdmin} onClose={() => setEditUt(null)} onSave={saveUt} />}
+      {editTech && <TechniqueEditorSheet initial={editTech} techniques={techniques} onClose={() => setEditTech(null)} onSave={saveTech}
+        onDelete={editTechEntry && (() => { setEditTech(null); setConfirmDel({ type: "tech", item: editTechEntry }); })} />}
+      {editUt && <UtensilEditorSheet initial={editUt} isAdmin={isAdmin} onClose={() => setEditUt(null)} onSave={saveUt}
+        onDelete={editUtEntry && (() => { setEditUt(null); setConfirmDel({ type: "ut", item: editUtEntry }); })} />}
 
       {/* Résultat d'un import YAML (ou saisie refusée) */}
       {importResult && <ImportResultDialog {...importResult} onClose={() => setImportResult(null)} />}

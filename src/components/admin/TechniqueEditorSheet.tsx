@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { SheetIdentityHeader } from "../ui/SheetIdentityHeader.jsx";
+import { SheetDeleteButton } from "./AdminPrimitives.jsx";
 import { TagInput } from "../ui/TagInput.jsx";
 import { difficultyColor, DIFFICULTY_LABEL } from "./techniqueDifficulty.js";
 import { TECHNIQUE_CATEGORIES } from "@/lib/household/dataYaml.js";
@@ -88,13 +89,15 @@ interface TechniqueEditorSheetProps {
   techniques: TechniqueEntry[];
   onClose: () => void;
   onSave: (draft: TechniqueDraft) => void;
+  /** Geste existant : suppression (la feuille se ferme avant la confirmation). */
+  onDelete?: () => void;
 }
 
 /**
  * Éditeur d'un geste technique (admin). L'en-tête est calqué sur la fiche
  * détaillée (TechniqueDetailSheet) pour que la saisie reflète l'affichage en recette.
  */
-export function TechniqueEditorSheet({ initial, techniques, onClose, onSave }: TechniqueEditorSheetProps) {
+export function TechniqueEditorSheet({ initial, techniques, onClose, onSave, onDelete }: TechniqueEditorSheetProps) {
   const [draft, setDraft] = useState<TechniqueDraft>(initial);
   const patch = (p: Partial<TechniqueDraft>) => setDraft(d => ({ ...d, ...p }));
   const options = techniques.filter(t => t.id !== draft.id).sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
@@ -161,6 +164,7 @@ export function TechniqueEditorSheet({ initial, techniques, onClose, onSave }: T
         <div className="field-label">Source (optionnel)</div>
         <input className="field-input" placeholder="ex: Escoffier, Le Guide Culinaire" value={draft.source || ""} onChange={e => patch({ source: e.target.value })} style={{ marginBottom: 16 }} />
         <div style={{ display: "flex", gap: 10 }}>
+          {onDelete && <SheetDeleteButton onClick={() => close(onDelete)} />}
           <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="undo" size={15} /> Annuler</button>
           <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => onSave(draft)}><Icon name="save" size={15} /> Sauvegarder</button>
         </div>

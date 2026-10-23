@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import type { IconName } from "../ui/Icon.jsx";
 import { UserAvatar } from "../user/UserAvatar.jsx";
@@ -15,14 +14,10 @@ interface ConsoleHeaderProps {
   onSection: (section: ConsoleSection) => void;
   /** Signalements en attente, en pastille sur l'onglet Modération. */
   pendingReports: number;
-  /** Taille de la base affichée (sections Ingrédients, Ustensiles, Techniques). */
-  baseCount: { count: number; noun: string } | null;
-  /** Actions alignées à droite du compteur (menu « Base »). */
-  actions?: ReactNode;
 }
 
-/** En-tête figé de la console : titre, onglets de section, compteur de la base. */
-export function ConsoleHeader({ section, onSection, pendingReports, baseCount, actions }: ConsoleHeaderProps) {
+/** En-tête figé de la console : titre et onglets de section. */
+export function ConsoleHeader({ section, onSection, pendingReports }: ConsoleHeaderProps) {
   return (
     <div style={{ padding: "20px 20px 10px", flexShrink: 0 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -47,16 +42,6 @@ export function ConsoleHeader({ section, onSection, pendingReports, baseCount, a
           );
         })}
       </OverscrollRow>
-      {/* Compteur et actions : figés avec l'en-tête (restent visibles au scroll). */}
-      {baseCount && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 14 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--text2)", padding: "0 2px" }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", fontFamily: "var(--ff-display)" }}>{baseCount.count}</span>
-            <span>{baseCount.noun}{baseCount.count > 1 ? "s" : ""} dans la base</span>
-          </div>
-          {actions}
-        </div>
-      )}
     </div>
   );
 }
