@@ -13,7 +13,7 @@ import { useVoiceControl, type UseVoiceControlResult } from "./useVoiceControl.j
 import { useLS } from "./useLS.js";
 import type { StepDuration } from "@/lib/planning/stepTimers.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
-import { techniqueSpeech, tipSpeech, type TimerAction } from "@/lib/cookSession/voiceCommands.js";
+import { techniqueSpeech, tipSpeech, voiceCommandLabel, type TimerAction } from "@/lib/cookSession/voiceCommands.js";
 import type { TechniqueEntry } from "@/lib/recipes/techniques.js";
 
 const TIMER_DONE: Record<TimerAction, string> = { pause: "en pause", resume: "repris", stop: "arrêté" };
@@ -67,6 +67,8 @@ export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, stepC
     paused,
     onError: notify,
     onCommand: command => {
+      // Confirmation discrète de ce qui a été compris (l'aide, elle, s'ouvre à l'écran).
+      if (command.kind !== "help" && command.kind !== "close") notify?.(`« ${voiceCommandLabel(command)} »`);
       if (command.kind === "next") onNext();
       else if (command.kind === "prev") onPrev();
       else if (command.kind === "repeat") voice.speak(speechRef.current);

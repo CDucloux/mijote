@@ -3184,6 +3184,8 @@ html.light .sheet-sticky-head::after {
   animation: cookVoiceListen 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   pointer-events: none;
 }
+/* Voix détectée : l'onde s'accélère et s'élargit, le micro dit « je t'entends ». */
+.cook-voice-btn.on.hearing::after { animation-duration: 0.9s; border-width: 3px; }
 @keyframes cookVoiceListen {
   from { transform: scale(1); opacity: 0.7; }
   to { transform: scale(1.6); opacity: 0; }

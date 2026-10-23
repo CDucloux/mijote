@@ -47,9 +47,6 @@ const FAST_END_MS = 1000;
 const MAX_FAST_ENDS = 5;
 /** Erreurs de dictée sans gravité : silence prolongé, arrêt volontaire. */
 const BENIGN_ERRORS = new Set(["no-speech", "aborted"]);
-/** Durée d'affichage de la dernière phrase entendue, et nombre de ses derniers mots montrés. */
-const HEARD_MS = 3000;
-const HEARD_WORDS = 6;
 
 function recognitionCtor(): RecognitionCtor | null {
   if (typeof window === "undefined") return null;
@@ -76,8 +73,6 @@ export interface UseVoiceControlResult {
   supported: boolean;
   /** Le mode mains libres est activé. */
   active: boolean;
-  /** Dernière phrase entendue (quelques secondes), pour montrer ce qui a été compris. */
-  heard: string | null;
   /** Où en est la dictée : lancée, micro ouvert, voix détectée (`null` hors mode). */
   status: VoiceStatus | null;
   toggle: () => void;
@@ -95,7 +90,6 @@ export interface UseVoiceControlResult {
 export function useVoiceControl({ onCommand, onError, paused = false }: UseVoiceControlOptions): UseVoiceControlResult {
   const [supported] = useState(() => recognitionCtor() !== null && typeof window !== "undefined" && "speechSynthesis" in window);
   const [active, setActive] = useState(false);
-  const [heard, setHeard] = useState<string | null>(null);
   const [status, setStatus] = useState<VoiceStatus>("starting");
   // Démarrage de la session de dictée en cours, et échecs de démarrage d'affilée.
   const sessionRef = useRef({ startedAt: 0, gotAudio: false, fastEnds: 0 });
@@ -158,8 +152,6 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
         const result = event.results[i];
         if (!result) continue;
         const transcript = result[0].transcript.trim();
-        // Seule la fin s'affiche : une dictée longue serait tronquée par son début.
-        if (transcript) setHeard(transcript.split(/\s+/).slice(-HEARD_WORDS).join(" "));
         const spoken = spokenRef.current;
         const reading = window.speechSynthesis.speaking || Date.now() - spoken.lastAt < ECHO_GRACE_MS;
         const { command, words } = parseVoiceTail(transcript, consumedRef.current.get(i) ?? 0, reading ? spoken.text : null);
@@ -218,13 +210,6 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     else listen();
   }, [active, paused, listen]);
 
-  // Dernière phrase entendue, affichée un court instant (l'utilisateur voit ce qui a été compris).
-  useEffect(() => {
-    if (heard === null) return;
-    const timer = setTimeout(() => setHeard(null), HEARD_MS);
-    return () => clearTimeout(timer);
-  }, [heard]);
-
   useEffect(() => {
     if (!supported) return;
     const synth = window.speechSynthesis;
@@ -272,5 +257,5 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     else onErrorRef.current?.("Le mode mains libres a besoin de Chrome, Edge ou Safari.");
   }, [supported]);
 
-  return { supported, active, heard: active ? heard : null, status: active ? status : null, toggle, speak, hush };
+  return { supported, active, status: active ? status : null, toggle, speak, hush };
 }

@@ -231,9 +231,23 @@ export const VOICE_HELP: readonly VoiceHelpGroup[] = [
   },
 ];
 
+/**
+ * Libellé court d'une commande reconnue, pour la confirmer à l'écran (« Suivant »,
+ * « Étape 3 »). Tiré de l'aide : un seul nom par commande, partout.
+ * @param command - Commande reconnue.
+ * @returns Le libellé à afficher.
+ */
+export function voiceCommandLabel(command: VoiceCommand): string {
+  if (command.kind === "goto") return `Étape ${command.step}`;
+  if (command.kind === "timer" && command.duration) return `Minuteur ${command.duration.label}`;
+  if (command.kind === "technique" && command.query) return `Technique ${command.query}`;
+  const entry = VOICE_HELP.flatMap(group => group.entries).find(item => item.kind === command.kind);
+  return entry?.say ?? command.kind;
+}
+
 /** Page du pas à pas à lire à voix haute (sous-ensemble de la page du mode cuisine). */
 export type SpokenPage =
-  | { kind: "overview"; ingredients: number; utensils: number; cuts: readonly string[] }
+  | { kind: "overview"; title?: string; ingredients: number; utensils: number; cuts: readonly string[] }
   | { kind: "bases"; count: number }
   | { kind: "step"; number: number; total: number; text: string };
 
@@ -241,6 +255,7 @@ const plural = (n: number, word: string): string => `${n} ${word}${n > 1 ? "s" :
 const listFr = (items: readonly string[]): string =>
   items.length > 1 ? `${items.slice(0, -1).join(", ")} et ${items[items.length - 1]}` : items[0] ?? "";
 const lowerFirst = (text: string): string => text.charAt(0).toLowerCase() + text.slice(1);
+const capitalize = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
 
 /**
  * Réponse à « astuce » sur la page courante.
@@ -320,7 +335,9 @@ export function cookPageSpeech(page: SpokenPage): string {
       page.utensils > 0 ? plural(page.utensils, "ustensile") : "",
       cuts.length > 0 ? plural(cuts.length, "découpe") : "",
     ].filter(Boolean);
-    const summary = parts.length ? `Mise en place : ${listFr(parts)}.` : "Mise en place.";
+    const title = page.title?.trim();
+    const intro = title ? `Mise en place pour ${title}.` : "Mise en place.";
+    const summary = parts.length ? `${intro} ${capitalize(listFr(parts))}.` : intro;
     // « Ciseler : 3 oignons » se lit « ciseler 3 oignons ».
     return cuts.length ? `${summary} À découper : ${listFr(cuts.map(cut => lowerFirst(cut.replace(" : ", " "))))}.` : summary;
   }

@@ -295,7 +295,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
   // Mains libres : la page est lue en arrivant dessus, la voix pilote la navigation
   // et lance le minuteur (durée dite, sinon la première de l'étape).
-  const pageSpeech = cookPageSpeech(isOverview ? { kind: "overview", ingredients: overviewIngs.length, utensils: overviewUts.length, cuts: postesDecoupe.map(posteLabel) }
+  const pageSpeech = cookPageSpeech(isOverview ? { kind: "overview", title: recipe.name, ingredients: overviewIngs.length, utensils: overviewUts.length, cuts: postesDecoupe.map(posteLabel) }
     : isBases ? { kind: "bases", count: pendingComponents.length }
     : { kind: "step", number: realIdx + 1, total: realStepCount, text: step?.text ?? "" });
   const voice = useCookVoice({

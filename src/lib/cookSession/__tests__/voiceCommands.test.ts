@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech, VOICE_HELP } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech, VOICE_HELP, voiceCommandLabel } from "@/lib/cookSession/voiceCommands.js";
 import { buildTechniqueIndex, type TechniqueEntry } from "@/lib/recipes/techniques.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
 
@@ -40,15 +40,16 @@ describe("parseVoiceCommand", () => {
 
 describe("cookPageSpeech", () => {
   it("annonce la mise en place", () => {
-    expect(cookPageSpeech({ kind: "overview", ingredients: 8, utensils: 1, cuts: [] })).toBe("Mise en place : 8 ingrédients et 1 ustensile.");
-    expect(cookPageSpeech({ kind: "overview", ingredients: 1, utensils: 0, cuts: [] })).toBe("Mise en place : 1 ingrédient.");
-    expect(cookPageSpeech({ kind: "overview", ingredients: 0, utensils: 0, cuts: [] })).toBe("Mise en place.");
+    expect(cookPageSpeech({ kind: "overview", title: "Tarte Tatin", ingredients: 8, utensils: 1, cuts: [] })).toBe("Mise en place pour Tarte Tatin. 8 ingrédients et 1 ustensile.");
+    expect(cookPageSpeech({ kind: "overview", ingredients: 1, utensils: 0, cuts: [] })).toBe("Mise en place. 1 ingrédient.");
+    expect(cookPageSpeech({ kind: "overview", title: "Tarte Tatin", ingredients: 0, utensils: 0, cuts: [] })).toBe("Mise en place pour Tarte Tatin.");
+    expect(cookPageSpeech({ kind: "overview", title: "  ", ingredients: 0, utensils: 0, cuts: [] })).toBe("Mise en place.");
   });
   it("énumère les découpes de la mise en place", () => {
     expect(cookPageSpeech({ kind: "overview", ingredients: 6, utensils: 2, cuts: ["Ciseler : 3 oignons", "Râper : 200 g carotte"] }))
-      .toBe("Mise en place : 6 ingrédients, 2 ustensiles et 2 découpes. À découper : ciseler 3 oignons et râper 200 g carotte.");
+      .toBe("Mise en place. 6 ingrédients, 2 ustensiles et 2 découpes. À découper : ciseler 3 oignons et râper 200 g carotte.");
     expect(cookPageSpeech({ kind: "overview", ingredients: 0, utensils: 0, cuts: ["Émincer : 1 poireau", "  "] }))
-      .toBe("Mise en place : 1 découpe. À découper : émincer 1 poireau.");
+      .toBe("Mise en place. 1 découpe. À découper : émincer 1 poireau.");
   });
   it("annonce les préparations de base", () => {
     expect(cookPageSpeech({ kind: "bases", count: 2 })).toBe("D'abord, 2 préparations de base à réaliser.");
@@ -256,5 +257,18 @@ describe("aller à une étape", () => {
   it("ignore l'annonce « Étape 3 » de la lecture captée par le micro", () => {
     expect(parseVoiceTail("étape 3 faire revenir", 0, "Étape 3. Faire revenir les oignons.").command).toBeNull();
     expect(parseVoiceTail("étape 5", 0, "Étape 3. Faire revenir les oignons.").command).toEqual({ kind: "goto", step: 5 });
+  });
+});
+
+describe("voiceCommandLabel", () => {
+  it("nomme la commande comme l'aide", () => {
+    expect(voiceCommandLabel({ kind: "next" })).toBe("Suivant");
+    expect(voiceCommandLabel({ kind: "finish" })).toBe("Terminé");
+    expect(voiceCommandLabel({ kind: "timer" })).toBe("Minuteur");
+  });
+  it("précise l'étape, la durée ou le geste demandés", () => {
+    expect(voiceCommandLabel({ kind: "goto", step: 3 })).toBe("Étape 3");
+    expect(voiceCommandLabel({ kind: "timer", duration: { minutes: 10, label: "10 min" } })).toBe("Minuteur 10 min");
+    expect(voiceCommandLabel({ kind: "technique", query: "monter" })).toBe("Technique monter");
   });
 });

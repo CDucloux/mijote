@@ -5,7 +5,6 @@ import { companionText, type CookParticipant } from "@/lib/cookSession/together.
 import { ParticipantAvatar } from "./ParticipantAvatar.jsx";
 import type { VoiceStatus } from "../../hooks/useVoiceControl.js";
 
-const VOICE_STATUS: Record<VoiceStatus, string> = { starting: "micro en route…", listening: "j'écoute", hearing: "je t'entends…" };
 
 /** Autre membre du foyer en cuisine : où il en est dans le pas à pas. */
 export interface CookCompanion {
@@ -31,7 +30,8 @@ interface CookModeHeaderProps {
   offline?: boolean;
   onClose: () => void;
   /** Mode mains libres : bouton micro (sans support, il explique au clic). */
-  voice?: { supported: boolean; active: boolean; heard: string | null; status: VoiceStatus | null; toggle: () => void };
+  /** `status` anime le micro (il s'agite quand il entend une voix), sans texte à l'écran. */
+  voice?: { supported: boolean; active: boolean; status: VoiceStatus | null; toggle: () => void };
   /** Ouvre l'aide des commandes vocales (bouton affiché tant que le mode est actif). */
   onVoiceHelp?: () => void;
 }
@@ -50,8 +50,7 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
             {recipeName}
           </div>
           <div style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {voice?.heard ? <span style={{ color: "var(--accent)" }}>« {voice.heard} »</span> : pageLabel}
-            {!voice?.heard && voice?.status && <span style={{ color: "var(--accent)" }}> · {VOICE_STATUS[voice.status]}</span>}
+            {pageLabel}
             {offline
               ? <span style={{ color: "var(--text2)" }}> · Hors ligne : ton binôme ne te voit plus</span>
               : companions.map(c => <span key={c.participant.uid} style={{ color: "var(--text2)" }}> · {companionText(c.participant, c.label)}</span>)}
@@ -63,7 +62,7 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
           </button>
         )}
         {voice && (
-          <button className={`cook-voice-btn${voice.active ? " on" : ""}`} onClick={voice.toggle} aria-pressed={voice.active}
+          <button className={`cook-voice-btn${voice.active ? " on" : ""}${voice.status === "hearing" ? " hearing" : ""}`} onClick={voice.toggle} aria-pressed={voice.active}
             title={voice.active ? "Couper le mode mains libres" : "Mains libres : « suivant », « répète », « minuteur », « pause », « stop »"}
             aria-label={voice.active ? "Couper le mode mains libres" : "Activer le mode mains libres"}>
             <Icon name="mic" size={18} weight={voice.active ? "fill" : "regular"} />
