@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech, VOICE_HELP } from "@/lib/cookSession/voiceCommands.js";
 import { buildTechniqueIndex, type TechniqueEntry } from "@/lib/recipes/techniques.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
 
@@ -215,5 +215,18 @@ describe("technique de l'étape", () => {
   });
   it("le dit quand l'étape n'a aucune technique", () => {
     expect(techniqueSpeech([])).toBe("Pas de technique repérée dans cette étape.");
+  });
+});
+
+describe("aide des commandes vocales", () => {
+  it("chaque phrase de l'aide déclenche la commande annoncée", () => {
+    for (const entry of VOICE_HELP.flatMap(group => group.entries)) {
+      expect(parseVoiceCommand(entry.say)?.kind, entry.say).toBe(entry.kind);
+    }
+  });
+  it("reconnaît « commandes », « commandes vocales », « aide » et « ferme »", () => {
+    expect(parseVoiceCommand("commandes vocales")).toEqual({ kind: "help" });
+    expect(parseVoiceCommand("aide")).toEqual({ kind: "help" });
+    expect(parseVoiceCommand("ferme")).toEqual({ kind: "close" });
   });
 });

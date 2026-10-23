@@ -2,7 +2,8 @@
  * Branche le mode mains libres sur le pas à pas : chaque page est lue à voix
  * haute en arrivant dessus, et les commandes vocales (« suivant », « précédent »,
  * « mise en place », « répète », « astuce », « technique », « silence », « lecture off / on »,
- * « minuteur », « pause », « reprends », « stop », « recette terminée ») pilotent la
+ * « minuteur », « pause », « reprends », « stop », « recette terminée », « commandes »)
+ * pilotent la
  * navigation et les minuteurs.
  *
  * @module useCookVoice
@@ -38,6 +39,8 @@ export interface UseCookVoiceOptions {
   onTimer: (duration?: StepDuration) => StepDuration | null;
   /** Met en pause, reprend ou arrête un minuteur ; rend le minuteur visé, ou `null`. */
   onTimerAction: (action: TimerAction) => CookTimer | null;
+  /** Ouvre ou ferme l'aide des commandes vocales (« commandes », « ferme »). */
+  onHelp: (open: boolean) => void;
   notify?: (message: string) => void;
   paused: boolean;
 }
@@ -47,7 +50,7 @@ export interface UseCookVoiceOptions {
  * @param options - Page courante, actions de navigation et de minuteur, cf. {@link UseCookVoiceOptions}.
  * @returns L'état du mode et sa bascule, cf. {@link UseVoiceControlResult}.
  */
-export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, onNext, onPrev, onOverview, onTimer, onTimerAction, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
+export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, onNext, onPrev, onOverview, onTimer, onTimerAction, onHelp, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
   // Lecture automatique de chaque page (« lecture off / on ») : retenue d'une recette à l'autre.
   const [autoRead, setAutoRead] = useLS("rf_cookVoiceAutoRead", true);
   const speechRef = useRef(speech);
@@ -66,6 +69,11 @@ export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, onNex
       else if (command.kind === "tip") voice.speak(tipSpeech(tipRef.current));
       else if (command.kind === "technique") voice.speak(techniqueSpeech(techniquesRef.current, command.query));
       else if (command.kind === "silence") voice.hush();
+      else if (command.kind === "help") {
+        voice.hush();
+        onHelp(true);
+      }
+      else if (command.kind === "close") onHelp(false);
       else if (command.kind === "readOff" || command.kind === "readOn") {
         const on = command.kind === "readOn";
         setAutoRead(on);
@@ -98,7 +106,7 @@ export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, onNex
 
   const wasActive = useRef(false);
   useEffect(() => {
-    if (active && !wasActive.current) notify?.("Mains libres : « suivant », « répète », « minuteur », « pause », « stop »");
+    if (active && !wasActive.current) notify?.("Mains libres activé : dis « commandes » pour toutes les voir");
     wasActive.current = active;
   }, [active, notify]);
 

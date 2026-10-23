@@ -29,6 +29,8 @@ export type VoiceCommand =
   | { kind: "silence" }
   | { kind: "readOff" }
   | { kind: "readOn" }
+  | { kind: "help" }
+  | { kind: "close" }
   | { kind: "timer"; duration?: StepDuration }
   | { kind: TimerAction };
 
@@ -40,6 +42,8 @@ export const MAX_COMMAND_WORDS = 6;
 // trop fréquent dans une cuisine pour couper un minuteur.
 const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
   ["finish", ["recette terminee", "recette finie", "recette fini"]],
+  ["help", ["commandes", "commande vocale", "commandes vocales", "aide"]],
+  ["close", ["ferme", "fermer"]],
   ["readOff", ["lecture off", "lecture of", "lecture coupee"]],
   ["readOn", ["lecture on", "lecture activee"]],
   ["silence", ["silence", "chut"]],
@@ -141,6 +145,60 @@ export function voiceTimerTarget(timers: readonly CookTimer[], action: TimerActi
   if (action === "resume") return nextPaused;
   return timers.find(timer => timer.done) ?? pilot ?? nextPaused;
 }
+
+/** Une commande de l'aide : ce qu'on dit, ce que ça fait, et la commande reconnue. */
+export interface VoiceHelpEntry {
+  say: string;
+  does: string;
+  kind: VoiceCommand["kind"];
+}
+
+/** Groupe de commandes de l'aide (« Naviguer », « Minuteurs »…). */
+export interface VoiceHelpGroup {
+  title: string;
+  entries: readonly VoiceHelpEntry[];
+}
+
+/** Aide des commandes vocales, affichée dans le pas à pas (« commandes »). */
+export const VOICE_HELP: readonly VoiceHelpGroup[] = [
+  {
+    title: "Naviguer",
+    entries: [
+      { say: "Suivant", does: "Page suivante. Aussi « ensuite », « continue ».", kind: "next" },
+      { say: "Précédent", does: "Page précédente. Aussi « retour ».", kind: "prev" },
+      { say: "Mise en place", does: "Revenir aux ingrédients, ustensiles et découpes.", kind: "overview" },
+      { say: "Recette terminée", does: "Terminer la recette.", kind: "finish" },
+    ],
+  },
+  {
+    title: "Écouter",
+    entries: [
+      { say: "Répète", does: "Relire la page.", kind: "repeat" },
+      { say: "Astuce", does: "Lire l'astuce de l'étape.", kind: "tip" },
+      { say: "Technique", does: "Expliquer le geste de l'étape. « Technique monter » pour en choisir un.", kind: "technique" },
+      { say: "Silence", does: "Couper la lecture en cours. Aussi « chut ».", kind: "silence" },
+      { say: "Lecture off", does: "Ne plus lire les étapes en tournant la page.", kind: "readOff" },
+      { say: "Lecture on", does: "Relire les étapes en tournant la page.", kind: "readOn" },
+    ],
+  },
+  {
+    title: "Minuteurs",
+    entries: [
+      { say: "Minuteur", does: "Lancer le minuteur de l'étape.", kind: "timer" },
+      { say: "Minuteur 10 minutes", does: "Lancer un minuteur de la durée dite.", kind: "timer" },
+      { say: "Pause", does: "Mettre en pause le minuteur qui sonnera le plus tôt.", kind: "pause" },
+      { say: "Reprends", does: "Relancer le minuteur en pause.", kind: "resume" },
+      { say: "Stop", does: "Couper le minuteur qui sonne, sinon le prochain.", kind: "stop" },
+    ],
+  },
+  {
+    title: "Aide",
+    entries: [
+      { say: "Commandes", does: "Afficher cette page. Aussi « aide ».", kind: "help" },
+      { say: "Ferme", does: "Fermer cette page.", kind: "close" },
+    ],
+  },
+];
 
 /** Page du pas à pas à lire à voix haute (sous-ensemble de la page du mode cuisine). */
 export type SpokenPage =

@@ -26,6 +26,7 @@ import { CookContent } from "../components/cookMode/CookContent.jsx";
 import { CookSidebar } from "../components/cookMode/CookSidebar.jsx";
 import { CookModeHeader } from "../components/cookMode/CookModeHeader.jsx";
 import { CookIterationSheet } from "../components/cookMode/CookIterationSheet.jsx";
+import { VoiceCommandsSheet } from "../components/cookMode/VoiceCommandsSheet.jsx";
 import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.js";
 import { companionText, cookPageLabel, pageKeyOf, partnerPositions } from "@/lib/cookSession/together.js";
 import { useCookTogether } from "../hooks/useCookTogether.js";
@@ -105,6 +106,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const [groupByCategory, setGroupByCategory] = useLS("rf_cookModeGroupByCategory", false);
   // Itération de fin de cuisson : alimente le carnet d'itérations depuis l'écran final.
   const [iterOpen, setIterOpen] = useState(false);
+  const [voiceHelpOpen, setVoiceHelpOpen] = useState(false);
   const [navDir, setNavDir] = useState(1); // sens de navigation (animation d'étape)
   const canIterate = !isNested && !!onUpdateRecipe;
   const saveIteration = (rating: number | null, notes: string) => {
@@ -320,6 +322,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
       if (target) (action === "stop" ? removeTimer : toggleTimer)(target.id);
       return target;
     },
+    onHelp: setVoiceHelpOpen,
     notify,
     paused: !!subCook || done || iterOpen || closing,
   });
@@ -361,7 +364,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
       <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
         <CookModeHeader recipeName={recipe.name} isNested={isNested} elapsed={elapsed} progress={progress} companions={companions} offline={together.offline} onClose={requestClose}
-          pageLabel={isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`} voice={voice} />
+          pageLabel={isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`} voice={voice} onVoiceHelp={() => setVoiceHelpOpen(true)} />
 
         {/* Main content */}
         <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
@@ -418,6 +421,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           onClose={() => setConvIng(null)}
         />
       )}
+      {voiceHelpOpen && <VoiceCommandsSheet zIndex={isNested ? 720 : 620} onClose={() => setVoiceHelpOpen(false)} />}
       {precSheet && <UtensilPrecautionSheet utensilName={precSheet.name} precaution={precSheet.prec} zIndex={isNested ? 720 : 620} onClose={() => setPrecSheet(null)} />}
     </>,
     document.body

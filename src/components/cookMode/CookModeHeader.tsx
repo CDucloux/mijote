@@ -32,10 +32,12 @@ interface CookModeHeaderProps {
   onClose: () => void;
   /** Mode mains libres : bouton micro (sans support, il explique au clic). */
   voice?: { supported: boolean; active: boolean; heard: string | null; status: VoiceStatus | null; toggle: () => void };
+  /** Ouvre l'aide des commandes vocales (bouton affiché tant que le mode est actif). */
+  onVoiceHelp?: () => void;
 }
 
 /** En-tête du pas à pas : fermeture, titre, page courante, chrono global et progression. */
-export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progress, companions = [], offline = false, onClose, voice }: CookModeHeaderProps) {
+export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progress, companions = [], offline = false, onClose, voice, onVoiceHelp }: CookModeHeaderProps) {
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "calc(16px + max(env(safe-area-inset-top) - 8px, 0px)) 20px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
@@ -55,6 +57,11 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
               : companions.map(c => <span key={c.participant.uid} style={{ color: "var(--text2)" }}> · {companionText(c.participant, c.label)}</span>)}
           </div>
         </div>
+        {voice?.active && onVoiceHelp && (
+          <button className="cook-voice-btn" onClick={onVoiceHelp} title="Commandes vocales" aria-label="Voir les commandes vocales">
+            <Icon name="help" size={18} />
+          </button>
+        )}
         {voice && (
           <button className={`cook-voice-btn${voice.active ? " on" : ""}`} onClick={voice.toggle} aria-pressed={voice.active}
             title={voice.active ? "Couper le mode mains libres" : "Mains libres : « suivant », « répète », « minuteur », « pause », « stop »"}
