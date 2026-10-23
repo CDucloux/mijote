@@ -1,5 +1,20 @@
 # Changelog – Cardamome
 
+## v4.80.0 – Cardamome · Mains libres en cuisine
+
+### Mode cuisine
+- **Mains libres** : un micro dans l'en-tête du pas à pas. Chaque page est lue à voix haute (la mise en place annonce la recette, ses ingrédients, ustensiles et découpes), et la voix pilote tout : « suivant », « précédent », « étape 3 », « mise en place », « terminé » ; « répète », « silence », « lecture off / on » ; « ingrédients », « combien de beurre », « ustensiles », « astuce », « technique » (« technique monter » quand il y en a plusieurs) ; « minuteur » (ou « minuteur 10 minutes »), « pause », « reprends », « stop », « temps restant », « durée ». La fin d'un minuteur est annoncée à voix haute.
+- **Aide des commandes** : « commandes » (ou le bouton ? à côté du micro) ouvre la liste complète, en-tête collant, une carte par usage ; « ferme » la referme.
+- **Fiable dans une vraie cuisine** : la commande peut finir une phrase, la lecture captée par le micro n'est jamais prise pour une commande, les mots trop courants sont ignorés, le micro se relance seul et l'écran reste allumé. Chaque commande comprise est confirmée par une courte notification, et la voix française la plus naturelle du navigateur est choisie.
+- **App Android** : dictée et synthèse vocale du système via un plugin natif (la WebView n'a pas la Web Speech API), permission micro demandée au premier usage.
+- **Sommaire** : seules les étapes avant la position courante sont cochées (revenir relire une étape ne laisse plus cochées celles d'après).
+
+### Partout
+- **Notifications sur desktop** : elles s'affichent désormais par-dessus le mode cuisine (elles restaient cachées dessous).
+
+### Sécurité
+- **Dépendances** : correctifs sans saut de version majeure, dont la faille critique de la coquille Android (`@capacitor/android` 8.5.3). Vulnérabilités ramenées de 29 à 8 pour l'app et de 16 à 8 pour les Cloud Functions, le reste n'étant ni livré ni corrigeable sans rétrograder Firebase.
+
 ## v4.79.0 – Cardamome · Écrans d'attente repensés
 
 ### Chargement
