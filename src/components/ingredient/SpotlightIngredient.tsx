@@ -63,13 +63,7 @@ export function SpotlightIngredient({ ingredient, onOpenIngredient, onExplore }:
 
   return (
     <section style={{ marginBottom: 22 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 2px 12px" }}>
-        {/* Pousse / jeune plant : distinct de l'étoile de « Découvrir », évoque le produit frais */}
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M12 20v-7" />
-          <path d="M12 13C12 9.7 9.5 8 6 8c0 3.5 2.5 5 6 5Z" />
-          <path d="M12 11c0-3 2.5-4.6 6-4.6 0 3.4-2.5 4.6-6 4.6Z" />
-        </svg>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, margin: "0 2px 12px" }}>
         <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>L'ingrédient du moment</h3>
         <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>chaque semaine</span>
       </div>
