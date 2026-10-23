@@ -140,7 +140,10 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
     if (!intent) return;
     if (intent === "plan") setShowMealModal(true);
     else if (intent === "share") { if (isPublished) setShareOpen(true); else setPendingPublish(true); }
-    navigate(location.pathname, { replace: true, state: { ...navState, intent: undefined } });
+    // Repart de l'état BRUT : il porte aussi `originPath` (page d'origine, lue par
+    // l'app pour le fond et le retour), que `navState` ne connaît pas.
+    const rawState = location.state && typeof location.state === "object" ? location.state : {};
+    navigate(location.pathname, { replace: true, state: { ...rawState, intent: undefined } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intent]);
   // CTA d'ajout réutilisé (lecture seule d'une recette publique) → ouvre une confirmation.

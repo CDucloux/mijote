@@ -169,7 +169,9 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
   return (
     <div className={quietList && !ingDetailId ? "config-quiet" : undefined} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
       {ingDetailId ? (
-        <div className={detailDismissing ? "page-dismiss-right" : undefined} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+        // Fond opaque porté par le calque qui glisse : ouverte depuis une recette, la fiche
+        // passe au-dessus d'elle (cf. AppInner) et la découvre en sortant.
+        <div className={detailDismissing ? "page-dismiss-right" : undefined} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", background: "var(--bg)" }}
           onAnimationEnd={detailDismissing ? (e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") onDetailDismissEnd?.(); } : undefined}>
           <IngredientDetail
             ingredient={detailIngredient}

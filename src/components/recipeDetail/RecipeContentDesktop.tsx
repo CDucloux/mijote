@@ -59,7 +59,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }: R
               );
               const effDbId = getIngId(ing);
               return (
-              <div key={ing.id} onClick={() => effDbId && navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`)} className={effDbId ? "hover-neutral" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, cursor: effDbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px" }}>
+              <div key={ing.id} onClick={() => effDbId && navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`, { state: { originPath: `/recipes/${recipe.id}` } })} className={effDbId ? "hover-neutral" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, cursor: effDbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px" }}>
                 <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
                   <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                 </span>

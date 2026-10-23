@@ -94,7 +94,7 @@ export function RecipeContentMobile({ recipe, activeTab, view, servings, setServ
               const clickable = isComp ? !!rc.comp : !!effDbId;
               const onClick = () => {
                 if (isComp && rc.comp) navigate(`/recipes/${rc.comp.id}`, { state: { from: recipe.id } });
-                else if (!isComp && effDbId) navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`);
+                else if (!isComp && effDbId) navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`, { state: { originPath: `/recipes/${recipe.id}` } });
               };
               return (
                 <div key={ing.id} onClick={onClick} onPointerDown={clickable ? spawnRipple : undefined} className={clickable ? "tap-row" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderTop: idx === 0 ? "none" : "1px solid var(--border)", cursor: clickable ? "pointer" : "default", borderBottomLeftRadius: last ? 16 : 0, borderBottomRightRadius: last ? 16 : 0 }}>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseAppRoute, originPathOf } from "@/lib/ui/appRoute.js";
+import { parseAppRoute, originPathOf, recipeUnderIngredient } from "@/lib/ui/appRoute.js";
 
 const base = { importRoute: null, newRoute: false, planRoute: false, cookModeRoute: false, editRoute: false, recipeId: null, ingredientId: null };
 
@@ -40,5 +40,25 @@ describe("originPathOf", () => {
     expect(originPathOf(undefined)).toBeNull();
     expect(originPathOf({ originPath: 3 })).toBeNull();
     expect(originPathOf("/home")).toBeNull();
+  });
+});
+
+describe("recipeUnderIngredient", () => {
+  it("garde la recette d'origine sous la fiche ingrédient", () => {
+    expect(recipeUnderIngredient("/recipes/abc")).toBe("abc");
+    expect(recipeUnderIngredient("/recipes/tarte%20tatin")).toBe("tarte tatin");
+  });
+  it("ignore les origines qui ne sont pas une fiche recette simple", () => {
+    expect(recipeUnderIngredient("/recipes")).toBeNull();
+    expect(recipeUnderIngredient("/recipes/abc/edit")).toBeNull();
+    expect(recipeUnderIngredient("/recipes/abc/cookmode")).toBeNull();
+    expect(recipeUnderIngredient("/recipes/new")).toBeNull();
+    expect(recipeUnderIngredient("/recipes/import-from-url")).toBeNull();
+    expect(recipeUnderIngredient("/stock")).toBeNull();
+    expect(recipeUnderIngredient("/admin/ingredients/beurre")).toBeNull();
+  });
+  it("rend null sans origine", () => {
+    expect(recipeUnderIngredient(null)).toBeNull();
+    expect(recipeUnderIngredient("")).toBeNull();
   });
 });

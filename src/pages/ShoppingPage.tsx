@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, type Dispatch, type SetStateAction } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner.jsx";
 import { UserAvatar } from "../components/user/UserAvatar.jsx";
@@ -35,6 +35,7 @@ interface ShoppingPageProps extends StockSinks {
 
 export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, recipes = [], categories = DEFAULT_CATEGORIES, loading = false, setStock, setLowStock }: ShoppingPageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { notify, logActivity } = useAppShell();
   // Focus sans scroll : empêche la page de « sauter » à l'ouverture des bottom-sheets.
   const focusNoScroll = useCallback((el: HTMLInputElement | null) => { if (el && typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches) el.focus({ preventScroll: true }); }, []);
@@ -146,7 +147,7 @@ export function ShoppingPage({ shoppingLists, setShoppingLists, ingredientDB, re
         <ListMenuSheet list={listMenu} onClose={() => setListMenu(null)}
           onSettings={list => setConfigList({ id: list.id, name: list.name ?? "", hideClear: list.hideClear })}
           onPlan={listMenu.type === "recipe" && listMenu.recipeId && recipes.some(r => r.id === listMenu.recipeId)
-            ? list => navigate(`/recipes/${list.recipeId}`, { state: { intent: "plan" } })
+            ? list => navigate(`/recipes/${list.recipeId}`, { state: { intent: "plan", originPath: location.pathname } })
             : undefined}
           onDelete={list => list.type === "free" ? setConfirmDeleteId(list.id) : deleteList(list.id)} />
       )}
