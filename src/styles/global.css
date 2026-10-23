@@ -3085,8 +3085,9 @@ html.light .sheet-sticky-head::after {
 }
 
 /* Aide des commandes vocales (VoiceCommandsSheet) : une carte par usage, et un
-   tableau à deux colonnes alignées, sans filet entre les lignes. La phrase à dire est en serif, comme une
-   réplique ; les variantes sont de petites étiquettes sous la description. */
+   tableau à deux colonnes alignées, sans filet entre les lignes. La phrase à dire
+   est une pilule dans une colonne de largeur fixe (les descriptions restent
+   alignées) ; les variantes sont de petites étiquettes sous la description. */
 .voice-help__head { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
 .voice-help__badge {
   flex-shrink: 0;
@@ -3128,25 +3129,29 @@ html.light .sheet-sticky-head::after {
 .voice-help__row {
   display: grid;
   grid-template-columns: minmax(118px, 36%) 1fr;
-  align-items: baseline;
+  align-items: center;
   gap: 14px;
-  padding: 10px 16px;
+  padding: 8px 14px;
 }
 .voice-help__say {
-  font-family: var(--ff-display);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
+  justify-self: start;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 .voice-help__does { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--text2); }
 .voice-help__also { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
 .voice-help__alias {
   padding: 2px 9px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent);
+  background: var(--surface3);
+  color: var(--text2);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
 }
 @media (max-width: 360px) {
   .voice-help__row { grid-template-columns: 1fr; gap: 2px; }
