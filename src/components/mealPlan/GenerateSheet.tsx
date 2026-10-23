@@ -29,85 +29,86 @@ interface GenerateSheetProps {
   onClose: () => void;
 }
 
+// Libellé de section : phrase courte, discrète, sans capitales (cf. tableau de bord).
+function SectionLabel({ children }: { children: string }) {
+  return <div style={{ fontSize: 13, fontWeight: 650, color: "var(--text2)", margin: "0 2px 9px" }}>{children}</div>;
+}
+
 /**
  * Sous-menu de génération automatique de la semaine : créneaux à remplir, style de
  * repas et bascule batch cooking. La génération elle-même est déléguée au parent.
+ * Sans bordure : niveaux de surface et teinte d'accent portent l'état.
  */
 export function GenerateSheet({ genSlots, onToggleSlot, genStyle, onPickStyle, genBatch, onToggleBatch, onGenerate, onClose }: GenerateSheetProps) {
   return (
     <SwipeableSheet onClose={onClose} style={{ maxHeight: "82dvh" }}>
-      <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Générer la semaine</h3>
-      <p style={{ fontSize: 12.5, color: "var(--text3)", margin: "0 0 16px" }}>Quel style de repas veux-tu pour les créneaux vides&nbsp;?</p>
+      <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 4px" }}>Générer la semaine</h3>
+      <p style={{ fontSize: 13, color: "var(--text3)", margin: "0 0 22px" }}>Les créneaux vides se remplissent selon le style choisi.</p>
 
       {/* Créneaux à remplir : par défaut midi + soir. Décocher « Midi » quand on
           mange à la cantine en semaine (l'auto-génération le laisse alors libre). */}
-      <div style={{ marginBottom: 18 }}>
-        <span style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "var(--text2)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 9 }}>Créneaux à remplir</span>
-        <div style={{ display: "flex", gap: 10 }}>
-          {["midi", "soir"].map(slot => {
-            const active = genSlots.includes(slot);
-            return (
-              <button key={slot} onClick={() => onToggleSlot(slot)} className="pressable" style={{
-                flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer",
-                padding: "11px 0", borderRadius: 13, fontSize: 14, fontWeight: 600,
-                color: active ? "var(--accent)" : "var(--text3)",
-                background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)",
-                border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
-              }}>
-                <span style={{ width: 18, height: 18, borderRadius: "50%", display: "grid", placeItems: "center", border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--accent)" : "transparent" }}>
-                  {active && <Icon name="check" size={11} color="#fff" />}
-                </span>
-                {SLOT_BY_ID[slot]?.label || slot}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-        {GEN_STYLES.map(o => {
-          const active = genStyle === o.id;
+      <SectionLabel>Créneaux à remplir</SectionLabel>
+      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+        {["midi", "soir"].map(slot => {
+          const active = genSlots.includes(slot);
+          const meta = SLOT_BY_ID[slot];
           return (
-            <button key={o.id} onClick={() => onPickStyle(o.id)} className="pressable" style={{
-              display: "flex", alignItems: "center", gap: 13, width: "100%", textAlign: "left", cursor: "pointer",
-              padding: "13px 14px", borderRadius: 15,
-              background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)",
-              border: `1.5px solid ${active ? "var(--accent)" : "var(--border)"}`,
+            <button key={slot} onClick={() => onToggleSlot(slot)} aria-pressed={active} className={`ripple ${active ? "ripple-light hover-deepen" : "hover-neutral"}`} style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer",
+              padding: "11px 0", borderRadius: 999, border: "none", fontSize: 14, fontWeight: 600,
+              color: active ? "#fff" : "var(--text2)", background: active ? "var(--accent)" : "var(--surface2)",
+              transition: "background-color 0.18s ease, color 0.18s ease",
             }}>
-              <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: active ? "rgba(var(--accent-rgb),0.2)" : "var(--surface3)" }}>
-                <Icon name={o.icon} size={19} color={active ? "var(--accent)" : "var(--text2)"} />
-              </span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 14.5, fontWeight: 600, color: "var(--text)" }}>{o.title}</span>
-                <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 2 }}>{o.desc}</span>
-              </span>
-              <span style={{ flexShrink: 0, width: 20, height: 20, borderRadius: "50%", display: "grid", placeItems: "center", border: `2px solid ${active ? "var(--accent)" : "var(--border)"}`, background: active ? "var(--accent)" : "transparent" }}>
-                {active && <Icon name="check" size={12} color="#fff" />}
-              </span>
+              {meta && <Icon name={meta.icon as IconName} size={16} weight={active ? "fill" : "regular"} color="currentColor" />}
+              {meta?.label || slot}
             </button>
           );
         })}
       </div>
-      {/* Batch cooking : tout préparer d'avance (ex. le dimanche) */}
-      <button onClick={onToggleBatch} className="pressable" style={{
-        display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
-        padding: "12px 14px", borderRadius: 14, marginBottom: 16,
-        background: genBatch ? "rgba(var(--ok-rgb),0.12)" : "var(--surface2)",
-        border: `1.5px solid ${genBatch ? "var(--ok)" : "var(--border)"}`,
+
+      <SectionLabel>Style de repas</SectionLabel>
+      <div role="radiogroup" aria-label="Style de repas" style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 24 }}>
+        {GEN_STYLES.map(o => {
+          const active = genStyle === o.id;
+          return (
+            <button key={o.id} role="radio" aria-checked={active} onClick={() => onPickStyle(o.id)} className={`ripple ${active ? "" : "hover-neutral"}`} style={{
+              display: "flex", alignItems: "center", gap: 13, width: "100%", textAlign: "left", cursor: "pointer",
+              padding: "12px 14px 12px 12px", borderRadius: 16, border: "none",
+              background: active ? "rgba(var(--accent-rgb),0.12)" : "var(--surface2)",
+              transition: "background-color 0.18s ease",
+            }}>
+              <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: active ? "var(--accent)" : "var(--surface)", transition: "background-color 0.18s ease" }}>
+                <Icon name={o.icon} size={18} color={active ? "#fff" : "var(--text2)"} />
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: "block", fontSize: 14.5, fontWeight: 600, color: "var(--text)" }}>{o.title}</span>
+                <span style={{ display: "block", fontSize: 12, color: "var(--text3)", lineHeight: 1.4, marginTop: 2 }}>{o.desc}</span>
+              </span>
+              {/* Radio : seul contour toléré, il porte l'état sélectionné. */}
+              <span aria-hidden="true" style={{ flexShrink: 0, width: 20, height: 20, borderRadius: "50%", boxSizing: "border-box", border: active ? "6px solid var(--accent)" : "2px solid var(--text3)", opacity: active ? 1 : 0.5, transition: "border 0.18s ease, opacity 0.18s ease" }} />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Batch cooking : tout préparer d'avance (ex. le dimanche). */}
+      <button role="switch" aria-checked={genBatch} onClick={onToggleBatch} className="ripple hover-neutral" style={{
+        display: "flex", alignItems: "center", gap: 13, width: "100%", textAlign: "left", cursor: "pointer",
+        padding: "12px 14px 12px 12px", borderRadius: 16, border: "none", marginBottom: 20, background: "var(--surface2)",
       }}>
-        <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: genBatch ? "rgba(var(--ok-rgb),0.2)" : "var(--surface3)" }}>
-          <Icon name="fire" size={18} color={genBatch ? "var(--ok)" : "var(--text2)"} />
+        <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: "var(--surface)" }}>
+          <Icon name="layers" size={18} color="var(--text2)" />
         </span>
         <span style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Batch cooking</span>
-          <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", lineHeight: 1.4, marginTop: 2 }}>Regroupe tout ce qu'il y a à cuisiner pour la semaine en une seule session à préparer d'avance.</span>
+          <span style={{ display: "block", fontSize: 14.5, fontWeight: 600, color: "var(--text)" }}>Batch cooking</span>
+          <span style={{ display: "block", fontSize: 12, color: "var(--text3)", lineHeight: 1.4, marginTop: 2 }}>Tout ce qu'il y a à cuisiner dans la semaine, regroupé en une session à préparer d'avance.</span>
         </span>
-        <span style={{ flexShrink: 0, width: 42, height: 24, borderRadius: 999, padding: 2, background: genBatch ? "var(--ok)" : "var(--surface3)", display: "flex", justifyContent: genBatch ? "flex-end" : "flex-start", transition: "background 0.15s" }}>
-          <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff" }} />
+        <span aria-hidden="true" style={{ position: "relative", width: 40, height: 23, borderRadius: 999, flexShrink: 0, background: genBatch ? "var(--accent)" : "var(--surface3)", transition: "background 0.25s ease" }}>
+          <span style={{ position: "absolute", top: 2.5, left: 2.5, width: 18, height: 18, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.28)", transform: genBatch ? "translateX(17px)" : "translateX(0)", transition: "transform 0.28s cubic-bezier(0.34,1.5,0.64,1)" }} />
         </span>
       </button>
-      <button className="btn btn-primary" style={{ width: "100%", borderRadius: 13, padding: "12px 0" }} onClick={onGenerate}>
-        <Icon name="calendar" size={16} /> Générer la semaine
+      <button className="btn btn-primary btn-pill" style={{ width: "100%", padding: "14px 0", fontSize: 15 }} onClick={onGenerate} disabled={genSlots.length === 0}>
+        <Icon name="sparkle" size={16} /> Générer la semaine
       </button>
     </SwipeableSheet>
   );
