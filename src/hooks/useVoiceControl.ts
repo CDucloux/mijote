@@ -28,6 +28,8 @@ interface Recognition {
   onresult: ((event: RecognitionEvent) => void) | null;
   onerror: ((event: RecognitionErrorEvent) => void) | null;
   onend: (() => void) | null;
+  onaudiostart: (() => void) | null;
+  onspeechstart: (() => void) | null;
   start(): void;
   abort(): void;
 }
@@ -38,6 +40,10 @@ const LANG = "fr-FR";
 const DUPLICATE_MS = 1200;
 /** Après la lecture, le micro peut encore rendre un écho pendant ce délai (latence de dictée). */
 const ECHO_GRACE_MS = 2000;
+/** Une dictée close aussi vite sans rien entendre est un échec de démarrage. */
+const FAST_END_MS = 1000;
+/** Échecs de démarrage d'affilée tolérés avant de couper le mode. */
+const MAX_FAST_ENDS = 5;
 /** Erreurs de dictée sans gravité : silence prolongé, arrêt volontaire. */
 const BENIGN_ERRORS = new Set(["no-speech", "aborted"]);
 /** Durée d'affichage de la dernière phrase entendue, et nombre de ses derniers mots montrés. */
@@ -49,6 +55,9 @@ function recognitionCtor(): RecognitionCtor | null {
   const scope = window as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor };
   return scope.SpeechRecognition ?? scope.webkitSpeechRecognition ?? null;
 }
+
+/** État de la dictée : en démarrage, micro qui capte, voix en cours de transcription. */
+export type VoiceStatus = "starting" | "listening" | "hearing";
 
 /** Options de {@link useVoiceControl}. */
 export interface UseVoiceControlOptions {
@@ -68,6 +77,8 @@ export interface UseVoiceControlResult {
   active: boolean;
   /** Dernière phrase entendue (quelques secondes), pour montrer ce qui a été compris. */
   heard: string | null;
+  /** Où en est la dictée : lancée, micro ouvert, voix détectée (`null` hors mode). */
+  status: VoiceStatus | null;
   toggle: () => void;
   /** Lit un texte à voix haute (interrompt la lecture en cours). */
   speak: (text: string) => void;
@@ -82,6 +93,9 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
   const [supported] = useState(() => recognitionCtor() !== null && typeof window !== "undefined" && "speechSynthesis" in window);
   const [active, setActive] = useState(false);
   const [heard, setHeard] = useState<string | null>(null);
+  const [status, setStatus] = useState<VoiceStatus>("starting");
+  // Démarrage de la session de dictée en cours, et échecs de démarrage d'affilée.
+  const sessionRef = useRef({ startedAt: 0, gotAudio: false, fastEnds: 0 });
   const recognitionRef = useRef<Recognition | null>(null);
   const runningRef = useRef(false);
   const lastRef = useRef({ kind: "", at: 0 });
@@ -109,6 +123,8 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     try {
       recognition.start();
       runningRef.current = true;
+      sessionRef.current.startedAt = Date.now();
+      sessionRef.current.gotAudio = false;
     } catch {
       // Déjà lancée, ou en cours d'arrêt : son `onend` la relancera.
     }
@@ -120,10 +136,18 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     if (!Ctor) return;
     const recognition = new Ctor();
     recognition.lang = LANG;
-    recognition.continuous = true;
+    // Une phrase par session, relancée aussitôt : le mode continu ne renvoie rien
+    // dans certains navigateurs (Edge), le mode phrase par phrase marche partout.
+    recognition.continuous = false;
     // Résultats provisoires : la commande part dès qu'elle est entendue, sans attendre
     // la fin de phrase (que certains navigateurs ne posent qu'après un long silence).
     recognition.interimResults = true;
+    recognition.onaudiostart = () => {
+      sessionRef.current.gotAudio = true;
+      sessionRef.current.fastEnds = 0;
+      setStatus("listening");
+    };
+    recognition.onspeechstart = () => setStatus("hearing");
     recognition.onresult = (event) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
@@ -157,7 +181,14 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     recognition.onend = () => {
       runningRef.current = false;
       consumedRef.current.clear(); // une nouvelle session renumérote ses résultats
-      setTimeout(listen, 250);
+      const session = sessionRef.current;
+      if (!session.gotAudio && Date.now() - session.startedAt < FAST_END_MS && ++session.fastEnds >= MAX_FAST_ENDS) {
+        onErrorRef.current?.("Mains libres : la dictée s'arrête dès son lancement dans ce navigateur. Essaie Chrome.");
+        setActive(false);
+        return;
+      }
+      setStatus("starting");
+      setTimeout(listen, 150);
     };
     recognitionRef.current = recognition;
     listen();
@@ -224,5 +255,5 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     else onErrorRef.current?.("Le mode mains libres a besoin de Chrome, Edge ou Safari.");
   }, [supported]);
 
-  return { supported, active, heard: active ? heard : null, toggle, speak };
+  return { supported, active, heard: active ? heard : null, status: active ? status : null, toggle, speak };
 }

@@ -3,6 +3,9 @@ import { BaseIcon } from "../ui/BaseIcon.jsx";
 import { fmtElapsed } from "@/lib/format.js";
 import { companionText, type CookParticipant } from "@/lib/cookSession/together.js";
 import { ParticipantAvatar } from "./ParticipantAvatar.jsx";
+import type { VoiceStatus } from "../../hooks/useVoiceControl.js";
+
+const VOICE_STATUS: Record<VoiceStatus, string> = { starting: "micro en route…", listening: "j'écoute", hearing: "je t'entends…" };
 
 /** Autre membre du foyer en cuisine : où il en est dans le pas à pas. */
 export interface CookCompanion {
@@ -28,7 +31,7 @@ interface CookModeHeaderProps {
   offline?: boolean;
   onClose: () => void;
   /** Mode mains libres : bouton micro (sans support, il explique au clic). */
-  voice?: { supported: boolean; active: boolean; heard: string | null; toggle: () => void };
+  voice?: { supported: boolean; active: boolean; heard: string | null; status: VoiceStatus | null; toggle: () => void };
 }
 
 /** En-tête du pas à pas : fermeture, titre, page courante, chrono global et progression. */
@@ -46,6 +49,7 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
           </div>
           <div style={{ fontSize: 12, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {voice?.heard ? <span style={{ color: "var(--accent)" }}>« {voice.heard} »</span> : pageLabel}
+            {!voice?.heard && voice?.status && <span style={{ color: "var(--accent)" }}> · {VOICE_STATUS[voice.status]}</span>}
             {offline
               ? <span style={{ color: "var(--text2)" }}> · Hors ligne : ton binôme ne te voit plus</span>
               : companions.map(c => <span key={c.participant.uid} style={{ color: "var(--text2)" }}> · {companionText(c.participant, c.label)}</span>)}
