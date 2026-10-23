@@ -140,7 +140,7 @@ html.light, .light {
 :where(
   .hover-ring, .ut-pill-clickable, .timer-btn,
   .field-picker, .lp-next,
-  .ing-hover, .spotlight-explore, .save-carnet-btn, .convert-reset
+  .ing-hover, .save-carnet-btn, .convert-reset
 ) {
   outline: 1px solid color-mix(in srgb, var(--ring-color, var(--hover-ring)) calc(var(--veil-on, 0) * 100%), transparent);
   outline-offset: -1px;
