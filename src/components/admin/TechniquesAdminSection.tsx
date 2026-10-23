@@ -1,11 +1,9 @@
 import { Icon } from "../ui/Icon.jsx";
 import { AdminCollapse, CollapseChevron, RowActions, AddPill } from "./AdminPrimitives.jsx";
-import { BaseImportExport } from "./BaseImportExport.jsx";
 import { difficultyColor, DIFFICULTY_LABEL } from "./techniqueDifficulty.js";
 import { TECHNIQUE_CATEGORIES } from "@/lib/household/dataYaml.js";
 import { techniqueVisual } from "@/lib/recipes/techniqueDisplay.js";
 import type { TechniqueEntry } from "@/lib/recipes/techniques.js";
-import type { BaseTransfer } from "../../hooks/useMasterImports.js";
 
 // Niveau de difficulté d'un geste : 5 pastilles, colorées vert→ambre→rouge.
 function DifficultyPips({ level }: { level?: number }) {
@@ -50,7 +48,6 @@ interface TechniquesAdminSectionProps {
   onCreate: (categoryKey: string) => void;
   onEdit: (technique: TechniqueEntry) => void;
   onDelete: (technique: TechniqueEntry) => void;
-  transfer: BaseTransfer;
 }
 
 /**
@@ -58,7 +55,7 @@ interface TechniquesAdminSectionProps {
  * L'admin voit toutes les catégories (pour ajouter partout), les autres
  * seulement celles qui ont des gestes.
  */
-export function TechniquesAdminSection({ techniques, isAdmin, openCats, onToggleCat, onCreate, onEdit, onDelete, transfer }: TechniquesAdminSectionProps) {
+export function TechniquesAdminSection({ techniques, isAdmin, openCats, onToggleCat, onCreate, onEdit, onDelete }: TechniquesAdminSectionProps) {
   const byCat = Object.keys(TECHNIQUE_CATEGORIES)
     .map((c): [string, TechniqueEntry[]] => [c, techniques.filter(t => t.category === c).sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"))])
     .filter(([, list]) => isAdmin || list.length);
@@ -101,8 +98,6 @@ export function TechniquesAdminSection({ techniques, isAdmin, openCats, onToggle
           </div>
         );
       })}
-
-      {isAdmin && <BaseImportExport count={techniques.length} noun="technique" exportTitle="Exporter le glossaire" importTitle="Importer le glossaire" {...transfer} />}
     </div>
   );
 }

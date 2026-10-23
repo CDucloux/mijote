@@ -6,7 +6,7 @@ import { SearchField } from "../ui/SearchField.jsx";
 import { IngredientStatusBadge } from "../badges/IngredientStatusBadge.jsx";
 import { UnderlineTabs } from "../ui/UnderlineTabs.jsx";
 import { MasterBadge } from "./AdminPrimitives.jsx";
-import { BaseImportExport } from "./BaseImportExport.jsx";
+import { BaseMenu } from "./BaseMenu.jsx";
 import { IngredientCategoryNav } from "./IngredientCategoryNav.jsx";
 import { countTrackingFilters, matchesTrackingFilter } from "@/lib/food/ingredientTracking.js";
 import type { IngredientTrackingFilter } from "@/lib/food/ingredientTracking.js";
@@ -62,8 +62,8 @@ interface IngredientsAdminSectionProps {
 }
 
 /**
- * Section « Ingrédients » : au large, deux volets (recherche, catégories et
- * outils de la base à gauche ; fiches de la sélection à droite), une colonne en
+ * Section « Ingrédients » : au large, deux volets (recherche et catégories à
+ * gauche ; fiches de la sélection et menu « Base » à droite), une colonne en
  * mobile. Filtre de suivi éditorial piloté aussi par le tableau de bord.
  */
 export function IngredientsAdminSection({ ingredientDB, categories, isAdmin, filter, onFilter, category, onCategory, search, onSearch, onReorder, onCreate, onOpen, transfer }: IngredientsAdminSectionProps) {
@@ -83,7 +83,6 @@ export function IngredientsAdminSection({ ingredientDB, categories, isAdmin, fil
         <SearchField value={search} onChange={onSearch} placeholder="Rechercher un ingrédient" />
         <IngredientCategoryNav categories={categories} counts={countByCategory(ingredientDB, filter)} total={filter ? counts[filter] : counts.all}
           value={category} onChange={onCategory} onReorder={isAdmin ? onReorder : undefined} />
-        {isAdmin && <div className="ing-admin-tools"><BaseImportExport count={ingredientDB.length} noun="ingrédient" {...transfer} /></div>}
       </aside>
 
       <section style={{ minWidth: 0 }}>
@@ -105,10 +104,15 @@ export function IngredientsAdminSection({ ingredientDB, categories, isAdmin, fil
             </div>
             </div>
           </div>
-          {isAdmin && category !== null && (
-            <button className="btn btn-primary btn-pill" onClick={() => onCreate(category)} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", fontSize: 13 }}>
-              <Icon name="plus" size={14} /> Ajouter
-            </button>
+          {isAdmin && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              <BaseMenu count={ingredientDB.length} noun="ingrédient" {...transfer} />
+              {category !== null && (
+                <button className="btn btn-primary btn-pill" onClick={() => onCreate(category)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 16px", fontSize: 13 }}>
+                  <Icon name="plus" size={14} /> Ajouter
+                </button>
+              )}
+            </div>
           )}
         </div>
         <div style={{ marginBottom: 18 }}>

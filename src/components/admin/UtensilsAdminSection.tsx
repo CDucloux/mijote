@@ -1,23 +1,19 @@
 import { UtImage } from "../recipe/StepPills.jsx";
 import { MasterBadge, RowActions } from "./AdminPrimitives.jsx";
-import { BaseImportExport } from "./BaseImportExport.jsx";
 import { UTENSIL_CATEGORIES } from "@/lib/household/dataYaml.js";
 import type { UtensilDbItem } from "@/lib/types.js";
-import type { BaseTransfer } from "../../hooks/useMasterImports.js";
 
 interface UtensilsAdminSectionProps {
   utensilDB: UtensilDbItem[];
-  isAdmin: boolean;
   onEdit: (item: UtensilDbItem) => void;
   onDelete: (item: UtensilDbItem) => void;
-  transfer: BaseTransfer;
 }
 
 /**
  * Section « Ustensiles » : grille groupée par famille (taxonomie fixe
  * `UTENSIL_CATEGORIES`, les entrées sans catégorie retombent dans « divers »).
  */
-export function UtensilsAdminSection({ utensilDB, isAdmin, onEdit, onDelete, transfer }: UtensilsAdminSectionProps) {
+export function UtensilsAdminSection({ utensilDB, onEdit, onDelete }: UtensilsAdminSectionProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       {Object.entries(UTENSIL_CATEGORIES).map(([catKey, catLabel], ci) => {
@@ -46,8 +42,6 @@ export function UtensilsAdminSection({ utensilDB, isAdmin, onEdit, onDelete, tra
           </div>
         );
       })}
-
-      {isAdmin && <BaseImportExport count={utensilDB.length} noun="ustensile" {...transfer} />}
     </div>
   );
 }

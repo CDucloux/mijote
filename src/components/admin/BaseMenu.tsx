@@ -1,5 +1,8 @@
 import { useRef, useState } from "react";
 import { Icon } from "../ui/Icon.jsx";
+import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
+import { HeroMenu } from "../recipeDetail/HeroMenu.jsx";
+import type { BaseTransfer } from "../../hooks/useMasterImports.js";
 
 interface YamlImportProps {
   onText: (text: string, fileName: string) => void;
@@ -45,40 +48,38 @@ function YamlImport({ onText, warn }: YamlImportProps) {
   );
 }
 
-interface BaseImportExportProps {
+interface BaseMenuProps extends BaseTransfer {
   count: number;
   noun: string;
-  exportTitle?: string;
+  /** Titre de la feuille d'import (« Importer dans la base » par défaut). */
   importTitle?: string;
-  onExportYaml: () => void;
-  onExportMarkdown: () => void;
-  onImportYaml: (text: string) => void;
 }
 
-const CARD = { background: "var(--float-surface)", boxShadow: "var(--float-shadow)", borderRadius: 20, padding: 18 };
-
-// Bloc réutilisable Export/Import YAML+Markdown d'une base master (ingrédients,
-// ustensiles, techniques) : rendu et espacement IDENTIQUES quelle que soit la
-// section. Autonome (gap interne) → plus de cartes « collées » selon le parent.
-export function BaseImportExport({ count, noun, exportTitle = "Exporter la base", importTitle = "Importer dans la base", onExportYaml, onExportMarkdown, onImportYaml }: BaseImportExportProps) {
+/**
+ * Menu « Base » d'une base master (ingrédients, ustensiles, techniques) : export
+ * YAML (réimportable, pour `data/`) ou Markdown (lecture), et import YAML dans une
+ * feuille dédiée. Maintenance ponctuelle : un menu plutôt qu'un bloc permanent.
+ */
+export function BaseMenu({ count, noun, importTitle = "Importer dans la base", onExportYaml, onExportMarkdown, onImportYaml }: BaseMenuProps) {
+  const [importing, setImporting] = useState(false);
   return (
-    <div className="slide-up" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 6 }}>
-      <div style={CARD}>
-        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-          <div style={{ minWidth: 0, flex: "1 1 200px" }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>{exportTitle}</h3>
-            <p style={{ fontSize: 12, color: "var(--text2)" }}>{count} {noun}{count > 1 ? "s" : ""} · <strong>YAML</strong> (réimportable, pour <code style={{ fontSize: 11 }}>data/</code>) ou Markdown (lecture)</p>
-          </div>
-          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-            <button className="btn btn-primary btn-pill btn-sm" onClick={onExportYaml} style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name="download" size={14} /> YAML</button>
-            <button className="btn btn-ghost btn-pill btn-sm" onClick={onExportMarkdown} style={{ display: "flex", alignItems: "center", gap: 6 }}><Icon name="download" size={14} /> Markdown</button>
-          </div>
-        </div>
-      </div>
-      <div style={CARD}>
-        <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{importTitle}</h3>
-        <YamlImport warn onText={onImportYaml} />
-      </div>
-    </div>
+    <>
+      <HeroMenu icon="layers" label="Base" iconSize={15} iconColor="currentColor" title="Exporter ou importer la base"
+        className="float-pill ripple" btnStyle={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 15px 8px 13px", borderRadius: 999, border: "none", fontSize: 13, fontWeight: 600, color: "var(--text2)", cursor: "pointer", flexShrink: 0 }}
+        items={[
+          { label: "Exporter en YAML", icon: "download", onClick: onExportYaml },
+          { label: "Exporter en Markdown", icon: "fileText", onClick: onExportMarkdown },
+          { label: "Importer un fichier YAML…", icon: "import", onClick: () => setImporting(true) },
+        ]} />
+      {importing && (
+        <SwipeableSheet onClose={() => setImporting(false)}>
+          {(close) => (<>
+            <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 650, letterSpacing: "-0.01em", margin: "4px 0 2px" }}>{importTitle}</h2>
+            <p style={{ fontSize: 13, color: "var(--text3)", marginBottom: 16, fontVariantNumeric: "tabular-nums" }}>{count} {noun}{count > 1 ? "s" : ""} aujourd'hui</p>
+            <YamlImport warn onText={(text) => close(() => { setImporting(false); onImportYaml(text); })} />
+          </>)}
+        </SwipeableSheet>
+      )}
+    </>
   );
 }

@@ -12,6 +12,7 @@ import { IngredientsAdminSection } from "../components/admin/IngredientsAdminSec
 import { UtensilsAdminSection } from "../components/admin/UtensilsAdminSection.jsx";
 import { TechniquesAdminSection } from "../components/admin/TechniquesAdminSection.jsx";
 import { ModerationSection } from "../components/admin/ModerationSection.jsx";
+import { BaseMenu } from "../components/admin/BaseMenu.jsx";
 import { TechniqueEditorSheet } from "../components/admin/TechniqueEditorSheet.jsx";
 import { UtensilEditorSheet } from "../components/admin/UtensilEditorSheet.jsx";
 import { useMasterImports } from "../hooks/useMasterImports.js";
@@ -182,7 +183,10 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
         </div>
       ) : (
         <>
-          <ConsoleHeader section={section} onSection={s => gotoSection(s)} pendingReports={moderation.reports.length} baseCount={baseCount} />
+          <ConsoleHeader section={section} onSection={s => gotoSection(s)} pendingReports={moderation.reports.length} baseCount={baseCount}
+            actions={isAdmin && baseCount && (section === "ustensiles"
+              ? <BaseMenu count={baseCount.count} noun={baseCount.noun} {...transfers.utensils} />
+              : section === "techniques" ? <BaseMenu count={baseCount.count} noun={baseCount.noun} importTitle="Importer le glossaire" {...transfers.techniques} /> : null)} />
 
           <div ref={sectionScrollRef} onScroll={e => { savedScrollTop.current = e.currentTarget.scrollTop; }} style={{ flex: 1, overflowY: "auto", padding: "16px 20px var(--page-pad-b)" }}>
             {section === "dashboard" && (
@@ -196,14 +200,14 @@ export function ConfigPage({ ingredientDB, setIngredientDB, utensilDB, setUtensi
                 onOpen={id => navigate(`/admin/ingredients/${encodeURIComponent(id)}`)} transfer={transfers.ingredients} />
             )}
             {section === "ustensiles" && (
-              <UtensilsAdminSection utensilDB={utensilDB} isAdmin={isAdmin} transfer={transfers.utensils}
+              <UtensilsAdminSection utensilDB={utensilDB}
                 onEdit={item => setEditUt({ ...item })} onDelete={item => setConfirmDel({ type: "ut", item })} />
             )}
             {section === "techniques" && (
               <TechniquesAdminSection techniques={techniques} isAdmin={isAdmin} openCats={openTechCats} onToggleCat={toggleTechCat}
                 onCreate={catKey => setEditTech({ id: "", name: "", category: catKey, definition: "", aliases: [], difficulty: undefined, source: "" })}
                 onEdit={t => setEditTech({ ...t, aliases: t.aliases || [], source: t.source || "" })}
-                onDelete={item => setConfirmDel({ type: "tech", item })} transfer={transfers.techniques} />
+                onDelete={item => setConfirmDel({ type: "tech", item })} />
             )}
             {section === "sources" && <SourcesAdmin sources={sources} setSources={setSources} isAdmin={isAdmin} />}
             {section === "modération" && <ModerationSection {...moderation} />}

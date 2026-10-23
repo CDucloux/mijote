@@ -24,6 +24,9 @@ interface HeroMenuProps {
   icon?: IconName;
   className?: string;
   align?: "left" | "right";
+  /** Libellé après l'icône : le déclencheur devient une pastille. */
+  label?: string;
+  title?: string;
 }
 
 interface MenuPos {
@@ -35,7 +38,7 @@ interface MenuPos {
 // Menu « trois points » des actions secondaires d'une recette (hero).
 // Se ferme au clic extérieur / Échap. Le dropdown utilise position:fixed pour
 // échapper à tout overflow:hidden parent.
-export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, icon = "more", className, align = "right" }: HeroMenuProps) {
+export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, icon = "more", className, align = "right", label, title = "Plus d'actions" }: HeroMenuProps) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<MenuPos>({ top: 0, right: undefined, left: undefined });
   const ref = useRef<HTMLDivElement>(null);
@@ -65,8 +68,8 @@ export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, i
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <button ref={btnRef} onClick={() => open ? setOpen(false) : openMenu()} style={btnStyle} className={className} title="Plus d'actions">
-        <Icon name={icon} size={iconSize} color={iconColor} />
+      <button ref={btnRef} onClick={() => open ? setOpen(false) : openMenu()} style={btnStyle} className={className} title={title} aria-haspopup="menu" aria-expanded={open}>
+        <Icon name={icon} size={iconSize} color={iconColor} />{label}
       </button>
       {open && (
         <div className="hero-menu-pop" style={{
