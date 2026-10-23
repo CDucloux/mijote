@@ -424,8 +424,14 @@ export function useFirestoreSync({
     if (!user || !bootstrapped) return;
     if (activeHidRef.current === desiredHid) return; // déjà sur le bon namespace
     if (transitionTargetRef.current === desiredHid) return; // bascule déjà en cours vers cette cible
-    transitionTargetRef.current = desiredHid;
-    let cancelled = false;
+    const target = desiredHid;
+    transitionTargetRef.current = target;
+    // Abandon seulement si la CIBLE a changé entre-temps (une nouvelle bascule a pris
+    // le relais). Pas d'annulation au nettoyage de l'effet : `householdPointer` change
+    // d'identité sans changer de cible (re-émission du pointeur à la dissolution), le
+    // relancement court-circuite alors sur la garde ci-dessus, et une bascule annulée
+    // ne serait jamais reprise (workspace « pas prêt » pour de bon, écran de chargement).
+    const cancelledNow = (): boolean => desiredHidRef.current !== target;
     (async () => {
       migratingRef.current = true;
       setSyncStatus("syncing");
@@ -433,7 +439,7 @@ export function useFirestoreSync({
         if (desiredHid) {
           const ws = householdWorkspace(desiredHid);
           const remote = await loadSharedData(ws);
-          if (cancelled) return;
+          if (cancelledNow()) return;
           if (householdPointer?.migrated) {
             applyShared(remote);                       // membre déjà à jour : simple chargement
             recipeSyncMap.current = mapOf(remote.recipes as DocumentData[]);
@@ -443,7 +449,7 @@ export function useFirestoreSync({
             // 1ère adhésion : fusion additive de MES données (snapshot local) dans le foyer.
             const merged = mergeShared(sharedRef.current as SharedData, remote);
             const newMap = await writeSharedData(ws, merged, mapOf(remote.recipes as DocumentData[]));
-            if (cancelled) return;
+            if (cancelledNow()) return;
             applyShared(merged);
             recipeSyncMap.current = newMap;
             recipesSigRef.current = JSON.stringify(merged.recipes || []);
@@ -462,7 +468,7 @@ export function useFirestoreSync({
           // été fusionnées à l'adhésion). Transition additive → pas de flicker.
           const soloWs = soloWorkspace(user.uid);
           const soloPrev = await loadSharedData(soloWs); // uniquement pour differ les recettes
-          if (cancelled) return;
+          if (cancelledNow()) return;
           const keep = {
             recipes: sharedRef.current.recipes || [],
             collections: sharedRef.current.collections || [],
@@ -472,7 +478,7 @@ export function useFirestoreSync({
             lowStock: sharedRef.current.lowStock || [],
           };
           const newMap = await writeSharedData(soloWs, keep as SharedData, mapOf(soloPrev.recipes as DocumentData[]));
-          if (cancelled) return;
+          if (cancelledNow()) return;
           applyShared(keep);
           recipeSyncMap.current = newMap;
           recipesSigRef.current = JSON.stringify(keep.recipes || []);
@@ -483,9 +489,11 @@ export function useFirestoreSync({
         }
         setSyncStatus("synced");
       } catch (e) { setSyncStatus("error"); reportError(e, { where: "sync:coordinator", desiredHid }); }
-      finally { migratingRef.current = false; transitionTargetRef.current = undefined; }
+      finally {
+        migratingRef.current = false;
+        if (transitionTargetRef.current === target) transitionTargetRef.current = undefined;
+      }
     })();
-    return () => { cancelled = true; };
   }, [user, bootstrapped, desiredHid, householdPointer, applyShared, setSyncStatus, seedSigs]);
 
   useEffect(() => {

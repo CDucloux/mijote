@@ -2,7 +2,6 @@ import { Icon } from "../ui/Icon.jsx";
 import type { IconName } from "../ui/Icon.jsx";
 import { UserAvatar } from "../user/UserAvatar.jsx";
 import { OverscrollRow } from "../ui/OverscrollRow.jsx";
-import { ReadOnlyBanner, AdminBanner } from "../ui/Banners.jsx";
 import type { ConsoleSection } from "../../constants/tabs.js";
 
 const SECTIONS: [ConsoleSection, string, IconName][] = [
@@ -13,17 +12,14 @@ const SECTIONS: [ConsoleSection, string, IconName][] = [
 interface ConsoleHeaderProps {
   section: ConsoleSection;
   onSection: (section: ConsoleSection) => void;
-  isAdmin: boolean;
   /** Signalements en attente, en pastille sur l'onglet Modération. */
   pendingReports: number;
-  /** Taille de la base affichée (sections Ingrédients, Ustensiles, Techniques). */
-  baseCount: { count: number; noun: string } | null;
 }
 
-/** En-tête figé de la console : titre, onglets de section, compteur de la base. */
-export function ConsoleHeader({ section, onSection, isAdmin, pendingReports, baseCount }: ConsoleHeaderProps) {
+/** En-tête figé de la console : titre et onglets de section. */
+export function ConsoleHeader({ section, onSection, pendingReports }: ConsoleHeaderProps) {
   return (
-    <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
+    <div style={{ padding: "20px 20px 10px", flexShrink: 0 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
           <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(var(--admin-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>
@@ -33,7 +29,9 @@ export function ConsoleHeader({ section, onSection, isAdmin, pendingReports, bas
         </div>
         <UserAvatar />
       </div>
-      <OverscrollRow stretch style={{ gap: 6 }}>
+      {/* Le défilement horizontal rogne aussi à la verticale : la rangée s'étend sous
+          les marges (négatives) pour laisser l'ombre des pastilles respirer. */}
+      <OverscrollRow stretch outerStyle={{ margin: "-6px -20px -8px", padding: "6px 20px 8px" }} style={{ gap: 6 }}>
         {SECTIONS.map(([s, label, ic]) => {
           const active = section === s;
           return (
@@ -46,16 +44,6 @@ export function ConsoleHeader({ section, onSection, isAdmin, pendingReports, bas
           );
         })}
       </OverscrollRow>
-      {/* Compteur + bannière admin : figés avec l'en-tête (restent visibles au scroll). */}
-      {baseCount && (
-        <div style={{ paddingTop: 14 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6, fontSize: 12, color: "var(--text2)", padding: "0 2px", marginBottom: 10 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", fontFamily: "var(--ff-display)" }}>{baseCount.count}</span>
-            <span>{baseCount.noun}{baseCount.count > 1 ? "s" : ""} dans la base</span>
-          </div>
-          {isAdmin ? <AdminBanner style={{ marginBottom: 6 }} /> : <ReadOnlyBanner style={{ marginBottom: 6 }} />}
-        </div>
-      )}
     </div>
   );
 }

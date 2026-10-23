@@ -8,9 +8,12 @@ import { ElasticScroll } from "../components/ui/ElasticScroll.jsx";
 import { HouseholdSection } from "../components/household/HouseholdSection.jsx";
 import { NotifRow, OnboardingCard, CalmDayCard, TodayMealRow } from "../components/home/HomeCards.jsx";
 import { SubviewPill, type HomeSubview } from "../components/home/SubviewPill.jsx";
+import { HomeDesktop } from "../components/home/HomeDesktop.jsx";
+import { useMediaQuery } from "../hooks/useMediaQuery.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { pickSpotlightIngredient } from "@/lib/planning/spotlight.js";
-import { buildDashboardSummary, groupTodayMeals } from "@/lib/planning/dashboard.js";
+import { buildDashboardSummary, buildWeekOverview, groupTodayMeals, pickHeroMeal, todayKey } from "@/lib/planning/dashboard.js";
+import { mondayWeekDays } from "@/lib/planning/weekDays.js";
 import type { IngredientDbItem, MealPlan, Recipe } from "@/lib/types.js";
 import type { ShoppingList } from "@/lib/food/shoppingAggregate.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
@@ -69,6 +72,13 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
 
   // Un repas composé (même créneau + groupe) = une carte, le plat en tête.
   const mealCards = useMemo(() => groupTodayMeals(meals), [meals]);
+  // Au large : héros du prochain repas + aperçu de la semaine (même seuil que `.home-desk`).
+  const isWide = useMediaQuery("(min-width: 900px)");
+  const heroPick = useMemo(() => pickHeroMeal(mealCards), [mealCards]);
+  const week = useMemo(() => {
+    const now = new Date();
+    return buildWeekOverview(mealPlan, recipes, mondayWeekDays(now), todayKey(now));
+  }, [mealPlan, recipes]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -124,6 +134,16 @@ export function HomePage({ recipes = [], mealPlan = {}, shoppingLists = [], lowS
             de wrapper ElasticScroll ici (sinon l'en-tête défilerait et laisserait
             voir les cartes derrière lui). */
         <DiscoverSection ingredientDB={ingredientDB} preferences={preferences} recipes={recipes} onOpenPublic={onOpenPublic} onClonePublic={onClonePublic} onNewRecipe={onNewRecipe} initialSearch={discoverSeed} onSeedConsumed={onDiscoverSeedConsumed} />
+      ) : isWide ? (
+      /* ── À suivre, au large : deux colonnes (HomeDesktop) ─────────────────── */
+      <ElasticScroll armWhenUnscrollable style={{ flex: 1, padding: "8px 20px var(--page-pad-b)" }}>
+        <HomeDesktop loading={loading} isEmpty={isEmpty} isCalm={isCalm} hero={heroPick.hero} rest={heroPick.rest} week={week}
+          shoppingTodo={shoppingTodo} lowStockNames={lowStockNames} spotlight={spotlight}
+          onOpenRecipe={id => onSelectRecipe?.(id)} onCook={id => navigate(`/recipes/${id}/cookmode`)}
+          onNewRecipe={() => onNewRecipe()} onExplore={() => onNavigateSubview?.("discover")}
+          onGoto={tab => setTab?.(tab)} onLowStock={() => navigate("/stock?view=low")}
+          onOpenIngredient={onOpenIngredient} onExploreSeason={onExploreSeason} />
+      </ElasticScroll>
       ) : (
       /* ── À suivre : tableau de bord perso (route /home) ─────────────────── */
       <ElasticScroll armWhenUnscrollable style={{ flex: 1, padding: "4px 20px var(--page-pad-b)" }}>

@@ -21,20 +21,20 @@ function UtensilGrid({ list, selectedIds, onGridClick }: { list: UtensilDbItem[]
       {list.map(d => {
         const on = selectedIds.has(d.id);
         return (
-          <button key={d.id} onClick={() => onGridClick(d)} className="pressable ripple" style={{
+          <button key={d.id} onClick={() => onGridClick(d)} aria-pressed={on} className={`ripple ${on ? "hover-tint" : "hover-neutral"}`} style={{
             display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
             padding: "14px 8px 10px",
-            borderRadius: 14,
-            background: on ? "rgba(var(--accent-rgb),0.1)" : "var(--surface)",
-            border: `1.5px solid ${on ? "var(--accent)" : "var(--border)"}`,
-            cursor: "pointer", position: "relative", transition: "all 0.15s",
+            borderRadius: 16, border: "none",
+            background: on ? "rgba(var(--accent-rgb),0.14)" : "var(--float-surface)",
+            boxShadow: on ? "none" : "var(--float-shadow)",
+            cursor: "pointer", position: "relative", transition: "background-color 0.15s, box-shadow 0.15s",
           }}>
             {on && (
               <div style={{ position: "absolute", top: 7, right: 7, width: 18, height: 18, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Icon name="check" size={10} color="#fff" />
               </div>
             )}
-            <UtImage src={d.image} alt={d.name} size={56} radius={12} border />
+            <UtImage src={d.image} alt={d.name} size={56} radius={12} />
             <span style={{ fontSize: 11, fontWeight: 500, color: on ? "var(--accent)" : "var(--text2)", textAlign: "center", lineHeight: 1.3, wordBreak: "break-word" }}>{d.name}</span>
           </button>
         );
@@ -99,8 +99,10 @@ export function UtensilPicker({ utensilDB, selected, onChange }: UtensilPickerPr
                 onClick={() => setReplacing(active ? null : u.id ?? null)} title="Remplacer cet ustensile">
                 <UtImage src={db?.image} alt={u.name} size={26} />
                 <span style={{ fontSize: 12, fontWeight: 600, color: active ? "#fff" : "var(--accent)" }}>{u.name}</span>
-                <button onClick={e => { e.stopPropagation(); if (active) setReplacing(null); toggle({ id: u.dbId, name: u.name }); }} style={{ display: "flex", alignItems: "center", opacity: 0.7 }}>
-                  <Icon name="close" size={12} color={active ? "#fff" : "var(--accent)"} />
+                <button onClick={e => { e.stopPropagation(); if (active) setReplacing(null); toggle({ id: u.dbId, name: u.name }); }}
+                  className="ing-chip-x chip-x-btn" data-on-accent={active || undefined} aria-label={`Retirer ${u.name}`} title="Retirer"
+                  style={{ border: "none", padding: 0, cursor: "pointer", color: active ? "#fff" : "var(--accent)", marginRight: -4 }}>
+                  <Icon name="close" size={12} color="currentColor" />
                 </button>
               </div>
             );
@@ -111,13 +113,13 @@ export function UtensilPicker({ utensilDB, selected, onChange }: UtensilPickerPr
       {/* Bandeau mode remplacement */}
       {replacing && (
         <div className="slide-up editor-col" style={{ marginTop: 12, padding: "0 20px", flexShrink: 0 }}>
-          <div style={{ padding: "9px 12px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.1)", border: "1px solid rgba(var(--accent-rgb),0.3)", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ padding: "9px 12px", borderRadius: 12, background: "rgba(var(--accent-rgb),0.12)", display: "flex", alignItems: "center", gap: 8 }}>
             <Icon name="swap" size={14} color="var(--accent)" />
             <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 500, flex: 1 }}>
               Choisis un ustensile pour remplacer <strong>{replacingName}</strong>
             </span>
-            <button onClick={() => setReplacing(null)} style={{ display: "flex", alignItems: "center", opacity: 0.7 }}>
-              <Icon name="close" size={13} color="var(--accent)" />
+            <button onClick={() => setReplacing(null)} className="ing-chip-x chip-x-btn" aria-label="Annuler le remplacement" style={{ border: "none", padding: 0, cursor: "pointer", color: "var(--accent)" }}>
+              <Icon name="close" size={13} color="currentColor" />
             </button>
           </div>
         </div>

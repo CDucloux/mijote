@@ -62,9 +62,11 @@ export function NewSectionButton({ onAdd }: { onAdd: (name: string) => void }) {
   // Repos : un filet de coupe titré, pas une carte. Une section découpe la liste,
   // l'affordance le dit littéralement (« couper ici ») sans rien teinter.
   if (!open) return (
-    <button type="button" className="section-cut" onClick={() => setOpen(true)}>
-      <span className="section-cut-label"><Icon name="plus" size={13} color="currentColor" /> Nouvelle section</span>
-    </button>
+    <div className="section-cut">
+      <button type="button" className="section-cut-label ripple hover-neutral" onClick={() => setOpen(true)}>
+        <Icon name="plus" size={13} color="currentColor" /> Nouvelle section
+      </button>
+    </div>
   );
   // Saisie : le nom s'écrit à la place du libellé, au gabarit d'un en-tête de section.
   return (

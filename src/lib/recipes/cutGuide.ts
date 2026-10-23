@@ -29,7 +29,7 @@ export interface CutFamilyEntry {
 export const CUT_FAMILIES: readonly CutFamilyEntry[] = [
   { id: "tranches", label: "Tranches", formes: ["emince", "lamelle", "rondelle"] },
   { id: "cubes", label: "Cubes", formes: ["des", "brunoise", "mirepoix", "paysanne"] },
-  { id: "fin", label: "Hachés et râpés", formes: ["cisele", "hache", "rape"] },
+  { id: "fin", label: "Hachés, concassés, râpés", formes: ["cisele", "hache", "concasse", "rape"] },
   { id: "batons", label: "Bâtons et fils", formes: ["batonnet", "julienne", "chiffonade"] },
   { id: "morceaux", label: "Morceaux", formes: ["troncon", "quartier"] },
 ];
@@ -60,6 +60,7 @@ export const CUT_GUIDE: Record<FormeDecoupe, CutGuideEntry> = {
   paysanne: { name: "Paysanne", hint: "petits carrés plats", result: "Carrés ou triangles plats d'environ 1 cm, fins de 2 mm, pour une soupe." },
   cisele: { name: "Ciselé", hint: "petits dés d'oignon", result: "Petits dés nets qui ne s'écrasent pas, pour l'oignon, l'échalote ou les herbes.", sizes: { fin: "2 mm", moyen: "3 mm", gros: "5 mm" } },
   hache: { name: "Haché", hint: "menu, irrégulier", result: "Morceaux fins et irréguliers, obtenus en repassant la lame.", sizes: { fin: "très menu", moyen: "menu", gros: "grossier" } },
+  concasse: { name: "Concassé", hint: "gros éclats", result: "Éclats grossiers et irréguliers, au couteau ou au pilon : noix, noisettes, tomate mondée.", sizes: { fin: "petits éclats", moyen: "éclats moyens", gros: "gros éclats" } },
   rape: { name: "Râpé", hint: "à la râpe", result: "Copeaux ou filaments obtenus à la râpe.", sizes: { fin: "râpe fine", moyen: "râpe moyenne", gros: "gros trous" } },
   batonnet: { name: "Bâtonnets", hint: "comme des frites", result: "Bâtons de section carrée d'environ 5 cm de long.", sizes: { fin: "5 mm", moyen: "1 cm", gros: "1,5 cm" } },
   julienne: { name: "Julienne", hint: "fins filaments", result: "Filaments de 1 à 2 mm sur 5 cm, pour une garniture croquante." },
@@ -88,7 +89,7 @@ const BY_NAME: [string[], FormeDecoupe[]][] = [
   [["carotte", "panais", "navet", "radis", "betterave"], ["rondelle", "des", "julienne", "rape"]],
   [["celeri"], ["des", "brunoise", "mirepoix"]],
   [["courgette", "aubergine", "concombre"], ["rondelle", "lamelle", "des", "batonnet"]],
-  [["tomate"], ["des", "quartier", "rondelle"]],
+  [["tomate"], ["des", "quartier", "rondelle", "concasse"]],
   [["poivron"], ["lamelle", "des", "julienne"]],
   [["chou"], ["emince", "quartier", "rape"]],
   [["champignon", "cepe", "girolle"], ["emince", "lamelle", "quartier"]],
@@ -97,6 +98,8 @@ const BY_NAME: [string[], FormeDecoupe[]][] = [
   [["persil", "coriandre", "basilic", "menthe", "ciboulette", "aneth", "estragon", "cerfeuil", "sauge", "oseille"], ["cisele", "hache", "chiffonade"]],
   [["citron", "orange", "pamplemousse"], ["rape", "quartier", "rondelle"]],
   [["parmesan", "gruyere", "comte", "emmental", "fromage"], ["rape", "des", "lamelle"]],
+  [["noix de coco", "coco"], ["rape", "lamelle"]],
+  [["noix", "noisette", "amande", "pistache", "cacahuete", "pignon", "pecan", "cajou", "macadamia"], ["concasse", "hache", "lamelle"]],
   [["pomme", "poire", "peche", "mangue", "ananas", "fraise", "abricot"], ["des", "lamelle", "quartier"]],
 ];
 
@@ -109,6 +112,7 @@ const BY_CATEGORY: Record<string, FormeDecoupe[]> = {
   fish_seafood: ["des", "lamelle", "troncon"],
   fruit: ["des", "lamelle", "quartier"],
   dairy: ["rape", "des", "lamelle"],
+  nuts_seeds: ["concasse", "hache", "lamelle"],
 };
 
 const DEFAULT_SHORTLIST: FormeDecoupe[] = ["des", "emince", "lamelle", "hache"];

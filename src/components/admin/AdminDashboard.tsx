@@ -120,7 +120,7 @@ export function AdminDashboard({ ingredientDB = [], utensilDB = [], techniques =
           <div className="dash-surface" style={{ display: "flex", flexDirection: "column", gap: 2, padding: 4 }}>
             <TodoRow count={ingNoImg} total={ing} label="Photos d'ingrédients" onClick={() => onGoto?.("ingredients", "no-image")} />
             <TodoRow count={ingNoNut} total={ing} label="Valeurs nutritionnelles" onClick={() => onGoto?.("ingredients", "no-nutrition")} />
-            <TodoRow count={ustNoImg} total={ust} label="Photos d'ustensiles" onClick={() => onGoto?.("ustensiles")} />
+            <TodoRow count={ustNoImg} total={ust} label="Photos d'ustensiles" onClick={() => onGoto?.("ustensiles", "no-image")} />
           </div>
         </div>
       </section>

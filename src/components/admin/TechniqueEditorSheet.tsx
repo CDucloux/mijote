@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { SheetIdentityHeader } from "../ui/SheetIdentityHeader.jsx";
+import { SheetDeleteButton } from "./AdminPrimitives.jsx";
 import { TagInput } from "../ui/TagInput.jsx";
 import { difficultyColor, DIFFICULTY_LABEL } from "./techniqueDifficulty.js";
 import { TECHNIQUE_CATEGORIES } from "@/lib/household/dataYaml.js";
@@ -32,7 +33,7 @@ function PhraseListEditor({ items, onChange, placeholder, addLabel }: { items: s
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {items.map((it, i) => (
         <div key={i} style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input className="field-input" value={it} placeholder={placeholder} onChange={e => setAt(i, e.target.value)} style={{ flex: 1, marginBottom: 0 }} />
+          <input className="field-input field-bare" value={it} placeholder={placeholder} onChange={e => setAt(i, e.target.value)} style={{ flex: 1, marginBottom: 0 }} />
           <RemoveButton onClick={() => onChange(items.filter((_, k) => k !== i))} />
         </div>
       ))}
@@ -48,15 +49,15 @@ function ConfusionListEditor({ items, onChange, options }: { items: TechniqueCon
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {items.map((it, i) => (
-        <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6, padding: 10, background: "var(--surface2)", borderRadius: 10, border: "1px solid var(--border)" }}>
+        <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6, padding: 10, background: "var(--surface2)", borderRadius: 14 }}>
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <select className="field-input" value={it.technique_id || ""} onChange={e => setAt(i, { technique_id: e.target.value })} style={{ flex: 1, marginBottom: 0 }}>
+            <select className="field-input field-bare" value={it.technique_id || ""} onChange={e => setAt(i, { technique_id: e.target.value })} style={{ flex: 1, marginBottom: 0, backgroundColor: "var(--surface)" }}>
               <option value="">Choisir un geste…</option>
               {options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
             <RemoveButton onClick={() => onChange(items.filter((_, k) => k !== i))} />
           </div>
-          <input className="field-input" value={it.distinction || ""} placeholder="En quoi ce geste s'en distingue…" onChange={e => setAt(i, { distinction: e.target.value })} style={{ marginBottom: 0 }} />
+          <input className="field-input field-bare" value={it.distinction || ""} placeholder="En quoi ce geste s'en distingue…" onChange={e => setAt(i, { distinction: e.target.value })} style={{ marginBottom: 0, backgroundColor: "var(--surface)" }} />
         </div>
       ))}
       <AddButton onClick={() => onChange([...items, { technique_id: "", distinction: "" }])} label="Ajouter une confusion" />
@@ -73,8 +74,7 @@ function DifficultyPicker({ value, onChange }: { value?: number; onChange: (leve
           return (
             <button key={n} className="ripple" onClick={() => onChange(on ? undefined : n)}
               style={{ flex: 1, padding: "9px 0", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                background: on ? difficultyColor(n) : "var(--surface2)", color: on ? "#fff" : "var(--text2)",
-                border: `1px solid ${on ? "transparent" : "var(--border)"}` }}>{n}</button>
+                background: on ? difficultyColor(n) : "var(--surface2)", color: on ? "#fff" : "var(--text2)", border: "none" }}>{n}</button>
           );
         })}
       </div>
@@ -88,13 +88,15 @@ interface TechniqueEditorSheetProps {
   techniques: TechniqueEntry[];
   onClose: () => void;
   onSave: (draft: TechniqueDraft) => void;
+  /** Geste existant : suppression (la feuille se ferme avant la confirmation). */
+  onDelete?: () => void;
 }
 
 /**
  * Éditeur d'un geste technique (admin). L'en-tête est calqué sur la fiche
  * détaillée (TechniqueDetailSheet) pour que la saisie reflète l'affichage en recette.
  */
-export function TechniqueEditorSheet({ initial, techniques, onClose, onSave }: TechniqueEditorSheetProps) {
+export function TechniqueEditorSheet({ initial, techniques, onClose, onSave, onDelete }: TechniqueEditorSheetProps) {
   const [draft, setDraft] = useState<TechniqueDraft>(initial);
   const patch = (p: Partial<TechniqueDraft>) => setDraft(d => ({ ...d, ...p }));
   const options = techniques.filter(t => t.id !== draft.id).sort((a, b) => (a.name || "").localeCompare(b.name || "", "fr"));
@@ -115,18 +117,18 @@ export function TechniqueEditorSheet({ initial, techniques, onClose, onSave }: T
             </span>
           )} />
         <div className="field-label">Nom</div>
-        <input className="field-input" placeholder="ex: Émulsionner" value={draft.name || ""} onChange={e => patch({ name: e.target.value })} style={{ marginBottom: 12 }} />
+        <input className="field-input field-bare" placeholder="ex: Émulsionner" value={draft.name || ""} onChange={e => patch({ name: e.target.value })} style={{ marginBottom: 12 }} />
         <div className="field-label">Catégorie</div>
-        <select className="field-input" value={draft.category || "preparation"} onChange={e => patch({ category: e.target.value })} style={{ marginBottom: 12 }}>
+        <select className="field-input field-bare" value={draft.category || "preparation"} onChange={e => patch({ category: e.target.value })} style={{ marginBottom: 12 }}>
           {Object.entries(TECHNIQUE_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
         <div className="field-label">Difficulté</div>
         <DifficultyPicker value={draft.difficulty} onChange={difficulty => patch({ difficulty })} />
         <div className="field-label">Définition</div>
-        <textarea className="field-input" rows={3} placeholder="Que veut dire ce geste ?" value={draft.definition || ""} onChange={e => patch({ definition: e.target.value })} style={{ marginBottom: 12, resize: "vertical", minHeight: 64 }} />
+        <textarea className="field-input field-bare" rows={3} placeholder="Que veut dire ce geste ?" value={draft.definition || ""} onChange={e => patch({ definition: e.target.value })} style={{ marginBottom: 12, resize: "vertical", minHeight: 64 }} />
 
         <div style={editLabel}>Fait partie de</div>
-        <select className="field-input" value={draft.hierarchy?.parent || ""}
+        <select className="field-input field-bare" value={draft.hierarchy?.parent || ""}
           onChange={e => patch({ hierarchy: e.target.value ? { ...(draft.hierarchy || {}), parent: e.target.value } : undefined })}
           style={{ marginBottom: 4 }}>
           <option value="">Aucun (geste racine)</option>
@@ -135,7 +137,7 @@ export function TechniqueEditorSheet({ initial, techniques, onClose, onSave }: T
         <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 4 }}>Le geste générique dont celui-ci est une variante (ex : « Ciseler » fait partie de « Hachage »).</div>
 
         <div style={sectionLabel(vis.color)}>Résultat attendu</div>
-        <textarea className="field-input" rows={2} placeholder="L'état observable après une bonne exécution."
+        <textarea className="field-input field-bare" rows={2} placeholder="L'état observable après une bonne exécution."
           value={expected.summary || ""}
           onChange={e => patch({ expected_result: { ...expected, summary: e.target.value } })}
           style={{ marginBottom: 8, resize: "vertical", minHeight: 48 }} />
@@ -156,11 +158,12 @@ export function TechniqueEditorSheet({ initial, techniques, onClose, onSave }: T
 
         <div className="field-label" style={{ marginTop: 18 }}>Alias / synonymes</div>
         <div style={{ marginBottom: 12 }}>
-          <TagInput tags={draft.aliases || []} onChange={v => patch({ aliases: v })} allTags={[]} label="" placeholder="fouetter, battre…" inputId="tech-alias-input" commitOnBlur dedupeInsensitive />
+          <TagInput tags={draft.aliases || []} onChange={v => patch({ aliases: v })} allTags={[]} label="" placeholder="fouetter, battre…" inputId="tech-alias-input" bare commitOnBlur dedupeInsensitive />
         </div>
         <div className="field-label">Source (optionnel)</div>
-        <input className="field-input" placeholder="ex: Escoffier, Le Guide Culinaire" value={draft.source || ""} onChange={e => patch({ source: e.target.value })} style={{ marginBottom: 16 }} />
+        <input className="field-input field-bare" placeholder="ex: Escoffier, Le Guide Culinaire" value={draft.source || ""} onChange={e => patch({ source: e.target.value })} style={{ marginBottom: 16 }} />
         <div style={{ display: "flex", gap: 10 }}>
+          {onDelete && <SheetDeleteButton onClick={() => close(onDelete)} />}
           <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => close()}><Icon name="undo" size={15} /> Annuler</button>
           <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => onSave(draft)}><Icon name="save" size={15} /> Sauvegarder</button>
         </div>

@@ -569,8 +569,12 @@ select {
 /* Pastille d'ingrédient retenu (filtres) : la croix vit dans un rond qui se
    dessine au survol desktop de la pastille, l'affordance de retrait. */
 .ing-chip-x { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--accent); transition: background-color 0.15s ease; }
+/* Même rond quand la croix est elle-même le bouton (pastilles d'ustensiles) ;
+   sur une pastille pleine d'accent, le rond est blanc translucide. */
+.chip-x-btn { background: transparent; }
 @media (hover: hover) and (pointer: fine) {
-  .ing-chip:hover .ing-chip-x { background: rgba(var(--accent-rgb), 0.2); }
+  .ing-chip:hover .ing-chip-x, .chip-x-btn:hover { background: rgba(var(--accent-rgb), 0.2); }
+  .chip-x-btn[data-on-accent]:hover { background: rgba(255, 255, 255, 0.25); }
 }
 
 /* Éditeur de carnet : pastilles de couleur et icônes. La pastille choisie porte
@@ -777,25 +781,26 @@ html.light .recipe-search.recipe-search--filled {
   appearance: textfield;
 }
 
-/* Stepper unifié (éditeur) : une seule pilule, boutons internes sans couture */
+/* Stepper unifié (éditeur) : une seule pilule sans bordure, boutons internes sans
+   couture ; à la saisie, un fin anneau accent inséré (comme `.field-bare`). */
 .stepper {
   display: flex;
   align-items: center;
-  height: 38px;
+  height: 42px;
   background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border: none;
+  border-radius: 999px;
   overflow: hidden;
-  transition: border-color 0.2s;
+  transition: box-shadow 0.2s;
 }
 
 .stepper:focus-within {
-  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1.5px rgba(var(--accent-rgb), 0.4);
 }
 
 .stepper-btn {
   flex-shrink: 0;
-  width: 38px;
+  width: 42px;
   height: 100%;
   display: flex;
   align-items: center;
@@ -3035,7 +3040,7 @@ html.light .sheet-sticky-head::after {
 /* « Découvrir des recettes » de l'ingrédient du moment : au survol souris
    (desktop), le fond ambré s'appuie et le chevron glisse vers la droite. */
 .spotlight-explore {
-  transition: background-color 0.18s ease, border-color 0.18s ease;
+  transition: background-color 0.18s ease;
 }
 .spotlight-explore .sx-chev {
   transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -3090,12 +3095,9 @@ html.light .sheet-sticky-head::after {
 .section-cut {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   width: 100%;
-  padding: 10px 2px;
-  background: none;
-  border: none;
-  cursor: pointer;
+  padding: 4px 2px;
   color: var(--text3);
 }
 .section-cut::before,
@@ -3106,20 +3108,26 @@ html.light .sheet-sticky-head::after {
   background: var(--border);
   transition: background-color 0.15s ease;
 }
+/* Le libellé est le bouton : une pastille (voile au survol desktop, onde au tap)
+   posée sur le filet. Au survol, seul le libellé se réchauffe d'un cran. */
 .section-cut-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
   transition: color 0.15s ease;
 }
-.section-cut:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+.section-cut-label:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (hover: hover) and (pointer: fine) {
-  .section-cut:hover { color: var(--text); }
-  .section-cut:hover::before,
-  .section-cut:hover::after { background: var(--text3); }
+  .section-cut-label:hover { color: var(--text2); }
 }
 .section-cut-form {
   display: flex;
@@ -3591,11 +3599,6 @@ html.light .sheet-sticky-head::after {
     display: flex !important;
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
-  }
-
-  /* Config ustensiles : 4 cartes par ligne sur desktop (au lieu de 2), pleine largeur */
-  .desktop-content .config-ut-grid {
-    grid-template-columns: repeat(4, 1fr) !important;
   }
 
   /* Detail panel, two-column on large screens */
@@ -5303,11 +5306,11 @@ html.light .sheet-sticky-head::after {
   justify-content: center;
   gap: 10px;
   padding: 28px 20px;
-  border-radius: 12px;
-  border: 1.5px dashed var(--border);
+  border-radius: 16px;
+  border: none;
   background: var(--surface2);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 .yaml-drop-icon {
   display: inline-flex;
@@ -5315,10 +5318,10 @@ html.light .sheet-sticky-head::after {
   transition: color 0.15s ease;
 }
 .yaml-drop-title { color: var(--text); }
+/* Fichier survolant la zone : seul état qui mérite un liseré (cf. CLAUDE.md, borderless). */
 .yaml-drop[data-over] {
-  border-style: solid;
-  border-color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.06);
+  background: rgba(var(--accent-rgb), 0.08);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 .yaml-drop[data-over] .yaml-drop-icon { color: var(--accent); }
 .yaml-drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -5403,6 +5406,89 @@ html.light .sheet-sticky-head::after {
 @media (hover: hover) and (pointer: fine) {
   .dash-card:hover .dash-chevron { color: var(--text2); transform: translateX(2px); }
   .dash-legend:hover > span:last-child { text-decoration: underline; text-underline-offset: 3px; }
+}
+
+/* Console > Ingrédients, Ustensiles, Techniques (AdminTwoPane) : une colonne en
+   mobile (recherche, pastilles de catégorie défilantes, fiches) ; au large, deux volets,
+   navigation à gauche et fiches en grille à droite. Sans bordure : les
+   fiches et la navigation flottent sur la surface `--float-surface`. */
+.admin-pane { display: flex; flex-direction: column; gap: 22px; }
+.admin-pane-aside { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.admin-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 4px; }
+/* Définition d'un geste : deux lignes au plus dans la liste. */
+.admin-clamp-2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.admin-cats { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 2px 20px 4px; }
+.admin-cats::-webkit-scrollbar { display: none; }
+.admin-cat {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px 8px 11px; border: none; border-radius: 999px; cursor: pointer;
+  background: var(--float-surface); box-shadow: var(--float-shadow);
+  color: var(--text2); font-size: 13px; font-weight: 600; white-space: nowrap; text-align: left;
+  transition: background-color 0.18s ease, color 0.18s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+}
+.admin-cat-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; }
+.admin-cat-count { font-size: 12px; font-weight: 500; color: var(--text3); font-variant-numeric: tabular-nums; }
+.admin-cat-grip { display: none; }
+.admin-cat[data-active] { background: var(--accent); color: #fff; }
+.admin-cat[data-active] .admin-cat-count { color: rgba(255, 255, 255, 0.75); }
+.admin-cat[data-empty]:not([data-active]) { opacity: 0.55; }
+@media (min-width: 640px) {
+  .admin-grid { grid-template-columns: repeat(auto-fill, minmax(min(var(--admin-col-min, 260px), 100%), 1fr)); }
+}
+@media (min-width: 900px) {
+  .admin-pane {
+    display: grid; grid-template-columns: 272px minmax(0, 1fr); column-gap: 32px; align-items: start;
+    transition: grid-template-columns 0.32s cubic-bezier(0.33, 1, 0.68, 1), column-gap 0.32s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  .admin-pane-aside { gap: 18px; transition: opacity 0.2s ease, visibility 0.32s; }
+  /* Volet replié : la colonne se referme, le contenu s'efface puis sort du flux d'accessibilité (inert). */
+  .admin-pane[data-folded] { grid-template-columns: 0px minmax(0, 1fr); column-gap: 0px; }
+  .admin-pane[data-folded] .admin-pane-aside { opacity: 0; visibility: hidden; overflow: hidden; }
+  .admin-fold { width: 38px; height: 38px; margin-top: -2px; border-radius: 50%; display: grid; place-items: center; border: none; background: transparent; cursor: pointer; flex-shrink: 0; }
+  .admin-cats {
+    flex-direction: column; gap: 1px; overflow: visible; margin: 0; padding: 4px;
+    background: var(--float-surface); box-shadow: var(--float-shadow); border-radius: 20px;
+  }
+  .admin-cat { display: flex; width: 100%; gap: 10px; padding: 9px 12px; border-radius: 14px; background: transparent; box-shadow: none; font-size: 14px; font-weight: 500; color: var(--text); }
+  .admin-cat-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* Sélection : aplat d'un cran + trait d'accent, plus discret qu'un fond plein dans une liste. */
+  .admin-cat[data-active] { background: var(--surface2); color: var(--text); font-weight: 650; }
+  .admin-cat[data-active] .admin-cat-count { color: var(--accent); font-weight: 650; }
+  .admin-cat[draggable="true"] { cursor: pointer; }
+  .admin-cat-grip { display: inline-flex; width: 0; overflow: hidden; color: var(--text3); cursor: grab; transition: width 0.15s ease; }
+  .admin-cat[data-drop] { box-shadow: inset 0 0 0 2px var(--accent); }
+  .admin-cat[data-dragging] { opacity: 0.4; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .admin-cat[draggable="true"]:hover .admin-cat-grip { width: 14px; }
+}
+
+/* Accueil desktop (HomeDesktop, ≥ 900 px) : colonne principale (héros du prochain
+   repas, aperçu de la semaine) et rail (à faire, foyer, saison). */
+.home-desk { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr); gap: 32px; align-items: start; max-width: 1280px; }
+.home-hero { background: var(--float-surface); box-shadow: var(--float-shadow); border-radius: 22px; overflow: hidden; }
+.home-hero-media { position: relative; display: block; width: 100%; aspect-ratio: 16 / 8; max-height: 340px; padding: 0; border: none; background: var(--surface2); cursor: pointer; overflow: hidden; }
+.home-hero-zoom { position: absolute; inset: 0; display: block; transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+.home-hero-slot {
+  position: absolute; top: 14px; left: 14px; display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 13px 7px 11px; border-radius: 999px; font-size: 13px; font-weight: 650;
+  background: var(--float-surface); color: var(--text);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.22);
+}
+.home-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; padding: 5px; }
+.home-week-day {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px 12px;
+  border: none; border-radius: 15px; background: transparent; cursor: pointer; color: var(--text2);
+}
+.home-week-name { font-size: 12px; font-weight: 600; text-transform: capitalize; color: var(--text3); }
+.home-week-num { font-family: var(--ff-display); font-size: 20px; font-weight: 700; line-height: 1.1; color: var(--text); font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+.home-week-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface3); }
+.home-week-dot[data-filled] { background: var(--accent); }
+.home-week-day[data-today] { background: rgba(var(--accent-rgb), 0.1); }
+.home-week-day[data-today] .home-week-name { color: var(--accent); }
+.home-week-day[data-past] { opacity: 0.45; }
+@media (hover: hover) and (pointer: fine) {
+  .home-hero-media:hover .home-hero-zoom { transform: scale(1.04); }
 }
 
 /* Lien vers la source (hero de la fiche) : au survol desktop, un trait fin se

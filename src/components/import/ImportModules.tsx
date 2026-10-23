@@ -52,8 +52,8 @@ export const TIPS: Record<ImportMode, { h: string; items: [string, string][] }> 
 
 const MODES: { key: ImportMode; label: string; icon: IconName | null }[] = [
   { key: "lien", label: "Lien", icon: "link" },
-  { key: "photo", label: "Photo", icon: "photo" },
   { key: "texte", label: "Texte", icon: null },
+  { key: "photo", label: "Photo", icon: "photo" },
   { key: "pdf", label: "PDF", icon: "pdf" },
 ];
 
@@ -66,7 +66,7 @@ function TextGlyph() {
   );
 }
 
-/** Contrôle segmenté Lien / Photo / Texte, pouce glissant animé (index du mode). */
+/** Contrôle segmenté Lien / Texte / Photo / PDF, pouce glissant animé (index du mode). */
 export function Segmented({ mode, onSelect }: { mode: ImportMode; onSelect: (mode: ImportMode) => void }) {
   const i = MODES.findIndex(m => m.key === mode);
   return (

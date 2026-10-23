@@ -80,7 +80,7 @@ export function IngredientDetail({ ingredient, ingredientDB, categories = DEFAUL
     );
   }
 
-  const CARD = { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 18, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" };
+  const CARD = { background: "var(--float-surface)", border: "none", borderRadius: 18, boxShadow: "var(--float-shadow)" };
   const up = (patch: Partial<IngredientDbItem>) => setDraft(p => p && { ...p, ...patch });
   const setNut = (k: NutrientKey, v: string) => up({ nutrition: { ...(draft?.nutrition || {}), isVegetable: isFruitVeg(draft?.category), [k]: v === "" ? undefined : +v } });
   const save = () => { if (draft) onSave?.(draft); setDraft(null); };

@@ -8,11 +8,13 @@ interface TagInputProps {
   placeholder?: string;
   inputId?: string;
   commitOnBlur?: boolean;
+  /** Sans bordure (le fond suffit), comme les champs `.field-bare`. */
+  bare?: boolean;
   dedupeInsensitive?: boolean;
 }
 
 // ─── TAG INPUT ────────────────────────────────────────────────────────────────
-export function TagInput({ tags, onChange, allTags, label = "Tags", placeholder = "Végétarien, Rapide…", inputId = "tag-input-field", commitOnBlur = false, dedupeInsensitive = false }: TagInputProps) {
+export function TagInput({ tags, onChange, allTags, label = "Tags", placeholder = "Végétarien, Rapide…", inputId = "tag-input-field", commitOnBlur = false, dedupeInsensitive = false, bare = false }: TagInputProps) {
   const [input, setInput] = useState("");
   const [focused, setFocused] = useState(false);
   const inputRef = useRef("");
@@ -35,7 +37,7 @@ export function TagInput({ tags, onChange, allTags, label = "Tags", placeholder 
   return (
     <div>
       {label ? <div className="field-label">{label}</div> : null}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "8px 10px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", minHeight: 42, cursor: "text" }}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "8px 10px", background: "var(--surface2)", border: bare ? "none" : "1px solid var(--border)", borderRadius: "var(--radius-sm)", minHeight: 42, cursor: "text" }}
         onClick={() => document.getElementById(inputId)?.focus()}>
         {tags.map(t => (
           <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "rgba(var(--accent-rgb),0.15)", color: "var(--accent)" }}>

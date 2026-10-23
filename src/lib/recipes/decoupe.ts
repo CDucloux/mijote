@@ -22,7 +22,7 @@ import { normTech, type TechniqueEntry, type TechniqueIndex } from "@/lib/recipe
  *  ordre sert aussi de tri par défaut des postes. À garder synchronisé avec le
  *  prompt d'import (`functions/prompts/recipeExtract.md`). */
 export const FORMES: readonly FormeDecoupe[] = [
-  "rape", "emince", "cisele", "hache", "chiffonade",
+  "rape", "emince", "cisele", "hache", "concasse", "chiffonade",
   "des", "brunoise", "mirepoix", "paysanne", "julienne", "batonnet",
   "lamelle", "rondelle", "troncon", "quartier",
 ];
@@ -45,6 +45,7 @@ export const FORME_LABEL: Record<FormeDecoupe, string> = {
   quartier: "Tailler en quartiers",
   rape: "Râper",
   hache: "Hacher",
+  concasse: "Concasser",
   chiffonade: "Ciseler en chiffonade",
 };
 
@@ -65,6 +66,7 @@ const FORME_GESTE: Record<FormeDecoupe, string[]> = {
   quartier: ["tailler en quartiers", "quartiers"],
   rape: ["râper"],
   hache: ["hacher"],
+  concasse: ["concasser"],
   chiffonade: ["ciseler en chiffonade", "chiffonade"],
 };
 
@@ -104,6 +106,7 @@ const FORME_ALIASES: Record<string, FormeDecoupe> = (() => {
     quartier: ["quartier", "quartiers", "en quartiers"],
     rape: ["râper", "râpé", "râpés", "râpée", "en fils"],
     hache: ["hacher", "haché", "hachés", "haché menu", "en hachis"],
+    concasse: ["concasser", "concassé", "concassés", "concassée", "concassées", "grossièrement haché", "grossièrement hachés", "haché grossièrement", "hachés grossièrement"],
     chiffonade: ["chiffonade", "en chiffonade"],
   };
   const map: Record<string, FormeDecoupe> = {};
@@ -257,7 +260,7 @@ export function buildPostesDecoupe(
  *  courant (« dés » → « des ») qui déclencheraient de faux positifs. */
 const CUT_MARKERS: readonly string[] = [
   "couper", "tailler", "detailler", "decouper", "trancher",
-  "emincer", "eminc", "ciseler", "cisel", "hacher", "hach", "raper", "rape",
+  "emincer", "eminc", "ciseler", "cisel", "hacher", "hach", "concass", "raper", "rape",
   "rondelle", "lamelle", "tranche", "julienne", "brunoise", "mirepoix",
   "paysanne", "chiffonade", "batonnet", "troncon", "quartier",
 ];

@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.77.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.78.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -61,7 +61,7 @@ toujours avec vous.
   PDF** : extraction,
   structuration et liaison des ingrédients / ustensiles par Claude, qui
   repère le **chef** qui signe la recette, **extrait aussi la découpe de chaque ingrédient** (émincé, ciselé, en dés,
-  en lamelles, en rondelles, râpé…) pour alimenter le poste « Découpe » du
+  en lamelles, en rondelles, concassé, râpé…) pour alimenter le poste « Découpe » du
   mode cuisine (éditable ensuite dans l'éditeur via une feuille guidée :
   découpes usuelles de l'ingrédient d'abord, formes rangées par résultat avec
   pictogramme, résultat attendu et taille en repères concrets ; jamais proposée pour alcools, huiles,
@@ -95,6 +95,10 @@ toujours avec vous.
   certains ingrédients (frais / surgelé…), en recette et en courses ; précautions
   d'utilisation éditoriales des ustensiles (chaleur, revêtement…) sur leur fiche et
   en contexte de recette, la puissance conseillée dessinée en bouton de plaque à 6 crans.
+- 🏠 **Accueil** : sur desktop, deux colonnes : le prochain repas en grand (photo,
+  services du repas, accès direct au mode cuisine) et l'aperçu de la semaine
+  créneau par créneau ; à côté, l'ingrédient du moment, les courses et le stock à
+  suivre, le foyer. Sur mobile, une colonne unique.
 - 📅 **Planning repas** : semainier glisser-déposer, menu contextuel par repas
   (ouvrir, replanifier vers une autre semaine, retirer), **générateur de semaine**
   (styles facile / équilibré / aventureux, repas composés, affinité de saison,

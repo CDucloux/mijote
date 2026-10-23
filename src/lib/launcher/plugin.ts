@@ -62,18 +62,29 @@ export async function takeWidgetChecks(): Promise<WidgetCheck[]> {
 }
 
 /**
- * Lien copié dans le presse-papiers, s'il y en a un : presse-papiers système en
- * natif, API web ailleurs. Ne lève jamais : un refus d'accès vaut « rien de copié ».
+ * Texte du presse-papiers : presse-papiers système en natif (lu directement, sans
+ * la bulle « Coller » que la WebView impose à `navigator.clipboard.readText`),
+ * API web ailleurs (le navigateur peut alors demander confirmation, c'est hors de
+ * notre main). Ne lève jamais : un refus d'accès vaut « rien de copié ».
  *
- * @returns Le premier lien http(s) copié, ou `null`.
+ * @returns Le texte copié, `""` si vide, illisible ou refusé.
  */
-export async function readClipboardLink(): Promise<string | null> {
+export async function readClipboardText(): Promise<string> {
   try {
     const text = Capacitor.isNativePlatform()
       ? (await Launcher.clipboardText()).text
       : await navigator.clipboard?.readText?.();
-    return firstHttpUrl(text);
+    return typeof text === "string" ? text : "";
   } catch {
-    return null;
+    return "";
   }
+}
+
+/**
+ * Lien copié dans le presse-papiers, s'il y en a un (cf. `readClipboardText`).
+ *
+ * @returns Le premier lien http(s) copié, ou `null`.
+ */
+export async function readClipboardLink(): Promise<string | null> {
+  return firstHttpUrl(await readClipboardText());
 }

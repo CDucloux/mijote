@@ -83,7 +83,7 @@ function DraggableStepBase({ step, index, total, ingredients, utensils, recipes,
   return (
     <div
       {...rowProps}
-      style={{ background: "var(--surface)", borderRadius: 18, padding: 16, border: `1px solid ${aimed ? "var(--accent)" : "var(--border)"}`, boxShadow: aimed ? "0 8px 24px -12px rgba(var(--accent-rgb),0.5)" : "0 1px 2px rgba(0,0,0,0.04)", transition: "border-color 0.15s, box-shadow 0.2s", ...(dragging ? LIFTED_ROW_STYLE : null) }}
+      style={{ background: "var(--float-surface)", borderRadius: 18, padding: 16, border: "none", boxShadow: aimed ? "inset 0 0 0 1.5px var(--accent), 0 8px 24px -12px rgba(var(--accent-rgb),0.5)" : "var(--float-shadow)", transition: "box-shadow 0.2s", ...(dragging ? LIFTED_ROW_STYLE : null) }}
     >
       {/* En-tête : poignée + numéro (badge dégradé) · section + supprimer */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 12 }}>
@@ -191,7 +191,7 @@ function DraggableStepBase({ step, index, total, ingredients, utensils, recipes,
 
           {/* Réglages des appareils liés à l'étape (four, blender…) */}
           {applianceUts.map(u => (
-            <div key={u.id} style={{ marginTop: 12, background: "var(--surface2)", borderRadius: 14, padding: 14, border: "1px solid var(--border)" }}>
+            <div key={u.id} style={{ marginTop: 12, background: "var(--surface2)", borderRadius: 14, padding: 14 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <UtImage src={utImg(u)} alt={u.name} size={22} border />
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text2)" }}>{u.name}</span>

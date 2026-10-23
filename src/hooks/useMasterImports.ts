@@ -26,7 +26,7 @@ const downloadText = (filename: string, text: string, type: string) => {
   exportTextFile(filename, text, type).catch(e => reportError(e, { action: "export", filename }));
 };
 
-/** Actions d'import / export d'une base master, branchées sur `BaseImportExport`. */
+/** Actions d'import / export d'une base master, branchées sur `BaseMenu`. */
 export interface BaseTransfer {
   onExportYaml: () => void;
   onExportMarkdown: () => void;

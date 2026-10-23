@@ -30,7 +30,7 @@ function SeasonFrieze({ months }: { months: number[] }) {
         <span style={{ fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text3)", fontWeight: 600 }}>Sa saison</span>
         <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>{count} mois / an</span>
       </div>
-      <SeasonBar months={months} from={AMBER} to={AMBER} node={AMBER} glow={`rgba(${AMBER_RGB}, 0.5)`} />
+      <SeasonBar months={months} />
     </div>
   );
 }
@@ -63,13 +63,7 @@ export function SpotlightIngredient({ ingredient, onOpenIngredient, onExplore }:
 
   return (
     <section style={{ marginBottom: 22 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 2px 12px" }}>
-        {/* Pousse / jeune plant : distinct de l'étoile de « Découvrir », évoque le produit frais */}
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M12 20v-7" />
-          <path d="M12 13C12 9.7 9.5 8 6 8c0 3.5 2.5 5 6 5Z" />
-          <path d="M12 11c0-3 2.5-4.6 6-4.6 0 3.4-2.5 4.6-6 4.6Z" />
-        </svg>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, margin: "0 2px 12px" }}>
         <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>L'ingrédient du moment</h3>
         <span style={{ marginLeft: "auto", fontSize: 11.5, color: "var(--text3)" }}>chaque semaine</span>
       </div>
@@ -107,10 +101,10 @@ export function SpotlightIngredient({ ingredient, onOpenIngredient, onExplore }:
 
         {onExplore && (
           <>
-            <div style={{ height: 1, background: "var(--border)", margin: "14px 0 12px" }} />
+            <div style={{ height: 14 }} />
             {/* Rebond vers « Découvrir » pré-semé sur ce produit : la saisonnalité
                 (tableau de bord) mène à l'exploration (communauté) d'un seul geste. */}
-            <button onClick={() => onExplore(ingredient)} className="pressable spotlight-explore" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: `rgba(${AMBER_RGB}, 0.12)`, color: AMBER, border: `1px solid rgba(${AMBER_RGB}, 0.32)`, fontWeight: 600, fontSize: 13.5, borderRadius: 999, padding: "10px 16px", cursor: "pointer" }}>
+            <button onClick={() => onExplore(ingredient)} className="pressable spotlight-explore" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", background: `rgba(${AMBER_RGB}, 0.12)`, color: AMBER, border: "none", fontWeight: 600, fontSize: 13.5, borderRadius: 999, padding: "10px 16px", cursor: "pointer" }}>
               <Icon name="sparkle" size={15} color={AMBER} />
               Découvrir des recettes avec cet ingrédient
               <span className="sx-chev" style={{ display: "inline-flex" }}><Icon name="forward" size={14} color={AMBER} /></span>
