@@ -4034,8 +4034,10 @@ html.light .sheet-sticky-head::after {
   animation: loadingFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
-/* La gousse du logo en grand : le corps respire, les trois nervures se tracent
-   puis s'effacent en boucle (pathLength="1" sur les nervures, cf. LogoPod). */
+/* La gousse du logo en grand : le corps respire, les trois nervures s'effacent
+   puis se retracent en boucle (pathLength="1" sur les nervures, cf. LogoPod). La
+   boucle PART du logo complet : sur un réseau rapide, l'écran ne dure qu'un
+   instant et doit montrer la gousse entière, pas des nervures encore à tracer. */
 .loading-mark {
   width: clamp(84px, 11vw, 120px);
   height: auto;
@@ -4046,7 +4048,7 @@ html.light .sheet-sticky-head::after {
 }
 .loading-mark g path {
   stroke-dasharray: 1;
-  stroke-dashoffset: 1;
+  stroke-dashoffset: 0;
   animation: loadingDraw 2.8s cubic-bezier(0.55, 0.1, 0.3, 1) infinite;
 }
 .loading-mark g path:nth-child(2) { animation-delay: 0.18s; }
@@ -4083,9 +4085,10 @@ html.light .sheet-sticky-head::after {
 }
 
 @keyframes loadingDraw {
-  0% { stroke-dashoffset: 1; }
-  45%, 80% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -1; }
+  0%, 30% { stroke-dashoffset: 0; }
+  55% { stroke-dashoffset: -1; }
+  55.01% { stroke-dashoffset: 1; }
+  85%, 100% { stroke-dashoffset: 0; }
 }
 @keyframes loadingBreathe {
   0%, 100% { transform: scale(1); }
@@ -4096,7 +4099,7 @@ html.light .sheet-sticky-head::after {
 }
 @media (prefers-reduced-motion: reduce) {
   .loading-mark > path, .loading-line::after { animation: none; }
-  .loading-mark g path { animation: none; stroke-dashoffset: 0; }
+  .loading-mark g path { animation: none; }
   .loading-line::after { left: 30%; }
 }
 
