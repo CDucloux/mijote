@@ -54,7 +54,7 @@ html.light, .light {
   .step-link-pill, .step-remove-pill, .classement-pill, .filter-chip, .empty-clear-link, .notif-row--nav, .notif-more,
   .toolbar-pill:not([data-active="1"]), .editor-add, .legal-row, .field-picker, .dash-card,
   .yaml-drop:not([data-over]), .photo-drop:not([data-busy]), .load-more:not([aria-busy="true"]),
-  .ciq-open, .section-cut-cancel, .imp-pdfcard .rm, .nr-strip button, .lp-theme, .lp-next,
+  .ciq-open, .section-cut-cancel, .imp-pdfcard .rm, .nr-strip button, .lp-theme,
   .btn-manage, .timer-btn, .search-clear-btn, .profile-page button,
   /* teinté */
   .stepper-btn, .save-carnet-btn, .timer-btn-accent, .ing-hover,
@@ -139,7 +139,7 @@ html.light, .light {
    inline). Spécificité nulle : un `:focus-visible` posé ailleurs garde la main. ── */
 :where(
   .hover-ring, .ut-pill-clickable, .timer-btn,
-  .field-picker, .lp-next,
+  .field-picker,
   .ing-hover, .save-carnet-btn, .convert-reset
 ) {
   outline: 1px solid color-mix(in srgb, var(--ring-color, var(--hover-ring)) calc(var(--veil-on, 0) * 100%), transparent);

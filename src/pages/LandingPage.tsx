@@ -1,4 +1,4 @@
-import { useEffect, useRef, type MouseEvent } from "react";
+import { useRef, type MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/ui/Icon.jsx";
 import { ThemeToggle } from "../components/ui/ThemeToggle.jsx";
@@ -53,8 +53,8 @@ export function LandingPage({ user, isDark, toggleTheme }: LandingPageProps) {
   // Overscroll élastique en bas de page (mobile), comme dans l'app. Désactivé sur
   // desktop, où c'est la fenêtre qui défile (cf. .lp-root en hauteur de contenu).
   // Le conteneur scrollable est .lp-root (partagé avec rootRef via setRoot) ; seul
-  // le contenu défilant est étiré (contentRef), la barre et le chevron fixes restent
-  // hors de la transformation pour ne pas casser leur `position: fixed`.
+  // le contenu défilant est étiré (contentRef), la barre fixe reste hors de la
+  // transformation pour ne pas casser son `position: fixed`.
   const isDesktop = useIsDesktop();
   const { scrollRef, contentRef } = useElasticScroll<HTMLDivElement>({ disabled: isDesktop });
   const setRoot = (el: HTMLDivElement | null) => { rootRef.current = el; scrollRef.current = el; };
@@ -71,36 +71,6 @@ export function LandingPage({ user, isDark, toggleTheme }: LandingPageProps) {
     rootRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-  // Chevron « suivant » : un SEUL bouton flottant (position fixe), toujours au même
-  // endroit à l'écran (les slides n'ont pas exactement la même hauteur, un bouton
-  // par slide tombait donc à des positions légèrement différentes). Il descend vers
-  // la première section dont le haut est encore sous le haut du viewport.
-  const nextRef = useRef<HTMLButtonElement>(null);
-  const goNext = () => {
-    const secs = rootRef.current?.querySelectorAll<HTMLElement>("section.lp-slide");
-    if (!secs) return;
-    for (const s of secs) {
-      if (s.getBoundingClientRect().top > 8) {
-        s.scrollIntoView({ behavior: "smooth", block: "start" });
-        return;
-      }
-    }
-  };
-  // Masque le chevron une fois la dernière slide atteinte (getBoundingClientRect
-  // suffit : indépendant du conteneur de défilement, window ou .lp-root).
-  useEffect(() => {
-    const secs = rootRef.current?.querySelectorAll("section.lp-slide");
-    const last = secs && secs[secs.length - 1];
-    const btn = nextRef.current;
-    if (!last || !btn) return;
-    const io = new IntersectionObserver(
-      ([entry]) => btn.classList.toggle("lp-next--hidden", entry.isIntersecting),
-      { threshold: 0.4 },
-    );
-    io.observe(last);
-    return () => io.disconnect();
-  }, []);
-
   // Fonctions de rendu (et non composants déclarés au render) : CTA et marque
   // apparaissent plusieurs fois. On factorise sans remonter de sous-composant qui
   // réinitialiserait un état à chaque render.
@@ -136,14 +106,8 @@ export function LandingPage({ user, isDark, toggleTheme }: LandingPageProps) {
         </div>
       </header>
 
-      {/* Chevron « suivant » unique et flottant : position fixe, donc toujours au
-          même endroit à l'écran quelle que soit la hauteur de la slide courante. */}
-      <button ref={nextRef} className="lp-next" onClick={goNext} aria-label="Section suivante">
-        <Icon name="chevronDown" size={20} />
-      </button>
-
-      {/* Contenu défilant (étiré par l'overscroll élastique). La barre et le chevron
-          fixes restent hors de ce bloc pour garder leur `position: fixed` intacte. */}
+      {/* Contenu défilant (étiré par l'overscroll élastique). La barre fixe reste
+          hors de ce bloc pour garder son `position: fixed` intacte. */}
       <div ref={contentRef}>
       {/* 1. Coup de poing */}
       <section className="lp-wrap lp-hero lp-slide">
@@ -226,7 +190,6 @@ export function LandingPage({ user, isDark, toggleTheme }: LandingPageProps) {
           <div className="lp-split__media">
             <div className="lp-dock">
               <PhoneFrame label="L'éditeur de recette de Cardamome : les champs se remplissent"><SceneEditor /></PhoneFrame>
-              <span className="lp-dock__bar" aria-hidden="true" />
             </div>
           </div>
         </div>

@@ -298,40 +298,6 @@
   justify-content: center;
   position: relative;
 }
-/* Chevron de descente : un SEUL bouton, flottant (position fixe) au bas-centre du
-   viewport, donc toujours au même endroit quelle que soit la hauteur de la slide.
-   Le nudge vit sur l'icône pour que le centrage (translateX) du bouton reste
-   stable. Se masque en douceur sur la dernière slide (classe --hidden). */
-.lp-next {
-  position: fixed;
-  left: 50%;
-  bottom: clamp(16px, 3.5vh, 30px);
-  transform: translateX(-50%);
-  width: 44px;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface2) 90%, transparent);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  color: var(--text2);
-  cursor: pointer;
-  z-index: 30;
-  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, opacity 0.3s ease;
-}
-.lp-next svg { animation: lpNudge 1.9s ease-in-out infinite; }
-.lp-next--hidden { opacity: 0; pointer-events: none; }
-@media (hover: hover) and (pointer: fine) {
-  .lp-next:hover { color: var(--text); }
-}
-@keyframes lpNudge {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(4px); }
-}
-@media (prefers-reduced-motion: reduce) { .lp-next svg { animation: none; } }
 
 /* Section à deux colonnes : texte + maquette d'app, en asymétrie. */
 .lp-split {
@@ -700,8 +666,6 @@
     min-height: 0;
     justify-content: flex-start;
   }
-  /* La flèche « suivant » n'a de sens que quand une slide fait pile un écran. */
-  .lp-next { display: none; }
 
   /* La scène (colonne de gauche/droite en desktop) passe TOUJOURS sous le texte,
      quel que soit son ordre dans le DOM : certaines slides placent la scène avant
@@ -778,9 +742,7 @@
   flex-shrink: 0;
   border-radius: 32px;
   background: var(--surface2);
-  border: 1px solid var(--border);
   padding: 8px;
-  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 .lp-device__notch {
   position: absolute;
@@ -803,30 +765,19 @@
   border: 1px solid var(--border);
 }
 
-/* ── Socle : téléphone tronqué qui « sort » d'une barre ─────────────────────────
+/* ── Fondu : téléphone tronqué qui s'efface dans la page ───────────────────────
    On ne montre que le haut du téléphone (le contenu de l'éditeur se termine à une
-   hauteur fixe, ~382px, car il est mis en page en px) : une hauteur bornée +
-   overflow:hidden masquent le bas vide, et une barre ferme la coupe. Évite un
-   téléphone trop haut sans le redimensionner (ce qui l'écraserait). */
+   hauteur fixe, ~382px, car il est mis en page en px) : une hauteur bornée coupe
+   le bas vide, et un masque l'efface dans le fond. Ni ombre ni socle, rien ne
+   vient dessiner la coupe. */
 .lp-dock {
-  position: relative;
   width: -moz-fit-content;
   width: fit-content;
-  height: 434px;
-  padding: 10px 24px 0;
+  height: 420px;
+  padding-top: 10px;
   overflow: hidden;
-}
-.lp-dock__bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 34px;
-  background: linear-gradient(180deg, var(--surface3), var(--surface2));
-  border-top: 1px solid var(--border);
-  border-radius: 16px 16px 0 0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 -18px 30px -20px rgba(0, 0, 0, 0.55);
-  z-index: 3;
+  -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent);
+  mask-image: linear-gradient(180deg, #000 72%, transparent);
 }
 
 .lp-scene { display: flex; flex-direction: column; font-family: var(--ff-body); }

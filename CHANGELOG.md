@@ -1,5 +1,19 @@
 # Changelog – Cardamome
 
+## v4.79.0 – Cardamome · Écrans d'attente repensés
+
+### Chargement
+- **Écran de chargement desktop et web** : la gousse du logo en grand, dont les nervures se tracent puis s'effacent en boucle, le nom en grand serif et une fine barre de progression, à la place de la petite casserole dans son anneau. Affiché au moins 1,5 s à l'ouverture pour laisser voir le premier tracé ; l'app installée garde son splash.
+- **Import intelligent** : « Ta recette prend forme », les cinq phases de l'extraction se cochent une à une sous une barre de progression. Fin de « On mijote » (l'ancien nom), de la cocotte et de la consigne de garder la fenêtre ouverte.
+
+### Landing
+- **Téléphone de l'éditeur** : il s'efface dans la page, sans ombre coupée en rectangle gris ni socle en dégradé.
+- Le « ? » du frigo ne passe plus sous la barre de navigation, et le chevron flottant « section suivante » est retiré.
+
+### Outillage
+- **Déploiement des Cloud Functions** : `npm run deploy` relève le délai d'analyse à 60 s, fin du « Timeout after 10000 » au premier déploiement.
+- **Lint** : les sorties générées des Functions (`functions/lib`, `functions/docs`) sont ignorées.
+
 ## v4.78.0 – Cardamome · Accueil en deux colonnes, console repensée
 
 ### Accueil

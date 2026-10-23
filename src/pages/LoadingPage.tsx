@@ -1,4 +1,4 @@
-import { EmptyArt } from "../components/ui/EmptyArt.jsx";
+import { LogoPod } from "../components/ui/LogoPod.jsx";
 
 // Coquille « app » (mobile installé / Capacitor) : le splash d'ouverture (gousse
 // qui pulse, cf. #boot-splash dans index.html) n'est peint que là. On lit le même
@@ -15,7 +15,7 @@ export function LoadingPage({ isDark }: LoadingPageProps) {
   // Sur la coquille app, on PROLONGE le splash d'ouverture (même gousse qui pulse)
   // plutôt que d'introduire un SECOND système de chargement (marmite + label) : un
   // seul indicateur perçu, continu du boot jusqu'à l'app. Sur web / desktop, pas de
-  // splash d'ouverture, donc on garde l'écran de chargement complet.
+  // splash d'ouverture : la gousse du logo en grand, qui se dessine.
   if (APP_SHELL) {
     return (
       <div className={`loading-root loading-root--boot${isDark ? "" : " light"}`}>
@@ -29,14 +29,10 @@ export function LoadingPage({ isDark }: LoadingPageProps) {
   }
   return (
     <div className={`loading-root${isDark ? "" : " light"}`}>
-      <div className="loading-card">
-        <div className="loading-logo">Cardam<span className="oh">o</span>me<span>·</span></div>
-        <div className="loading-spinner-wrap">
-          <div className="loading-spinner-track" />
-          <div className="loading-spinner" />
-          <div className="loading-art"><EmptyArt name="casserole" size={44} /></div>
-        </div>
-        <div className="loading-label">Connexion en cours…</div>
+      <div className="loading-card" role="status" aria-label="Connexion en cours">
+        <LogoPod size={120} className="loading-mark" />
+        <div className="loading-word" aria-hidden="true">Cardam<span>o</span>me<span>·</span></div>
+        <div className="loading-line" aria-hidden="true" />
       </div>
     </div>
   );

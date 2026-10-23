@@ -9,7 +9,8 @@ export default defineConfig([
   // `dist` : build web. `android` : coquille native Capacitor (projet Gradle +
   // bundle web généré par `cap sync` dans assets/public/) : ce n'est pas du code
   // source de l'app, eslint n'a rien à y faire.
-  globalIgnores(['dist', 'android']),
+  // `functions/lib` et `functions/docs` : sorties générées (tsc au predeploy, TypeDoc).
+  globalIgnores(['dist', 'android', 'functions/lib', 'functions/docs']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
