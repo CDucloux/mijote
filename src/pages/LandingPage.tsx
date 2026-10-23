@@ -190,7 +190,6 @@ export function LandingPage({ user, isDark, toggleTheme }: LandingPageProps) {
           <div className="lp-split__media">
             <div className="lp-dock">
               <PhoneFrame label="L'éditeur de recette de Cardamome : les champs se remplissent"><SceneEditor /></PhoneFrame>
-              <span className="lp-dock__bar" aria-hidden="true" />
             </div>
           </div>
         </div>
