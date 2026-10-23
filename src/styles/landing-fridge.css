@@ -56,10 +56,11 @@
 }
 
 /* Le « ? » : un trait d'encre ambre qui se trace une fois, puis oscille à peine.
-   Pas de halo : il tient par sa couleur et son épaisseur. */
+   Pas de halo : il tient par sa couleur et son épaisseur. Posé à hauteur du haut
+   du frigo, jamais au-dessus : sinon il file sous la barre de navigation fixe. */
 .lp-fridge__q {
   position: absolute;
-  top: -9%;
+  top: 2%;
   right: -22%;
   width: clamp(44px, 8vw, 62px);
   overflow: visible;
