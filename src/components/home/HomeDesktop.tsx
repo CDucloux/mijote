@@ -192,7 +192,10 @@ export function HomeDesktop({ loading, isEmpty, isCalm, hero, rest, week, shoppi
             </div>
           </section>
         )}
-        <HouseholdSection />
+        <div>
+          <SectionTitle>Mon foyer</SectionTitle>
+          <HouseholdSection />
+        </div>
       </aside>
     </div>
   );
