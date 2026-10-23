@@ -1,7 +1,8 @@
 /**
  * Branche le mode mains libres sur le pas à pas : chaque page est lue à voix
  * haute en arrivant dessus, et les commandes vocales (« suivant », « précédent »,
- * « mise en place », « répète », « minuteur », « pause », « reprends », « stop ») pilotent la
+ * « mise en place », « répète », « astuce », « minuteur », « pause », « reprends »,
+ * « stop », « recette terminée ») pilotent la
  * navigation et les minuteurs.
  *
  * @module useCookVoice
@@ -10,7 +11,7 @@ import { useEffect, useRef } from "react";
 import { useVoiceControl, type UseVoiceControlResult } from "./useVoiceControl.js";
 import type { StepDuration } from "@/lib/planning/stepTimers.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
-import type { TimerAction } from "@/lib/cookSession/voiceCommands.js";
+import { tipSpeech, type TimerAction } from "@/lib/cookSession/voiceCommands.js";
 
 const TIMER_DONE: Record<TimerAction, string> = { pause: "en pause", resume: "repris", stop: "arrêté" };
 const NO_TIMER: Record<TimerAction, string> = { pause: "Aucun minuteur en marche.", resume: "Aucun minuteur en pause.", stop: "Aucun minuteur à arrêter." };
@@ -23,6 +24,10 @@ export interface UseCookVoiceOptions {
   pageKey: string | number;
   onNext: () => void;
   onPrev: () => void;
+  /** Astuce de la page courante, lue sur « astuce ». */
+  tip?: string | null;
+  /** Termine la recette (« recette terminée »). */
+  onFinish: () => void;
   /** Retour à la mise en place ; rend `false` si la recette n'en a pas. */
   onOverview: () => boolean;
   /** Lance un minuteur (durée dite, sinon celle de l'étape) ; rend la durée lancée, ou `null`. */
@@ -38,9 +43,10 @@ export interface UseCookVoiceOptions {
  * @param options - Page courante, actions de navigation et de minuteur, cf. {@link UseCookVoiceOptions}.
  * @returns L'état du mode et sa bascule, cf. {@link UseVoiceControlResult}.
  */
-export function useCookVoice({ speech, pageKey, onNext, onPrev, onOverview, onTimer, onTimerAction, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
+export function useCookVoice({ speech, pageKey, tip, onFinish, onNext, onPrev, onOverview, onTimer, onTimerAction, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
   const speechRef = useRef(speech);
-  useEffect(() => { speechRef.current = speech; });
+  const tipRef = useRef(tip);
+  useEffect(() => { speechRef.current = speech; tipRef.current = tip; });
 
   const voice = useVoiceControl({
     paused,
@@ -49,6 +55,11 @@ export function useCookVoice({ speech, pageKey, onNext, onPrev, onOverview, onTi
       if (command.kind === "next") onNext();
       else if (command.kind === "prev") onPrev();
       else if (command.kind === "repeat") voice.speak(speechRef.current);
+      else if (command.kind === "tip") voice.speak(tipSpeech(tipRef.current));
+      else if (command.kind === "finish") {
+        voice.speak("Recette terminée. Bon appétit !");
+        onFinish();
+      }
       else if (command.kind === "overview") {
         if (!onOverview()) voice.speak("Pas de mise en place pour cette recette.");
       }

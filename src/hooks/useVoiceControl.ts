@@ -211,10 +211,9 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
 
   useEffect(() => {
     if (!active) return;
-    if (paused) {
-      recognitionRef.current?.abort();
-      window.speechSynthesis.cancel();
-    } else listen();
+    // En pause, la lecture en cours se termine (« Recette terminée. Bon appétit ! »).
+    if (paused) recognitionRef.current?.abort();
+    else listen();
   }, [active, paused, listen]);
 
   // Dernière phrase entendue, affichée un court instant (l'utilisateur voit ce qui a été compris).

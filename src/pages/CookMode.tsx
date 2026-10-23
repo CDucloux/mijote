@@ -4,7 +4,7 @@ import { Icon } from "../components/ui/Icon.jsx";
 import { parseDurations } from "@/lib/planning/stepTimers.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
-import { buildPostesDecoupe, findDecoupeStepIndex, sortPostesByStep } from "@/lib/recipes/decoupe.js";
+import { buildPostesDecoupe, findDecoupeStepIndex, posteLabel, sortPostesByStep } from "@/lib/recipes/decoupe.js";
 import { createIngredientResolver, resolveLineEntry } from "@/lib/food/nameMatcher.js";
 import { resolveUsagePrecaution } from "@/lib/utensils/usagePrecaution.js";
 import { findUtensilEntry } from "@/lib/utensils/utensilLookup.js";
@@ -292,12 +292,14 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
   // Mains libres : la page est lue en arrivant dessus, la voix pilote la navigation
   // et lance le minuteur (durée dite, sinon la première de l'étape).
-  const pageSpeech = cookPageSpeech(isOverview ? { kind: "overview", ingredients: overviewIngs.length, utensils: overviewUts.length }
+  const pageSpeech = cookPageSpeech(isOverview ? { kind: "overview", ingredients: overviewIngs.length, utensils: overviewUts.length, cuts: postesDecoupe.map(posteLabel) }
     : isBases ? { kind: "bases", count: pendingComponents.length }
     : { kind: "step", number: realIdx + 1, total: realStepCount, text: step?.text ?? "" });
   const voice = useCookVoice({
     speech: pageSpeech,
     pageKey: stepIdx,
+    tip: step?.tip,
+    onFinish: finishCooking,
     onNext: () => (stepIdx < totalSteps - 1 ? goNext() : finishCooking()),
     onPrev: goPrev,
     onOverview: () => {

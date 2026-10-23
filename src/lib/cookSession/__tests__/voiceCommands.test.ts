@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, voiceTimerTarget } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget } from "@/lib/cookSession/voiceCommands.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
 
 describe("parseVoiceCommand", () => {
@@ -39,9 +39,15 @@ describe("parseVoiceCommand", () => {
 
 describe("cookPageSpeech", () => {
   it("annonce la mise en place", () => {
-    expect(cookPageSpeech({ kind: "overview", ingredients: 8, utensils: 1 })).toBe("Mise en place : 8 ingrédients et 1 ustensile.");
-    expect(cookPageSpeech({ kind: "overview", ingredients: 1, utensils: 0 })).toBe("Mise en place : 1 ingrédient.");
-    expect(cookPageSpeech({ kind: "overview", ingredients: 0, utensils: 0 })).toBe("Mise en place.");
+    expect(cookPageSpeech({ kind: "overview", ingredients: 8, utensils: 1, cuts: [] })).toBe("Mise en place : 8 ingrédients et 1 ustensile.");
+    expect(cookPageSpeech({ kind: "overview", ingredients: 1, utensils: 0, cuts: [] })).toBe("Mise en place : 1 ingrédient.");
+    expect(cookPageSpeech({ kind: "overview", ingredients: 0, utensils: 0, cuts: [] })).toBe("Mise en place.");
+  });
+  it("énumère les découpes de la mise en place", () => {
+    expect(cookPageSpeech({ kind: "overview", ingredients: 6, utensils: 2, cuts: ["Ciseler : 3 oignons", "Râper : 200 g carotte"] }))
+      .toBe("Mise en place : 6 ingrédients, 2 ustensiles et 2 découpes. À découper : ciseler 3 oignons et râper 200 g carotte.");
+    expect(cookPageSpeech({ kind: "overview", ingredients: 0, utensils: 0, cuts: ["Émincer : 1 poireau", "  "] }))
+      .toBe("Mise en place : 1 découpe. À découper : émincer 1 poireau.");
   });
   it("annonce les préparations de base", () => {
     expect(cookPageSpeech({ kind: "bases", count: 2 })).toBe("D'abord, 2 préparations de base à réaliser.");
@@ -137,5 +143,22 @@ describe("retour à la mise en place", () => {
   it("ignore l'expression quand elle est lue à voix haute", () => {
     const spoken = "Mise en place : 8 ingrédients et 2 ustensiles.";
     expect(parseVoiceTail("mise en place 8 ingrédients", 0, spoken).command).toBeNull();
+  });
+});
+
+describe("astuce et fin de recette", () => {
+  it("reconnaît « astuce » et « recette terminée »", () => {
+    expect(parseVoiceCommand("astuce")).toEqual({ kind: "tip" });
+    expect(parseVoiceCommand("une astuce ?")).toEqual({ kind: "tip" });
+    expect(parseVoiceCommand("recette terminée")).toEqual({ kind: "finish" });
+    expect(parseVoiceTail("voilà c'est bon recette terminée").command).toEqual({ kind: "finish" });
+  });
+  it("ne termine pas sur « terminé » seul", () => {
+    expect(parseVoiceCommand("terminé")).toBeNull();
+  });
+  it("lit l'astuce, ou dit qu'il n'y en a pas", () => {
+    expect(tipSpeech(" Ne pas trop remuer. ")).toBe("Astuce de l'étape : Ne pas trop remuer.");
+    expect(tipSpeech("")).toBe("Pas d'astuce pour cette étape.");
+    expect(tipSpeech(undefined)).toBe("Pas d'astuce pour cette étape.");
   });
 });

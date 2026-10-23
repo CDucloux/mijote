@@ -22,6 +22,8 @@ export type VoiceCommand =
   | { kind: "prev" }
   | { kind: "repeat" }
   | { kind: "overview" }
+  | { kind: "tip" }
+  | { kind: "finish" }
   | { kind: "timer"; duration?: StepDuration }
   | { kind: TimerAction };
 
@@ -32,11 +34,13 @@ export const MAX_COMMAND_WORDS = 6;
 // Une entrée peut tenir en plusieurs mots (« mise en place »). « arrête » est exclu :
 // trop fréquent dans une cuisine pour couper un minuteur.
 const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
+  ["finish", ["recette terminee", "recette finie", "recette fini"]],
   ["stop", ["stop", "stoppe"]],
   ["pause", ["pause"]],
   ["resume", ["reprends", "reprendre", "reprise"]],
   ["timer", ["minuteur", "minuterie", "chrono", "timer"]],
   ["overview", ["mise en place"]],
+  ["tip", ["astuce"]],
   ["repeat", ["repete", "repetes", "repeter", "relis", "relire", "redis", "redire"]],
   ["prev", ["precedent", "precedente", "retour", "reviens", "arriere"]],
   ["next", ["suivant", "suivante", "ensuite", "continue", "continuer"]],
@@ -122,11 +126,24 @@ export function voiceTimerTarget(timers: readonly CookTimer[], action: TimerActi
 
 /** Page du pas à pas à lire à voix haute (sous-ensemble de la page du mode cuisine). */
 export type SpokenPage =
-  | { kind: "overview"; ingredients: number; utensils: number }
+  | { kind: "overview"; ingredients: number; utensils: number; cuts: readonly string[] }
   | { kind: "bases"; count: number }
   | { kind: "step"; number: number; total: number; text: string };
 
 const plural = (n: number, word: string): string => `${n} ${word}${n > 1 ? "s" : ""}`;
+const listFr = (items: readonly string[]): string =>
+  items.length > 1 ? `${items.slice(0, -1).join(", ")} et ${items[items.length - 1]}` : items[0] ?? "";
+const lowerFirst = (text: string): string => text.charAt(0).toLowerCase() + text.slice(1);
+
+/**
+ * Réponse à « astuce » sur la page courante.
+ * @param tip - Astuce de l'étape, absente ou vide s'il n'y en a pas.
+ * @returns La phrase à lire.
+ */
+export function tipSpeech(tip: string | null | undefined): string {
+  const text = tip?.trim();
+  return text ? `Astuce de l'étape : ${text}` : "Pas d'astuce pour cette étape.";
+}
 
 /**
  * Texte lu à voix haute pour une page du pas à pas.
@@ -135,8 +152,15 @@ const plural = (n: number, word: string): string => `${n} ${word}${n > 1 ? "s" :
  */
 export function cookPageSpeech(page: SpokenPage): string {
   if (page.kind === "overview") {
-    const parts = [page.ingredients > 0 && plural(page.ingredients, "ingrédient"), page.utensils > 0 && plural(page.utensils, "ustensile")].filter(Boolean);
-    return parts.length ? `Mise en place : ${parts.join(" et ")}.` : "Mise en place.";
+    const cuts = page.cuts.map(cut => cut.trim()).filter(Boolean);
+    const parts = [
+      page.ingredients > 0 ? plural(page.ingredients, "ingrédient") : "",
+      page.utensils > 0 ? plural(page.utensils, "ustensile") : "",
+      cuts.length > 0 ? plural(cuts.length, "découpe") : "",
+    ].filter(Boolean);
+    const summary = parts.length ? `Mise en place : ${listFr(parts)}.` : "Mise en place.";
+    // « Ciseler : 3 oignons » se lit « ciseler 3 oignons ».
+    return cuts.length ? `${summary} À découper : ${listFr(cuts.map(cut => lowerFirst(cut.replace(" : ", " "))))}.` : summary;
   }
   if (page.kind === "bases") return `D'abord, ${plural(page.count, "préparation")} de base à réaliser.`;
   const text = page.text.trim();
