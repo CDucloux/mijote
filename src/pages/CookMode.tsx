@@ -371,7 +371,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
         {/* Main content */}
         <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
           {/* Desktop sidebar */}
-          <CookSidebar pages={pages} stepIdx={stepIdx} onGoTo={goTo} others={together.others} doneSteps={together.doneSteps} />
+          <CookSidebar pages={pages} stepIdx={stepIdx} onGoTo={goTo} others={together.others} />
 
           {/* Step content */}
           <div ref={stepScrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>

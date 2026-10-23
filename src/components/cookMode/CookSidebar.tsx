@@ -16,22 +16,22 @@ interface CookSidebarProps {
   onGoTo: (idx: number) => void;
   /** Cuisiner à deux : autres membres par clé de page. */
   others?: ReadonlyMap<string, CookParticipant[]>;
-  /** Cuisiner à deux : étapes (index réels) faites par l'un ou l'autre. */
-  doneSteps?: ReadonlySet<number>;
 }
 
 /**
  * Sommaire latéral du cook mode (desktop uniquement, masqué en mobile via CSS) :
  * une entrée par page (mise en place, bases, étapes) avec pastille d'état
  * (à venir / active / franchie). Cliquer une entrée y navigue (`onGoTo`). À deux,
- * une étape faite par l'autre compte comme franchie, et son avatar marque sa page.
+ * l'avatar de l'autre membre marque sa page.
  */
-export function CookSidebar({ pages, stepIdx, onGoTo, others, doneSteps }: CookSidebarProps) {
+export function CookSidebar({ pages, stepIdx, onGoTo, others }: CookSidebarProps) {
   return (
     <div className="cook-mode-sidebar" style={{ display: "none", width: 260, minWidth: 260, overflowY: "auto", borderRight: "1px solid var(--border)", padding: "12px 0" }}>
       {pages.map((pg, idx) => {
         const active = idx === stepIdx;
-        const passed = !active && (idx < stepIdx || (pg.kind === "step" && !!doneSteps?.has(pg.realIdx)));
+        // Franchie = avant la position courante, seulement : revenir relire une étape ne
+        // laisse pas cochées celles d'après (même marquées faites dans la session à deux).
+        const passed = idx < stepIdx;
         const label = cookPageLabel(pg);
         const here = others?.get(pageKeyOf(pg)) ?? [];
         const dotBg = active ? "var(--accent)" : passed ? "var(--ok)" : "var(--surface2)";
