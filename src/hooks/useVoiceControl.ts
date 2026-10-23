@@ -4,7 +4,8 @@
  *
  * S'appuie sur la Web Speech API (dictée et synthèse vocale du navigateur) :
  * disponible dans Chrome, Edge et Safari, absente de Firefox et de la WebView
- * Android de l'app installée. `supported` le dit, l'UI masque alors le bouton.
+ * Android de l'app installée. `supported` le dit ; sans support, la bascule
+ * explique pourquoi au lieu d'activer le mode.
  * Pendant la lecture à voix haute, l'écoute est coupée pour que le micro
  * n'entende pas la synthèse et ne la prenne pas pour une commande.
  *
@@ -170,6 +171,7 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
 
   const toggle = useCallback(() => {
     if (supported) setActive(on => !on);
+    else onErrorRef.current?.("Le mode mains libres a besoin de Chrome, Edge ou Safari.");
   }, [supported]);
 
   return { supported, active, toggle, speak };

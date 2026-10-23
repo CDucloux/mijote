@@ -27,7 +27,7 @@ interface CookModeHeaderProps {
   /** Cuisiner à deux, hors ligne : l'autre membre ne voit plus notre position. */
   offline?: boolean;
   onClose: () => void;
-  /** Mode mains libres : bouton micro, absent si le navigateur ne sait pas écouter. */
+  /** Mode mains libres : bouton micro (sans support, il explique au clic). */
   voice?: { supported: boolean; active: boolean; toggle: () => void };
 }
 
@@ -51,7 +51,7 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
               : companions.map(c => <span key={c.participant.uid} style={{ color: "var(--text2)" }}> · {companionText(c.participant, c.label)}</span>)}
           </div>
         </div>
-        {voice?.supported && (
+        {voice && (
           <button className={`cook-voice-btn${voice.active ? " on" : ""}`} onClick={voice.toggle} aria-pressed={voice.active}
             title={voice.active ? "Couper le mode mains libres" : "Mains libres : « suivant », « répète », « minuteur »"}
             aria-label={voice.active ? "Couper le mode mains libres" : "Activer le mode mains libres"}>
