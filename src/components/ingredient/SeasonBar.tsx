@@ -4,14 +4,16 @@ import { currentMonth } from "@/lib/food/seasonality.js";
 // Barre continue : les mois de saison forment des segments arrondis remplis sur
 // une piste, avec un nœud « ce mois-ci » posé sur la timeline, et les initiales
 // des mois dessous. Aplat d'une seule couleur, sans dégradé ni halo : la saison
-// se lit à la forme des segments, pas à un effet. Couleur paramétrable (accent
-// dans la fiche ingrédient, ambre dans « L'ingrédient du moment »).
+// se lit à la forme des segments, pas à un effet. Ambre partout (la couleur de la
+// saison, celle du badge « De saison »), fiche ingrédient comme accueil.
+/** Ambre de la saison (badge « De saison », ingrédient du moment). */
+const SEASON_AMBER = "#e8920a";
 const MONTHS_INI = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 
 /**
  * @param months - Numéros de mois de saison (1–12).
- * @param color - Couleur des segments et des mois de saison (défaut accent).
- * @param node - Couleur de l'anneau du nœud « ce mois-ci ».
+ * @param color - Couleur des segments et des mois de saison (défaut ambre).
+ * @param node - Couleur de l'anneau du nœud « ce mois-ci » (défaut ambre).
  * @param trackHeight - Épaisseur de la piste (px).
  * @param onToggle - Si fourni, la frise devient ÉDITABLE : chaque mois est un bouton
  *   qui appelle `onToggle(mois)` ; la piste reflète la sélection en direct.
@@ -24,7 +26,7 @@ interface SeasonBarProps {
   onToggle?: (month: number) => void;
 }
 
-export function SeasonBar({ months, color = "var(--accent)", node = "var(--accent-deep, #b8461c)", trackHeight = 12, onToggle }: SeasonBarProps) {
+export function SeasonBar({ months, color = SEASON_AMBER, node = SEASON_AMBER, trackHeight = 12, onToggle }: SeasonBarProps) {
   const on = new Set(months || []);
   const now = currentMonth();
   const pct = (n: number) => `${(n / 12) * 100}%`;

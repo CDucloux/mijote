@@ -30,7 +30,7 @@ function SeasonFrieze({ months }: { months: number[] }) {
         <span style={{ fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--text3)", fontWeight: 600 }}>Sa saison</span>
         <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>{count} mois / an</span>
       </div>
-      <SeasonBar months={months} color={AMBER} node={AMBER} />
+      <SeasonBar months={months} />
     </div>
   );
 }
