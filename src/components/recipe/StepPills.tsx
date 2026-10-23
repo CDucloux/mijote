@@ -10,7 +10,9 @@ import { fmtQtyUnit } from "../../lib/format.js";
 
 const chip: CSSProperties = { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, background: "var(--surface2)", borderRadius: 20, padding: "4px 10px 4px 4px", fontWeight: 500, color: "var(--text)" };
 const qtyStyle: CSSProperties = { color: "var(--text3)", fontWeight: 400, marginLeft: 2 };
-const utImgStyle: CSSProperties = { width: "100%", height: "100%", objectFit: "contain", padding: "8%", boxSizing: "border-box" };
+// Marge intérieure en px entiers (et non 8 %) : une image à taille fractionnaire est
+// re-rastérisée à un sous-pixel différent à chaque appui, et semble « gigoter ».
+const utImgStyle = (size: number): CSSProperties => ({ width: "100%", height: "100%", objectFit: "contain", padding: Math.max(1, Math.round(size * 0.08)), boxSizing: "border-box", display: "block" });
 
 interface IngredientPillProps {
   image?: string;
@@ -57,7 +59,7 @@ export function UtImage({ src, alt, size = 22, radius = "50%", border = false, s
       )}
       {src && !err
         ? <img ref={imgRef} src={src} alt={alt || ""} onLoad={onLoad} onError={onError} referrerPolicy="no-referrer"
-          loading="lazy" decoding="async" className="ing-img-reveal" data-loaded={loaded ? "1" : undefined} style={utImgStyle} />
+          loading="lazy" decoding="async" className="ing-img-reveal" data-loaded={loaded ? "1" : undefined} style={utImgStyle(size)} />
         : <Icon name="photo" size={Math.round(size * 0.42)} color="#b3afaa" />}
     </span>
   );
