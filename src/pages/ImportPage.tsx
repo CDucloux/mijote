@@ -14,7 +14,7 @@ import { extractPdfText } from "@/lib/recipes/pdfImport.js";
 import { hasUsablePdfText } from "@/lib/recipes/pdfText.js";
 import { visibleSources, prettyHost } from "@/lib/sources/recommendedSources.js";
 import { importFailureFor } from "@/lib/recipes/importInterruption.js";
-import { readClipboardLink } from "@/lib/launcher/plugin.js";
+import { readClipboardLink, readClipboardText } from "@/lib/launcher/plugin.js";
 import { DEFAULT_SOURCES } from "@/constants/recommendedSources.js";
 import type { ImportMode } from "../components/import/ImportModules.jsx";
 import type { ImportKind } from "@/lib/aiQuota.js";
@@ -171,10 +171,8 @@ export function ImportPage({ mode = "lien" }: { mode?: ImportMode }) {
   };
 
   const pasteFromClipboard = async () => {
-    try {
-      const t = await navigator.clipboard?.readText?.();
-      if (t && t.trim()) { setText(t); setError(""); textRef.current?.focus(); }
-    } catch { /* presse-papiers indisponible : saisie manuelle */ }
+    const t = await readClipboardText(); // "" si indisponible : saisie manuelle
+    if (t.trim()) { setText(t); setError(""); textRef.current?.focus(); }
   };
 
   const ready = mode === "lien" ? URL_RE.test(url.trim())
