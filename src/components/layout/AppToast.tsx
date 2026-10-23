@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { Icon, type IconName } from "../ui/Icon.jsx";
 
 /** Notification affichée (cf. useNotifications). */
@@ -20,13 +21,18 @@ const TONE: Record<string, { bg: string; icon: IconName }> = {
 };
 const OK: { bg: string; icon: IconName } = { bg: "var(--ok)", icon: "check" };
 
-/** Toast global : en haut sur desktop, au-dessus de la tab bar sur mobile. */
+/**
+ * Toast global : en haut sur desktop, au-dessus de la tab bar sur mobile. Porté
+ * dans <body> : sur desktop, le #root est mis à l'échelle (transform, cf. page zoom)
+ * et crée un contexte d'empilement ; le toast y restait piégé sous les surfaces
+ * plein écran portées dans <body> (mode cuisine), quel que soit son z-index.
+ */
 export function AppToast({ notification, leaving, isDesktop }: AppToastProps) {
   const tone = TONE[notification.type ?? ""] ?? OK;
   const animation = leaving
     ? (isDesktop ? "toastOut 0.24s ease-in both" : "toastDown 0.24s cubic-bezier(0.4,0,1,1) both")
     : `${isDesktop ? "toastIn" : "toastUp"} 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both`;
-  return (
+  return createPortal(
     <div style={{ position: "fixed", left: 0, right: 0, display: "flex", justifyContent: "center", zIndex: 999, pointerEvents: "none",
       ...(isDesktop ? { top: 16 } : { bottom: "calc(var(--tab-h) + env(safe-area-inset-bottom) + 12px)" }) }}>
       <div style={{ display: "inline-flex", alignItems: "center", gap: 8, maxWidth: "calc(100vw - 32px)", background: tone.bg, color: "#fff", padding: "10px 18px 10px 12px", borderRadius: 30, fontSize: 13, fontWeight: 500, boxShadow: "0 4px 20px rgba(0,0,0,0.35)", whiteSpace: "nowrap", animation }}>
@@ -35,6 +41,7 @@ export function AppToast({ notification, leaving, isDesktop }: AppToastProps) {
         </div>
         {notification.msg}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -4,7 +4,7 @@ import { Icon } from "../components/ui/Icon.jsx";
 import { parseDurations } from "@/lib/planning/stepTimers.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
-import { buildPostesDecoupe, findDecoupeStepIndex, sortPostesByStep } from "@/lib/recipes/decoupe.js";
+import { buildPostesDecoupe, findDecoupeStepIndex, posteLabel, sortPostesByStep } from "@/lib/recipes/decoupe.js";
 import { createIngredientResolver, resolveLineEntry } from "@/lib/food/nameMatcher.js";
 import { resolveUsagePrecaution } from "@/lib/utensils/usagePrecaution.js";
 import { findUtensilEntry } from "@/lib/utensils/utensilLookup.js";
@@ -26,9 +26,12 @@ import { CookContent } from "../components/cookMode/CookContent.jsx";
 import { CookSidebar } from "../components/cookMode/CookSidebar.jsx";
 import { CookModeHeader } from "../components/cookMode/CookModeHeader.jsx";
 import { CookIterationSheet } from "../components/cookMode/CookIterationSheet.jsx";
+import { VoiceCommandsSheet } from "../components/cookMode/VoiceCommandsSheet.jsx";
 import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.js";
 import { companionText, cookPageLabel, pageKeyOf, partnerPositions } from "@/lib/cookSession/together.js";
 import { useCookTogether } from "../hooks/useCookTogether.js";
+import { useCookVoice } from "../hooks/useCookVoice.js";
+import { cookPageSpeech, stepTechniques, voiceTimerTarget } from "@/lib/cookSession/voiceCommands.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import type { IngredientLine, Recipe, Utensil, UtensilDbItem } from "@/lib/types.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
@@ -103,6 +106,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   const [groupByCategory, setGroupByCategory] = useLS("rf_cookModeGroupByCategory", false);
   // Itération de fin de cuisson : alimente le carnet d'itérations depuis l'écran final.
   const [iterOpen, setIterOpen] = useState(false);
+  const [voiceHelpOpen, setVoiceHelpOpen] = useState(false);
   const [navDir, setNavDir] = useState(1); // sens de navigation (animation d'étape)
   const canIterate = !isNested && !!onUpdateRecipe;
   const saveIteration = (rating: number | null, notes: string) => {
@@ -286,6 +290,58 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   }, [subCook, done, iterOpen, closing, stepIdx, totalSteps, isBases, allComponentsDone]);
 
   const stepDurations = useMemo(() => (step ? parseDurations(step.text) : []), [step]);
+  // Ingrédients liés à l'étape courante (bruts + composants)
+  const linkedIngs = stepLinked(recipe.ingredients, step?.ingredients);
+  const linkedUts = stepLinked(recipe.utensils, step?.utensils);
+
+  // Ce que la voix lit sur « ingrédients » / « ustensiles » : les quantités telles qu'affichées.
+  const toSpokenIngredient = (ing: IngredientLine) => ({ name: ing.name ?? "", quantity: ing.amount != null && ing.amount !== "" ? displayQty(ing, Number(ing.amount) * (mult || 1)) : "" });
+  const voiceRecipeIngredients = overviewIngs.map(toSpokenIngredient);
+  const voicePageItems = isOverview
+    ? { ingredients: voiceRecipeIngredients, utensils: overviewUts.map(u => ({ name: u.name ?? "" })), scope: "recipe" as const }
+    : { ingredients: linkedIngs.map(toSpokenIngredient), utensils: linkedUts.map(u => ({ name: u.name ?? "" })), scope: "step" as const };
+  const currentTechniques = useMemo(() => stepTechniques(step?.text, techIndex), [step, techIndex]);
+  const timerLabel = realIdx >= 0 ? `Étape ${realIdx + 1}` : isOverview ? "Mise en place" : "Bases";
+
+  // Mains libres : la page est lue en arrivant dessus, la voix pilote la navigation
+  // et lance le minuteur (durée dite, sinon la première de l'étape).
+  const pageSpeech = cookPageSpeech(isOverview ? { kind: "overview", title: recipe.name, ingredients: overviewIngs.length, utensils: overviewUts.length, cuts: postesDecoupe.map(posteLabel) }
+    : isBases ? { kind: "bases", count: pendingComponents.length }
+    : { kind: "step", number: realIdx + 1, total: realStepCount, text: step?.text ?? "" });
+  const voice = useCookVoice({
+    speech: pageSpeech,
+    pageKey: stepIdx,
+    tip: step?.tip,
+    techniques: currentTechniques,
+    onFinish: finishCooking,
+    pageItems: voicePageItems,
+    recipeIngredients: voiceRecipeIngredients,
+    timers,
+    elapsed,
+    stepCount: realStepCount,
+    onGotoStep: goToStep,
+    onNext: () => (stepIdx < totalSteps - 1 ? goNext() : finishCooking()),
+    onPrev: goPrev,
+    onOverview: () => {
+      if (!hasOverview) return false;
+      if (stepIdx === 0) voice.speak(pageSpeech);
+      else goTo(0);
+      return true;
+    },
+    onTimer: said => {
+      const duration = said ?? stepDurations[0];
+      if (duration) addTimer(duration, stepIdx, timerLabel);
+      return duration ?? null;
+    },
+    onTimerAction: action => {
+      const target = voiceTimerTarget(timers, action);
+      if (target) (action === "stop" ? removeTimer : toggleTimer)(target.id);
+      return target;
+    },
+    onHelp: setVoiceHelpOpen,
+    notify,
+    paused: !!subCook || done || iterOpen || closing,
+  });
 
   // Gestes tactiles sur le contenu d'une étape (swipe + élastique vertical).
   const { stepScrollRef, stepElasticRef } = useStepGestures(
@@ -293,9 +349,6 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     [subCook, done, iterOpen, stepIdx, totalSteps, isBases, allComponentsDone],
   );
 
-  // Ingrédients liés à l'étape courante (bruts + composants)
-  const linkedIngs = stepLinked(recipe.ingredients, step?.ingredients);
-  const linkedUts = stepLinked(recipe.utensils, step?.utensils);
 
   return createPortal(
     <>
@@ -324,12 +377,12 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
       <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
         <CookModeHeader recipeName={recipe.name} isNested={isNested} elapsed={elapsed} progress={progress} companions={companions} offline={together.offline} onClose={requestClose}
-          pageLabel={isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`} />
+          pageLabel={isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`} voice={voice} onVoiceHelp={() => setVoiceHelpOpen(true)} />
 
         {/* Main content */}
         <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>
           {/* Desktop sidebar */}
-          <CookSidebar pages={pages} stepIdx={stepIdx} onGoTo={goTo} others={together.others} doneSteps={together.doneSteps} />
+          <CookSidebar pages={pages} stepIdx={stepIdx} onGoTo={goTo} others={together.others} />
 
           {/* Step content */}
           <div ref={stepScrollRef} style={{ flex: 1, overflowY: "auto", padding: "24px 20px" }}>
@@ -381,6 +434,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
           onClose={() => setConvIng(null)}
         />
       )}
+      {voiceHelpOpen && <VoiceCommandsSheet zIndex={isNested ? 720 : 620} onClose={() => setVoiceHelpOpen(false)} />}
       {precSheet && <UtensilPrecautionSheet utensilName={precSheet.name} precaution={precSheet.prec} zIndex={isNested ? 720 : 620} onClose={() => setPrecSheet(null)} />}
     </>,
     document.body

@@ -31,8 +31,6 @@ export interface CookTogether {
   session: CookTogetherSession | null;
   /** Autres membres présents, par clé de page. */
   others: Map<string, CookParticipant[]>;
-  /** Index réels des étapes faites par l'un ou l'autre. */
-  doneSteps: ReadonlySet<number>;
   /** Lancement commun (epoch ms) une fois la session rejointe, sinon null. */
   startedAt: number | null;
   /** Recette terminée par l'un des membres, dans la session effectivement rejointe. */
@@ -131,7 +129,6 @@ export function useCookTogether({ householdId, recipe, user, pageKey, pageKeys, 
 
   const session = useMemo(() => (hid ? parseCookSession(raw) : null), [hid, raw]);
   const others = useMemo(() => othersByPage(session, uid, now), [session, uid, now]);
-  const doneSteps = useMemo(() => new Set(session?.doneSteps ?? []), [session]);
   const markDone = useCallback((realIdx: number) => {
     if (hid && realIdx >= 0) markStepDone(hid, rid, realIdx).catch(ignore);
   }, [hid, rid]);
@@ -157,7 +154,7 @@ export function useCookTogether({ householdId, recipe, user, pageKey, pageKeys, 
   const online = useOnline();
 
   return {
-    session, others, doneSteps, startedAt, finished, finishedBy: finished ? session?.finishedBy ?? null : null,
+    session, others, startedAt, finished, finishedBy: finished ? session?.finishedBy ?? null : null,
     offline: hid !== null && !online, markDone, finish, timers, saveTimer, dropTimer,
   };
 }

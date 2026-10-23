@@ -1,0 +1,163 @@
+/**
+ * Branche le mode mains libres sur le pas à pas : chaque page est lue à voix
+ * haute en arrivant dessus, et les commandes vocales (« suivant », « précédent »,
+ * « mise en place », « répète », « astuce », « technique », « silence », « lecture off / on »,
+ * « étape 3 », « ingrédients », « ustensiles », « durée », « temps restant », « minuteur », « pause », « reprends », « stop », « terminé », « commandes »)
+ * pilotent la
+ * navigation et les minuteurs.
+ *
+ * @module useCookVoice
+ */
+import { useEffect, useRef } from "react";
+import { useVoiceControl, type UseVoiceControlResult } from "./useVoiceControl.js";
+import { useLS } from "./useLS.js";
+import type { StepDuration } from "@/lib/planning/stepTimers.js";
+import type { CookTimer } from "@/lib/planning/cookTimers.js";
+import {
+  elapsedSpeech, itemsSpeech, quantitySpeech, remainingSpeech, techniqueSpeech, timerDoneSpeech, tipSpeech, voiceCommandLabel,
+  type SpokenItem, type TimerAction,
+} from "@/lib/cookSession/voiceCommands.js";
+import type { TechniqueEntry } from "@/lib/recipes/techniques.js";
+
+/** Horloge lue au moment de la commande (hors rendu). */
+const clock = (): number => Date.now();
+
+const TIMER_DONE: Record<TimerAction, string> = { pause: "en pause", resume: "repris", stop: "arrêté" };
+const NO_TIMER: Record<TimerAction, string> = { pause: "Aucun minuteur en marche.", resume: "Aucun minuteur en pause.", stop: "Aucun minuteur à arrêter." };
+
+/** Options de {@link useCookVoice}. */
+export interface UseCookVoiceOptions {
+  /** Texte lu pour la page courante (cf. `cookPageSpeech`). */
+  speech: string;
+  /** Change à chaque page : déclenche la lecture de la nouvelle. */
+  pageKey: string | number;
+  onNext: () => void;
+  onPrev: () => void;
+  /** Astuce de la page courante, lue sur « astuce ». */
+  tip?: string | null;
+  /** Gestes du glossaire cités dans l'étape, lus sur « technique ». */
+  techniques: readonly TechniqueEntry[];
+  /** Termine la recette (« terminé »). */
+  onFinish: () => void;
+  /** Ingrédients et ustensiles de la page (liés à l'étape, ou toute la recette sur la mise en place). */
+  pageItems: { ingredients: readonly SpokenItem[]; utensils: readonly SpokenItem[]; scope: "step" | "recipe" };
+  /** Tous les ingrédients de la recette : « combien de beurre » les cherche s'ils manquent à l'étape. */
+  recipeIngredients: readonly SpokenItem[];
+  /** Minuteurs de la session : « temps restant », et annonce de ceux qui sonnent. */
+  timers: readonly CookTimer[];
+  /** Secondes écoulées depuis le lancement, lues sur « durée ». */
+  elapsed: number;
+  /** Nombre d'étapes de la recette : borne « étape N ». */
+  stepCount: number;
+  /** Va à l'étape réelle `index` (base 0), déjà bornée. */
+  onGotoStep: (index: number) => void;
+  /** Retour à la mise en place ; rend `false` si la recette n'en a pas. */
+  onOverview: () => boolean;
+  /** Lance un minuteur (durée dite, sinon celle de l'étape) ; rend la durée lancée, ou `null`. */
+  onTimer: (duration?: StepDuration) => StepDuration | null;
+  /** Met en pause, reprend ou arrête un minuteur ; rend le minuteur visé, ou `null`. */
+  onTimerAction: (action: TimerAction) => CookTimer | null;
+  /** Ouvre ou ferme l'aide des commandes vocales (« commandes », « ferme »). */
+  onHelp: (open: boolean) => void;
+  notify?: (message: string) => void;
+  paused: boolean;
+}
+
+/**
+ * Mode mains libres du pas à pas.
+ * @param options - Page courante, actions de navigation et de minuteur, cf. {@link UseCookVoiceOptions}.
+ * @returns L'état du mode et sa bascule, cf. {@link UseVoiceControlResult}.
+ */
+export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, pageItems, recipeIngredients, timers, elapsed, stepCount, onGotoStep, onNext, onPrev, onOverview, onTimer, onTimerAction, onHelp, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
+  // Lecture automatique de chaque page (« lecture off / on ») : retenue d'une recette à l'autre.
+  const [autoRead, setAutoRead] = useLS("rf_cookVoiceAutoRead", true);
+  const speechRef = useRef(speech);
+  const tipRef = useRef(tip);
+  const techniquesRef = useRef(techniques);
+  const autoReadRef = useRef(autoRead);
+  const elapsedRef = useRef(elapsed);
+  const itemsRef = useRef({ pageItems, recipeIngredients });
+  const timersRef = useRef(timers);
+  useEffect(() => {
+    speechRef.current = speech; tipRef.current = tip; techniquesRef.current = techniques;
+    autoReadRef.current = autoRead; elapsedRef.current = elapsed;
+    itemsRef.current = { pageItems, recipeIngredients }; timersRef.current = timers;
+  });
+
+  const voice = useVoiceControl({
+    paused,
+    onError: notify,
+    onCommand: command => {
+      // Confirmation discrète de ce qui a été compris (l'aide, elle, s'ouvre à l'écran).
+      if (command.kind !== "help" && command.kind !== "close") notify?.(`« ${voiceCommandLabel(command)} »`);
+      if (command.kind === "next") onNext();
+      else if (command.kind === "prev") onPrev();
+      else if (command.kind === "repeat") voice.speak(speechRef.current);
+      else if (command.kind === "tip") voice.speak(tipSpeech(tipRef.current));
+      else if (command.kind === "technique") voice.speak(techniqueSpeech(techniquesRef.current, command.query));
+      else if (command.kind === "silence") voice.hush();
+      else if (command.kind === "elapsed") voice.speak(elapsedSpeech(elapsedRef.current));
+      else if (command.kind === "remaining") voice.speak(remainingSpeech(timersRef.current, clock()));
+      else if (command.kind === "ingredients" || command.kind === "utensils") {
+        const { pageItems: page, recipeIngredients: all } = itemsRef.current;
+        if (command.kind === "ingredients" && command.query) voice.speak(quantitySpeech(command.query, page.ingredients, all));
+        else voice.speak(itemsSpeech(command.kind, command.kind === "ingredients" ? page.ingredients : page.utensils, page.scope));
+      }
+      else if (command.kind === "help") {
+        voice.hush();
+        onHelp(true);
+      }
+      else if (command.kind === "close") onHelp(false);
+      else if (command.kind === "readOff" || command.kind === "readOn") {
+        const on = command.kind === "readOn";
+        setAutoRead(on);
+        voice.speak(on ? "Lecture des étapes relancée." : "Lecture des étapes coupée.");
+      }
+      else if (command.kind === "goto") {
+        if (command.step <= stepCount) onGotoStep(command.step - 1);
+        else voice.speak(stepCount > 0 ? `Cette recette n'a que ${stepCount} étape${stepCount > 1 ? "s" : ""}.` : "Cette recette n'a pas d'étapes.");
+      }
+      else if (command.kind === "finish") {
+        // Graphie phonétique, jamais affichée : les synthèses vocales ratent la liaison
+        // de « bon appétit » (« bon | appétit »), on écrit ce qui doit s'entendre.
+        voice.speak("Recette terminée. Bonne appétit !");
+        onFinish();
+      }
+      else if (command.kind === "overview") {
+        if (!onOverview()) voice.speak("Pas de mise en place pour cette recette.");
+      }
+      else if (command.kind !== "timer") {
+        const timer = onTimerAction(command.kind);
+        voice.speak(timer ? `Minuteur de ${timer.label} ${TIMER_DONE[command.kind]}.` : NO_TIMER[command.kind]);
+      } else {
+        const started = onTimer(command.duration);
+        voice.speak(started ? `Minuteur de ${started.label} lancé.` : "Pas de durée dans cette étape. Dis par exemple : minuteur 5 minutes.");
+      }
+    },
+  });
+
+  const { active, speak } = voice;
+  // Lu via une ref : rebasculer « lecture on » ne relit pas la page (la confirmation suffit).
+  useEffect(() => {
+    if (active && !paused && autoReadRef.current) speak(speechRef.current);
+  }, [active, paused, pageKey, speak]);
+
+  // Annonce à voix haute chaque minuteur qui sonne (la sonnerie seule ne dit pas lequel).
+  const announcedRef = useRef(new Set<string>());
+  useEffect(() => {
+    for (const timer of timers) {
+      if (!timer.done) { announcedRef.current.delete(timer.id); continue; }
+      if (announcedRef.current.has(timer.id)) continue;
+      announcedRef.current.add(timer.id);
+      if (active) speak(timerDoneSpeech(timer));
+    }
+  }, [timers, active, speak]);
+
+  const wasActive = useRef(false);
+  useEffect(() => {
+    if (active && !wasActive.current) notify?.("Mains libres activé : dis « commandes » pour toutes les voir");
+    wasActive.current = active;
+  }, [active, notify]);
+
+  return voice;
+}
