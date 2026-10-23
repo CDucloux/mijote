@@ -42,9 +42,11 @@ function MealHero({ card, onOpen, onCook }: { card: TodayMealCard; onOpen: (id: 
   return (
     <article className="slide-up home-hero">
       <button onClick={open} className="home-hero-media" aria-label={`Ouvrir ${recipe.name}`}>
-        <RecipeImage recipe={recipe} fontSize={72} />
-        <span className="home-hero-slot" style={{ background: slot?.color || "var(--surface2)", color: slot?.text || "var(--text2)" }}>
-          <Icon name={(slot?.icon ?? "utensils") as IconName} size={13} weight="fill" color="currentColor" />
+        {/* Le zoom vit sur une enveloppe : la transition inline (opacité) de l'image écraserait la sienne. */}
+        <span className="home-hero-zoom"><RecipeImage recipe={recipe} fontSize={72} /></span>
+        {/* Sur la photo, la teinte translucide du créneau se perdait : pastille pleine, icône à la couleur du créneau. */}
+        <span className="home-hero-slot">
+          <Icon name={(slot?.icon ?? "utensils") as IconName} size={14} weight="fill" color={slot?.accent ?? "var(--accent)"} />
           {slot?.today || "Au menu"}
         </span>
       </button>
@@ -174,6 +176,7 @@ export function HomeDesktop({ loading, isEmpty, isCalm, hero, rest, week, shoppi
       </div>
 
       <aside style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        {spotlight && <SpotlightIngredient ingredient={spotlight} onOpenIngredient={onOpenIngredient} onExplore={onExploreSeason} />}
         {hasTodo && (
           <section style={{ marginBottom: 26 }}>
             <SectionTitle>À faire</SectionTitle>
@@ -190,7 +193,6 @@ export function HomeDesktop({ loading, isEmpty, isCalm, hero, rest, week, shoppi
           </section>
         )}
         <HouseholdSection />
-        {spotlight && <SpotlightIngredient ingredient={spotlight} onOpenIngredient={onOpenIngredient} onExplore={onExploreSeason} />}
       </aside>
     </div>
   );
