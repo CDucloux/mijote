@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.78.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.79.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -287,7 +287,16 @@ Le **backend Firebase** se déploie via la CLI :
 ```shell
 # Règles de sécurité + Cloud Functions
 npx firebase deploy --only firestore:rules,storage:rules,functions
+
+# Cloud Functions seules (délai d'analyse du code relevé à 60 s)
+cd functions && npm run deploy
 ```
+
+> [!TIP]
+> « User code failed to load… Timeout after 10000 » au premier déploiement :
+> la CLI n'attend que 10 s le chargement à froid des dépendances. `npm run deploy`
+> (dans `functions/`) relève ce délai ; avec la commande `npx firebase deploy`
+> directe, exportez `FUNCTIONS_DISCOVERY_TIMEOUT=60` au préalable.
 
 > [!NOTE]
 > **App Check** : renseignez `VITE_FIREBASE_RECAPTCHA_SITE_KEY` et déployez le
