@@ -292,13 +292,20 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
   // Mains libres : la page est lue en arrivant dessus, la voix pilote la navigation
   // et lance le minuteur (durée dite, sinon la première de l'étape).
+  const pageSpeech = cookPageSpeech(isOverview ? { kind: "overview", ingredients: overviewIngs.length, utensils: overviewUts.length }
+    : isBases ? { kind: "bases", count: pendingComponents.length }
+    : { kind: "step", number: realIdx + 1, total: realStepCount, text: step?.text ?? "" });
   const voice = useCookVoice({
-    speech: cookPageSpeech(isOverview ? { kind: "overview", ingredients: overviewIngs.length, utensils: overviewUts.length }
-      : isBases ? { kind: "bases", count: pendingComponents.length }
-      : { kind: "step", number: realIdx + 1, total: realStepCount, text: step?.text ?? "" }),
+    speech: pageSpeech,
     pageKey: stepIdx,
     onNext: () => (stepIdx < totalSteps - 1 ? goNext() : finishCooking()),
     onPrev: goPrev,
+    onOverview: () => {
+      if (!hasOverview) return false;
+      if (stepIdx === 0) voice.speak(pageSpeech);
+      else goTo(0);
+      return true;
+    },
     onTimer: said => {
       const duration = said ?? stepDurations[0];
       if (duration) addTimer(duration, stepIdx, timerLabel);

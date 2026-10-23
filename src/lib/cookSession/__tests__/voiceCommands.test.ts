@@ -83,7 +83,11 @@ describe("commandes de minuteur", () => {
     expect(parseVoiceCommand("pause")).toEqual({ kind: "pause" });
     expect(parseVoiceCommand("reprends")).toEqual({ kind: "resume" });
     expect(parseVoiceCommand("stop")).toEqual({ kind: "stop" });
-    expect(parseVoiceCommand("arrête")).toEqual({ kind: "stop" });
+    expect(parseVoiceCommand("stoppe")).toEqual({ kind: "stop" });
+  });
+  it("n'arrête pas un minuteur sur « arrête », trop fréquent en cuisine", () => {
+    expect(parseVoiceCommand("arrête")).toBeNull();
+    expect(parseVoiceCommand("arrête de toucher ça")).toBeNull();
   });
   it("fait passer l'action avant le lancement d'un minuteur", () => {
     expect(parseVoiceCommand("pause le minuteur")).toEqual({ kind: "pause" });
@@ -117,5 +121,21 @@ describe("voiceTimerTarget", () => {
     expect(voiceTimerTarget([], "stop")).toBeNull();
     expect(voiceTimerTarget([pausedShort], "pause")).toBeNull();
     expect(voiceTimerTarget([soon, ringing], "resume")).toBeNull();
+  });
+});
+
+describe("retour à la mise en place", () => {
+  it("reconnaît « mise en place », même en fin de dictée", () => {
+    expect(parseVoiceCommand("mise en place")).toEqual({ kind: "overview" });
+    expect(parseVoiceCommand("retourne à la mise en place")).toEqual({ kind: "overview" });
+    expect(parseVoiceTail("bon on revient à la mise en place").command).toEqual({ kind: "overview" });
+  });
+  it("exige les trois mots dans l'ordre", () => {
+    expect(parseVoiceCommand("en place")).toBeNull();
+    expect(parseVoiceCommand("place mise")).toBeNull();
+  });
+  it("ignore l'expression quand elle est lue à voix haute", () => {
+    const spoken = "Mise en place : 8 ingrédients et 2 ustensiles.";
+    expect(parseVoiceTail("mise en place 8 ingrédients", 0, spoken).command).toBeNull();
   });
 });

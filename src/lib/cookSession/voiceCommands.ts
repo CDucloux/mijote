@@ -21,6 +21,7 @@ export type VoiceCommand =
   | { kind: "next" }
   | { kind: "prev" }
   | { kind: "repeat" }
+  | { kind: "overview" }
   | { kind: "timer"; duration?: StepDuration }
   | { kind: TimerAction };
 
@@ -28,11 +29,14 @@ export type VoiceCommand =
 export const MAX_COMMAND_WORDS = 6;
 
 // Ordre = priorité : « pause le minuteur » met en pause, il n'en lance pas un nouveau.
+// Une entrée peut tenir en plusieurs mots (« mise en place »). « arrête » est exclu :
+// trop fréquent dans une cuisine pour couper un minuteur.
 const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
-  ["stop", ["stop", "stoppe", "arrete", "arreter"]],
+  ["stop", ["stop", "stoppe"]],
   ["pause", ["pause"]],
   ["resume", ["reprends", "reprendre", "reprise"]],
   ["timer", ["minuteur", "minuterie", "chrono", "timer"]],
+  ["overview", ["mise en place"]],
   ["repeat", ["repete", "repetes", "repeter", "relis", "relire", "redis", "redire"]],
   ["prev", ["precedent", "precedente", "retour", "reviens", "arriere"]],
   ["next", ["suivant", "suivante", "ensuite", "continue", "continuer"]],
@@ -46,15 +50,18 @@ const wordsOf = (text: string | null | undefined): string[] =>
  * Les actions sur un minuteur passent avant son lancement, et le minuteur avant la
  * navigation : « stop minuteur » arrête, « minuteur suivant » ne tourne pas la page.
  * @param transcript - Phrase reconnue par la dictée (casse, accents et ponctuation indifférents).
- * @param ignoredWords - Mots-clés à ne pas prendre en compte (ceux du texte en cours de lecture).
+ * @param ignoredWords - Mots à ne pas prendre en compte (ceux du texte en cours de lecture) :
+ *   un mot-clé en plusieurs mots n'est ignoré que si tous ses mots le sont.
  * @returns La commande, ou `null` (phrase vide, trop longue, ou sans mot-clé).
  */
 export function parseVoiceCommand(transcript: string | null | undefined, ignoredWords?: ReadonlySet<string>): VoiceCommand | null {
   const words = wordsOf(transcript);
   if (words.length === 0 || words.length > MAX_COMMAND_WORDS) return null;
-  const said = new Set(words);
+  const said = ` ${words.join(" ")} `;
+  const heardKeyword = (keyword: string): boolean =>
+    said.includes(` ${keyword} `) && !keyword.split(" ").every(word => ignoredWords?.has(word));
   for (const [kind, keywords] of VOCABULARY) {
-    if (!keywords.some(keyword => said.has(keyword) && !ignoredWords?.has(keyword))) continue;
+    if (!keywords.some(heardKeyword)) continue;
     if (kind !== "timer") return { kind };
     const duration = parseDurations(words.join(" "))[0];
     return duration ? { kind, duration } : { kind };

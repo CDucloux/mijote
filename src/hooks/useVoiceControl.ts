@@ -15,6 +15,7 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { parseVoiceTail, type VoiceCommand } from "@/lib/cookSession/voiceCommands.js";
+import { pickFrenchVoice } from "@/lib/cookSession/speechVoice.js";
 
 // La Web Speech API n'est pas typée par lib.dom : on décrit le strict nécessaire.
 interface RecognitionAlternative { transcript: string }
@@ -107,6 +108,8 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
   const spokenRef = useRef({ text: "", lastAt: 0 });
   // Retient la phrase lue : Chrome oublie l'énoncé (et sa fin) s'il est ramassé par le GC.
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  // Voix la plus naturelle disponible ; la liste se charge après coup (`voiceschanged`).
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
   // Rappels lus au moment de l'événement : la reconnaissance vit plus longtemps qu'un rendu.
   const onCommandRef = useRef(onCommand);
   const onErrorRef = useRef(onError);
@@ -221,6 +224,15 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     return () => clearTimeout(timer);
   }, [heard]);
 
+  useEffect(() => {
+    if (!supported) return;
+    const synth = window.speechSynthesis;
+    const load = () => { voiceRef.current = pickFrenchVoice(synth.getVoices()); };
+    load();
+    synth.addEventListener("voiceschanged", load);
+    return () => synth.removeEventListener("voiceschanged", load);
+  }, [supported]);
+
   // Écran maintenu allumé tant que le mode est actif (re-demandé au retour au premier plan).
   useEffect(() => {
     if (!active || !("wakeLock" in navigator)) return;
@@ -243,7 +255,7 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     synth.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = LANG;
-    const voice = synth.getVoices().find(v => v.lang.toLowerCase().startsWith("fr"));
+    const voice = voiceRef.current ?? pickFrenchVoice(synth.getVoices());
     if (voice) utterance.voice = voice;
     utteranceRef.current = utterance;
     spokenRef.current = { text, lastAt: Date.now() };
