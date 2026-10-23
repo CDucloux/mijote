@@ -2,7 +2,7 @@
  * Branche le mode mains libres sur le pas à pas : chaque page est lue à voix
  * haute en arrivant dessus, et les commandes vocales (« suivant », « précédent »,
  * « mise en place », « répète », « astuce », « technique », « silence », « lecture off / on »,
- * « étape 3 », « durée », « minuteur », « pause », « reprends », « stop », « terminé », « commandes »)
+ * « étape 3 », « ingrédients », « ustensiles », « durée », « temps restant », « minuteur », « pause », « reprends », « stop », « terminé », « commandes »)
  * pilotent la
  * navigation et les minuteurs.
  *
@@ -13,8 +13,14 @@ import { useVoiceControl, type UseVoiceControlResult } from "./useVoiceControl.j
 import { useLS } from "./useLS.js";
 import type { StepDuration } from "@/lib/planning/stepTimers.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
-import { elapsedSpeech, techniqueSpeech, tipSpeech, voiceCommandLabel, type TimerAction } from "@/lib/cookSession/voiceCommands.js";
+import {
+  elapsedSpeech, itemsSpeech, quantitySpeech, remainingSpeech, techniqueSpeech, timerDoneSpeech, tipSpeech, voiceCommandLabel,
+  type SpokenItem, type TimerAction,
+} from "@/lib/cookSession/voiceCommands.js";
 import type { TechniqueEntry } from "@/lib/recipes/techniques.js";
+
+/** Horloge lue au moment de la commande (hors rendu). */
+const clock = (): number => Date.now();
 
 const TIMER_DONE: Record<TimerAction, string> = { pause: "en pause", resume: "repris", stop: "arrêté" };
 const NO_TIMER: Record<TimerAction, string> = { pause: "Aucun minuteur en marche.", resume: "Aucun minuteur en pause.", stop: "Aucun minuteur à arrêter." };
@@ -33,6 +39,12 @@ export interface UseCookVoiceOptions {
   techniques: readonly TechniqueEntry[];
   /** Termine la recette (« terminé »). */
   onFinish: () => void;
+  /** Ingrédients et ustensiles de la page (liés à l'étape, ou toute la recette sur la mise en place). */
+  pageItems: { ingredients: readonly SpokenItem[]; utensils: readonly SpokenItem[]; scope: "step" | "recipe" };
+  /** Tous les ingrédients de la recette : « combien de beurre » les cherche s'ils manquent à l'étape. */
+  recipeIngredients: readonly SpokenItem[];
+  /** Minuteurs de la session : « temps restant », et annonce de ceux qui sonnent. */
+  timers: readonly CookTimer[];
   /** Secondes écoulées depuis le lancement, lues sur « durée ». */
   elapsed: number;
   /** Nombre d'étapes de la recette : borne « étape N ». */
@@ -56,7 +68,7 @@ export interface UseCookVoiceOptions {
  * @param options - Page courante, actions de navigation et de minuteur, cf. {@link UseCookVoiceOptions}.
  * @returns L'état du mode et sa bascule, cf. {@link UseVoiceControlResult}.
  */
-export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, elapsed, stepCount, onGotoStep, onNext, onPrev, onOverview, onTimer, onTimerAction, onHelp, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
+export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, pageItems, recipeIngredients, timers, elapsed, stepCount, onGotoStep, onNext, onPrev, onOverview, onTimer, onTimerAction, onHelp, notify, paused }: UseCookVoiceOptions): UseVoiceControlResult {
   // Lecture automatique de chaque page (« lecture off / on ») : retenue d'une recette à l'autre.
   const [autoRead, setAutoRead] = useLS("rf_cookVoiceAutoRead", true);
   const speechRef = useRef(speech);
@@ -64,9 +76,12 @@ export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, elaps
   const techniquesRef = useRef(techniques);
   const autoReadRef = useRef(autoRead);
   const elapsedRef = useRef(elapsed);
+  const itemsRef = useRef({ pageItems, recipeIngredients });
+  const timersRef = useRef(timers);
   useEffect(() => {
     speechRef.current = speech; tipRef.current = tip; techniquesRef.current = techniques;
     autoReadRef.current = autoRead; elapsedRef.current = elapsed;
+    itemsRef.current = { pageItems, recipeIngredients }; timersRef.current = timers;
   });
 
   const voice = useVoiceControl({
@@ -82,6 +97,12 @@ export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, elaps
       else if (command.kind === "technique") voice.speak(techniqueSpeech(techniquesRef.current, command.query));
       else if (command.kind === "silence") voice.hush();
       else if (command.kind === "elapsed") voice.speak(elapsedSpeech(elapsedRef.current));
+      else if (command.kind === "remaining") voice.speak(remainingSpeech(timersRef.current, clock()));
+      else if (command.kind === "ingredients" || command.kind === "utensils") {
+        const { pageItems: page, recipeIngredients: all } = itemsRef.current;
+        if (command.kind === "ingredients" && command.query) voice.speak(quantitySpeech(command.query, page.ingredients, all));
+        else voice.speak(itemsSpeech(command.kind, command.kind === "ingredients" ? page.ingredients : page.utensils, page.scope));
+      }
       else if (command.kind === "help") {
         voice.hush();
         onHelp(true);
@@ -120,6 +141,17 @@ export function useCookVoice({ speech, pageKey, tip, techniques, onFinish, elaps
   useEffect(() => {
     if (active && !paused && autoReadRef.current) speak(speechRef.current);
   }, [active, paused, pageKey, speak]);
+
+  // Annonce à voix haute chaque minuteur qui sonne (la sonnerie seule ne dit pas lequel).
+  const announcedRef = useRef(new Set<string>());
+  useEffect(() => {
+    for (const timer of timers) {
+      if (!timer.done) { announcedRef.current.delete(timer.id); continue; }
+      if (announcedRef.current.has(timer.id)) continue;
+      announcedRef.current.add(timer.id);
+      if (active) speak(timerDoneSpeech(timer));
+    }
+  }, [timers, active, speak]);
 
   const wasActive = useRef(false);
   useEffect(() => {

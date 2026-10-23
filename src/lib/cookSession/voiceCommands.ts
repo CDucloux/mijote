@@ -11,7 +11,7 @@
  */
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 import { parseDurations, type StepDuration } from "@/lib/planning/stepTimers.js";
-import type { CookTimer } from "@/lib/planning/cookTimers.js";
+import { remainingSecs, type CookTimer } from "@/lib/planning/cookTimers.js";
 import { annotateText, type TechniqueEntry, type TechniqueIndex } from "@/lib/recipes/techniques.js";
 
 /** Action vocale sur un minuteur déjà lancé. */
@@ -28,6 +28,9 @@ export type VoiceCommand =
   | { kind: "finish" }
   | { kind: "goto"; step: number }
   | { kind: "elapsed" }
+  | { kind: "remaining" }
+  | { kind: "ingredients"; query?: string }
+  | { kind: "utensils" }
   | { kind: "silence" }
   | { kind: "readOff" }
   | { kind: "readOn" }
@@ -49,6 +52,8 @@ const VOCABULARY: readonly [Exclude<VoiceCommand["kind"], "goto">, readonly stri
   ["readOff", ["lecture off", "lecture of", "lecture coupee"]],
   ["readOn", ["lecture on", "lecture activee"]],
   ["silence", ["silence", "chut"]],
+  // « combien de temps il reste » : le temps restant passe avant la durée écoulée.
+  ["remaining", ["temps restant", "temps il reste", "il reste combien", "reste combien"]],
   ["elapsed", ["duree", "combien de temps"]],
   ["stop", ["stop", "stoppe"]],
   ["pause", ["pause"]],
@@ -57,6 +62,8 @@ const VOCABULARY: readonly [Exclude<VoiceCommand["kind"], "goto">, readonly stri
   ["overview", ["mise en place"]],
   ["tip", ["astuce"]],
   ["technique", ["technique", "techniques"]],
+  ["ingredients", ["ingredients", "ingredient", "combien de", "combien d"]],
+  ["utensils", ["ustensiles", "ustensile"]],
   ["repeat", ["repete", "repetes", "repeter", "relis", "relire", "redis", "redire"]],
   ["prev", ["precedent", "precedente", "retour", "reviens", "arriere"]],
   ["next", ["suivant", "suivante", "ensuite", "continue", "continuer"]],
@@ -112,6 +119,12 @@ export function parseVoiceCommand(transcript: string | null | undefined, ignored
       // « technique monter » : les mots qui suivent nomment le geste voulu.
       const at = words.findIndex(word => word.startsWith("technique"));
       const query = words.slice(at + 1).filter(word => !FILLER.has(word)).join(" ");
+      return query ? { kind, query } : { kind };
+    }
+    if (kind === "ingredients") {
+      // « combien de beurre » : l'ingrédient demandé suit « combien de ».
+      const at = words.indexOf("combien");
+      const query = at >= 0 ? words.slice(at + 1).filter(word => !FILLER.has(word)).join(" ") : "";
       return query ? { kind, query } : { kind };
     }
     if (kind !== "timer") return { kind };
@@ -206,6 +219,8 @@ export const VOICE_HELP: readonly VoiceHelpGroup[] = [
     icon: "speaker",
     entries: [
       { say: "Répète", does: "Relire la page", kind: "repeat" },
+      { say: "Ingrédients", also: ["combien de beurre"], does: "Les ingrédients de l'étape et leurs quantités", kind: "ingredients" },
+      { say: "Ustensiles", does: "Les ustensiles de l'étape", kind: "utensils" },
       { say: "Astuce", does: "Lire l'astuce de l'étape", kind: "tip" },
       { say: "Technique", also: ["technique monter"], does: "Expliquer le geste de l'étape", kind: "technique" },
       { say: "Silence", also: ["chut"], does: "Couper la lecture en cours", kind: "silence" },
@@ -218,6 +233,7 @@ export const VOICE_HELP: readonly VoiceHelpGroup[] = [
     icon: "clock",
     entries: [
       { say: "Durée", also: ["depuis combien de temps"], does: "Temps écoulé depuis le lancement", kind: "elapsed" },
+      { say: "Temps restant", also: ["combien de temps il reste"], does: "Ce qu'il reste sur les minuteurs", kind: "remaining" },
       { say: "Minuteur", also: ["minuteur 10 minutes"], does: "Lancer le minuteur de l'étape, ou la durée dite", kind: "timer" },
       { say: "Pause", does: "Mettre en pause le prochain à sonner", kind: "pause" },
       { say: "Reprends", does: "Relancer le minuteur en pause", kind: "resume" },
@@ -261,6 +277,98 @@ export function elapsedSpeech(seconds: number): string {
   const rest = minutes % 60;
   if (hours === 0) return `Recette lancée depuis ${plural(minutes, "minute")}.`;
   return `Recette lancée depuis ${plural(hours, "heure")}${rest ? ` ${rest}` : ""}.`;
+}
+
+/** Ingrédient ou ustensile à lire : son nom et, pour un ingrédient, la quantité affichée. */
+export interface SpokenItem {
+  name: string;
+  quantity?: string;
+}
+
+const itemText = (item: SpokenItem): string => {
+  const quantity = item.quantity?.trim();
+  return quantity ? `${item.name.trim()}, ${quantity}` : item.name.trim();
+};
+const sameItem = (item: SpokenItem, query: string): boolean => {
+  const name = wordsOf(item.name).join(" ");
+  const wanted = wordsOf(query).join(" ");
+  return name !== "" && wanted !== "" && (name.includes(wanted) || wanted.includes(name));
+};
+
+/**
+ * Réponse à « ingrédients » ou « ustensiles » : ceux de l'étape, ou ceux de la
+ * recette sur la mise en place. Chaque ingrédient est suivi de la quantité
+ * affichée à l'écran (« guanciale, 120 g »), sans accord à risque.
+ * @param kind - Ce qui est demandé.
+ * @param items - Éléments de la page (liés à l'étape, ou toute la recette).
+ * @param scope - `"step"` pour une étape, `"recipe"` pour la mise en place.
+ * @returns La phrase à lire.
+ */
+export function itemsSpeech(kind: "ingredients" | "utensils", items: readonly SpokenItem[], scope: "step" | "recipe"): string {
+  const named = items.filter(item => item.name.trim());
+  const noun = kind === "ingredients" ? "ingrédient" : "ustensile";
+  if (named.length === 0) return scope === "step" ? `Pas d'${noun} lié à cette étape.` : `Pas d'${noun} dans cette recette.`;
+  const head = kind === "ingredients"
+    ? (scope === "step" ? "Pour cette étape" : "Ingrédients de la recette")
+    : (scope === "step" ? "Ustensiles pour cette étape" : "Ustensiles de la recette");
+  return `${head} : ${named.map(itemText).join(" ; ")}.`;
+}
+
+/**
+ * Réponse à « combien de beurre » : la quantité de l'ingrédient demandé, cherché
+ * d'abord dans l'étape, puis dans toute la recette.
+ * @param query - Ingrédient demandé.
+ * @param stepItems - Ingrédients de l'étape, quantités affichées.
+ * @param recipeItems - Ingrédients de la recette, quantités affichées.
+ * @returns La phrase à lire.
+ */
+export function quantitySpeech(query: string, stepItems: readonly SpokenItem[], recipeItems: readonly SpokenItem[]): string {
+  const found = stepItems.find(item => sameItem(item, query)) ?? recipeItems.find(item => sameItem(item, query));
+  if (!found) return `Je ne trouve pas ${query} dans la recette.`;
+  const quantity = found.quantity?.trim();
+  return quantity ? `${capitalize(found.name.trim())} : ${quantity}.` : `${capitalize(found.name.trim())} : pas de quantité indiquée.`;
+}
+
+/** Temps en mots pour la synthèse vocale (« 45 secondes », « 3 minutes 20 », « 12 minutes »). */
+function durationWords(seconds: number): string {
+  if (seconds < 60) return plural(seconds, "seconde");
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    return `${plural(hours, "heure")}${minutes % 60 ? ` ${minutes % 60}` : ""}`;
+  }
+  // Les secondes ne comptent que sur les fins de cuisson courtes.
+  return minutes < 5 && rest > 0 ? `${plural(minutes, "minute")} ${rest}` : plural(minutes, "minute");
+}
+
+/**
+ * Réponse à « temps restant » : ce qu'il reste sur chaque minuteur actif, le plus
+ * proche de sonner en premier.
+ * @param timers - Minuteurs de la session.
+ * @param now - Horodatage courant (ms).
+ * @returns La phrase à lire.
+ */
+export function remainingSpeech(timers: readonly CookTimer[], now: number): string {
+  const live = timers
+    .filter(timer => !timer.done)
+    .map(timer => ({ timer, left: remainingSecs(timer, now) }))
+    .sort((a, b) => a.left - b.left);
+  if (live.length === 0) return "Aucun minuteur en cours.";
+  return live
+    .map(({ timer, left }) => `Minuteur de ${timer.label} : ${durationWords(left)}${timer.running ? "" : ", en pause"}.`)
+    .join(" ");
+}
+
+/**
+ * Annonce d'un minuteur qui vient de sonner : en mains libres, la sonnerie seule
+ * ne dit pas lequel.
+ * @param timer - Le minuteur terminé.
+ * @returns La phrase à lire.
+ */
+export function timerDoneSpeech(timer: Pick<CookTimer, "label" | "stepLabel">): string {
+  const step = timer.stepLabel?.trim();
+  return step ? `Minuteur de ${timer.label} terminé, ${lowerFirst(step)}.` : `Minuteur de ${timer.label} terminé.`;
 }
 
 /** Page du pas à pas à lire à voix haute (sous-ensemble de la page du mode cuisine). */

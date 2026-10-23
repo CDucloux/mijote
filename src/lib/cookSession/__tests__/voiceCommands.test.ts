@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech, VOICE_HELP, voiceCommandLabel, elapsedSpeech } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech, VOICE_HELP, voiceCommandLabel, elapsedSpeech, itemsSpeech, quantitySpeech, remainingSpeech, timerDoneSpeech } from "@/lib/cookSession/voiceCommands.js";
 import { buildTechniqueIndex, type TechniqueEntry } from "@/lib/recipes/techniques.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
 
@@ -288,5 +288,61 @@ describe("durée de la recette", () => {
   it("borne les valeurs aberrantes", () => {
     expect(elapsedSpeech(-10)).toBe("Recette lancée depuis moins d'une minute.");
     expect(elapsedSpeech(Number.NaN)).toBe("Recette lancée depuis moins d'une minute.");
+  });
+});
+
+describe("ingrédients et ustensiles", () => {
+  const step = [{ name: "Guanciale", quantity: "120g" }, { name: "Vin blanc sec", quantity: "1 verre" }];
+  const recipe = [...step, { name: "Beurre doux", quantity: "30 g" }, { name: "Sel", quantity: "" }];
+
+  it("reconnaît « ingrédients », « combien de… » et « ustensiles »", () => {
+    expect(parseVoiceCommand("ingrédients")).toEqual({ kind: "ingredients" });
+    expect(parseVoiceCommand("combien de beurre")).toEqual({ kind: "ingredients", query: "beurre" });
+    expect(parseVoiceCommand("il faut combien d'oignons")).toEqual({ kind: "ingredients", query: "oignons" });
+    expect(parseVoiceCommand("ustensiles")).toEqual({ kind: "utensils" });
+  });
+  it("laisse « combien de temps » à la durée", () => {
+    expect(parseVoiceCommand("combien de temps")).toEqual({ kind: "elapsed" });
+  });
+  it("lit les éléments de l'étape ou de la recette", () => {
+    expect(itemsSpeech("ingredients", step, "step")).toBe("Pour cette étape : Guanciale, 120g ; Vin blanc sec, 1 verre.");
+    expect(itemsSpeech("utensils", [{ name: "Poêle" }, { name: "Passoire" }], "recipe")).toBe("Ustensiles de la recette : Poêle ; Passoire.");
+    expect(itemsSpeech("ingredients", [], "step")).toBe("Pas d'ingrédient lié à cette étape.");
+    expect(itemsSpeech("utensils", [{ name: " " }], "recipe")).toBe("Pas d'ustensile dans cette recette.");
+  });
+  it("donne la quantité demandée, de l'étape puis de la recette", () => {
+    expect(quantitySpeech("guanciale", step, recipe)).toBe("Guanciale : 120g.");
+    expect(quantitySpeech("beurre", step, recipe)).toBe("Beurre doux : 30 g.");
+    expect(quantitySpeech("sel", step, recipe)).toBe("Sel : pas de quantité indiquée.");
+    expect(quantitySpeech("chocolat", step, recipe)).toBe("Je ne trouve pas chocolat dans la recette.");
+  });
+});
+
+describe("temps restant et fin de minuteur", () => {
+  const timer = (patch: Partial<CookTimer>): CookTimer => ({
+    id: "t", label: "10 min", totalSec: 600, running: true, endAt: 0, remainingMs: 0, done: false, stepIdx: 2, stepLabel: "Étape 3", ...patch,
+  });
+  const now = 1_000_000;
+
+  it("reconnaît « temps restant », y compris « combien de temps il reste »", () => {
+    expect(parseVoiceCommand("temps restant")).toEqual({ kind: "remaining" });
+    expect(parseVoiceCommand("combien de temps il reste")).toEqual({ kind: "remaining" });
+    expect(parseVoiceCommand("il reste combien")).toEqual({ kind: "remaining" });
+  });
+  it("dit ce qu'il reste, le plus proche de sonner d'abord", () => {
+    const long = timer({ id: "a", label: "1 h", endAt: now + 75 * 60_000 });
+    const short = timer({ id: "b", label: "5 min", endAt: now + 200_000 });
+    const paused = timer({ id: "c", label: "10 min", running: false, endAt: null, remainingMs: 45_000 });
+    expect(remainingSpeech([long, short, paused], now))
+      .toBe("Minuteur de 10 min : 45 secondes, en pause. Minuteur de 5 min : 3 minutes 20. Minuteur de 1 h : 1 heure 15.");
+    expect(remainingSpeech([timer({ endAt: now + 12 * 60_000 + 30_000 })], now)).toBe("Minuteur de 10 min : 12 minutes.");
+  });
+  it("ignore les minuteurs terminés", () => {
+    expect(remainingSpeech([timer({ done: true })], now)).toBe("Aucun minuteur en cours.");
+    expect(remainingSpeech([], now)).toBe("Aucun minuteur en cours.");
+  });
+  it("annonce la fin d'un minuteur avec son étape", () => {
+    expect(timerDoneSpeech({ label: "10 min", stepLabel: "Étape 3" })).toBe("Minuteur de 10 min terminé, étape 3.");
+    expect(timerDoneSpeech({ label: "5 min", stepLabel: "" })).toBe("Minuteur de 5 min terminé.");
   });
 });

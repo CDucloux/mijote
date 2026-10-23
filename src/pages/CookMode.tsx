@@ -290,6 +290,16 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   }, [subCook, done, iterOpen, closing, stepIdx, totalSteps, isBases, allComponentsDone]);
 
   const stepDurations = useMemo(() => (step ? parseDurations(step.text) : []), [step]);
+  // Ingrédients liés à l'étape courante (bruts + composants)
+  const linkedIngs = stepLinked(recipe.ingredients, step?.ingredients);
+  const linkedUts = stepLinked(recipe.utensils, step?.utensils);
+
+  // Ce que la voix lit sur « ingrédients » / « ustensiles » : les quantités telles qu'affichées.
+  const toSpokenIngredient = (ing: IngredientLine) => ({ name: ing.name ?? "", quantity: ing.amount != null && ing.amount !== "" ? displayQty(ing, Number(ing.amount) * (mult || 1)) : "" });
+  const voiceRecipeIngredients = overviewIngs.map(toSpokenIngredient);
+  const voicePageItems = isOverview
+    ? { ingredients: voiceRecipeIngredients, utensils: overviewUts.map(u => ({ name: u.name ?? "" })), scope: "recipe" as const }
+    : { ingredients: linkedIngs.map(toSpokenIngredient), utensils: linkedUts.map(u => ({ name: u.name ?? "" })), scope: "step" as const };
   const currentTechniques = useMemo(() => stepTechniques(step?.text, techIndex), [step, techIndex]);
   const timerLabel = realIdx >= 0 ? `Étape ${realIdx + 1}` : isOverview ? "Mise en place" : "Bases";
 
@@ -304,6 +314,9 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     tip: step?.tip,
     techniques: currentTechniques,
     onFinish: finishCooking,
+    pageItems: voicePageItems,
+    recipeIngredients: voiceRecipeIngredients,
+    timers,
     elapsed,
     stepCount: realStepCount,
     onGotoStep: goToStep,
@@ -336,9 +349,6 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     [subCook, done, iterOpen, stepIdx, totalSteps, isBases, allComponentsDone],
   );
 
-  // Ingrédients liés à l'étape courante (bruts + composants)
-  const linkedIngs = stepLinked(recipe.ingredients, step?.ingredients);
-  const linkedUts = stepLinked(recipe.utensils, step?.utensils);
 
   return createPortal(
     <>
