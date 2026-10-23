@@ -27,6 +27,7 @@ export type VoiceCommand =
   | { kind: "technique"; query?: string }
   | { kind: "finish" }
   | { kind: "goto"; step: number }
+  | { kind: "elapsed" }
   | { kind: "silence" }
   | { kind: "readOff" }
   | { kind: "readOn" }
@@ -48,6 +49,7 @@ const VOCABULARY: readonly [Exclude<VoiceCommand["kind"], "goto">, readonly stri
   ["readOff", ["lecture off", "lecture of", "lecture coupee"]],
   ["readOn", ["lecture on", "lecture activee"]],
   ["silence", ["silence", "chut"]],
+  ["elapsed", ["duree", "combien de temps"]],
   ["stop", ["stop", "stoppe"]],
   ["pause", ["pause"]],
   ["resume", ["reprends", "reprendre", "reprise"]],
@@ -215,6 +217,7 @@ export const VOICE_HELP: readonly VoiceHelpGroup[] = [
     title: "Minuteurs",
     icon: "clock",
     entries: [
+      { say: "Durée", also: ["depuis combien de temps"], does: "Temps écoulé depuis le lancement", kind: "elapsed" },
       { say: "Minuteur", also: ["minuteur 10 minutes"], does: "Lancer le minuteur de l'étape, ou la durée dite", kind: "timer" },
       { say: "Pause", does: "Mettre en pause le prochain à sonner", kind: "pause" },
       { say: "Reprends", does: "Relancer le minuteur en pause", kind: "resume" },
@@ -243,6 +246,21 @@ export function voiceCommandLabel(command: VoiceCommand): string {
   if (command.kind === "technique" && command.query) return `Technique ${command.query}`;
   const entry = VOICE_HELP.flatMap(group => group.entries).find(item => item.kind === command.kind);
   return entry?.say ?? command.kind;
+}
+
+/**
+ * Réponse à « durée » : depuis combien de temps la recette est lancée, en mots
+ * (une synthèse vocale lit mal « 1:05 »).
+ * @param seconds - Secondes écoulées depuis le lancement.
+ * @returns La phrase à lire.
+ */
+export function elapsedSpeech(seconds: number): string {
+  const minutes = Math.floor(Math.max(0, Number.isFinite(seconds) ? seconds : 0) / 60);
+  if (minutes < 1) return "Recette lancée depuis moins d'une minute.";
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours === 0) return `Recette lancée depuis ${plural(minutes, "minute")}.`;
+  return `Recette lancée depuis ${plural(hours, "heure")}${rest ? ` ${rest}` : ""}.`;
 }
 
 /** Page du pas à pas à lire à voix haute (sous-ensemble de la page du mode cuisine). */

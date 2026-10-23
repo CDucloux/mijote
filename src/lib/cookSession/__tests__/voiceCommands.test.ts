@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech, VOICE_HELP, voiceCommandLabel } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech, VOICE_HELP, voiceCommandLabel, elapsedSpeech } from "@/lib/cookSession/voiceCommands.js";
 import { buildTechniqueIndex, type TechniqueEntry } from "@/lib/recipes/techniques.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
 
@@ -270,5 +270,23 @@ describe("voiceCommandLabel", () => {
     expect(voiceCommandLabel({ kind: "goto", step: 3 })).toBe("Étape 3");
     expect(voiceCommandLabel({ kind: "timer", duration: { minutes: 10, label: "10 min" } })).toBe("Minuteur 10 min");
     expect(voiceCommandLabel({ kind: "technique", query: "monter" })).toBe("Technique monter");
+  });
+});
+
+describe("durée de la recette", () => {
+  it("reconnaît « durée » et « depuis combien de temps »", () => {
+    expect(parseVoiceCommand("durée")).toEqual({ kind: "elapsed" });
+    expect(parseVoiceCommand("ça fait combien de temps")).toEqual({ kind: "elapsed" });
+  });
+  it("dit le temps écoulé en mots", () => {
+    expect(elapsedSpeech(30)).toBe("Recette lancée depuis moins d'une minute.");
+    expect(elapsedSpeech(60)).toBe("Recette lancée depuis 1 minute.");
+    expect(elapsedSpeech(12 * 60 + 40)).toBe("Recette lancée depuis 12 minutes.");
+    expect(elapsedSpeech(3600)).toBe("Recette lancée depuis 1 heure.");
+    expect(elapsedSpeech(2 * 3600 + 5 * 60)).toBe("Recette lancée depuis 2 heures 5.");
+  });
+  it("borne les valeurs aberrantes", () => {
+    expect(elapsedSpeech(-10)).toBe("Recette lancée depuis moins d'une minute.");
+    expect(elapsedSpeech(Number.NaN)).toBe("Recette lancée depuis moins d'une minute.");
   });
 });

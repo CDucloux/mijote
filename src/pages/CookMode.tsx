@@ -304,6 +304,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     tip: step?.tip,
     techniques: currentTechniques,
     onFinish: finishCooking,
+    elapsed,
     stepCount: realStepCount,
     onGotoStep: goToStep,
     onNext: () => (stepIdx < totalSteps - 1 ? goNext() : finishCooking()),
