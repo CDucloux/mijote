@@ -1,4 +1,6 @@
 import { Icon } from "../ui/Icon.jsx";
+import { useLS } from "../../hooks/useLS.js";
+import { useMediaQuery } from "../../hooks/useMediaQuery.js";
 import { IngImage } from "../ui/Img.jsx";
 import { SearchField } from "../ui/SearchField.jsx";
 import { IngredientStatusBadge } from "../badges/IngredientStatusBadge.jsx";
@@ -71,10 +73,13 @@ export function IngredientsAdminSection({ ingredientDB, categories, isAdmin, fil
   const groups = groupAdminIngredients(ingredientDB, order, { category, filter, search });
   const shown = groups.reduce((n, g) => n + g.items.length, 0);
   const selected = category !== null ? categories[category] : undefined;
+  // Volet gauche repliable au large seulement (en mobile, les catégories sont une rangée de pastilles).
+  const [asideOpen, setAsideOpen] = useLS("rf_adminIngAsideOpen", true);
+  const canFold = useMediaQuery("(min-width: 900px)"); // même seuil que `.ing-admin` (global.css)
 
   return (
-    <div className="slide-up ing-admin">
-      <aside className="ing-admin-aside">
+    <div className="slide-up ing-admin" data-folded={(canFold && !asideOpen) || undefined}>
+      <aside className="ing-admin-aside" inert={canFold && !asideOpen}>
         <SearchField value={search} onChange={onSearch} placeholder="Rechercher un ingrédient" />
         <IngredientCategoryNav categories={categories} counts={countByCategory(ingredientDB, filter)} total={filter ? counts[filter] : counts.all}
           value={category} onChange={onCategory} onReorder={isAdmin ? onReorder : undefined} />
@@ -83,13 +88,21 @@ export function IngredientsAdminSection({ ingredientDB, categories, isAdmin, fil
 
       <section style={{ minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, display: "flex", alignItems: "flex-start", gap: 12 }}>
+            {canFold && (
+              <button className="icon-btn-soft ripple ing-admin-fold" onClick={() => setAsideOpen(o => !o)}
+                aria-expanded={asideOpen} title={asideOpen ? "Masquer les catégories" : "Afficher les catégories"}>
+                <Icon name="sidebar" size={18} />
+              </button>
+            )}
+            <div style={{ minWidth: 0 }}>
             <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 28, fontWeight: 650, letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0, display: "flex", alignItems: "center", gap: 10 }}>
               {selected && <span style={{ fontSize: 24 }}>{selected.icon}</span>}
               <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selected?.label ?? "Tous les ingrédients"}</span>
             </h2>
             <div style={{ fontSize: 13, color: "var(--text3)", marginTop: 4, fontVariantNumeric: "tabular-nums" }}>
               {shown} fiche{shown > 1 ? "s" : ""}{search.trim() ? ` pour « ${search.trim()} »` : ""}
+            </div>
             </div>
           </div>
           {isAdmin && category !== null && (

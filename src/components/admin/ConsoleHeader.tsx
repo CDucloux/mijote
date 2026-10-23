@@ -21,7 +21,7 @@ interface ConsoleHeaderProps {
 /** En-tête figé de la console : titre, onglets de section, compteur de la base. */
 export function ConsoleHeader({ section, onSection, pendingReports, baseCount }: ConsoleHeaderProps) {
   return (
-    <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
+    <div style={{ padding: "20px 20px 10px", flexShrink: 0 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
           <span style={{ width: 30, height: 30, borderRadius: 9, background: "rgba(var(--admin-rgb),0.14)", display: "grid", placeItems: "center", flexShrink: 0 }}>

@@ -5432,8 +5432,15 @@ html.light .sheet-sticky-head::after {
   .ing-admin-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 }
 @media (min-width: 900px) {
-  .ing-admin { display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 32px; align-items: start; }
-  .ing-admin-aside { gap: 18px; }
+  .ing-admin {
+    display: grid; grid-template-columns: 272px minmax(0, 1fr); column-gap: 32px; align-items: start;
+    transition: grid-template-columns 0.32s cubic-bezier(0.33, 1, 0.68, 1), column-gap 0.32s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  .ing-admin-aside { gap: 18px; transition: opacity 0.2s ease, visibility 0.32s; }
+  /* Volet replié : la colonne se referme, le contenu s'efface puis sort du flux d'accessibilité (inert). */
+  .ing-admin[data-folded] { grid-template-columns: 0px minmax(0, 1fr); column-gap: 0px; }
+  .ing-admin[data-folded] .ing-admin-aside { opacity: 0; visibility: hidden; overflow: hidden; }
+  .ing-admin-fold { width: 38px; height: 38px; margin-top: -2px; border-radius: 50%; display: grid; place-items: center; border: none; background: transparent; cursor: pointer; flex-shrink: 0; }
   .ing-admin-tools { order: 0; }
   .ing-cats {
     flex-direction: column; gap: 1px; overflow: visible; margin: 0; padding: 4px;
