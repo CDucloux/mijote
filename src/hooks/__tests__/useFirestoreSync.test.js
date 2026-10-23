@@ -183,6 +183,28 @@ describe("useFirestoreSync", () => {
     expect(fs.writeSharedData).not.toHaveBeenCalled(); // déjà migré → pas de fusion/écriture
   });
 
+  it("dissolution : une ré-émission du pointeur pendant le retour en solo ne bloque pas le workspace (non-régression)", async () => {
+    fs.loadMasterDB.mockResolvedValue(MASTER);
+    fs.loadUserData.mockResolvedValue({ recipes: [], userDB: { ingredients: [], utensils: [] } });
+    fs.loadSharedData.mockResolvedValue({ recipes: [{ id: "hr" }], collections: [], mealPlan: {}, shoppingLists: [], stock: [], lowStock: [] });
+    const props = makeProps({ user: { uid: "me" }, householdPointer: { id: "h1", migrated: true } });
+    const { result, rerender } = renderHook(p => useFirestoreSync(p), { initialProps: props });
+    await act(async () => { await authCb({ uid: "me" }); });
+    await waitFor(() => expect(result.current.workspaceReady).toBe(true));
+
+    // Retour en solo : la lecture de l'espace perso reste en vol pendant que le
+    // pointeur est ré-émis (nouvel objet, même cible « sans foyer »).
+    let release;
+    fs.loadSharedData.mockImplementationOnce(() => new Promise(r => { release = r; }));
+    rerender({ ...props, householdPointer: { id: null } });
+    await waitFor(() => expect(result.current.workspaceReady).toBe(false));
+    rerender({ ...props, householdPointer: { id: null } });
+    await act(async () => { release({ recipes: [], collections: [], mealPlan: {}, shoppingLists: [], stock: [], lowStock: [] }); });
+
+    await waitFor(() => expect(result.current.workspaceReady).toBe(true));
+    expect(props.setSyncStatus).toHaveBeenLastCalledWith("synced");
+  });
+
   it("changement de compte : purge immédiate des données du compte précédent (anti-bleed)", async () => {
     fs.loadMasterDB.mockResolvedValue(MASTER);
     fs.loadUserData.mockResolvedValue({ recipes: [{ id: "r1" }], userDB: { ingredients: [], utensils: [] } });
