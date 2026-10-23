@@ -80,7 +80,7 @@ function DraggableIngredientBase({
   if (ing.recipeId) {
     const comp = (recipes || []).find(r => r.id === ing.recipeId);
     return (
-      <div {...rowProps} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: `1px solid ${aimed ? "var(--accent)" : "var(--border)"}`, transition: "border-color 0.15s, box-shadow 0.2s", display: "flex", alignItems: "center", gap: 10, ...dragStyle }}>
+      <div {...rowProps} style={{ background: "var(--float-surface)", borderRadius: 16, padding: 12, border: "none", boxShadow: aimed ? "inset 0 0 0 1.5px var(--accent)" : "var(--float-shadow)", transition: "box-shadow 0.2s", display: "flex", alignItems: "center", gap: 10, ...dragStyle }}>
         {handle}
         {comp?.image
           ? <IngImage src={comp.image} alt={comp.name} size={36} cover />
@@ -139,13 +139,13 @@ function DraggableIngredientBase({
     </button>
   );
   return (
-    <div {...rowProps} style={{ background: "var(--surface)", borderRadius: 12, padding: 12, border: `1px solid ${aimed ? "var(--accent)" : "var(--border)"}`, transition: "border-color 0.15s, box-shadow 0.2s", ...dragStyle }}>
+    <div {...rowProps} style={{ background: "var(--float-surface)", borderRadius: 16, padding: 12, border: "none", boxShadow: aimed ? "inset 0 0 0 1.5px var(--accent)" : "var(--float-shadow)", transition: "box-shadow 0.2s", ...dragStyle }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {handle}
         <span style={{ position: "relative", width: 36, height: 36, flexShrink: 0, display: "flex" }}>
           {img
             ? <IngImage src={img} alt={ing.name} size={36} />
-            : <span style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: "var(--surface2)", border: "1px dashed var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="leaf" size={15} color="var(--text3)" /></span>}
+            : <span style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon name="leaf" size={15} color="var(--text3)" /></span>}
           {cutBtn}
         </span>
         {/* Champ + pastille de statut logée à l'intérieur (padding-right réservé). */}
