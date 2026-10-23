@@ -19,7 +19,7 @@ export type VoiceCommand =
   | { kind: "repeat" }
   | { kind: "timer"; duration?: StepDuration };
 
-/** Nombre de mots maximal d'une phrase prise pour une commande. */
+/** Nombre de mots examinés : une phrase courte, ou la fin d'une dictée plus longue. */
 export const MAX_COMMAND_WORDS = 6;
 
 const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
@@ -29,39 +29,55 @@ const VOCABULARY: readonly [VoiceCommand["kind"], readonly string[]][] = [
   ["next", ["suivant", "suivante", "ensuite", "continue", "continuer"]],
 ];
 
+const wordsOf = (text: string | null | undefined): string[] =>
+  normalizeStr(text).replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+
 /**
  * Commande portée par une phrase transcrite, ou `null` si elle n'en contient pas.
  * Le minuteur est cherché en premier : « minuteur suivant » ne doit pas tourner la page.
  * @param transcript - Phrase reconnue par la dictée (casse, accents et ponctuation indifférents).
+ * @param ignoredWords - Mots-clés à ne pas prendre en compte (ceux du texte en cours de lecture).
  * @returns La commande, ou `null` (phrase vide, trop longue, ou sans mot-clé).
  */
-export function parseVoiceCommand(transcript: string | null | undefined): VoiceCommand | null {
-  const words = normalizedWords(transcript).split(" ").filter(Boolean);
+export function parseVoiceCommand(transcript: string | null | undefined, ignoredWords?: ReadonlySet<string>): VoiceCommand | null {
+  const words = wordsOf(transcript);
   if (words.length === 0 || words.length > MAX_COMMAND_WORDS) return null;
   const said = new Set(words);
   for (const [kind, keywords] of VOCABULARY) {
-    if (!keywords.some(keyword => said.has(keyword))) continue;
+    if (!keywords.some(keyword => said.has(keyword) && !ignoredWords?.has(keyword))) continue;
     if (kind !== "timer") return { kind };
-    const duration = parseDurations(transcript)[0];
+    const duration = parseDurations(words.join(" "))[0];
     return duration ? { kind, duration } : { kind };
   }
   return null;
 }
 
-const normalizedWords = (text: string | null | undefined): string =>
-  normalizeStr(text).replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean).join(" ");
+/** Résultat de {@link parseVoiceTail}. */
+export interface VoiceTail {
+  command: VoiceCommand | null;
+  /** Nombre de mots de la transcription : reprendre l'analyse après eux. */
+  words: number;
+}
 
 /**
- * Vrai si une phrase entendue n'est que l'écho de la lecture à voix haute : le
- * micro reste ouvert pendant la lecture (pour qu'on puisse l'interrompre d'un
- * « suivant »), il capte donc aussi la synthèse vocale.
- * @param transcript - Phrase reconnue pendant (ou juste après) la lecture.
- * @param spoken - Texte en cours de lecture.
- * @returns `true` si la phrase figure telle quelle dans le texte lu.
+ * Commande dite à la fin d'une dictée en cours.
+ *
+ * Le micro reste ouvert pendant toute la cuisine, et certains navigateurs (Edge)
+ * cousent en une seule longue transcription la lecture à voix haute captée par
+ * le micro et la commande qui la suit. On n'examine donc que les derniers mots
+ * nouveaux (après `fromWord`, déjà traités). Pendant une lecture, les mots-clés
+ * présents dans le texte lu sont ignorés : « ensuite » lu dans une étape ne doit
+ * pas tourner la page.
+ * @param transcript - Transcription courante (provisoire ou définitive) de la dictée.
+ * @param fromWord - Nombre de mots déjà analysés dans cette transcription.
+ * @param spoken - Texte en cours de lecture à voix haute, s'il y en a un.
+ * @returns La commande trouvée (ou `null`) et le nombre de mots de la transcription.
  */
-export function isSpeechEcho(transcript: string | null | undefined, spoken: string | null | undefined): boolean {
-  const heard = normalizedWords(transcript);
-  return heard !== "" && ` ${normalizedWords(spoken)} `.includes(` ${heard} `);
+export function parseVoiceTail(transcript: string | null | undefined, fromWord = 0, spoken?: string | null): VoiceTail {
+  const words = wordsOf(transcript);
+  const fresh = words.slice(Math.max(0, fromWord)).slice(-MAX_COMMAND_WORDS);
+  const ignored = spoken ? new Set(wordsOf(spoken)) : undefined;
+  return { command: parseVoiceCommand(fresh.join(" "), ignored), words: words.length };
 }
 
 /** Page du pas à pas à lire à voix haute (sous-ensemble de la page du mode cuisine). */

@@ -7,13 +7,14 @@
  * Android de l'app installée. `supported` le dit ; sans support, la bascule
  * explique pourquoi au lieu d'activer le mode.
  * Le micro reste ouvert pendant la lecture à voix haute (on peut l'interrompre
- * d'un « suivant ») : ce qu'il capte de la synthèse elle-même est filtré
- * (`isSpeechEcho`) pour ne pas être pris pour une commande.
+ * d'un « suivant ») : les mots-clés présents dans le texte lu sont ignorés tant
+ * qu'il est lu, pour que la synthèse captée ne soit pas prise pour une commande
+ * (cf. `parseVoiceTail`).
  *
  * @module useVoiceControl
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { isSpeechEcho, parseVoiceCommand, type VoiceCommand } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceTail, type VoiceCommand } from "@/lib/cookSession/voiceCommands.js";
 
 // La Web Speech API n'est pas typée par lib.dom : on décrit le strict nécessaire.
 interface RecognitionAlternative { transcript: string }
@@ -37,8 +38,11 @@ const LANG = "fr-FR";
 const DUPLICATE_MS = 1200;
 /** Après la lecture, le micro peut encore rendre un écho pendant ce délai (latence de dictée). */
 const ECHO_GRACE_MS = 2000;
-/** Durée d'affichage de la dernière phrase entendue. */
+/** Erreurs de dictée sans gravité : silence prolongé, arrêt volontaire. */
+const BENIGN_ERRORS = new Set(["no-speech", "aborted"]);
+/** Durée d'affichage de la dernière phrase entendue, et nombre de ses derniers mots montrés. */
 const HEARD_MS = 3000;
+const HEARD_WORDS = 6;
 
 function recognitionCtor(): RecognitionCtor | null {
   if (typeof window === "undefined") return null;
@@ -81,6 +85,9 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
   const recognitionRef = useRef<Recognition | null>(null);
   const runningRef = useRef(false);
   const lastRef = useRef({ kind: "", at: 0 });
+  // Mots déjà analysés par résultat de dictée (index du résultat → nombre de mots) :
+  // une transcription provisoire grandit, on n'en relit que la fin nouvelle.
+  const consumedRef = useRef(new Map<number, number>());
   // Lecture en cours : texte lu et dernier instant où la synthèse parlait. On ne
   // s'appuie pas sur `onend` de la synthèse, que Chrome omet sur les textes longs.
   const spokenRef = useRef({ text: "", lastAt: 0 });
@@ -114,18 +121,21 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     const recognition = new Ctor();
     recognition.lang = LANG;
     recognition.continuous = true;
-    recognition.interimResults = false;
+    // Résultats provisoires : la commande part dès qu'elle est entendue, sans attendre
+    // la fin de phrase (que certains navigateurs ne posent qu'après un long silence).
+    recognition.interimResults = true;
     recognition.onresult = (event) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        if (!result?.isFinal) continue;
+        if (!result) continue;
         const transcript = result[0].transcript.trim();
+        // Seule la fin s'affiche : une dictée longue serait tronquée par son début.
+        if (transcript) setHeard(transcript.split(/\s+/).slice(-HEARD_WORDS).join(" "));
         const spoken = spokenRef.current;
         const reading = window.speechSynthesis.speaking || Date.now() - spoken.lastAt < ECHO_GRACE_MS;
-        if (reading && isSpeechEcho(transcript, spoken.text)) continue;
-        setHeard(transcript);
-        const command = parseVoiceCommand(transcript);
+        const { command, words } = parseVoiceTail(transcript, consumedRef.current.get(i) ?? 0, reading ? spoken.text : null);
         if (!command) continue;
+        consumedRef.current.set(i, words);
         const now = Date.now();
         if (command.kind === lastRef.current.kind && now - lastRef.current.at < DUPLICATE_MS) continue;
         lastRef.current = { kind: command.kind, at: now };
@@ -139,11 +149,14 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
       } else if (event.error === "network" || event.error === "audio-capture") {
         onErrorRef.current?.("Mains libres indisponible : micro ou connexion introuvable.");
         setActive(false);
+      } else if (!BENIGN_ERRORS.has(event.error)) {
+        onErrorRef.current?.(`Mains libres : la dictée a échoué (${event.error}).`);
       }
     };
     // La dictée s'arrête d'elle-même après un silence : on la relance tant que le mode est actif.
     recognition.onend = () => {
       runningRef.current = false;
+      consumedRef.current.clear(); // une nouvelle session renumérote ses résultats
       setTimeout(listen, 250);
     };
     recognitionRef.current = recognition;

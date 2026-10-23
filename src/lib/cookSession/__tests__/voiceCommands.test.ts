@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseVoiceCommand, cookPageSpeech, isSpeechEcho } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceCommand, parseVoiceTail, cookPageSpeech } from "@/lib/cookSession/voiceCommands.js";
 
 describe("parseVoiceCommand", () => {
   it("reconnaît les trois commandes et le retour, sans casse ni accents", () => {
@@ -52,22 +52,27 @@ describe("cookPageSpeech", () => {
   });
 });
 
-describe("isSpeechEcho", () => {
-  const spoken = "Étape 4. Ajouter la pâte et passer à l'étape suivante après 2 minutes.";
-  it("reconnaît un fragment du texte lu, sans casse ni accents", () => {
-    expect(isSpeechEcho("l'étape suivante", spoken)).toBe(true);
-    expect(isSpeechEcho("ETAPE 4", spoken)).toBe(true);
+describe("parseVoiceTail", () => {
+  it("trouve la commande à la fin d'une longue dictée (lecture captée puis commande)", () => {
+    const transcript = "étape 2 faire fondre le beurre dans une poêle suivant";
+    expect(parseVoiceTail(transcript)).toEqual({ command: { kind: "next" }, words: 10 });
   });
-  it("laisse passer une commande absente du texte lu", () => {
-    expect(isSpeechEcho("répète", spoken)).toBe(false);
-    expect(isSpeechEcho("suivant", spoken)).toBe(false);
+  it("ne réexamine pas les mots déjà traités", () => {
+    expect(parseVoiceTail("suivant faire fondre", 1).command).toBeNull();
+    expect(parseVoiceTail("suivant faire fondre répète", 1).command).toEqual({ kind: "repeat" });
   });
-  it("ne prend pas un mot partiel pour un écho", () => {
-    expect(isSpeechEcho("ape", spoken)).toBe(false);
+  it("ignore les mots-clés présents dans le texte en cours de lecture", () => {
+    const spoken = "Étape 3. Ajouter la crème, ensuite laisser réduire.";
+    expect(parseVoiceTail("ajouter la crème ensuite laisser", 0, spoken).command).toBeNull();
+    expect(parseVoiceTail("ajouter la crème suivant", 0, spoken).command).toEqual({ kind: "next" });
+    expect(parseVoiceTail("ensuite", 0, null).command).toEqual({ kind: "next" });
   });
-  it("rend false sur une entrée vide", () => {
-    expect(isSpeechEcho("", spoken)).toBe(false);
-    expect(isSpeechEcho("suivant", "")).toBe(false);
-    expect(isSpeechEcho(null, null)).toBe(false);
+  it("lit la durée d'un minuteur en fin de dictée", () => {
+    expect(parseVoiceTail("bon alors on va dire minuteur 10 minutes").command).toEqual({ kind: "timer", duration: { minutes: 10, label: "10 min" } });
+  });
+  it("rend une commande nulle sur une entrée vide ou entièrement traitée", () => {
+    expect(parseVoiceTail("")).toEqual({ command: null, words: 0 });
+    expect(parseVoiceTail(null)).toEqual({ command: null, words: 0 });
+    expect(parseVoiceTail("suivant", 1)).toEqual({ command: null, words: 1 });
   });
 });
