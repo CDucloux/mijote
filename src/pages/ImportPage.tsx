@@ -274,7 +274,7 @@ export function ImportPage({ mode = "lien" }: { mode?: ImportMode }) {
   );
   const textArea = (
     <>
-      <button className="imp-pastebtn" onClick={pasteFromClipboard}>
+      <button className="imp-pastebtn ripple ripple-accent" onClick={pasteFromClipboard}>
         <Icon name="copy" size={15} color="currentColor" /> Coller depuis le presse-papiers
       </button>
       <textarea ref={textRef} className="imp-txtarea" rows={10}

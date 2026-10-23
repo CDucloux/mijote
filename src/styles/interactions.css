@@ -60,7 +60,7 @@ html.light, .light {
   .stepper-btn, .save-carnet-btn, .timer-btn-accent, .ing-hover,
   .spotlight-explore, .match-dot, .day-intake-pill, .auth__back, .cook-step-link, .cook-timer-btn,
   .tech-more, .convert-row, .convert-reset, .imp-creator, .account-group.is-special .menu-row,
-  .imp-dropzone:not(.drag), .imp-addphoto, .imp-clip,
+  .imp-dropzone:not(.drag), .imp-addphoto, .imp-clip, .imp-pastebtn,
   /* danger */
   .menu-row-danger, .account-group.is-danger .menu-row, .list-del-btn, .timer-btn-stop,
   .btn-danger, .icon-btn-danger, .mp-remove-btn,
@@ -104,7 +104,7 @@ html.light, .light {
   .ing-hover, .spotlight-explore, .match-dot, .day-intake-pill, .auth__back,
   .step-link-pill[data-active], .classement-pill[data-active], .filter-chip[data-on],
   .cook-step-link, .cook-timer-btn, .tech-more, .convert-row, .convert-reset, .imp-creator,
-  .imp-dropzone:not(.drag), .imp-addphoto, .imp-clip,
+  .imp-dropzone:not(.drag), .imp-addphoto, .imp-clip, .imp-pastebtn,
   .account-group.is-special .menu-row
 ) {
   --veil-color: var(--tint, var(--accent));
