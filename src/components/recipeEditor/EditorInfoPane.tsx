@@ -83,7 +83,7 @@ export function EditorInfoPane({ form, up, upYield, onToggleComponent, onOpenChe
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <EditorHead icon="grid" label="Classement" />
         {/* Préparation de base (composant) : réutilisable comme ingrédient. */}
-        <div style={{ background: form.isComponent ? "rgba(var(--accent-rgb),0.05)" : "var(--surface)", border: `1px solid ${form.isComponent ? "rgba(var(--accent-rgb),0.4)" : "var(--border)"}`, borderRadius: 16, overflow: "hidden", transition: "border-color 0.2s, background-color 0.2s" }}>
+        <div style={{ background: form.isComponent ? "rgba(var(--accent-rgb),0.1)" : "var(--surface)", borderRadius: 18, overflow: "hidden", transition: "background-color 0.2s" }}>
           {/* `.ripple` sur la rangée seule : l'onde ne déborde pas sur le rendement déplié. */}
           <label className="ripple" style={{ display: "flex", alignItems: "center", gap: 12, padding: 15, cursor: "pointer" }}>
             <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: form.isComponent ? "rgba(var(--accent-rgb),0.16)" : "var(--surface2)" }}><BaseIcon size={20} color={form.isComponent ? "var(--accent)" : "var(--text2)"} /></span>
@@ -97,7 +97,7 @@ export function EditorInfoPane({ form, up, upYield, onToggleComponent, onOpenChe
             </button>
           </label>
           {form.isComponent && (
-            <div style={{ margin: "0 15px", padding: "14px 0 15px", borderTop: "1px solid rgba(var(--accent-rgb),0.25)" }}>
+            <div style={{ padding: "2px 15px 16px" }}>
               <div className="field-label">Rendement <span style={{ color: "var(--accent2)" }}>*</span> <span style={{ color: "var(--text3)", fontWeight: 400 }}>· ce que produit la préparation</span></div>
               <div style={{ display: "flex", gap: 10 }}>
                 <input className="field-input field-soft" type="number" min="0" step="any" placeholder="ex : 400" value={form.yield?.amount ?? ""} onChange={e => upYield("amount", e.target.value === "" ? "" : +e.target.value)} style={{ flex: 2, background: "var(--surface)", borderRadius: 12 }} />
