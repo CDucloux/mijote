@@ -6,12 +6,14 @@ import com.getcapacitor.BridgeActivity;
 
 import studio.cardamome.cooksession.CookSessionPlugin;
 import studio.cardamome.launcher.LauncherPlugin;
+import studio.cardamome.voice.VoicePlugin;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(CookSessionPlugin.class);
         registerPlugin(LauncherPlugin.class);
+        registerPlugin(VoicePlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

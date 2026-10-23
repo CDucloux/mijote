@@ -3,9 +3,11 @@
  * haute et écran maintenu allumé.
  *
  * S'appuie sur la Web Speech API (dictée et synthèse vocale du navigateur) :
- * disponible dans Chrome, Edge et Safari, absente de Firefox et de la WebView
- * Android de l'app installée. `supported` le dit ; sans support, la bascule
- * explique pourquoi au lieu d'activer le mode.
+ * disponible dans Chrome, Edge et Safari, absente de Firefox. Dans l'app Android,
+ * dont la WebView ne l'a pas, le plugin natif `Voice` prend le relais (cf.
+ * `voice/plugin`). `supported` le dit ; sans support, la bascule explique
+ * pourquoi au lieu d'activer le mode.
+ *
  * Le micro reste ouvert pendant la lecture à voix haute (on peut l'interrompre
  * d'un « suivant ») : les mots-clés présents dans le texte lu sont ignorés tant
  * qu'il est lu, pour que la synthèse captée ne soit pas prise pour une commande
@@ -16,6 +18,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { parseVoiceTail, type VoiceCommand } from "@/lib/cookSession/voiceCommands.js";
 import { pickFrenchVoice } from "@/lib/cookSession/speechVoice.js";
+import { isNativeVoice, nativeSpeech, NativeRecognition } from "@/lib/voice/plugin.js";
 
 // La Web Speech API n'est pas typée par lib.dom : on décrit le strict nécessaire.
 interface RecognitionAlternative { transcript: string }
@@ -48,11 +51,19 @@ const MAX_FAST_ENDS = 5;
 /** Erreurs de dictée sans gravité : silence prolongé, arrêt volontaire. */
 const BENIGN_ERRORS = new Set(["no-speech", "aborted"]);
 
+// App Android : la WebView n'a pas la Web Speech API, la dictée native en imite le contrat.
+const NATIVE = isNativeVoice();
+
 function recognitionCtor(): RecognitionCtor | null {
+  if (NATIVE) return NativeRecognition;
   if (typeof window === "undefined") return null;
   const scope = window as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor };
   return scope.SpeechRecognition ?? scope.webkitSpeechRecognition ?? null;
 }
+
+/** Lecture en cours, synthèse du navigateur ou du système selon la plateforme. */
+const isSpeaking = (): boolean => (NATIVE ? nativeSpeech.speaking : window.speechSynthesis.speaking);
+const cancelSpeech = (): void => { if (NATIVE) nativeSpeech.cancel(); else window.speechSynthesis.cancel(); };
 
 /** État de la dictée : en démarrage, micro qui capte, voix en cours de transcription. */
 export type VoiceStatus = "starting" | "listening" | "hearing";
@@ -88,7 +99,7 @@ export interface UseVoiceControlResult {
  * @returns L'état du mode et ses actions, cf. {@link UseVoiceControlResult}.
  */
 export function useVoiceControl({ onCommand, onError, paused = false }: UseVoiceControlOptions): UseVoiceControlResult {
-  const [supported] = useState(() => recognitionCtor() !== null && typeof window !== "undefined" && "speechSynthesis" in window);
+  const [supported] = useState(() => NATIVE || (recognitionCtor() !== null && typeof window !== "undefined" && "speechSynthesis" in window));
   const [active, setActive] = useState(false);
   const [status, setStatus] = useState<VoiceStatus>("starting");
   // Démarrage de la session de dictée en cours, et échecs de démarrage d'affilée.
@@ -153,7 +164,7 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
         if (!result) continue;
         const transcript = result[0].transcript.trim();
         const spoken = spokenRef.current;
-        const reading = window.speechSynthesis.speaking || Date.now() - spoken.lastAt < ECHO_GRACE_MS;
+        const reading = isSpeaking() || Date.now() - spoken.lastAt < ECHO_GRACE_MS;
         const { command, words } = parseVoiceTail(transcript, consumedRef.current.get(i) ?? 0, reading ? spoken.text : null);
         if (!command) continue;
         consumedRef.current.set(i, words);
@@ -191,7 +202,7 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     listen();
     // Suit la synthèse vocale pour dater la fin de la lecture (filtre d'écho).
     const poll = setInterval(() => {
-      if (window.speechSynthesis.speaking) spokenRef.current.lastAt = Date.now();
+      if (isSpeaking()) spokenRef.current.lastAt = Date.now();
     }, 250);
     return () => {
       clearInterval(poll);
@@ -199,7 +210,7 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
       recognition.abort();
       runningRef.current = false;
       recognitionRef.current = null;
-      window.speechSynthesis.cancel();
+      cancelSpeech();
     };
   }, [active, listen]);
 
@@ -211,7 +222,7 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
   }, [active, paused, listen]);
 
   useEffect(() => {
-    if (!supported) return;
+    if (!supported || NATIVE) return; // le système choisit lui-même sa meilleure voix française
     const synth = window.speechSynthesis;
     const load = () => { voiceRef.current = pickFrenchVoice(synth.getVoices()); };
     load();
@@ -237,6 +248,11 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
 
   const speak = useCallback((text: string) => {
     if (!supported || !text) return;
+    spokenRef.current = { text, lastAt: Date.now() };
+    if (NATIVE) {
+      nativeSpeech.speak(text);
+      return;
+    }
     const synth = window.speechSynthesis;
     synth.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -244,12 +260,11 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     const voice = voiceRef.current ?? pickFrenchVoice(synth.getVoices());
     if (voice) utterance.voice = voice;
     utteranceRef.current = utterance;
-    spokenRef.current = { text, lastAt: Date.now() };
     synth.speak(utterance);
   }, [supported]);
 
   const hush = useCallback(() => {
-    if (supported) window.speechSynthesis.cancel();
+    if (supported) cancelSpeech();
   }, [supported]);
 
   const toggle = useCallback(() => {
