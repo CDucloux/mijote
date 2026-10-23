@@ -41,7 +41,7 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "calc(16px + max(env(safe-area-inset-top) - 8px, 0px)) 20px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-        <button className="cook-close-btn" onClick={onClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <button className="cook-close-btn ripple" onClick={onClose} style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Icon name={isNested ? "back" : "close"} size={18} />
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -57,12 +57,12 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
           </div>
         </div>
         {voice?.active && onVoiceHelp && (
-          <button className="cook-voice-btn" onClick={onVoiceHelp} title="Commandes vocales" aria-label="Voir les commandes vocales">
+          <button className="cook-voice-btn ripple" onClick={onVoiceHelp} title="Commandes vocales" aria-label="Voir les commandes vocales">
             <Icon name="help" size={18} />
           </button>
         )}
         {voice && (
-          <button className={`cook-voice-btn${voice.active ? " on" : ""}${voice.status === "hearing" ? " hearing" : ""}`} onClick={voice.toggle} aria-pressed={voice.active}
+          <button className={`cook-voice-btn ripple${voice.active ? " on ripple-light" : ""}${voice.status === "hearing" ? " hearing" : ""}`} onClick={voice.toggle} aria-pressed={voice.active}
             title={voice.active ? "Couper le mode mains libres" : "Mains libres : « suivant », « répète », « minuteur », « pause », « stop »"}
             aria-label={voice.active ? "Couper le mode mains libres" : "Activer le mode mains libres"}>
             <Icon name="mic" size={18} weight={voice.active ? "fill" : "regular"} />

@@ -3146,7 +3146,9 @@ html.light .sheet-sticky-head::after {
 .voice-help__also { display: block; margin-top: 2px; font-size: 12px; color: var(--text3); }
 
 /* Micro du mode mains libres (en-tête du pas à pas). Allumé : pastille accent, et
-   une onde qui s'étend pour dire que le micro écoute. */
+   une onde qui s'étend pour dire que le micro écoute. L'onde est une ombre portée
+   animée (et non un pseudo-élément agrandi) : le bouton porte `.ripple`, dont
+   l'`overflow: hidden` rognerait tout ce qui déborde, mais jamais sa propre ombre. */
 .cook-voice-btn {
   position: relative;
   width: 36px;
@@ -3162,24 +3164,23 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
-.cook-voice-btn.on { background: var(--accent); color: #fff; }
-.cook-voice-btn.on::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid var(--accent);
+.cook-voice-btn.on {
+  background: var(--accent);
+  color: #fff;
   animation: cookVoiceListen 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-  pointer-events: none;
 }
 /* Voix détectée : l'onde s'accélère et s'élargit, le micro dit « je t'entends ». */
-.cook-voice-btn.on.hearing::after { animation-duration: 0.9s; border-width: 3px; }
+.cook-voice-btn.on.hearing { animation-name: cookVoiceHear; animation-duration: 0.9s; }
 @keyframes cookVoiceListen {
-  from { transform: scale(1); opacity: 0.7; }
-  to { transform: scale(1.6); opacity: 0; }
+  from { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.55); }
+  to { box-shadow: 0 0 0 11px rgba(var(--accent-rgb), 0); }
+}
+@keyframes cookVoiceHear {
+  from { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.75); }
+  to { box-shadow: 0 0 0 15px rgba(var(--accent-rgb), 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cook-voice-btn.on::after { animation: none; opacity: 0; }
+  .cook-voice-btn.on { animation: none; }
 }
 
 @media (hover: hover) and (pointer: fine) {
