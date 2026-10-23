@@ -48,7 +48,7 @@ html.light, .light {
   .hover-neutral, .hover-tint, .hover-danger, .hover-deepen, .float-pill, .float-card,
   /* neutre */
   .ut-pill-clickable, .fiche-hdr-btn, .btn-ghost, .menu-row, .hh-calm-tile,
-  .cook-close-btn, .editor-tab:not(.active), .complete-row, .import-back,
+  .cook-close-btn, .cook-voice-btn:not(.on), .editor-tab:not(.active), .complete-row, .import-back,
   .desktop-nav-item, .icon-btn-soft, .action-dock-ghost, .action-dock-close,
   .auth__theme, .auth__google, .tech-confuse, .sheet-close-btn,
   .step-link-pill, .step-remove-pill, .classement-pill, .filter-chip, .empty-clear-link, .notif-row--nav, .notif-more,

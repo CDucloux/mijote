@@ -3084,13 +3084,48 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
 }
 
+/* Micro du mode mains libres (en-tête du pas à pas). Allumé : pastille accent, et
+   une onde qui s'étend pour dire que le micro écoute. */
+.cook-voice-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.cook-voice-btn.on { background: var(--accent); color: #fff; }
+.cook-voice-btn.on::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: cookVoiceListen 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  pointer-events: none;
+}
+@keyframes cookVoiceListen {
+  from { transform: scale(1); opacity: 0.7; }
+  to { transform: scale(1.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cook-voice-btn.on::after { animation: none; opacity: 0; }
+}
+
 @media (hover: hover) and (pointer: fine) {
   /* Bouton fermer du mode cuisine : retour de survol (desktop). */
   .cook-close-btn {
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
-  .cook-close-btn:hover { color: var(--text); }
+  .cook-close-btn:hover, .cook-voice-btn:not(.on):hover { color: var(--text); }
 
   /* Onglets de l'éditeur de recette : au survol desktop, un onglet non sélectionné
      s'éclaircit (voile neutre + texte), comme le bouton fermer à gauche. */

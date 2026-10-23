@@ -29,6 +29,8 @@ import { CookIterationSheet } from "../components/cookMode/CookIterationSheet.js
 import { buildCookSnapshot, pickPilotTimerId } from "@/lib/cookSession/snapshot.js";
 import { companionText, cookPageLabel, pageKeyOf, partnerPositions } from "@/lib/cookSession/together.js";
 import { useCookTogether } from "../hooks/useCookTogether.js";
+import { useCookVoice } from "../hooks/useCookVoice.js";
+import { cookPageSpeech } from "@/lib/cookSession/voiceCommands.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import type { IngredientLine, Recipe, Utensil, UtensilDbItem } from "@/lib/types.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
@@ -286,6 +288,25 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
   }, [subCook, done, iterOpen, closing, stepIdx, totalSteps, isBases, allComponentsDone]);
 
   const stepDurations = useMemo(() => (step ? parseDurations(step.text) : []), [step]);
+  const timerLabel = realIdx >= 0 ? `Étape ${realIdx + 1}` : isOverview ? "Mise en place" : "Bases";
+
+  // Mains libres : la page est lue en arrivant dessus, la voix pilote la navigation
+  // et lance le minuteur (durée dite, sinon la première de l'étape).
+  const voice = useCookVoice({
+    speech: cookPageSpeech(isOverview ? { kind: "overview", ingredients: overviewIngs.length, utensils: overviewUts.length }
+      : isBases ? { kind: "bases", count: pendingComponents.length }
+      : { kind: "step", number: realIdx + 1, total: realStepCount, text: step?.text ?? "" }),
+    pageKey: stepIdx,
+    onNext: () => (stepIdx < totalSteps - 1 ? goNext() : finishCooking()),
+    onPrev: goPrev,
+    onTimer: said => {
+      const duration = said ?? stepDurations[0];
+      if (duration) addTimer(duration, stepIdx, timerLabel);
+      return duration ?? null;
+    },
+    notify,
+    paused: !!subCook || done || iterOpen || closing,
+  });
 
   // Gestes tactiles sur le contenu d'une étape (swipe + élastique vertical).
   const { stepScrollRef, stepElasticRef } = useStepGestures(
@@ -324,7 +345,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
 
       <div style={{ position: "fixed", inset: 0, zIndex: isNested ? 600 : 500, background: "var(--bg)", display: "flex", flexDirection: "column", animation: closing ? "cookModeOut 0.28s cubic-bezier(0.4,0,0.9,0.4) forwards" : "cookModeIn 0.45s cubic-bezier(0.25,0.46,0.45,0.94)" }}>
         <CookModeHeader recipeName={recipe.name} isNested={isNested} elapsed={elapsed} progress={progress} companions={companions} offline={together.offline} onClose={requestClose}
-          pageLabel={isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`} />
+          pageLabel={isOverview ? "Mise en place" : isBases ? "Bases" : `Étape ${realIdx + 1} / ${realStepCount}`} voice={voice} />
 
         {/* Main content */}
         <div style={{ flex: 1, overflow: "hidden", display: "flex" }}>

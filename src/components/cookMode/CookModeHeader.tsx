@@ -27,10 +27,12 @@ interface CookModeHeaderProps {
   /** Cuisiner à deux, hors ligne : l'autre membre ne voit plus notre position. */
   offline?: boolean;
   onClose: () => void;
+  /** Mode mains libres : bouton micro, absent si le navigateur ne sait pas écouter. */
+  voice?: { supported: boolean; active: boolean; toggle: () => void };
 }
 
 /** En-tête du pas à pas : fermeture, titre, page courante, chrono global et progression. */
-export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progress, companions = [], offline = false, onClose }: CookModeHeaderProps) {
+export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progress, companions = [], offline = false, onClose, voice }: CookModeHeaderProps) {
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "calc(16px + max(env(safe-area-inset-top) - 8px, 0px)) 20px 16px", background: "var(--surface)", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
@@ -49,6 +51,13 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
               : companions.map(c => <span key={c.participant.uid} style={{ color: "var(--text2)" }}> · {companionText(c.participant, c.label)}</span>)}
           </div>
         </div>
+        {voice?.supported && (
+          <button className={`cook-voice-btn${voice.active ? " on" : ""}`} onClick={voice.toggle} aria-pressed={voice.active}
+            title={voice.active ? "Couper le mode mains libres" : "Mains libres : « suivant », « répète », « minuteur »"}
+            aria-label={voice.active ? "Couper le mode mains libres" : "Activer le mode mains libres"}>
+            <Icon name="mic" size={18} weight={voice.active ? "fill" : "regular"} />
+          </button>
+        )}
         {/* Chrono global : temps écoulé depuis le lancement de la recette. */}
         {!isNested && (
           <div title="Temps écoulé depuis le lancement" style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 11px", borderRadius: 999, background: "var(--surface2)", fontVariantNumeric: "tabular-nums" }}>
