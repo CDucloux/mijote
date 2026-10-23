@@ -5463,6 +5463,33 @@ html.light .sheet-sticky-head::after {
   .admin-cat[draggable="true"]:hover .admin-cat-grip { width: 14px; }
 }
 
+/* Accueil desktop (HomeDesktop, ≥ 900 px) : colonne principale (héros du prochain
+   repas, aperçu de la semaine) et rail (à faire, foyer, saison). */
+.home-desk { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr); gap: 32px; align-items: start; max-width: 1280px; }
+.home-hero { background: var(--float-surface); box-shadow: var(--float-shadow); border-radius: 22px; overflow: hidden; }
+.home-hero-media { position: relative; display: block; width: 100%; aspect-ratio: 16 / 8; max-height: 340px; padding: 0; border: none; background: var(--surface2); cursor: pointer; overflow: hidden; }
+.home-hero-media img { transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+.home-hero-slot {
+  position: absolute; top: 14px; left: 14px; display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 650;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+.home-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; padding: 5px; }
+.home-week-day {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px 12px;
+  border: none; border-radius: 15px; background: transparent; cursor: pointer; color: var(--text2);
+}
+.home-week-name { font-size: 12px; font-weight: 600; text-transform: capitalize; color: var(--text3); }
+.home-week-num { font-family: var(--ff-display); font-size: 20px; font-weight: 700; line-height: 1.1; color: var(--text); font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+.home-week-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface3); }
+.home-week-dot[data-filled] { background: var(--accent); }
+.home-week-day[data-today] { background: rgba(var(--accent-rgb), 0.1); }
+.home-week-day[data-today] .home-week-name { color: var(--accent); }
+.home-week-day[data-past] { opacity: 0.45; }
+@media (hover: hover) and (pointer: fine) {
+  .home-hero-media:hover img { transform: scale(1.03); }
+}
+
 /* Lien vers la source (hero de la fiche) : au survol desktop, un trait fin se
    dessine sous le domaine, de gauche à droite (dégradé plein dont la largeur
    s'anime, plutôt que text-decoration qui ne se transitionne pas). */

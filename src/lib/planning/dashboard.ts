@@ -163,3 +163,66 @@ export function groupTodayMeals(meals: readonly TodayMeal[]): TodayMealCard[] {
     return { slot: primary.slot, primary, others: sorted.filter(m => m !== primary) };
   });
 }
+
+/** Repas mis en avant sur l'accueil desktop, et ceux qui restent dans la journée. */
+export interface HeroPick {
+  hero: TodayMealCard | null;
+  rest: TodayMealCard[];
+}
+
+/**
+ * Choisit le repas « à venir » à mettre en avant : la première carte dont le
+ * créneau n'est pas encore passé (cf. {@link upcomingSlot}) ; le soir venu, la
+ * dernière carte du jour reste en tête plutôt que de laisser le héros vide.
+ *
+ * @param cards - Cartes du jour, triées par créneau ({@link groupTodayMeals}).
+ * @param date - Date/heure de référence (défaut : maintenant).
+ * @returns Le héros (`null` sans repas) et les autres cartes, dans l'ordre.
+ */
+export function pickHeroMeal(cards: readonly TodayMealCard[], date: Date = new Date()): HeroPick {
+  if (cards.length === 0) return { hero: null, rest: [] };
+  const now = slotOrder(upcomingSlot(date));
+  const index = cards.findIndex(card => slotOrder(card.slot) >= now);
+  const heroIndex = index === -1 ? cards.length - 1 : index;
+  return { hero: cards[heroIndex], rest: cards.filter((_, i) => i !== heroIndex) };
+}
+
+/** Un jour de l'aperçu de semaine : créneaux pourvus ou libres. */
+export interface WeekOverviewDay {
+  key: string;
+  isToday: boolean;
+  isPast: boolean;
+  slots: { slot: string; filled: boolean }[];
+}
+
+/** Aperçu de la semaine (lundi → dimanche) et créneaux encore libres. */
+export interface WeekOverview {
+  days: WeekOverviewDay[];
+  /** Créneaux vides d'aujourd'hui à dimanche (le passé ne compte plus). */
+  free: number;
+}
+
+/**
+ * Aperçu compact de la semaine en cours pour l'accueil : pour chaque jour, quels
+ * créneaux portent une recette existante. Un repas dont la recette a disparu
+ * compte comme libre (il n'apparaît pas non plus dans « Aujourd'hui »).
+ *
+ * @param mealPlan - Le planning indexé par date.
+ * @param recipes - Les recettes (un créneau n'est pourvu que si sa recette existe).
+ * @param weekDays - Les 7 clés de la semaine, du lundi au dimanche.
+ * @param today - Clé du jour courant.
+ * @param slots - Créneaux suivis (défaut : midi et soir).
+ * @returns Les 7 jours et le nombre de créneaux libres à venir.
+ */
+export function buildWeekOverview(mealPlan: Record<string, MealItem[]> = {}, recipes: readonly Pick<Recipe, "id">[] = [], weekDays: readonly string[], today: string, slots: readonly string[] = ["midi", "soir"]): WeekOverview {
+  const known = new Set(recipes.map(r => r.id));
+  let free = 0;
+  const days = weekDays.map(key => {
+    const items = (mealPlan[key] || []).filter(m => m.recipeId && known.has(m.recipeId));
+    const isPast = key < today;
+    const daySlots = slots.map(slot => ({ slot, filled: items.some(m => m.slot === slot) }));
+    if (!isPast) free += daySlots.filter(s => !s.filled).length;
+    return { key, isToday: key === today, isPast, slots: daySlots };
+  });
+  return { days, free };
+}
