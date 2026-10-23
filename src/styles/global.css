@@ -569,8 +569,12 @@ select {
 /* Pastille d'ingrédient retenu (filtres) : la croix vit dans un rond qui se
    dessine au survol desktop de la pastille, l'affordance de retrait. */
 .ing-chip-x { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--accent); transition: background-color 0.15s ease; }
+/* Même rond quand la croix est elle-même le bouton (pastilles d'ustensiles) ;
+   sur une pastille pleine d'accent, le rond est blanc translucide. */
+.chip-x-btn { background: transparent; }
 @media (hover: hover) and (pointer: fine) {
-  .ing-chip:hover .ing-chip-x { background: rgba(var(--accent-rgb), 0.2); }
+  .ing-chip:hover .ing-chip-x, .chip-x-btn:hover { background: rgba(var(--accent-rgb), 0.2); }
+  .chip-x-btn[data-on-accent]:hover { background: rgba(255, 255, 255, 0.25); }
 }
 
 /* Éditeur de carnet : pastilles de couleur et icônes. La pastille choisie porte
