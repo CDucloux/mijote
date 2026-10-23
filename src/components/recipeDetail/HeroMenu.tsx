@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { CSSProperties } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { spawnRipple } from "@/lib/ui/ripple.js";
@@ -36,13 +37,15 @@ interface MenuPos {
 }
 
 // Menu « trois points » des actions secondaires d'une recette (hero).
-// Se ferme au clic extérieur / Échap. Le dropdown utilise position:fixed pour
-// échapper à tout overflow:hidden parent.
+// Se ferme au clic extérieur / Échap. Le dropdown est porté dans <body> en
+// position:fixed : un ancêtre transformé (animation `.slide-up`) deviendrait sinon
+// son bloc conteneur et le décalerait, et un overflow:hidden parent le rognerait.
 export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, icon = "more", className, align = "right", label, title = "Plus d'actions" }: HeroMenuProps) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<MenuPos>({ top: 0, right: undefined, left: undefined });
   const ref = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
 
   const openMenu = () => {
     if (btnRef.current) {
@@ -59,7 +62,10 @@ export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, i
 
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (!ref.current?.contains(target) && !popRef.current?.contains(target)) setOpen(false);
+    };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
@@ -71,8 +77,8 @@ export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, i
       <button ref={btnRef} onClick={() => open ? setOpen(false) : openMenu()} style={btnStyle} className={className} title={title} aria-haspopup="menu" aria-expanded={open}>
         <Icon name={icon} size={iconSize} color={iconColor} />{label}
       </button>
-      {open && (
-        <div className="hero-menu-pop" style={{
+      {open && createPortal(
+        <div ref={popRef} className="hero-menu-pop" style={{
           position: "fixed",
           top: pos.top,
           right: pos.right,
@@ -92,7 +98,8 @@ export function HeroMenu({ items, btnStyle, iconColor = "#fff", iconSize = 20, i
               {it.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

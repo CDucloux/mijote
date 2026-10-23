@@ -64,7 +64,7 @@ export function BaseMenu({ count, noun, importTitle = "Importer dans la base", o
   const [importing, setImporting] = useState(false);
   return (
     <>
-      <HeroMenu icon="layers" label="Base" iconSize={15} iconColor="currentColor" title="Exporter ou importer la base"
+      <HeroMenu icon="database" label="Base" iconSize={15} iconColor="currentColor" title="Exporter ou importer la base"
         className="float-pill ripple" btnStyle={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 15px 8px 13px", borderRadius: 999, border: "none", fontSize: 13, fontWeight: 600, color: "var(--text2)", cursor: "pointer", flexShrink: 0 }}
         items={[
           { label: "Exporter en YAML", icon: "download", onClick: onExportYaml },
