@@ -4034,22 +4034,21 @@ html.light .sheet-sticky-head::after {
   animation: loadingFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
-/* La gousse du logo en grand : le corps respire, les trois nervures s'effacent
-   puis se retracent en boucle (pathLength="1" sur les nervures, cf. LogoPod). La
-   boucle PART du logo complet : sur un réseau rapide, l'écran ne dure qu'un
-   instant et doit montrer la gousse entière, pas des nervures encore à tracer. */
+/* La gousse du logo en grand : le corps respire, les trois nervures se tracent
+   puis s'effacent en boucle (pathLength="1" sur les nervures, cf. LogoPod). Le
+   premier tracé finit vers 1,4 s : useBootHold tient l'écran au moins ce temps. */
 .loading-mark {
   width: clamp(84px, 11vw, 120px);
   height: auto;
 }
 .loading-mark > path {
   transform-origin: 50% 100%;
-  animation: loadingBreathe 2.8s ease-in-out infinite;
+  animation: loadingBreathe 2.4s ease-in-out infinite;
 }
 .loading-mark g path {
   stroke-dasharray: 1;
-  stroke-dashoffset: 0;
-  animation: loadingDraw 2.8s cubic-bezier(0.55, 0.1, 0.3, 1) infinite;
+  stroke-dashoffset: 1;
+  animation: loadingDraw 2.4s cubic-bezier(0.55, 0.1, 0.3, 1) infinite;
 }
 .loading-mark g path:nth-child(2) { animation-delay: 0.18s; }
 .loading-mark g path:nth-child(3) { animation-delay: 0.3s; }
@@ -4085,10 +4084,9 @@ html.light .sheet-sticky-head::after {
 }
 
 @keyframes loadingDraw {
-  0%, 30% { stroke-dashoffset: 0; }
-  55% { stroke-dashoffset: -1; }
-  55.01% { stroke-dashoffset: 1; }
-  85%, 100% { stroke-dashoffset: 0; }
+  0% { stroke-dashoffset: 1; }
+  45%, 80% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -1; }
 }
 @keyframes loadingBreathe {
   0%, 100% { transform: scale(1); }
@@ -4099,7 +4097,7 @@ html.light .sheet-sticky-head::after {
 }
 @media (prefers-reduced-motion: reduce) {
   .loading-mark > path, .loading-line::after { animation: none; }
-  .loading-mark g path { animation: none; }
+  .loading-mark g path { animation: none; stroke-dashoffset: 0; }
   .loading-line::after { left: 30%; }
 }
 
