@@ -6,6 +6,7 @@ import { useTheme } from "./hooks/useTheme.js";
 import { useOverlayThemeColor } from "./hooks/useOverlayThemeColor.js";
 import { useStatusBarSync } from "./hooks/useStatusBarSync.js";
 import { useAuthUser } from "./hooks/useAuthUser.js";
+import { useBootHold } from "./hooks/useBootHold.js";
 import { AppInner } from "./AppInner.jsx";
 import { LegalPage } from "./pages/LegalPage.jsx";
 import { LoadingPage } from "./pages/LoadingPage.jsx";
@@ -24,6 +25,8 @@ function RedirectFromLogin() {
 interface ProtectedRoutesProps {
   /** `undefined` tant que l'auth se résout, `null` déconnecté. */
   user: User | null | undefined;
+  /** Écran de chargement à afficher (auth en cours ou durée minimale d'ouverture). */
+  loading: boolean;
   isDark: boolean;
   toggleTheme: () => void;
 }
@@ -31,9 +34,9 @@ interface ProtectedRoutesProps {
 // Garde d'auth au niveau du routeur : écran de chargement tant que l'auth se résout,
 // documents légaux publics, redirection vers /login sinon, et l'app complète (avec
 // toute sa machinerie) UNIQUEMENT une fois connecté.
-function ProtectedRoutes({ user, isDark, toggleTheme }: ProtectedRoutesProps) {
+function ProtectedRoutes({ user, loading, isDark, toggleTheme }: ProtectedRoutesProps) {
   const location = useLocation();
-  if (user === undefined) return <LoadingPage isDark={isDark} />;
+  if (loading) return <LoadingPage isDark={isDark} />;
   if (!user && location.pathname.startsWith("/legal")) {
     return <div style={{ height: "100dvh", background: "var(--bg)", color: "var(--text)" }}><LegalPage /></div>;
   }
@@ -47,6 +50,8 @@ export default function App() {
   useOverlayThemeColor(); // voile la barre système PWA tant qu'une modale est ouverte
   useStatusBarSync(isDark); // aligne la barre système sur le thème (boot, bascule, reprise)
   const { user, postLogin } = useAuthUser();
+  const bootHold = useBootHold();
+  const loading = user === undefined || bootHold;
 
   // Relâche le splash d'ouverture dès que l'auth est connue : il couvre TOUT le
   // chargement à froid puis cède la place au premier écran réel, sans saut du relais.
@@ -58,12 +63,12 @@ export default function App() {
     <Routes>
       {/* Connexion : route publique. Déjà connecté → retour à l'origine, après une brève
           transition « Connexion en cours… » (postLogin) même quand le login est instantané. */}
-      <Route path="/login" element={user === undefined || postLogin ? <LoadingPage isDark={isDark} /> : user ? <RedirectFromLogin /> : <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={signInWithGoogle} />} />
+      <Route path="/login" element={loading || postLogin ? <LoadingPage isDark={isDark} /> : user ? <RedirectFromLogin /> : <LoginPage isDark={isDark} onToggleTheme={toggleTheme} onSignIn={signInWithGoogle} />} />
       {/* Sous basename="/app", on entre par l'accueil (la vitrine publique vit hors /app). */}
       <Route path="/" element={<Navigate to="/home" replace />} />
       {/* Une seule instance d'AppInner pour toutes les routes : aucun remontage (ni flicker
           de l'écran de chargement) lors de la navigation. */}
-      <Route path="*" element={<ProtectedRoutes user={user} isDark={isDark} toggleTheme={toggleTheme} />} />
+      <Route path="*" element={<ProtectedRoutes user={user} loading={loading} isDark={isDark} toggleTheme={toggleTheme} />} />
     </Routes>
   );
 }
