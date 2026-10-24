@@ -27,6 +27,7 @@ import { RescheduleSheet, DuplicateSheet } from "../components/mealPlan/ReplanSh
 import { GenerateSheet } from "../components/mealPlan/GenerateSheet.jsx";
 import { AddRecipeSheet } from "../components/mealPlan/AddRecipeSheet.jsx";
 import { CompleteMealSheet } from "../components/mealPlan/CompleteMealSheet.jsx";
+import { ServicePlanView, type ServiceMealDish } from "../components/mealPlan/ServicePlanView.jsx";
 import { useMealBatchSession } from "../hooks/useMealBatchSession.js";
 import { DAYS_SHORT_FR, MONTHS_FR, mondayFirstIndex } from "../constants/calendar.js";
 import { mondayWeekDays, shiftWeeks } from "@/lib/planning/weekDays.js";
@@ -132,6 +133,16 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     const platEntry = group.items.find(x => itemRole(x.item, x.item.recipeId ? recipesById.get(x.item.recipeId) : undefined) === "plat") || group.items[0];
     setComposeFor({ date, slot, groupId: group.groupId || null, baseIdx: (mealPlan[date] || []).indexOf(platEntry.item), baseRecipeId: platEntry.item.recipeId });
   }, [mealPlan, recipesById]);
+
+  // « Organiser le service » : le repas figé à l'ouverture (rôles résolus).
+  const [serviceFor, setServiceFor] = useState<{ date: string; slot: string; dishes: ServiceMealDish[] } | null>(null);
+  const openService = useCallback((date: string, slot: string, group: SlotGroup) => {
+    const dishes = group.items.flatMap(({ item }): ServiceMealDish[] => {
+      const recipe = item.recipeId ? recipesById.get(item.recipeId) : undefined;
+      return recipe ? [{ recipe, role: itemRole(item, recipe) }] : [];
+    });
+    if (dishes.length) setServiceFor({ date, slot, dishes });
+  }, [recipesById]);
 
   const attachToMeal = useCallback((recipeId: string, role: string) => {
     if (!composeFor) return;
@@ -266,7 +277,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {MEAL_SLOTS.filter(s => s.id !== "matin" || getMeals(date, s.id).length).map(s => (
-                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={selectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} onOpenItemMenu={setItemMenu} onAdd={openAdd} startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} wasLongPress={wasLongPress} />
+                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={selectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} onOrganize={openService} onOpenItemMenu={setItemMenu} onAdd={openAdd} startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} wasLongPress={wasLongPress} />
                     ))}
                   </div>
                 </div>
@@ -358,6 +369,11 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           prepCount={prepCount} cookCount={cookCount} mealOccasions={mealOccasions}
           onClose={closeBatch} onSelectRecipe={selectRecipe}
         />,
+        document.body,
+      )}
+
+      {serviceFor && createPortal(
+        <ServicePlanView date={serviceFor.date} slot={serviceFor.slot} dishes={serviceFor.dishes} onClose={() => setServiceFor(null)} />,
         document.body,
       )}
 

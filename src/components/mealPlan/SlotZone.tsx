@@ -38,6 +38,8 @@ interface SlotZoneProps {
   onSetDropTarget: (key: string | null) => void;
   onSetDragInfo: (info: DragInfo | null) => void;
   onComplete?: (date: string, slot: string, group: SlotGroup) => void;
+  /** Ouvre « Organiser le service » pour un repas d'au moins deux plats. */
+  onOrganize?: (date: string, slot: string, group: SlotGroup) => void;
   onOpenItemMenu: (target: ItemMenuTarget) => void;
   onAdd: (date: string, slots: string[], autoOpen: boolean) => void;
   startLongPress: LongPressHandlers["startLongPress"];
@@ -55,7 +57,7 @@ const MEAL_ROLE_IDS: RoleId[] = ["entree", "plat", "accompagnement", "dessert"];
 // sur ce slot, gère le drag-and-drop, le menu contextuel (appui long) et le bouton
 // « Compléter » quand le repas n'est pas encore complet.
 // Sorti du composant page et mémoïsé → jamais recréé au re-render du parent.
-export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete, onOpenItemMenu, onAdd, startLongPress, cancelLongPress, moveLongPress, wasLongPress }: SlotZoneProps) {
+export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTarget, dragInfo, mealPlan, recipesById, onSelectRecipe, onRemoveMeal, onMoveMeal, onSetDropTarget, onSetDragInfo, onComplete, onOrganize, onOpenItemMenu, onAdd, startLongPress, cancelLongPress, moveLongPress, wasLongPress }: SlotZoneProps) {
   const dropKey = date + ":" + slot;
   const isOver = dropTarget === dropKey;
   const slotGroups = mealsForSlot(meals, recipesById);
@@ -116,11 +118,21 @@ export const SlotZone = React.memo(function SlotZone({ date, slot, meals, dropTa
                 </div>
               );
             })}
-            {slot !== "matin" && onComplete && !full && (
+            {(slot !== "matin" && ((onComplete && !full) || (onOrganize && items.length >= 2))) && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 2 }}>
+            {onOrganize && items.length >= 2 && (
+              <button onClick={() => onOrganize(date, slot, { ...g, items })} className="ripple" title="Organiser le service : qui démarre quand, four et mains partagés"
+                style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: "rgba(var(--accent-rgb),0.12)", color: "var(--accent)", border: "none", cursor: "pointer" }}>
+                <Icon name="clock" size={10} color="var(--accent)" /> Organiser
+              </button>
+            )}
+            {onComplete && !full && (
               <button onClick={() => onComplete(date, slot, g)} className="ripple" title="Compléter le repas (entrée, accompagnement, dessert)"
-                style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 4, marginTop: 2, padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: "transparent", color: MP_SLOT_TEXT[slot], border: `1px dashed ${MP_SLOT_TEXT[slot]}`, cursor: "pointer" }}>
+                style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 8px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: "transparent", color: MP_SLOT_TEXT[slot], border: `1px dashed ${MP_SLOT_TEXT[slot]}`, cursor: "pointer" }}>
                 <Icon name="plus" size={10} color={MP_SLOT_TEXT[slot]} /> Compléter
               </button>
+            )}
+              </div>
             )}
           </div>
         );
