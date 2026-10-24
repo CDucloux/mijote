@@ -166,9 +166,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const gen = useWeekGeneration({ generate, undo, weekDays, household, hasRecipes: recipes.length > 0, notify, logActivity, openBatch });
 
   // Session batch : vue LIVE dérivée du planning de la semaine visible (plats, bases,
-  // mise en place mutualisée, cuissons regroupées, découpe par ingrédient + compteurs).
-  const { batch, miseEnPlace, cookingGroups, decoupeByName, hasWeekDishes, mealOccasions, cookCount, prepCount } =
-    useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, resolver, ingredientDB, stock });
+  // découpe groupée, session dans le temps, rangement, réglages par semaine).
+  const batchSession = useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, resolver, ingredientDB, stock });
+  const { hasWeekDishes } = batchSession;
+  const batchBaseIds = useMemo(() => new Set(batchSession.batch.bases.map(b => b.recipe.id)), [batchSession.batch]);
 
   const getMeals = useCallback((date: string, slot: string) => (mealPlan[date] || []).filter(m => m.slot === slot), [mealPlan]);
 
@@ -255,7 +256,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             {/* Accès à la session batch : bannière contextuelle (ré-ouvrable), affichée
                 seulement quand la semaine contient au moins un plat. Sortie du header
                 pour ne plus reléguer le titre sur deux lignes. */}
-            {hasWeekDishes && <BatchSessionBanner isPlus={isPlus} onOpen={() => isPlus ? openBatch() : goPlus()} />}
+            {hasWeekDishes && <BatchSessionBanner isPlus={isPlus} settings={batchSession.settings} end={batchSession.cookingPlan.end} meals={batchSession.mealOccasions} onOpen={() => isPlus ? openBatch() : goPlus()} />}
             {weekDays.map((date, di) => {
               const isToday = date === todayStr;
               const intake = dayIntakes.get(date);
@@ -360,14 +361,18 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       )}
 
       {/* Session batch : PAGE dédiée (route /meal-plan/batch), portée en plein écran.
-          Keyée par la semaine → la checklist interne repart vierge à chaque semaine. */}
+          Keyée par la semaine : l'onglet et la vue repartent à zéro, l'avancement est
+          gardé par semaine dans le hook. */}
       {batchOpen && createPortal(
         <BatchSessionView
           key={weekDays[0]}
           weekLabel={`Semaine du ${new Date(weekDays[0] + "T12:00").getDate()} ${MONTHS_FR[new Date(weekDays[0] + "T12:00").getMonth()]}`}
-          batch={batch} miseEnPlace={miseEnPlace} cookingGroups={cookingGroups} decoupeByName={decoupeByName}
-          prepCount={prepCount} cookCount={cookCount} mealOccasions={mealOccasions}
-          onClose={closeBatch} onSelectRecipe={selectRecipe}
+          weekDays={weekDays} mealOccasions={batchSession.mealOccasions}
+          prepStages={batchSession.prepStages} decoupeByName={batchSession.decoupeByName}
+          cookingPlan={batchSession.cookingPlan} storage={batchSession.storage} baseIds={batchBaseIds}
+          settings={batchSession.settings} onSettings={batchSession.updateSettings} onToggle={batchSession.toggleChecked}
+          recipeOf={id => recipesById.get(id)}
+          onClose={closeBatch}
         />,
         document.body,
       )}

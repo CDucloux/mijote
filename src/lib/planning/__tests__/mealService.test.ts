@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { planMealService, serviceRoadmap, ovenSpans, serviceReminders, stepOvenTemperature, stepUsesOven, dateAtClock, ovenConflictMessage, holdAdvice, type ServiceDishInput } from "../mealService.js";
+import { planMealService, serviceRoadmap, ovenSpans, serviceReminders, stepOvenTemperature, stepUsesOven, dateAtClock, ovenConflictMessage, holdAdvice, shiftPlan, serviceTaskKey, type ServiceDishInput } from "../mealService.js";
 import type { Step } from "@/lib/types.js";
 
 const at = (hours: number, minutes = 0): number => new Date(2026, 9, 24, hours, minutes).getTime();
@@ -151,5 +151,32 @@ describe("ovenConflictMessage / holdAdvice", () => {
   it("conseille de garder au chaud au-delà de 15 min d'avance", () => {
     expect(holdAdvice({ name: "Gratin", hold: 80 })).toBe("Gratin est prêt 1 h 20 avant de passer à table : garde-le au chaud, ou réchauffe-le quelques minutes juste avant.");
     expect(holdAdvice({ name: "Gratin", hold: 10 })).toBeNull();
+  });
+});
+
+describe("bases (feeds) et shiftPlan", () => {
+  it("place une base pour qu'elle finisse avant le premier plat qui la consomme", () => {
+    const bouillon = { ...dish("bouillon", "plat", [step(10, 10, "Légumes dans la marmite"), step(45, 0, "Frémir")]), feeds: ["soupe"] };
+    const soupe = dish("soupe", "plat", [step(5, 5, "Verser le bouillon"), step(25, 0, "Cuire")]);
+    const plan = planMealService([bouillon, soupe], { serveAt: at(17), offsets: { plat: 0 }, now: at(12) });
+    const byId = Object.fromEntries(plan.dishes.map(d => [d.id, d]));
+    expect(byId.soupe.start).toBe(at(16, 30));
+    expect(byId.bouillon.end).toBe(at(16, 30));
+    expect(plan.start).toBe(at(15, 35));
+  });
+
+  it("décale tout le plan sans changer son placement relatif", () => {
+    const plan = planMealService([gigot], { serveAt: at(20), offsets: { plat: 0 }, now: at(12) });
+    const shifted = shiftPlan(plan, -60 * 60_000);
+    expect(shifted.start).toBe(plan.start - 60 * 60_000);
+    expect(shifted.dishes[0].tasks.map(t => t.end - t.start)).toEqual(plan.dishes[0].tasks.map(t => t.end - t.start));
+    expect(shifted.dishes[0].serveAt).toBe(at(19));
+    expect(plan.dishes[0].serveAt).toBe(at(20));
+  });
+});
+
+describe("serviceTaskKey", () => {
+  it("identifie une étape par son plat et son index", () => {
+    expect(serviceTaskKey({ dishId: "gigot", stepIndex: 2 })).toBe("t:gigot:2");
   });
 });

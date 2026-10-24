@@ -53,7 +53,7 @@ describe("weekEntries", () => {
   });
 });
 
-import { buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
+import { buildMiseEnPlace } from "@/lib/planning/batchSession.js";
 
 describe("buildMiseEnPlace – mutualisation par ingrédient", () => {
   // Deux recettes qui partagent l'oignon : on doit sommer, estimer les pièces, et
@@ -88,16 +88,3 @@ describe("buildMiseEnPlace – mutualisation par ingrédient", () => {
   });
 });
 
-describe("groupCookings – cuissons mutualisées", () => {
-  it("regroupe les plats partageant le même appareil (≥ 2)", () => {
-    const g1 = { id: "g1", name: "Gratin", utensils: [{ name: "Plat à gratin" }] };
-    const g2 = { id: "g2", name: "Légumes rôtis", utensils: [{ name: "Four" }] };
-    const p1 = { id: "p1", name: "Poêlée", utensils: [{ name: "Poêle" }] };
-    const dishes = [g1, g2, p1].map(r => ({ recipe: r, meals: 1, cookings: 1, servings: 2 }));
-    const groups = groupCookings(dishes);
-    const four = groups.find(g => g.method === "four");
-    expect(four).toBeTruthy();
-    expect(four.dishes.map(d => d.recipe.id).sort()).toEqual(["g1", "g2"]); // les 2 vont au four
-    expect(groups.find(g => g.method === "plaques")).toBeFalsy();            // un seul plat → pas de mutualisation
-  });
-});

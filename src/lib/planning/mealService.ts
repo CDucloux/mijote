@@ -38,6 +38,11 @@ export interface ServiceDishInput {
   recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime">;
   /** Décalage propre au plat (minutes après l'entrée), prioritaire sur celui du rôle. */
   offset?: number;
+  /**
+   * Plats qui consomment celui-ci (une base : fond, pâte, sauce). Il est alors placé
+   * après eux dans le calcul, pour finir avant le premier d'entre eux.
+   */
+  feeds?: string[];
 }
 
 /** Options du calcul. */
@@ -184,14 +189,17 @@ export function planMealService(dishes: ServiceDishInput[], options: ServiceOpti
   let handShifts = 0;
 
   const prepared = dishes.map(dish => ({ dish, timing: recipeTiming(dish.recipe), serveAt: options.serveAt + (dish.offset ?? offsets[dish.role] ?? 0) * MINUTE }));
-  // Le plus long d'abord : il a le moins de marge, il choisit ses créneaux.
-  const order = [...prepared].sort((a, b) => b.timing.total - a.timing.total);
+  // Le plus long d'abord : il a le moins de marge, il choisit ses créneaux. Les
+  // bases passent après les plats qui les consomment, pour finir avant eux.
+  const feeder = (input: ServiceDishInput): number => input.feeds?.length ? 1 : 0;
+  const order = [...prepared].sort((a, b) => feeder(a.dish) - feeder(b.dish) || b.timing.total - a.timing.total);
   const placed = new Map<string, ServiceDish>();
 
   for (const { dish, timing, serveAt } of order) {
     const steps = dish.recipe.steps ?? [];
     const tasks: ServiceTask[] = [];
-    let latestEnd = serveAt;
+    const consumers = (dish.feeds ?? []).map(id => placed.get(id)?.start).filter((start): start is number => start != null);
+    let latestEnd = Math.min(serveAt, ...consumers);
     for (let index = timing.steps.length - 1; index >= 0; index--) {
       const { minutes, active, source } = timing.steps[index];
       const step = steps[index] ?? {};
@@ -256,6 +264,16 @@ export function serviceRoadmap(plan: Pick<ServicePlan, "dishes">): RoadmapTask[]
   return plan.dishes
     .flatMap(dish => dish.tasks.map(task => ({ ...task, dishName: dish.name, role: dish.role })))
     .sort((a, b) => a.start - b.start || roleOrder(a.role) - roleOrder(b.role));
+}
+
+/**
+ * Clé stable d'une étape du plan, pour la cocher.
+ *
+ * @param task - L'étape (plat et index).
+ * @returns `"t:<plat>:<étape>"`.
+ */
+export function serviceTaskKey(task: Pick<ServiceTask, "dishId" | "stepIndex">): string {
+  return `t:${task.dishId}:${task.stepIndex}`;
 }
 
 /** Usage du four sur une plage (température constante). */
@@ -367,4 +385,26 @@ function fmtShift(minutes: number): string {
   if (minutes < 60) return `${minutes} min`;
   const rest = minutes % 60;
   return rest ? `${Math.floor(minutes / 60)} h ${String(rest).padStart(2, "0")}` : `${minutes / 60} h`;
+}
+
+/**
+ * Décale tout un plan dans le temps : le placement relatif ne dépend que des
+ * durées et des ressources, pas de l'heure. Sert à caler une session sur une heure
+ * de DÉBUT (batch) plutôt que de service.
+ *
+ * @param plan - Le plan à décaler.
+ * @param delta - Décalage en ms (positif : plus tard).
+ * @returns Une copie décalée (le retard `lateBy` n'est pas recalculé).
+ */
+export function shiftPlan(plan: ServicePlan, delta: number): ServicePlan {
+  return {
+    ...plan,
+    start: plan.start + delta,
+    end: plan.end + delta,
+    dishes: plan.dishes.map(dish => ({
+      ...dish,
+      serveAt: dish.serveAt + delta, start: dish.start + delta, end: dish.end + delta,
+      tasks: dish.tasks.map(task => ({ ...task, start: task.start + delta, end: task.end + delta })),
+    })),
+  };
 }

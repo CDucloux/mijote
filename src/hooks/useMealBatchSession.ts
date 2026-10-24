@@ -1,13 +1,16 @@
 import { useCallback, useMemo } from "react";
-import { buildBatchSession, weekEntries, buildMiseEnPlace, groupCookings } from "@/lib/planning/batchSession.js";
+import { useLS } from "./useLS.js";
+import { buildBatchSession, weekEntries, buildMiseEnPlace } from "@/lib/planning/batchSession.js";
 import { buildPostesDecoupe, FORME_LABEL } from "@/lib/recipes/decoupe.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { prepWorkOrder, planBatchCooking, planStorage, recipeHasFish, batchSettingsFor, withBatchSettings, type BatchMeal, type BatchSettings, type BatchCookInput } from "@/lib/planning/batchPlan.js";
+import { dateAtClock } from "@/lib/planning/mealService.js";
 import { DEFAULT_CATEGORIES } from "../constants/categories.js";
 import type { IngredientDbItem, IngredientLine, MealPlan, SavedRecipe } from "@/lib/types.js";
 import type { UseRecipeDerivedResult } from "./useRecipeDerived.js";
 
 // Catégories dont la découpe vaut d'être mutualisée (produits frais à travailler).
-const PREP_CATEGORIES = new Set(["vegetable", "herbs"]);
+const PREP_CATEGORIES = new Set(["vegetable", "fruit", "herbs", "mushroom", "meat", "fish_seafood"]);
 
 /** Dépendances de la vue session batch (données de la semaine visible). */
 export interface MealBatchSessionDeps {
@@ -22,8 +25,11 @@ export interface MealBatchSessionDeps {
 
 /**
  * Vue « session batch » dérivée du planning de la semaine visible : plats à
- * cuisiner, bases partagées, mise en place mutualisée, cuissons regroupées et
- * gestes de découpe par ingrédient, plus les compteurs du récapitulatif.
+ * cuisiner, bases partagées, mise en place mutualisée (dans l'ordre de travail),
+ * gestes de découpe par ingrédient, session placée à partir de son heure de début,
+ * rangement frigo / congélateur de chaque repas, plus les compteurs du récapitulatif.
+ * Les réglages et l'avancement (jour, heure, cuisiniers, cases cochées) sont gardés
+ * par semaine sur l'appareil.
  *
  * Vue LIVE et peu coûteuse (une semaine de repas), recalculée quand le planning ou
  * la base bougent. La logique métier vit dans lib/planning/batchSession et
@@ -46,7 +52,6 @@ export function useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, 
     }),
     [batch, recipesById, resolver, ingredientDB, stock, categoryOrder],
   );
-  const cookingGroups = useMemo(() => groupCookings(batch.dishes), [batch]);
   // Découpe mutualisée : on exploite la découpe individuelle notée sur chaque recette
   // (champ `cut` des lignes d'ingrédients) pour proposer, par ingrédient, le(s)
   // geste(s) concret(s) à faire d'un coup. Indexé par nom d'ingrédient normalisé.
@@ -81,10 +86,49 @@ export function useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, 
     }
     return n;
   }, [mealPlan, weekDays, recipes]);
-  // Cuissons réelles : seuls les plats qui cuisent (cookTime > 0), pondérés par leur
-  // nombre de cuissons (une cuisson batch couvre plusieurs repas).
-  const cookCount = useMemo(() => batch.dishes.reduce((s, d) => s + (Number((d.recipe as { cookTime?: number | string }).cookTime) > 0 ? d.cookings : 0), 0), [batch]);
-  const prepCount = useMemo(() => miseEnPlace.reduce((n, g) => n + g.items.length, 0), [miseEnPlace]);
+  // Réglages et avancement de la session (jour, heure, cuisiniers, cases cochées),
+  // gardés par semaine sur l'appareil.
+  const weekStart = weekDays[0] ?? "";
+  const [allSettings, setAllSettings] = useLS<Record<string, BatchSettings>>("rf_batchSessions", {});
+  const settings = useMemo(() => batchSettingsFor(allSettings[weekStart], weekStart), [allSettings, weekStart]);
+  const updateSettings = useCallback((patch: Partial<BatchSettings>) =>
+    setAllSettings(prev => withBatchSettings(prev, weekStart, { ...batchSettingsFor(prev[weekStart], weekStart), ...patch })), [setAllSettings, weekStart]);
+  const toggleChecked = useCallback((key: string) => setAllSettings(prev => {
+    const current = batchSettingsFor(prev[weekStart], weekStart);
+    const checked = current.checked.includes(key) ? current.checked.filter(k => k !== key) : [...current.checked, key];
+    return withBatchSettings(prev, weekStart, { ...current, checked });
+  }), [setAllSettings, weekStart]);
 
-  return { batch, miseEnPlace, cookingGroups, decoupeByName, hasWeekDishes, mealOccasions, cookCount, prepCount };
+  const prepStages = useMemo(() => prepWorkOrder(miseEnPlace), [miseEnPlace]);
+  // Session dans le temps : un passage par plat, puis les bases (avant les plats
+  // qui les consomment).
+  const cookInputs = useMemo<BatchCookInput[]>(() => {
+    const full = (id: string) => recipesById.get(id);
+    const dishInputs = batch.dishes.flatMap(d => { const r = full(d.recipe.id); return r ? [{ id: r.id, name: r.name || "Sans nom", recipe: r }] : []; });
+    const baseInputs = batch.bases.flatMap(b => {
+      const r = full(b.recipe.id);
+      const feeds = batch.dishes.filter(d => (d.recipe.ingredients || []).some(l => l.recipeId === b.recipe.id)).map(d => d.recipe.id);
+      return r ? [{ id: r.id, name: r.name || "Sans nom", recipe: r, feeds }] : [];
+    });
+    return [...dishInputs, ...baseInputs];
+  }, [batch, recipesById]);
+  // Le retard n'a pas de sens pour une session qu'on lance quand on veut : `now`
+  // vaut le début, le plan ne dépend que des réglages.
+  const startAt = dateAtClock(settings.day, settings.clock) ?? 0;
+  const cookingPlan = useMemo(() => planBatchCooking(cookInputs, { startAt, cooks: settings.cooks, now: startAt }), [cookInputs, startAt, settings.cooks]);
+
+  // Rangement : chaque repas de la semaine servi par un plat de la session.
+  const meals = useMemo<BatchMeal[]>(() => {
+    const ids = new Set(batch.dishes.map(d => d.recipe.id));
+    return weekDays.flatMap(date => (mealPlan[date] || []).flatMap(it => it.recipeId && ids.has(it.recipeId) ? [{ recipeId: it.recipeId, date, slot: it.slot || "midi" }] : []));
+  }, [batch, mealPlan, weekDays]);
+  const storage = useMemo(() => {
+    const categoryById = new Map((ingredientDB || []).map(i => [i.id, i.category]));
+    return planStorage(settings.day, meals, id => { const r = recipesById.get(id); return !!r && recipeHasFish(r, dbId => categoryById.get(dbId)); });
+  }, [settings.day, meals, recipesById, ingredientDB]);
+
+  return {
+    batch, decoupeByName, hasWeekDishes, mealOccasions,
+    prepStages, cookingPlan, storage, meals, settings, updateSettings, toggleChecked,
+  };
 }

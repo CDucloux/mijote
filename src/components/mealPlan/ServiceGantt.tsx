@@ -9,6 +9,8 @@ const MAX_WINDOW_MS = 6 * 60 * 60_000;
 interface ServiceGanttProps {
   plan: ServicePlan;
   recipeOf: (dishId: string) => Pick<Recipe, "steps"> | undefined;
+  /** Sous-titre d'un plat (défaut : « servi à … »). */
+  dishCaption?: (dish: ServicePlan["dishes"][number]) => string;
 }
 
 const taskKind = (task: ServiceTask): string => task.oven ? "is-oven" : task.active * 2 >= task.minutes ? "is-hands" : "is-wait";
@@ -18,7 +20,7 @@ const taskKind = (task: ServiceTask): string => task.oven ? "is-oven" : task.act
  * lignes de ressources (le four et ses températures, les mains). Les créneaux
  * qu'un plat a dû céder au four sont hachurés à leur place d'origine.
  */
-export function ServiceGantt({ plan, recipeOf }: ServiceGanttProps) {
+export function ServiceGantt({ plan, recipeOf, dishCaption }: ServiceGanttProps) {
   const windowStart = Math.max(plan.start, plan.end - MAX_WINDOW_MS);
   const span = Math.max(1, plan.end - windowStart);
   const pos = (time: number): string => `${Math.max(0, (time - windowStart) / span * 100)}%`;
@@ -39,9 +41,9 @@ export function ServiceGantt({ plan, recipeOf }: ServiceGanttProps) {
         {plan.dishes.map(dish => (
           <div key={dish.id} className="svc-g__row">
             <span className="svc-g__label">
-              <span className="svc-g__role">{roleLabel(dish.role)}</span>
+              <span className="svc-g__role">{dishCaption ? "" : roleLabel(dish.role)}</span>
               <span className="svc-g__name">{dish.name}</span>
-              <span className="svc-g__serve">{dish.start < windowStart ? `dès ${clockLabel(dish.start)} · ` : ""}servi à {clockLabel(dish.serveAt)}</span>
+              <span className="svc-g__serve">{dish.start < windowStart ? `dès ${clockLabel(dish.start)} · ` : ""}{dishCaption ? dishCaption(dish) : `servi à ${clockLabel(dish.serveAt)}`}</span>
             </span>
             <span className="svc-g__track">
               {grid}

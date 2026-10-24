@@ -94,3 +94,11 @@
   .svc-foot { display: flex; justify-content: flex-end; }
   .svc-foot .serve-cta { width: auto; padding: 0 24px; }
 }
+
+/* Étapes cochables (session batch) et repère « il est … » */
+.svc-road__task.is-checkable { width: 100%; border: none; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.svc-road__task.is-checked { background: transparent; box-shadow: none; }
+.svc-road__task.is-checked .svc-road__what { color: var(--text3); text-decoration: line-through; text-decoration-color: var(--surface3); }
+.svc-road__task.is-checked .svc-road__rail { opacity: 0.35; }
+.svc-road__now { display: flex; align-items: center; gap: 8px; margin: 14px 0 -4px; font-size: 11px; font-weight: 700; color: var(--red); }
+.svc-road__now::after { content: ""; flex: 1; height: 2px; border-radius: 2px; background: rgba(var(--red-rgb), 0.4); }
