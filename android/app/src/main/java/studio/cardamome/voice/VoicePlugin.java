@@ -47,6 +47,10 @@ import java.util.Locale;
 )
 public class VoicePlugin extends Plugin {
 
+    /** Durée minimale d'une session de dictée, et silence qui la clôt (ms). */
+    private static final long SESSION_MIN_MILLIS = 15000L;
+    private static final long SILENCE_MILLIS = 4000L;
+
     private final Handler main = new Handler(Looper.getMainLooper());
     private SpeechRecognizer recognizer;
     private TextToSpeech tts;
@@ -120,6 +124,12 @@ public class VoicePlugin extends Plugin {
             intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
             intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getContext().getPackageName());
             intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, Math.max(1, maxResults));
+            // Session tenue ouverte malgré les silences : chaque relance coupe le micro
+            // (bip, démarrage du service) et perd les mots dits à ce moment-là. Les
+            // commandes partent sur les résultats provisoires, sans attendre la fin.
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, SESSION_MIN_MILLIS);
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, SILENCE_MILLIS);
+            intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, SILENCE_MILLIS);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !phrases.isEmpty()) {
                 intent.putStringArrayListExtra(RecognizerIntent.EXTRA_BIASING_STRINGS, phrases);
             }
