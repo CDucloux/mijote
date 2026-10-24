@@ -52,7 +52,7 @@ function MealHero({ card, onOpen, onCook }: { card: TodayMealCard; onOpen: (id: 
       </button>
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, padding: "18px 22px 20px", flexWrap: "wrap" }}>
         <div style={{ minWidth: 0, flex: "1 1 240px" }}>
-          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>{recipe.name}</h3>
+          <h3 style={{ fontFamily: "var(--ff-display)", fontSize: 30, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>{recipe.name}</h3>
           <div style={{ fontSize: 13.5, color: "var(--text3)", marginTop: 6, fontVariantNumeric: "tabular-nums" }}>
             {[minutes > 0 && fmtTime(minutes), count > 0 && `${count} ingrédient${count > 1 ? "s" : ""}`].filter(Boolean).join(" · ")}
           </div>
