@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.81.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.81.1-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -156,7 +156,9 @@ toujours avec vous.
   10 minutes », « pause », « stop », « temps restant », « terminé »…), avec une
   aide listant toutes les commandes (« commandes ») et la fin des minuteurs
   annoncée à voix haute. Web Speech API dans Chrome, Edge et Safari ; dictée et
-  synthèse vocale du système dans l'app Android (plugin natif).
+  synthèse vocale du système dans l'app Android (plugin natif). Toutes les
+  hypothèses de la dictée sont examinées et, sur Android 13+, les mots des
+  commandes sont favorisés : pas besoin de forcer la voix.
 - 📱 **Lanceur Android** : à l'appui long sur l'icône, des **raccourcis qui suivent
   le foyer** (prochain repas planifié, courses restantes, ajout en photo, planning),
   et trois **widgets** d'écran d'accueil : « Au menu » (repas du jour avec photos),
