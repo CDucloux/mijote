@@ -41,21 +41,21 @@ export function RecipeHeroBadges({ recipe, recipeVegan, recipeInSeason, difficul
   return (
     <>
       {recipe.isComponent && (
-        <button onClick={onOpenBaseInfo} aria-label="Préparation de base" className="tag" style={{ gap: 5, fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(255,255,255,0.92)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer" }}>
+        <button onClick={onOpenBaseInfo} aria-label="Préparation de base" className="tag hero-chip" style={{ gap: 5, fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "rgba(255,255,255,0.92)", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer" }}>
           <BaseIcon size={12} color="#fff" /> Base
         </button>
       )}
       {recipeVegan && (
-        <VeganBadge />
+        <VeganBadge hero />
       )}
       {recipeInSeason && (
-        <SeasonBadge />
+        <SeasonBadge hero />
       )}
       <DifficultyBadge score={difficulty.score} onImage title={difficultyExplain ? "Voir comment la difficulté est calculée" : difficultyTitle} onClick={difficultyExplain ? onOpenDifficulty : undefined} />
-      {categoryLabel(recipe.category) && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: `1px solid ${tagBorder}` }}><span style={{ fontSize: 12, lineHeight: 1 }}>{categoryEmoji(recipe.category)}</span>{categoryLabel(recipe.category)}</span>}
-      {recipe.cuisine && <span className="tag" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: `1px solid ${tagBorder}` }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
-      {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} style={{ display: "inline-flex", alignItems: "center", padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: (col.color || DEFAULT_NOTEBOOK_COLOR) + "33", color: col.color || DEFAULT_NOTEBOOK_COLOR }}>{col.name}</span> : null; })}
-      {!publicMode && <button onClick={onOpenCollections} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: `1px solid ${tagBorder}`, display: "inline-flex", alignItems: "center", gap: 4, ...(variant === "desktop" ? {} : { cursor: "pointer" }) }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>}
+      {categoryLabel(recipe.category) && <span className="tag hero-chip" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: `1px solid ${tagBorder}` }}><span style={{ fontSize: 12, lineHeight: 1 }}>{categoryEmoji(recipe.category)}</span>{categoryLabel(recipe.category)}</span>}
+      {recipe.cuisine && <span className="tag hero-chip" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.9)", background: "rgba(255,255,255,0.12)", border: `1px solid ${tagBorder}` }}><span style={{ fontSize: 12, lineHeight: 1 }}>{cuisineEmoji(recipe.cuisine)}</span>{recipe.cuisine}</span>}
+      {(recipe.collections || []).map(cid => { const col = (collections || []).find(c => c.id === cid); return col ? <span key={cid} className="hero-chip" style={{ display: "inline-flex", alignItems: "center", padding: "0 10px", borderRadius: 20, fontSize: 10, fontWeight: 600, background: (col.color || DEFAULT_NOTEBOOK_COLOR) + "33", color: col.color || DEFAULT_NOTEBOOK_COLOR }}>{col.name}</span> : null; })}
+      {!publicMode && <button onClick={onOpenCollections} className="hero-chip" style={{ padding: "0 10px", borderRadius: 20, fontSize: 10, fontWeight: 500, background: "rgba(255,255,255,0.1)", color: "#fff", border: `1px solid ${tagBorder}`, display: "inline-flex", alignItems: "center", gap: 4, ...(variant === "desktop" ? {} : { cursor: "pointer" }) }}><Icon name="plus" size={10} color="#fff" /> Carnet</button>}
     </>
   );
 }

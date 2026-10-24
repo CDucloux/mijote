@@ -10,6 +10,9 @@ const LABEL = { fontSize: 9.5, fontWeight: 600, color: "#fff", letterSpacing: "0
 // opaque : sur une photo le rendu est quasi identique, mais composité gratuitement.
 const GLASS = { padding: "4px 9px 4px 7px", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" };
 const FLAT = { padding: "3px 10px 3px 7px" };
+// Variante du hero de fiche : même boîte que les autres pastilles du hero (classe
+// `hero-chip`, hauteur fixe) ; la bordure transparente prend la place de leur liseré.
+const HERO = { padding: "0 10px 0 8px", border: "1px solid transparent", gap: 5 };
 
 interface OverlayBadgeProps {
   icon: IconName;
@@ -18,13 +21,16 @@ interface OverlayBadgeProps {
   title?: string;
   ariaLabel?: string;
   glass?: boolean;
+  /** Pastille du hero de fiche recette, alignée sur ses voisines. */
+  hero?: boolean;
 }
 
-export function OverlayBadge({ icon, label, bg, title, ariaLabel, glass = false }: OverlayBadgeProps) {
+export function OverlayBadge({ icon, label, bg, title, ariaLabel, glass = false, hero = false }: OverlayBadgeProps) {
   return (
-    <span title={title || label} aria-label={ariaLabel || label} style={{ display: "inline-flex", alignItems: "center", gap: 4, borderRadius: 20, background: bg, border: "none", ...(glass ? GLASS : FLAT) }}>
-      <Icon name={icon} size={11} color="#fff" />
-      <span style={LABEL}>{label}</span>
+    <span title={title || label} aria-label={ariaLabel || label} className={hero ? "hero-chip" : undefined}
+      style={{ display: "inline-flex", alignItems: "center", gap: 4, borderRadius: 20, background: bg, border: "none", ...(hero ? HERO : glass ? GLASS : FLAT) }}>
+      <Icon name={icon} size={hero ? 12 : 11} color="#fff" />
+      <span style={hero ? { ...LABEL, fontSize: 10 } : LABEL}>{label}</span>
     </span>
   );
 }

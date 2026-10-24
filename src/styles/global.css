@@ -511,6 +511,17 @@ select {
   border: none;
 }
 
+/* Pastilles du hero de fiche recette (Vegan, De saison, Base, difficulté, catégorie,
+   cuisine, carnets) : une hauteur fixe commune. Leurs polices, icônes et bordures
+   diffèrent, et la hauteur suivait chacune : Vegan et De saison sortaient plus petits. */
+.hero-chip,
+.tag.hero-chip {
+  height: 24px;
+  box-sizing: border-box;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .tag.accent {
   background: rgba(var(--accent-rgb), 0.15);
   color: var(--accent);
