@@ -138,7 +138,7 @@ html.light, .light {
 /* ── Liseré : outline superposé à une bordure de 1px (cohabite avec les bordures
    inline). Spécificité nulle : un `:focus-visible` posé ailleurs garde la main. ── */
 :where(
-  .hover-ring, .ut-pill-clickable, .timer-btn,
+  .hover-ring, .timer-btn,
   .field-picker,
   .ing-hover, .save-carnet-btn, .convert-reset
 ) {
