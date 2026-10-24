@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.81.1 – Cardamome · Mains libres sans forcer la voix
+
+### Mode cuisine
+- **Commandes vocales mieux comprises** : la dictée propose plusieurs transcriptions par phrase, toutes sont désormais examinées. Un « suivant » dit de loin, souvent rendu « suis vent » en premier choix, passe du premier coup. « Précédant » est compris comme « précédent ».
+- **App Android** : les mots des commandes sont transmis à la dictée du système pour qu'elle les favorise (Android 13+), et la session d'écoute reste ouverte plus longtemps : moins de relances, donc moins de bips et de mots perdus.
+
 ## v4.81.0 – Cardamome · Rétro planning et session batch
 
 ### Rétro planning

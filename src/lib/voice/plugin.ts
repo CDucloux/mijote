@@ -10,10 +10,12 @@
  * @module voice/plugin
  */
 import { Capacitor, registerPlugin } from "@capacitor/core";
+import { VOICE_PHRASES } from "@/lib/cookSession/voiceCommands.js";
 
 /** Interface exposée par l'implémentation native (`VoicePlugin.java`). */
 interface VoicePlugin {
-  start(options: { lang: string }): Promise<void>;
+  /** `phrases` : mots à favoriser (Android 13+), `maxResults` : hypothèses rendues. */
+  start(options: { lang: string; phrases: readonly string[]; maxResults: number }): Promise<void>;
   stop(): Promise<void>;
   speak(options: { text: string }): Promise<void>;
   stopSpeaking(): Promise<void>;
@@ -27,10 +29,10 @@ export function isNativeVoice(): boolean {
   return Capacitor.isNativePlatform();
 }
 
-/** Résultat de dictée au format du navigateur (un seul résultat par session). */
+/** Résultat de dictée au format du navigateur (un seul résultat par session, ses hypothèses en ordre). */
 export interface NativeRecognitionEvent {
   resultIndex: number;
-  results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
+  results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
 }
 
 const field = (event: unknown, key: string): unknown =>
@@ -47,9 +49,12 @@ function listenOnce(): void {
   bridged = true;
   const ignore = () => {};
   void Voice.addListener("result", event => {
+    const listed = field(event, "alternatives");
     const transcript = field(event, "transcript");
-    if (typeof transcript !== "string") return;
-    session.current?.onresult?.({ resultIndex: 0, results: [{ isFinal: field(event, "isFinal") === true, 0: { transcript } }] });
+    const transcripts = (Array.isArray(listed) ? listed : [transcript]).filter((text): text is string => typeof text === "string");
+    if (!transcripts.length) return;
+    const result = Object.assign(transcripts.map(text => ({ transcript: text })), { isFinal: field(event, "isFinal") === true });
+    session.current?.onresult?.({ resultIndex: 0, results: [result] });
   }).catch(ignore);
   void Voice.addListener("state", event => {
     const state = field(event, "state");
@@ -72,6 +77,7 @@ export class NativeRecognition {
   lang = "fr-FR";
   continuous = false;
   interimResults = true;
+  maxAlternatives = 1;
   onresult: ((event: NativeRecognitionEvent) => void) | null = null;
   onerror: ((event: { error: string }) => void) | null = null;
   onend: (() => void) | null = null;
@@ -81,7 +87,7 @@ export class NativeRecognition {
   start(): void {
     listenOnce();
     session.current = this;
-    Voice.start({ lang: this.lang }).catch(() => {
+    Voice.start({ lang: this.lang, phrases: VOICE_PHRASES, maxResults: this.maxAlternatives }).catch(() => {
       this.onerror?.({ error: "audio-capture" });
       this.onend?.();
     });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseVoiceCommand, parseVoiceTail, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech, VOICE_HELP, voiceCommandLabel, elapsedSpeech, itemsSpeech, quantitySpeech, remainingSpeech, timerDoneSpeech } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceCommand, parseVoiceTail, parseVoiceAlternatives, VOICE_PHRASES, cookPageSpeech, tipSpeech, voiceTimerTarget, stepTechniques, techniqueSpeech, VOICE_HELP, voiceCommandLabel, elapsedSpeech, itemsSpeech, quantitySpeech, remainingSpeech, timerDoneSpeech } from "@/lib/cookSession/voiceCommands.js";
 import { buildTechniqueIndex, type TechniqueEntry } from "@/lib/recipes/techniques.js";
 import type { CookTimer } from "@/lib/planning/cookTimers.js";
 
@@ -83,6 +83,42 @@ describe("parseVoiceTail", () => {
     expect(parseVoiceTail("")).toEqual({ command: null, words: 0 });
     expect(parseVoiceTail(null)).toEqual({ command: null, words: 0 });
     expect(parseVoiceTail("suivant", 1)).toEqual({ command: null, words: 1 });
+  });
+});
+
+describe("parseVoiceAlternatives", () => {
+  it("retient la commande d'une hypothèse suivante quand la première n'en porte pas", () => {
+    expect(parseVoiceAlternatives(["suis vent", "suivant", "suivants"])).toEqual({ command: { kind: "next" }, words: 2 });
+  });
+  it("garde l'ordre de la dictée : la première commande trouvée gagne", () => {
+    expect(parseVoiceAlternatives(["répète", "suivant"]).command).toEqual({ kind: "repeat" });
+  });
+  it("reprend après le plus grand nombre de mots, pour ne pas redéclencher", () => {
+    expect(parseVoiceAlternatives(["suivant", "suis vent"], 2)).toEqual({ command: null, words: 2 });
+  });
+  it("applique le filtre d'écho à chaque hypothèse", () => {
+    const spoken = "Étape 3. Ajouter la crème, ensuite laisser réduire.";
+    expect(parseVoiceAlternatives(["ensuite", "en suite"], 0, spoken).command).toBeNull();
+  });
+  it("tolère une liste vide ou des entrées nulles", () => {
+    expect(parseVoiceAlternatives([])).toEqual({ command: null, words: 0 });
+    expect(parseVoiceAlternatives([null, undefined, "stop"]).command).toEqual({ kind: "stop" });
+  });
+  it("comprend « précédant », graphie fréquente de la dictée", () => {
+    expect(parseVoiceCommand("précédant")).toEqual({ kind: "prev" });
+  });
+});
+
+describe("VOICE_PHRASES", () => {
+  it("reprend les commandes de l'aide et leurs variantes, en minuscules et sans doublon", () => {
+    expect(VOICE_PHRASES).toContain("suivant");
+    expect(VOICE_PHRASES).toContain("précédent");
+    expect(VOICE_PHRASES).toContain("minuteur 10 minutes");
+    expect(new Set(VOICE_PHRASES).size).toBe(VOICE_PHRASES.length);
+    expect(VOICE_PHRASES.every(phrase => phrase === phrase.toLowerCase())).toBe(true);
+  });
+  it("ne contient que des phrases que la dictée sait reconnaître", () => {
+    for (const phrase of VOICE_PHRASES) expect(parseVoiceCommand(phrase), phrase).not.toBeNull();
   });
 });
 
