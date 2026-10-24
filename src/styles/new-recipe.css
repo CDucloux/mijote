@@ -4,7 +4,7 @@
 .nr { display: flex; flex-direction: column; }
 
 .nr-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-.nr-head h3 { margin: 0; font-family: var(--ff-display); font-size: 22px; font-weight: 700; letter-spacing: -0.015em; }
+.nr-head h3 { margin: 0; font-family: var(--ff-display); font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
 .nr-x {
   flex-shrink: 0;
   width: 32px;
