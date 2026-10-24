@@ -19,6 +19,7 @@ import { RecipeContentMobile } from "../components/recipeDetail/RecipeContentMob
 import { RecipeContentDesktop } from "../components/recipeDetail/RecipeContentDesktop.jsx";
 import { ShoppingSelectSheet } from "../components/recipeDetail/ShoppingSelectSheet.jsx";
 import { MealPlanSheet } from "../components/recipeDetail/MealPlanSheet.jsx";
+import { ServeAtSheet } from "../components/recipeDetail/ServeAtSheet.jsx";
 import { ReportSheet } from "../components/recipeDetail/ReportSheet.jsx";
 import { PublishSheet } from "../components/recipeDetail/PublishSheet.jsx";
 import { CloneConfirmSheet } from "../components/recipeDetail/CloneConfirmSheet.jsx";
@@ -120,6 +121,8 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
   const [activeTab, setActiveTab] = useState<DetailTab>("Ingrédients");
   const isDesktop = useIsDesktop();
   const [showMealModal, setShowMealModal] = useState(false);
+  const [showServeAt, setShowServeAt] = useState(false);
+  const openServeAt = recipe.steps?.length ? () => setShowServeAt(true) : undefined;
   const [mealDate, setMealDate] = useState(new Date().toISOString().slice(0, 10));
   const [mealSlot, setMealSlot] = useState("midi");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -263,7 +266,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
         <div style={{ position: "fixed", right: 24, bottom: 28, zIndex: 60, width: 280 }}>{keepCta}</div>
       )}
       {isDesktop && !publicMode && (
-        <RecipeActionDock onOpenShopping={openShoppingModal} onOpenMealPlan={() => setShowMealModal(true)} />
+        <RecipeActionDock onOpenShopping={openShoppingModal} onOpenMealPlan={() => setShowMealModal(true)} onOpenServeAt={openServeAt} />
       )}
 
       {/* Desktop tabs */}
@@ -288,7 +291,7 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
 
           {/* Infos + actions – remontés juste sous le hero, au-dessus des onglets */}
           <RecipeStatsMobile recipe={recipe} nutriLetter={nutriLetter} publicMode={publicMode} keepCta={keepCta}
-            onOpenNutrition={() => setShowNutrition(true)} onOpenShopping={() => { openShoppingModal(); }} onOpenMealPlan={() => setShowMealModal(true)} />
+            onOpenNutrition={() => setShowNutrition(true)} onOpenShopping={() => { openShoppingModal(); }} onOpenMealPlan={() => setShowMealModal(true)} onOpenServeAt={openServeAt} />
 
           {/* Onglets sticky sous la barre, switch segmenté avec indicateur glissant */}
           <RecipeTabsMobile activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -324,6 +327,11 @@ export function RecipeDetail({ recipe, recipes = [], cookMode = false, onSetCook
           isInStock={isInStock} isLowStock={isLowStock} getIngImage={view.getIngImage} mult={mult}
           onClose={() => setShowShoppingModal(false)}
           onConfirm={items => { onAddToShopping?.(recipe, items, mult); setShowShoppingModal(false); }} />
+      )}
+
+      {showServeAt && (
+        <ServeAtSheet recipe={recipe} onClose={() => setShowServeAt(false)}
+          onEditTimings={onEdit && !publicMode ? () => { setShowServeAt(false); onEdit(); } : undefined} />
       )}
 
       {showMealModal && (
