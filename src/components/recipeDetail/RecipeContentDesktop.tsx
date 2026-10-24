@@ -59,7 +59,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }: R
               );
               const effDbId = getIngId(ing);
               return (
-              <div key={ing.id} onClick={() => effDbId && navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`)} className={effDbId ? "hover-neutral" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, cursor: effDbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px" }}>
+              <div key={ing.id} onClick={() => effDbId && navigate(`/admin/ingredients/${encodeURIComponent(effDbId)}`, { state: { originPath: `/recipes/${recipe.id}` } })} className={effDbId ? "hover-neutral" : undefined} style={{ display: "flex", alignItems: "center", gap: 12, cursor: effDbId ? "pointer" : "default", borderRadius: 10, padding: "4px 6px", margin: "-4px -6px" }}>
                 <span style={{ position: "relative", flexShrink: 0, display: "inline-flex" }}>
                   <IngImage src={getIngImage(ing.dbId, ing.name)} alt={ing.name} size={48} />
                 </span>
@@ -85,7 +85,7 @@ export function RecipeContentDesktop({ recipe, view, baseSteps, setCookMode }: R
               {recipe.utensils.map(u => {
                 const prec = getUtPrecaution?.(u);
                 return (
-                <div key={u.id} onClick={prec ? () => setPrecSheet({ name: u.name, prec }) : undefined} className={`ut-pill-desktop${prec ? " ut-pill-clickable" : ""}`} title={prec ? "Voir les précautions d'utilisation" : undefined} style={{ position: "relative", display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: prec ? "7px 32px 7px 8px" : "7px 14px 7px 8px", border: "1px solid var(--border)", cursor: prec ? "pointer" : "default" }}>
+                <div key={u.id} onClick={prec ? () => setPrecSheet({ name: u.name, prec }) : undefined} className={`ut-pill-desktop${prec ? " ut-pill-clickable" : ""}`} title={prec ? "Voir les précautions d'utilisation" : undefined} style={{ position: "relative", display: "flex", alignItems: "center", gap: 9, background: "var(--surface2)", borderRadius: 12, padding: prec ? "8px 33px 8px 9px" : "8px 15px 8px 9px", cursor: prec ? "pointer" : "default" }}>
                   <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={28} radius={7} />
                   <span style={{ fontSize: 13, fontWeight: 500 }}>{u.name}</span>
                   {prec && <PrecautionInfoBadge tone={prec.tone} style={{ top: "50%", right: 8, transform: "translateY(-50%)", width: 20, height: 20 }} />}

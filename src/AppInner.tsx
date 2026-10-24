@@ -4,7 +4,7 @@ import type { User } from "firebase/auth";
 import { cleanRecipeForExport } from "@/lib/recipes/recipeSchema.js";
 import { isSavedRecipe } from "@/lib/recipes/savedRecipes.js";
 import { exportTextFile } from "@/lib/ui/fileExport.js";
-import { parseAppRoute, originPathOf } from "@/lib/ui/appRoute.js";
+import { parseAppRoute, originPathOf, recipeUnderIngredient } from "@/lib/ui/appRoute.js";
 import { pageTitle } from "@/lib/ui/pageTitle.js";
 import { reportError } from "@/lib/observability/observability.js";
 import { installGlobalRipple } from "@/lib/ui/ripple.js";
@@ -196,7 +196,8 @@ export function AppInner({ user, isDark, toggleTheme }: AppInnerProps) {
   const [discoverSeed, setDiscoverSeed] = useState("");
   const goDiscover = useCallback((q = "") => { setDiscoverSeed(q.trim()); navigate("/discover"); }, [navigate]);
   // Intention consommée par la fiche à l'arrivée (« plan » → planning, « share » → partage).
-  const openRecipeWithIntent = useCallback((id: string, intent: "plan" | "share") => navigate(`/recipes/${id}`, { state: { intent } }), [navigate]);
+  const openRecipeWithIntent = useCallback((id: string, intent: "plan" | "share") =>
+    navigate(`/recipes/${id}`, { state: { intent, originPath: location.pathname } }), [navigate, location.pathname]);
 
   // Recette en cours d'édition : brouillon (nouvelle / import) ou recette existante
   // pilotée par la route /recipes/:id/edit (survit à un remontage).
@@ -242,6 +243,13 @@ export function AppInner({ user, isDark, toggleTheme }: AppInnerProps) {
   // de l'ouverture au retour (pas de rejeu d'animation, scroll conservé).
   const originPath = originPathOf(location.state);
   const visibleTab = selectedRecipe && currentRecipe ? (originPath ? tabForPath(originPath) : tab) : tab;
+  // Fiche ingrédient ouverte depuis une fiche recette : la recette reste montée
+  // DESSOUS (même calque, même position dans l'arbre, scroll conservé). Sans elle, la
+  // sortie de la fiche ingrédient glissait sur un fond vide.
+  const underRecipeId = adminFiche ? recipeUnderIngredient(originPath) : null;
+  const underRecipe = underRecipeId ? recipes.find(r => r.id === underRecipeId) : undefined;
+  const ficheOverRecipe = !!underRecipe && !(selectedRecipe && currentRecipe);
+  const overlayRecipe = selectedRecipe && currentRecipe ? currentRecipe : underRecipe;
 
   const shellValue = useAppShellValue(
     { user, householdId: householdPointer?.id || null, syncStatus, isDark, notify, techniques, sources, directory, isAdmin, isPlus, subscription, giftImportUsed, markGiftImportUsed },
@@ -293,17 +301,27 @@ export function AppInner({ user, isDark, toggleTheme }: AppInnerProps) {
     <PublicRecipeScreen docs={publicDocs} enterClass={detailEnter} isDesktop={isDesktop} user={user} isAdmin={isAdmin}
       owned={!!publicDocs && (recipes.some(r => r.clonedFrom?.publicId === publicDocs.pub.pubId) || publicDocs.pub.authorUid === user.uid)}
       onClone={cloneFromPublic} onExportPDF={exportPDF} notify={notify} ingredientDB={ingredientDB} utensilDB={utensilDB} categories={categories} />
-  ) : selectedRecipe && currentRecipe ? (
+  ) : overlayRecipe ? (
     // Fiche privée en OVERLAY au-dessus de l'onglet d'origine, gardé monté dessous
     // toute la vie de la fiche : pas de rejeu d'entrée au retour, scroll conservé.
     // `paddingTop` rend à l'onglet la réserve d'inset que #root cède au hero à fond perdu.
+    // Fiche ingrédient ouverte depuis la recette : elle passe AU-DESSUS du calque
+    // recette (inerte), qui reste en place pour réapparaître à sa sortie.
     <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0, display: "flex", flexDirection: "column", boxSizing: "border-box", paddingTop: isDesktop ? 0 : "var(--safe-hero-top)" }}>
-      {tabContent}
-      <div key={selectedRecipe}
-        className={dismissing ? "page-dismiss-right" : `${detailEnter}${isDesktop ? " desktop-content" : ""}`}
-        onAnimationEnd={dismissing ? (e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); } : undefined}
+      {ficheOverRecipe ? (
+        // Calque transparent : c'est la fiche (fond opaque, cf. ConfigPage) qui glisse à
+        // la sortie. La bande de la barre système la suit, pour ne pas laisser voir le
+        // hero de la recette sous l'heure et les icônes pendant la lecture de la fiche.
+        <div style={{ position: "absolute", inset: 0, zIndex: 3, display: "flex", flexDirection: "column" }}>
+          {!isDesktop && <div className={dismissing ? "page-dismiss-right" : undefined} style={{ height: "var(--safe-hero-top)", flexShrink: 0, background: "var(--bg)" }} />}
+          {tabContent}
+        </div>
+      ) : tabContent}
+      <div key={overlayRecipe.id} inert={ficheOverRecipe}
+        className={ficheOverRecipe ? (isDesktop ? "desktop-content" : "") : dismissing ? "page-dismiss-right" : `${detailEnter}${isDesktop ? " desktop-content" : ""}`}
+        onAnimationEnd={dismissing && !ficheOverRecipe ? (e) => { if (e.target === e.currentTarget && e.animationName === "detailDismissRight") finishDismiss(); } : undefined}
         style={{ position: "absolute", inset: 0, overflow: isDesktop ? "hidden" : "auto", minHeight: 0, background: "var(--bg)", zIndex: 2 }}>
-        <RecipeDetail recipe={currentRecipe} recipes={recipes} cookMode={cookModeRoute}
+        <RecipeDetail recipe={overlayRecipe} recipes={recipes} cookMode={cookModeRoute}
           onSetCookMode={(v) => navigate(v ? `/recipes/${selectedRecipe}/cookmode` : `/recipes/${selectedRecipe}`, v ? undefined : { replace: true })}
           onBack={() => dismissDetail(() => setSelectedRecipe(null))} onEdit={() => navigate(`/recipes/${selectedRecipe}/edit`)} onDelete={deleteAndLeave}
           onUpdateRecipe={(updated) => { if (isSavedRecipe(updated)) setRecipes(prev => prev.map(r => r.id === updated.id ? updated : r)); }}
@@ -330,7 +348,7 @@ export function AppInner({ user, isDark, toggleTheme }: AppInnerProps) {
   // Fiche affichée en mobile : le hero à fond perdu remonte jusqu'à la barre système,
   // la réserve d'inset du #root est donc coupée (cf. .root--edge-hero).
   const edgeHero = !isDesktop && !isEditing && !importRoute && !planRoute
-    && (publicPubId ? !!publicDocs : (!!selectedRecipe && !!currentRecipe));
+    && (publicPubId ? !!publicDocs : (!!selectedRecipe && !!currentRecipe) || ficheOverRecipe);
 
   return (
     <AppShellProvider value={shellValue}>

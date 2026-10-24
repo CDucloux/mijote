@@ -100,3 +100,42 @@ export function canImport(state: CreditState, kind: ImportKind): boolean {
   const cost = creditCost(kind);
   return state.monthLeft >= cost && state.dayLeft >= cost;
 }
+
+/** État de la jauge de crédits : marge confortable, bientôt épuisés, ou import impossible. */
+export type CreditTone = "ok" | "low" | "blocked";
+
+/** Ce que montre la jauge de crédits de la page d'import. */
+export interface CreditSummary {
+  tone: CreditTone;
+  /** Crédits restants (« 99 crédits ce mois-ci », « Crédits épuisés »). */
+  count: string;
+  /** Coût de l'import en cours, ou ce qui bloque (« Ce lien : 1 crédit », « Reprends demain »). */
+  note: string;
+  /** Part du mois RESTANTE (0-100) : la jauge se vide à mesure qu'on importe. */
+  leftPct: number;
+}
+
+/** Seuil de crédits restants sous lequel la jauge passe en alerte. */
+export const LOW_CREDITS = 10;
+
+const KIND_SUBJECT: Record<ImportKind, string> = { url: "Ce lien", text: "Ce texte", pdf: "Ce PDF", photo: "Les photos" };
+const credits = (n: number): string => `${n} crédit${n > 1 ? "s" : ""}`;
+
+/**
+ * Résumé de la jauge de crédits pour un type d'import : on ne montre que le coût
+ * de l'import en cours (le barème complet encombrait), ou ce qui l'empêche.
+ * @param state - Le reliquat de crédits courant.
+ * @param kind - Type d'import affiché.
+ * @returns Teinte, libellés et part restante de la jauge.
+ */
+export function creditSummary(state: CreditState, kind: ImportKind): CreditSummary {
+  const cost = creditCost(kind);
+  const monthGone = state.monthLeft < cost;
+  const dayGone = !monthGone && state.dayLeft < cost;
+  const leftPct = state.monthLimit > 0 ? Math.max(0, Math.min(100, Math.round((state.monthLeft / state.monthLimit) * 100))) : 0;
+  const count = state.monthLeft <= 0 ? "Crédits épuisés" : `${credits(state.monthLeft)} ce mois-ci`;
+  // Mois entamé mais insuffisant : le coût affiché suffit à expliquer le blocage.
+  const note = state.monthLeft <= 0 ? "Retour le 1er du mois" : dayGone ? "Reprends demain" : `${KIND_SUBJECT[kind]} : ${credits(cost)}`;
+  const tone: CreditTone = monthGone || dayGone ? "blocked" : state.monthLeft <= LOW_CREDITS ? "low" : "ok";
+  return { tone, count, note, leftPct };
+}

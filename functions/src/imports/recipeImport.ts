@@ -4,7 +4,8 @@
  * Deux points d'entrée `onCall`, tous deux réservés côté serveur (admin illimité,
  * abonné Cardamome+ avec quota, cf. {@link assertImportAllowed}), jamais en masquant
  * un simple bouton :
- * - {@link importRecipeFromUrl} : extraction depuis une URL (Claude Haiku 5.5) ;
+ * - {@link importRecipeFromUrl} : extraction depuis une URL (Claude Haiku 5.5),
+ *   ou depuis la légende d'un post Instagram/TikTok (cf. `socialCaption`) ;
  * - {@link importRecipeFromImages} : extraction depuis 1–2 photos de livre (Sonnet) ;
  * - {@link importRecipeFromText} : extraction depuis un texte collé (Haiku) ;
  * - {@link importRecipeFromPdf} : extraction depuis le texte d'un PDF, extrait
@@ -27,12 +28,13 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   htmlToText, imageUrlsInText, extractOgImage,
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
-  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut, sanitizeChef, parseJsonLoose, modelText,
+  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut, sanitizeChef, sanitizeStepTiming, parseJsonLoose, modelText,
   type Intermediate, type ApplianceInfo,
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
 import { assertHostAllowed, BlockedHostError } from "./urlGuard.js";
 import { readFreshImport, writeImportCache } from "./importCache.js";
+import { socialPlatform, extractSocialCaption, LINK_PREVIEW_USER_AGENT, MIN_CAPTION_LENGTH, type SocialPlatform } from "./socialCaption.js";
 
 /** Clé API Anthropic (secret), l'extraction IA est refusée si elle est absente. */
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
@@ -41,6 +43,8 @@ const ADMIN_EMAIL = defineString("ADMIN_EMAIL");
 
 /** Garde-fou : on ne télécharge pas des pages HTML au-delà de cette taille. */
 const MAX_HTML_BYTES = 3_000_000;
+/** Garde-fou : taille maximale de la miniature d'un post social. */
+const MAX_COVER_BYTES = 2_000_000;
 /** Délai maximal de récupération d'une page avant abandon. */
 const FETCH_TIMEOUT_MS = 15_000;
 /** Nombre maximal de redirections suivies (chacune re-vérifiée anti-SSRF). */
@@ -123,17 +127,25 @@ function parseModelResponse(response: Anthropic.Message, kind: string): LlmDraft
   return parsed;
 }
 
+/** User-Agent de navigateur : beaucoup de sites renvoient une page vide aux robots. */
+const BROWSER_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36";
+
+/** Ressource récupérée : octets bruts et type de contenu annoncé. */
+interface FetchedBody { bytes: Buffer; contentType: string }
+
 /**
- * Récupère le HTML d'une page côté serveur (pas de CORS), avec un UA de navigateur
- * (beaucoup de sites renvoient une page vide aux bots), un timeout et une taille
- * bornée pour éviter les abus.
+ * Récupère une ressource côté serveur (pas de CORS), avec un timeout et une taille
+ * bornée pour éviter les abus. Les redirections sont suivies à la main, chaque saut
+ * re-vérifié (anti-SSRF).
  *
- * @param url - L'URL de la page à récupérer.
- * @returns Le HTML décodé en UTF-8.
+ * @param url - L'URL à récupérer.
+ * @param options - `userAgent` et `accept` envoyés, `maxBytes` toléré, `accepts`
+ *   qui valide le type de contenu, `typeError` levé s'il est refusé.
+ * @returns Les octets et le type de contenu.
  * @throws HttpsError `unavailable` / `invalid-argument` / `deadline-exceeded`
- *   selon l'échec (réseau, type de contenu, page trop lourde ou trop lente).
+ *   selon l'échec (réseau, type de contenu, ressource trop lourde ou trop lente).
  */
-async function fetchHtml(url: string): Promise<string> {
+async function fetchBody(url: string, options: { userAgent: string; accept: string; maxBytes: number; accepts: (contentType: string) => boolean; typeError: string }): Promise<FetchedBody> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
@@ -148,11 +160,7 @@ async function fetchHtml(url: string): Promise<string> {
       res = await fetch(current, {
         redirect: "manual",
         signal: controller.signal,
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml",
-          "Accept-Language": "fr,en;q=0.8",
-        },
+        headers: { "User-Agent": options.userAgent, "Accept": options.accept, "Accept-Language": "fr,en;q=0.8" },
       });
       const location = res.status >= 300 && res.status < 400 ? res.headers.get("location") : null;
       if (!location) break;
@@ -160,8 +168,8 @@ async function fetchHtml(url: string): Promise<string> {
       current = new URL(location, current).toString();
     }
     if (!res.ok) throw new HttpsError("unavailable", `La page a répondu ${res.status}.`);
-    const ct = res.headers.get("content-type") || "";
-    if (!ct.includes("html") && !ct.includes("xml")) throw new HttpsError("invalid-argument", "L'URL ne pointe pas vers une page web.");
+    const contentType = res.headers.get("content-type") || "";
+    if (!options.accepts(contentType)) throw new HttpsError("invalid-argument", options.typeError);
     if (!res.body) throw new HttpsError("unavailable", "Réponse sans contenu.");
     const reader = res.body.getReader();
     const chunks: Uint8Array[] = []; let size = 0;
@@ -169,10 +177,10 @@ async function fetchHtml(url: string): Promise<string> {
       const { done, value } = await reader.read();
       if (done) break;
       size += value.length;
-      if (size > MAX_HTML_BYTES) { controller.abort(); throw new HttpsError("invalid-argument", "Page trop volumineuse."); }
+      if (size > options.maxBytes) { controller.abort(); throw new HttpsError("invalid-argument", "Ressource trop volumineuse."); }
       chunks.push(value);
     }
-    return Buffer.concat(chunks).toString("utf-8");
+    return { bytes: Buffer.concat(chunks), contentType };
   } catch (e) {
     if (e instanceof HttpsError) throw e;
     if (e instanceof BlockedHostError) throw new HttpsError("invalid-argument", "Cette adresse n'est pas autorisée (réseau interne).");
@@ -180,6 +188,45 @@ async function fetchHtml(url: string): Promise<string> {
     throw new HttpsError("unavailable", "Impossible de récupérer la page (réseau ou URL invalide).");
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/**
+ * Récupère le HTML d'une page, par défaut avec un UA de navigateur.
+ *
+ * @param url - L'URL de la page à récupérer.
+ * @param userAgent - L'UA à présenter (robot d'aperçu pour un réseau social).
+ * @returns Le HTML décodé en UTF-8.
+ * @throws HttpsError selon l'échec, cf. {@link fetchBody}.
+ */
+async function fetchHtml(url: string, userAgent = BROWSER_USER_AGENT): Promise<string> {
+  const { bytes } = await fetchBody(url, {
+    userAgent, accept: "text/html,application/xhtml+xml", maxBytes: MAX_HTML_BYTES,
+    accepts: type => type.includes("html") || type.includes("xml"),
+    typeError: "L'URL ne pointe pas vers une page web.",
+  });
+  return bytes.toString("utf-8");
+}
+
+/**
+ * Télécharge la miniature d'un post social pour que le client la ré-héberge : les
+ * URLs d'image d'Instagram sont signées et expirent au bout de quelques jours.
+ * Best-effort : `null` à la moindre erreur, l'import se poursuit sans couverture.
+ *
+ * @param url - L'URL de la miniature (`og:image`), éventuellement vide.
+ * @returns L'image en base64 avec son type, ou `null`.
+ */
+async function fetchCoverImage(url: string): Promise<{ mediaType: string; data: string } | null> {
+  if (!/^https:\/\//i.test(url)) return null;
+  try {
+    const { bytes, contentType } = await fetchBody(url, {
+      userAgent: BROWSER_USER_AGENT, accept: "image/*", maxBytes: MAX_COVER_BYTES,
+      accepts: type => /^image\/(jpeg|png|webp)/i.test(type),
+      typeError: "Miniature dans un format inattendu.",
+    });
+    return { mediaType: contentType.split(";")[0].trim().toLowerCase(), data: bytes.toString("base64") };
+  } catch {
+    return null;
   }
 }
 
@@ -191,7 +238,7 @@ type LlmDraft = Record<string, unknown> & {
   chef?: unknown;
   ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string; group?: unknown; cut?: unknown }[];
   utensils?: { name?: string }[];
-  steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; utensilParams?: unknown; group?: unknown }[];
+  steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; utensilParams?: unknown; group?: unknown; duration?: unknown; activeTime?: unknown; durationEstimated?: unknown }[];
   /** Numéro (1-based) de l'image qui est la photo du plat, 0/absent si aucune. */
   coverPhoto?: unknown;
   /** Préparation de base réutilisable (caramel, pâte, fond…) plutôt qu'un plat fini. */
@@ -265,6 +312,7 @@ function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
       };
       const params = sanitizeUtensilParams(s.utensilParams); if (params) step.utensilParams = params;
       const group = (typeof s.group === "string" ? s.group : "").trim(); if (group) step.group = group.slice(0, 80);
+      Object.assign(step, sanitizeStepTiming(s.duration, s.activeTime, s.durationEstimated));
       return step;
     }).filter((s) => s.text),
   };
@@ -455,6 +503,73 @@ function applianceInfosFrom(request: CallableRequest): ApplianceInfo[] {
   return parseApplianceInfos((request.data as { appliances?: unknown })?.appliances);
 }
 
+/** Nom affiché de chaque réseau social reconnu. */
+const PLATFORM_LABEL: Record<SocialPlatform, string> = { instagram: "Instagram", tiktok: "TikTok" };
+
+/**
+ * Motif (`details.reason`) des échecs propres aux réseaux sociaux : le client y
+ * répond par l'aide « colle la légende dans l'onglet Texte » plutôt qu'une erreur.
+ */
+const SOCIAL_CAPTION_REASON = "social-caption";
+
+/** Échec d'un import social, porteur du motif attendu par le client. */
+function socialCaptionError(platform: SocialPlatform, message: string): HttpsError {
+  return new HttpsError("failed-precondition", message, { reason: SOCIAL_CAPTION_REASON, platform });
+}
+
+/**
+ * Lit la légende et la miniature d'un post social en se présentant comme un robot
+ * d'aperçu de liens (cf. `socialCaption`).
+ *
+ * @param url - Le lien du post.
+ * @param platform - Le réseau reconnu.
+ * @returns La légende et l'URL de la miniature (`""` si absente).
+ * @throws HttpsError `failed-precondition` (motif {@link SOCIAL_CAPTION_REASON})
+ *   si la page est inaccessible ou sa légende trop courte pour une recette.
+ */
+async function readSocialPost(url: string, platform: SocialPlatform): Promise<{ caption: string; image: string }> {
+  const label = PLATFORM_LABEL[platform];
+  let html: string;
+  try {
+    html = await fetchHtml(url, LINK_PREVIEW_USER_AGENT);
+  } catch (e) {
+    logger.warn(`importRecipeFromUrl, ${label} inaccessible:`, e instanceof Error ? e.message : e);
+    throw socialCaptionError(platform, `${label} n'a pas laissé lire ce post. Copie sa description et colle-la dans l'onglet Texte.`);
+  }
+  const caption = extractSocialCaption(html);
+  if (caption.length < MIN_CAPTION_LENGTH) {
+    throw socialCaptionError(platform, `La légende de ce post est illisible ou trop courte pour contenir la recette. Copie sa description et colle-la dans l'onglet Texte.`);
+  }
+  return { caption, image: extractOgImage(html) };
+}
+
+/**
+ * Extrait la recette de la légende d'un post social. La miniature est renvoyée en
+ * base64 (`cover`) pour être ré-hébergée par le client, hors cache d'idempotence
+ * (taille d'un document Firestore) : un import rejoué garde l'URL d'origine.
+ *
+ * @returns `{ recipe, method: "social", cover }`, `cover` valant `null` si la
+ *   miniature n'a pas pu être téléchargée.
+ * @throws HttpsError `failed-precondition` (motif {@link SOCIAL_CAPTION_REASON})
+ *   si la légende ne contient pas de recette.
+ */
+async function importSocialPost(uid: string, requestId: unknown, url: string, platform: SocialPlatform, post: { caption: string; image: string }, knownUtensils: string[], applianceInfos: ApplianceInfo[]): Promise<{ recipe: ReturnType<typeof assignIdsAndLink>; method: string; cover: { mediaType: string; data: string } | null }> {
+  const label = PLATFORM_LABEL[platform];
+  const [inter, cover] = await Promise.all([
+    extractFromText(post.caption, knownUtensils, applianceInfos, `depuis la légende d'une vidéo ${label}`, "social"),
+    fetchCoverImage(post.image),
+  ]);
+  inter.source = url;
+  inter.image = post.image;
+  inter.utensils = filterUtensilsToKnown(collectUtensils(inter), knownUtensils);
+  const recipe = assignIdsAndLink(inter, knownUtensils);
+  if (!recipe.name || !recipe.ingredients.length) {
+    throw socialCaptionError(platform, `La légende de ce post ne contient pas la recette. Si elle est dans la vidéo ou les commentaires, copie-la dans l'onglet Texte.`);
+  }
+  await writeImportCache(uid, requestId, { recipe, method: "social" }).catch(() => { /* best-effort */ });
+  return { recipe, method: "social", cover };
+}
+
 /**
  * Importe une recette depuis une URL.
  *
@@ -466,7 +581,10 @@ function applianceInfosFrom(request: CallableRequest): ApplianceInfo[] {
  * NB : réactiver `enforceAppCheck: true` (ici et sur {@link importRecipeFromImages})
  * une fois le front déployé avec la clé reCAPTCHA v3, sinon l'import serait rejeté.
  *
- * @returns `{ recipe, method: "llm" }`.
+ * Un lien Instagram ou TikTok suit un autre chemin : la légende du post, lue avant
+ * tout débit, est extraite comme un texte collé (cf. {@link importSocialPost}).
+ *
+ * @returns `{ recipe, method: "llm" }`, ou `{ recipe, method: "social", cover }`.
  * @throws HttpsError selon l'échec (accès/quota, URL, page, extraction).
  */
 export const importRecipeFromUrl = onCall(
@@ -479,14 +597,18 @@ export const importRecipeFromUrl = onCall(
     // rappeler le LLM. On ne débite (assertImportAllowed) qu'en cas de cache absent.
     const cached = await readFreshImport(request.auth.uid, requestId).catch(() => null);
     if (cached) return cached;
-    await assertImportAllowed(request, ADMIN_EMAIL.value(), "url", requestId);
-
     const url = String((request.data as { url?: unknown })?.url || "").trim();
     if (!/^https?:\/\/.+/i.test(url)) throw new HttpsError("invalid-argument", "URL invalide.");
+    const platform = socialPlatform(url);
+    // Réseau social : la légende est lue AVANT de débiter, un post illisible ne
+    // coûte pas de crédit.
+    const post = platform ? await readSocialPost(url, platform) : null;
+    await assertImportAllowed(request, ADMIN_EMAIL.value(), "url", requestId);
     const knownUtensils = knownUtensilsFrom(request);
     const applianceInfos = applianceInfosFrom(request);
 
     try {
+      if (post && platform) return await importSocialPost(request.auth.uid, requestId, url, platform, post, knownUtensils, applianceInfos);
       const html = await fetchHtml(url);
       const ogImage = extractOgImage(html); // image principale du plat
       const text = htmlToText(html);

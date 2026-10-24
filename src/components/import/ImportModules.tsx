@@ -7,8 +7,9 @@ import { PlusBadge } from "../badges/PlusBadge.jsx";
 import { monogramOf, tintOf, type RecommendedSource } from "@/lib/sources/recommendedSources.js";
 import { outboundSourceHref } from "@/lib/sources/outboundLink.js";
 import { recordSourceClick } from "@/lib/firebase/sourceClicks.js";
-import { CREDIT_COST, type ImportKind, type CreditState } from "@/lib/aiQuota.js";
+import { creditSummary, type ImportKind, type CreditState } from "@/lib/aiQuota.js";
 import { GIFT_OFFER } from "@/lib/onboarding/giftRecipe.js";
+import { SOCIAL_LABEL, type SocialPlatform } from "@/lib/recipes/socialLink.js";
 
 // Mode d'onglet de la page d'import (clés françaises de l'UI, distinctes de ImportKind).
 export type ImportMode = "lien" | "photo" | "texte" | "pdf";
@@ -31,6 +32,7 @@ export const TIPS: Record<ImportMode, { h: string; items: [string, string][] }> 
   lien: { h: "Bien importer un lien", items: [
     ["Vise la page de la recette", " : pas la page d'accueil ni une liste."],
     ["Blogs, magazines, sites perso", " : ça passe en général sans souci."],
+    ["Un reel Instagram ou TikTok", " : on lit la recette dans sa légende."],
     ["Un site qui bloque ?", " Copie le texte de la recette et passe par l'onglet Texte."],
   ] },
   photo: { h: "Pour une bonne extraction", items: [
@@ -105,30 +107,19 @@ export function QuotaBar({ credits, kind, unlimited }: { credits?: CreditState |
     );
   }
   if (!credits) return null;
-  const cost = CREDIT_COST[kind] ?? 1;
-  const monthGone = credits.monthLeft < cost;
-  const dayGone = !monthGone && credits.dayLeft < cost;
-  const blocked = monthGone || dayGone;
-  const pct = credits.monthLimit ? Math.min(100, Math.round((credits.monthUsed / credits.monthLimit) * 100)) : 100;
-  const low = !blocked && credits.monthLeft <= 10;
-  const count = credits.monthLeft <= 0
-    ? "Crédits épuisés"
-    : `${credits.monthLeft} crédit${credits.monthLeft > 1 ? "s" : ""} ce mois-ci`;
-  const reset = credits.monthLeft <= 0
-    ? "Ça repart le 1er du mois"
-    : monthGone
-    ? `Il te reste ${credits.monthLeft} crédit, une photo en coûte 2`
-    : dayGone
-    ? "Beaucoup d'imports aujourd'hui, reprends demain (tes crédits du mois sont intacts)"
-    : "Lien, texte ou PDF : 1 crédit · photo : 2 crédits";
+  const { tone, count, note, leftPct } = creditSummary(credits, kind);
   return (
-    <div className={`imp-quota${low ? " low" : ""}${blocked ? " blocked" : ""}`}>
-      <div className="imp-q-top">
-        <span className="imp-q-label"><span className="spark"><Icon name="sparkle" size={13} color="currentColor" /></span>Crédits intelligents</span>
-        <span className="imp-q-count">{count}</span>
-      </div>
-      <div className="imp-q-track"><div className="imp-q-fill" style={{ width: `${pct}%` }} /></div>
-      <div className="imp-q-reset">{reset}</div>
+    <div className={`imp-quota tone-${tone}`}>
+      <span className="imp-q-ic" aria-hidden="true"><Icon name="sparkle" size={14} color="currentColor" /></span>
+      <span className="imp-q-txt">
+        <span className="imp-q-row">
+          <span className="imp-q-count">{count}</span>
+          <span className="imp-q-note">{note}</span>
+        </span>
+        <span className="imp-q-track" role="progressbar" aria-label="Crédits restants ce mois-ci" aria-valuenow={leftPct} aria-valuemin={0} aria-valuemax={100}>
+          <span className="imp-q-fill" style={{ width: `${leftPct}%` }} />
+        </span>
+      </span>
     </div>
   );
 }
@@ -297,6 +288,28 @@ export function ImpInlineError({ children }: { children: ReactNode }) {
     <div className="imp-inline-err">
       <Icon name="warning" size={15} color="var(--red)" />
       <span>{children}</span>
+    </div>
+  );
+}
+
+/**
+ * Aide sous le champ lien pour un post Instagram ou TikTok : on n'y lit que la
+ * légende. Avant l'import, elle prévient ; après un échec de lecture (`failure`),
+ * elle porte le message serveur. Dans les deux cas, un raccourci vers l'onglet
+ * Texte pour coller la description à la main.
+ */
+export function SocialLinkHint({ platform, failure, onUseText }: { platform: SocialPlatform; failure?: string; onUseText: () => void }) {
+  const label = SOCIAL_LABEL[platform];
+  return (
+    <div className={`imp-social${failure ? " is-failed" : ""}`} role={failure ? "alert" : undefined}>
+      <span className="ic"><Icon name={failure ? "warning" : "info"} size={17} color="currentColor" /></span>
+      <span className="t">
+        <b>{failure ? "Légende introuvable" : `Lien ${label}`}</b>
+        <span>{failure || "On lit la recette dans la légende du post. Si elle n'y est pas en entier, copie la description et colle-la ici."}</span>
+      </span>
+      <button className="imp-social-btn ripple" onClick={onUseText}>
+        <Icon name="paste" size={14} color="currentColor" /> Coller la légende
+      </button>
     </div>
   );
 }

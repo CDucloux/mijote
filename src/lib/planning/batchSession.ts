@@ -12,7 +12,6 @@
  */
 import type { IngredientDbItem, SavedRecipe } from "@/lib/types.js";
 import { flattenForShopping, type ComponentRecipe } from "@/lib/recipes/recipeComponents.js";
-import { recipeCookingMethods, COOKING_METHODS } from "@/lib/recipes/cooking.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
 /** Item du mealPlan (forme minimale). */
@@ -229,38 +228,4 @@ export function buildMiseEnPlace(dishes: BatchDish[], ctx: MiseEnPlaceContext): 
   return [...groups.entries()]
     .map(([category, its]) => ({ category, items: its.sort((a, b) => b.usedBy.length - a.usedBy.length || a.name.localeCompare(b.name, "fr")) }))
     .sort((a, b) => order(a.category) - order(b.category));
-}
-
-// ─── CUISSONS REGROUPÉES (mutualiser le four / les feux) ──────────────────────
-
-/** Un groupe de plats partageant le même mode de cuisson (ex. tous au four). */
-export interface CookingGroup {
-  method: string;
-  label: string;
-  dishes: BatchDish[];
-}
-
-/**
- * Regroupe les plats par mode de cuisson (four, plaques, air-fryer…), déduit des
- * ustensiles. Permet de mutualiser l'appareil : « au four : Gratin + Légumes rôtis »
- * → on l'allume une seule fois. Un plat peut apparaître sous plusieurs modes.
- *
- * @param dishes - Les plats de la session.
- * @returns Les groupes de cuisson, triés du plus fourni au moins fourni.
- */
-export function groupCookings(dishes: BatchDish[]): CookingGroup[] {
-  const labelOf = new Map(COOKING_METHODS.map(m => [m.id, m.label]));
-  const groups = new Map<string, BatchDish[]>();
-  for (const d of dishes) {
-    const methods = recipeCookingMethods(d.recipe as { utensils?: { name?: string }[] });
-    const keys = methods.size ? [...methods] : ["autre"];
-    for (const k of keys) { const g = groups.get(k) || []; g.push(d); groups.set(k, g); }
-  }
-  return [...groups.entries()]
-    .map(([method, ds]) => ({ method, label: labelOf.get(method) || method, dishes: ds }))
-    // « autre » = aucune méthode de cuisson détectée → ce n'est PAS une cuisson à
-    // mutualiser (souvent : plat sans cuisson). On ne montre que les vrais appareils
-    // partagés (≥ 2 plats).
-    .filter(g => g.method !== "autre" && g.dishes.length > 1)
-    .sort((a, b) => b.dishes.length - a.dishes.length);
 }

@@ -13,7 +13,7 @@ import {
   WifiSlash, ClockCounterClockwise, Eraser, ArrowsLeftRight, ArrowsDownUp, Pause, Play,
   Stop, DotsThreeVertical, DotsThree, Info, Eye, EyeSlash, Heart, Globe, Lock, Scales,
   AndroidLogo, AppleLogo, Camera, ClipboardText, ArrowClockwise, ArrowCounterClockwise, CircleNotch, Bell,
-  Question, Lightning, Knife, BowlSteam, Gift, ChefHat, SidebarSimple, Database, FunnelSimple, Microphone, SpeakerHigh,
+  Question, Lightning, Knife, BowlSteam, Gift, ChefHat, SidebarSimple, Database, FunnelSimple, Microphone, SpeakerHigh, Snowflake,
 } from "@phosphor-icons/react";
 import type { IconWeight } from "@phosphor-icons/react";
 import type { ComponentType, SVGProps } from "react";
@@ -156,6 +156,7 @@ const ICONS = {
   paste: ClipboardText,
   mail: EnvelopeSimple,
   box: Package,
+  snow: Snowflake,
   wifiOff: WifiSlash,
   history: ClockCounterClockwise,
   eraser: Eraser,

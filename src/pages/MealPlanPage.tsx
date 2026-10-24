@@ -27,6 +27,7 @@ import { RescheduleSheet, DuplicateSheet } from "../components/mealPlan/ReplanSh
 import { GenerateSheet } from "../components/mealPlan/GenerateSheet.jsx";
 import { AddRecipeSheet } from "../components/mealPlan/AddRecipeSheet.jsx";
 import { CompleteMealSheet } from "../components/mealPlan/CompleteMealSheet.jsx";
+import { ServicePlanView, type ServiceMealDish } from "../components/mealPlan/ServicePlanView.jsx";
 import { useMealBatchSession } from "../hooks/useMealBatchSession.js";
 import { DAYS_SHORT_FR, MONTHS_FR, mondayFirstIndex } from "../constants/calendar.js";
 import { mondayWeekDays, shiftWeeks } from "@/lib/planning/weekDays.js";
@@ -133,6 +134,16 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     setComposeFor({ date, slot, groupId: group.groupId || null, baseIdx: (mealPlan[date] || []).indexOf(platEntry.item), baseRecipeId: platEntry.item.recipeId });
   }, [mealPlan, recipesById]);
 
+  // « Organiser le service » : le repas figé à l'ouverture (rôles résolus).
+  const [serviceFor, setServiceFor] = useState<{ date: string; slot: string; dishes: ServiceMealDish[] } | null>(null);
+  const openService = useCallback((date: string, slot: string, group: SlotGroup) => {
+    const dishes = group.items.flatMap(({ item }): ServiceMealDish[] => {
+      const recipe = item.recipeId ? recipesById.get(item.recipeId) : undefined;
+      return recipe ? [{ recipe, role: itemRole(item, recipe) }] : [];
+    });
+    if (dishes.length) setServiceFor({ date, slot, dishes });
+  }, [recipesById]);
+
   const attachToMeal = useCallback((recipeId: string, role: string) => {
     if (!composeFor) return;
     setMealPlan(prev => {
@@ -155,9 +166,10 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const gen = useWeekGeneration({ generate, undo, weekDays, household, hasRecipes: recipes.length > 0, notify, logActivity, openBatch });
 
   // Session batch : vue LIVE dérivée du planning de la semaine visible (plats, bases,
-  // mise en place mutualisée, cuissons regroupées, découpe par ingrédient + compteurs).
-  const { batch, miseEnPlace, cookingGroups, decoupeByName, hasWeekDishes, mealOccasions, cookCount, prepCount } =
-    useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, resolver, ingredientDB, stock });
+  // découpe groupée, session dans le temps, rangement, réglages par semaine).
+  const batchSession = useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, resolver, ingredientDB, stock });
+  const { hasWeekDishes } = batchSession;
+  const batchBaseIds = useMemo(() => new Set(batchSession.batch.bases.map(b => b.recipe.id)), [batchSession.batch]);
 
   const getMeals = useCallback((date: string, slot: string) => (mealPlan[date] || []).filter(m => m.slot === slot), [mealPlan]);
 
@@ -244,7 +256,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
             {/* Accès à la session batch : bannière contextuelle (ré-ouvrable), affichée
                 seulement quand la semaine contient au moins un plat. Sortie du header
                 pour ne plus reléguer le titre sur deux lignes. */}
-            {hasWeekDishes && <BatchSessionBanner isPlus={isPlus} onOpen={() => isPlus ? openBatch() : goPlus()} />}
+            {hasWeekDishes && <BatchSessionBanner isPlus={isPlus} settings={batchSession.settings} end={batchSession.cookingPlan.end} meals={batchSession.mealOccasions} onOpen={() => isPlus ? openBatch() : goPlus()} />}
             {weekDays.map((date, di) => {
               const isToday = date === todayStr;
               const intake = dayIntakes.get(date);
@@ -266,7 +278,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {MEAL_SLOTS.filter(s => s.id !== "matin" || getMeals(date, s.id).length).map(s => (
-                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={selectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} onOpenItemMenu={setItemMenu} onAdd={openAdd} startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} wasLongPress={wasLongPress} />
+                      <SlotZone key={s.id} date={date} slot={s.id} meals={getMeals(date, s.id)} dropTarget={dropTarget} dragInfo={dragInfo} mealPlan={mealPlan} recipesById={recipesById} onSelectRecipe={selectRecipe} onRemoveMeal={removeMeal} onMoveMeal={moveMeal} onSetDropTarget={setDropTarget} onSetDragInfo={setDragInfo} onComplete={openComplete} onOrganize={openService} onOpenItemMenu={setItemMenu} onAdd={openAdd} startLongPress={startLongPress} cancelLongPress={cancelLongPress} moveLongPress={moveLongPress} wasLongPress={wasLongPress} />
                     ))}
                   </div>
                 </div>
@@ -349,15 +361,24 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
       )}
 
       {/* Session batch : PAGE dédiée (route /meal-plan/batch), portée en plein écran.
-          Keyée par la semaine → la checklist interne repart vierge à chaque semaine. */}
+          Keyée par la semaine : l'onglet et la vue repartent à zéro, l'avancement est
+          gardé par semaine dans le hook. */}
       {batchOpen && createPortal(
         <BatchSessionView
           key={weekDays[0]}
           weekLabel={`Semaine du ${new Date(weekDays[0] + "T12:00").getDate()} ${MONTHS_FR[new Date(weekDays[0] + "T12:00").getMonth()]}`}
-          batch={batch} miseEnPlace={miseEnPlace} cookingGroups={cookingGroups} decoupeByName={decoupeByName}
-          prepCount={prepCount} cookCount={cookCount} mealOccasions={mealOccasions}
-          onClose={closeBatch} onSelectRecipe={selectRecipe}
+          weekDays={weekDays} mealOccasions={batchSession.mealOccasions}
+          prepStages={batchSession.prepStages} decoupeByName={batchSession.decoupeByName}
+          cookingPlan={batchSession.cookingPlan} storage={batchSession.storage} baseIds={batchBaseIds}
+          settings={batchSession.settings} onSettings={batchSession.updateSettings} onToggle={batchSession.toggleChecked}
+          recipeOf={id => recipesById.get(id)}
+          onClose={closeBatch}
         />,
+        document.body,
+      )}
+
+      {serviceFor && createPortal(
+        <ServicePlanView date={serviceFor.date} slot={serviceFor.slot} dishes={serviceFor.dishes} onClose={() => setServiceFor(null)} />,
         document.body,
       )}
 

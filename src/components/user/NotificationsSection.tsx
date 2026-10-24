@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import type { CSSProperties } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "../ui/Icon.jsx";
 import type { IconName } from "../ui/Icon.jsx";
 import { EmptyArt } from "../ui/EmptyArt.jsx";
@@ -103,6 +103,7 @@ function NotificationsSkeleton() {
 export function NotificationsSection({ activities = [], loading = false, onNavigated }: NotificationsSectionProps) {
   const { user } = useAppShell();
   const navigate = useNavigate();
+  const location = useLocation();
   const [expanded, setExpanded] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [, setTick] = useState(0);
@@ -116,8 +117,10 @@ export function NotificationsSection({ activities = [], loading = false, onNavig
   const shown = useMemo(() => (expanded ? activities : activities.slice(0, COLLAPSED)), [expanded, activities]);
   const currentEmail = user?.email || "";
   const rest = activities.length - COLLAPSED;
-  // Renvoie vers l'onglet ciblé puis referme le panneau (accès via le bouton rond).
-  const go = (route: string) => { onNavigated?.(); navigate(route); };
+  // Renvoie vers l'écran ciblé. `originPath` : une fiche recette s'ouvre par-dessus
+  // CETTE page (gardée montée dessous) et y revient au retour, au lieu de l'onglet
+  // Recettes puis d'un remontage des notifications.
+  const go = (route: string) => { onNavigated?.(); navigate(route, { state: { originPath: location.pathname } }); };
 
   // Dépliage en douceur : un court spinner, puis on révèle le reste (chaque ligne
   // supplémentaire apparaît en cascade, cf. l'index global plus bas).

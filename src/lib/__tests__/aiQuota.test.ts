@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { MONTHLY_CREDITS, DAILY_CREDITS, CREDIT_COST, creditCost, periodKeys, currentCredits, creditState, canImport } from "../aiQuota.js";
+import { MONTHLY_CREDITS, DAILY_CREDITS, CREDIT_COST, creditCost, periodKeys, currentCredits, creditState, canImport, creditSummary } from "../aiQuota.js";
 
 // Ces constantes DOIVENT rester alignées avec functions/quota.ts (autorité serveur).
 describe("constantes (parité serveur)", () => {
@@ -62,5 +62,29 @@ describe("canImport", () => {
   it("refuse tout import quand le soft cap journalier est atteint", () => {
     const s = creditState({ creditsDay: "2026-08-06", creditsDayCount: DAILY_CREDITS, creditsMonth: "2026-08", creditsMonthCount: 40 }, now);
     expect(canImport(s, "url")).toBe(false);
+  });
+});
+
+describe("creditSummary", () => {
+  const state = (monthLeft: number, dayLeft = 30) => ({ monthUsed: 100 - monthLeft, monthLeft, monthLimit: 100, dayUsed: 30 - dayLeft, dayLeft, dayLimit: 30 });
+
+  it("montre les crédits restants et le coût de l'import en cours", () => {
+    expect(creditSummary(state(99), "url")).toEqual({ tone: "ok", count: "99 crédits ce mois-ci", note: "Ce lien : 1 crédit", leftPct: 99 });
+    expect(creditSummary(state(99), "photo").note).toBe("Les photos : 2 crédits");
+    expect(creditSummary(state(1), "pdf").count).toBe("1 crédit ce mois-ci");
+  });
+  it("passe en alerte sous le seuil, puis bloque quand le coût dépasse le reste", () => {
+    expect(creditSummary(state(10), "text").tone).toBe("low");
+    expect(creditSummary(state(1), "photo")).toMatchObject({ tone: "blocked", note: "Les photos : 2 crédits" });
+  });
+  it("bloque sur le plafond du jour sans toucher au mois", () => {
+    expect(creditSummary(state(80, 0), "url")).toMatchObject({ tone: "blocked", note: "Reprends demain", count: "80 crédits ce mois-ci" });
+  });
+  it("dit quand le mois est épuisé", () => {
+    expect(creditSummary(state(0), "url")).toEqual({ tone: "blocked", count: "Crédits épuisés", note: "Retour le 1er du mois", leftPct: 0 });
+  });
+  it("borne la jauge sur des données aberrantes", () => {
+    expect(creditSummary({ ...state(50), monthLimit: 0 }, "url").leftPct).toBe(0);
+    expect(creditSummary({ ...state(50), monthLeft: 150 }, "url").leftPct).toBe(100);
   });
 });

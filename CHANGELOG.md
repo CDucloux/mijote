@@ -1,5 +1,31 @@
 # Changelog – Cardamome
 
+## v4.81.0 – Cardamome · Rétro planning et session batch
+
+### Rétro planning
+- **Servir à…** : sur chaque fiche recette (pilule sur mobile, dock sur ordinateur), on choisit le jour et l'heure du repas, la feuille répond par l'heure de départ en gros et le déroulé placé à rebours (mains occupées, attente, durées estimées signalées), coupé par jour quand une marinade se lance la veille. En retard, elle propose l'heure atteignable.
+- **Organiser le service** : sur un repas d'au moins deux plats du planning, chaque plat a son heure de service (réglable au quart d'heure) et les étapes sont placées à rebours en partageant les mains (seul ou à deux) et le four (une température à la fois). Les conflits de four résolus et les plats prêts trop tôt sont expliqués ; vue en frise (plats, four, mains) ou en feuille de route heure par heure.
+- **Durées par étape** : chaque étape porte sa durée et sa part « mains occupées », remplies par l'import (lues dans la source ou estimées) et corrigeables dans l'éditeur, où une durée estimée est signalée jusqu'à confirmation. Les recettes sans ces durées s'appuient sur le texte et les temps déclarés, et l'horaire dit quand il est approximatif.
+- **Rappels** dans l'app Android : départ et retours en cuisine après une attente, en notifications locales.
+
+### Session batch
+- **Une session dans le temps** : on choisit le jour et l'heure, elle répond « Fini vers 17 h 10 » avec le temps de mains occupées et une barre d'avancement gardée pour la semaine.
+- **Préparer** : la découpe groupée dans un ordre de travail (légumes clairs, aromatiques, viandes et poissons, le reste), étendue aux fruits, champignons, viandes et poissons, avec le temps gagné à tout faire d'un coup.
+- **Cuisiner** : feuille de route ou frise, bases avant les plats qui les utilisent, four partagé par température, étapes à cocher.
+- **Ranger** : chaque repas de la semaine au frigo (3 jours, 2 pour le poisson) ou au congélateur avec le jour où sortir la boîte, étiquettes à copier, rappels de décongélation.
+- **Bannière du planning** : elle annonce la session (jour, horaires, repas couverts). Interface sans bordure ni emoji ; la carte « Cuissons à mutualiser » laisse place à la bande du four par température.
+
+### Import
+- **Instagram et TikTok** : un lien de reel ou de vidéo est lu par sa légende, avant tout débit de crédit, et la miniature est ré-hébergée. Une aide sous le champ le dit et, si la légende est illisible, renvoie vers l'onglet Texte (« Coller la légende »).
+- **Jauge de crédits** : une pilule claire, crédits restants et coût de l'import en cours, teintée selon l'état.
+
+### Mode cuisine
+- Les images ne gigotent plus au toucher, les ustensiles se barrent progressivement, et le bouton fermer, le micro et l'aide ont leur onde tactile.
+
+### Partout
+- **Fiches** : à la sortie d'une fiche ouverte depuis une notification, les courses ou une autre fiche, on retrouve l'écran d'origine ; la fiche ingrédient glisse au-dessus de sa recette sans fond blanc.
+- **Finitions** : pastilles du hero de recette à la même hauteur, pastilles d'ustensile sans liseré au survol, titres de l'accueil et de « Nouvelle recette » en demi-gras.
+
 ## v4.80.0 – Cardamome · Mains libres en cuisine
 
 ### Mode cuisine

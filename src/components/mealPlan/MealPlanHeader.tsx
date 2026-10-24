@@ -1,3 +1,6 @@
+import { clockLabel } from "@/lib/planning/serveSchedule.js";
+import { dateAtClock } from "@/lib/planning/mealService.js";
+import { weekdayName, type BatchSettings } from "@/lib/planning/batchPlan.js";
 import { Icon } from "../ui/Icon.jsx";
 import { PlusBadge } from "../badges/PlusBadge.jsx";
 import { UserAvatar } from "../user/UserAvatar.jsx";
@@ -49,23 +52,29 @@ export function MealPlanHeader({ weekDays, isPlus, canUndo, onUndo, onGenerate, 
   );
 }
 
-/** Accès à la session batch, affiché quand la semaine contient au moins un plat. */
-export function BatchSessionBanner({ isPlus, onOpen }: { isPlus: boolean; onOpen: () => void }) {
+/**
+ * Accès à la session batch, affiché quand la semaine contient au moins un plat. Il
+ * annonce la session elle-même : jour, heure de début et de fin, repas couverts.
+ */
+export function BatchSessionBanner({ isPlus, settings, end, meals, onOpen }: { isPlus: boolean; settings: Pick<BatchSettings, "day" | "clock" | "done">; end: number; meals: number; onOpen: () => void }) {
+  const start = dateAtClock(settings.day, settings.clock);
   return (
     <button onClick={onOpen} className="pressable float-card"
       style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", cursor: "pointer",
-        padding: "12px 14px", borderRadius: 14 }}>
-      <span style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--ok-rgb),0.18)" }}>
-        <Icon name="fire" size={19} color="var(--ok)" />
+        padding: "12px 14px", borderRadius: 16 }}>
+      <span style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(var(--accent-rgb),0.13)" }}>
+        <Icon name={settings.done ? "check" : "layers"} size={19} color="var(--accent)" />
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Session batch</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>Session batch · {weekdayName(settings.day)}</span>
           {!isPlus && <PlusBadge />}
         </span>
-        <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 1 }}>Mise en place mutualisée & cuissons regroupées</span>
+        <span style={{ display: "block", fontSize: 11.5, color: "var(--text3)", marginTop: 2 }}>
+          {settings.done ? `Terminée · ${meals} repas prêts` : `${start != null ? clockLabel(start) : settings.clock} → ${clockLabel(end)} · ${meals} repas de la semaine`}
+        </span>
       </span>
-      <Icon name="forward" size={16} color="var(--ok)" />
+      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", background: "rgba(var(--accent-rgb),0.12)", padding: "6px 11px", borderRadius: 999, flexShrink: 0 }}>{settings.done ? "Revoir" : "Préparer"}</span>
     </button>
   );
 }

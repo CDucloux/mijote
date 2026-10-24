@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.80.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.81.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -56,7 +56,8 @@ toujours avec vous.
 - 🧩 **Préparations de base** : une recette peut consommer une « base »
   réutilisable (sauce, pâte, appareil) avec un rendement ; les courses éclatent
   automatiquement la base en ingrédients bruts.
-- 🤖 **Import intelligent** : importez une recette depuis une **URL**, **1 à 2
+- 🤖 **Import intelligent** : importez une recette depuis une **URL** (un reel
+  Instagram ou une vidéo TikTok est lu par sa légende), **1 à 2
   photos** d'un livre, un **texte collé** (mail, note, message) ou un **fichier
   PDF** : extraction,
   structuration et liaison des ingrédients / ustensiles par Claude, qui
@@ -68,7 +69,8 @@ toujours avec vous.
   vinaigres, sauces et sucres ; chaque étape de découpe reçoit un **bol** pour
   réserver ce qui vient d'être taillé), et
   **détecte les préparations de base** (caramel, pâte, fond…) et leur
-  rendement estimé (réservé aux abonnés **Cardamome+**, sur un pool mensuel de
+  rendement estimé, et donne à chaque étape sa **durée** et sa part « mains
+  occupées » (lues ou estimées, corrigeables dans l'éditeur) (réservé aux abonnés **Cardamome+**, sur un pool mensuel de
   **100 crédits intelligents** : 1 crédit par lien / texte / PDF, 2 par photo,
   avec un garde-fou journalier discret ; illimité pour l'administrateur). Les quatre modes vivent sur un écran unique à
   onglets, avec une sélection de **sources recommandées** (configurable en console
@@ -77,6 +79,8 @@ toujours avec vous.
   console admin). Un **premier import offert** accueille les
   non-abonnés avec une recette découverte, pour goûter la fonctionnalité sans
   abonnement.
+- ⏱ **Servir à…** : sur une fiche recette, l'heure de départ et le déroulé à
+  rebours pour servir à l'heure voulue (rappels dans l'app Android).
 - 📓 **Carnets** : rangez vos recettes dans des carnets colorés (manuels ou
   « intelligents », dérivés d'un filtre).
 - 🌍 **Style de cuisine** : un champ unique parmi une liste prédéfinie
@@ -103,7 +107,11 @@ toujours avec vous.
   (ouvrir, replanifier vers une autre semaine, retirer), **générateur de semaine**
   (styles facile / équilibré / aventureux, repas composés, affinité de saison,
   priorité aux ingrédients déjà en stock hors basiques de placard),
-  **session batch** (préparations à cuisiner d'avance), **apports du jour**
+  **session batch** (une session calée sur un jour et une heure, en trois temps :
+  découpe groupée dans un ordre de travail, cuisson en feuille de route ou en
+  frise avec four partagé, rangement frigo ou congélateur repas par repas),
+  **organiser le service** d'un repas à plusieurs plats (rétro planning : heure
+  de départ de chaque plat, four et mains partagés), **apports du jour**
   (repère par journée pour le sel, les protéines, les fibres et l'énergie, détail au tap) et
   export `.ics`.
 - 🛒 **Listes de courses** : ajout par collage, tri par rayon, gestes de swipe

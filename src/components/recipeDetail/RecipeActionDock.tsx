@@ -4,13 +4,15 @@ import { Icon } from "../ui/Icon.jsx";
 interface RecipeActionDockProps {
   onOpenShopping: () => void;
   onOpenMealPlan: () => void;
+  /** Absent pour une recette sans étapes. */
+  onOpenServeAt?: () => void;
 }
 
 /**
  * Dock d'actions flottant de la fiche (desktop) : un bouton « + » qui déplie les
- * actions Courses et Planifier. Un clic en dehors le replie.
+ * actions Courses, Planifier et Servir à. Un clic en dehors le replie.
  */
-export function RecipeActionDock({ onOpenShopping, onOpenMealPlan }: RecipeActionDockProps) {
+export function RecipeActionDock({ onOpenShopping, onOpenMealPlan, onOpenServeAt }: RecipeActionDockProps) {
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -35,6 +37,7 @@ export function RecipeActionDock({ onOpenShopping, onOpenMealPlan }: RecipeActio
         <div className={`action-dock${closing ? " closing" : ""}`}>
           <button className="action-dock-btn action-dock-primary" onClick={onOpenShopping}><Icon name="shopping" size={16} color="#fff" /> Courses</button>
           <button className="action-dock-btn action-dock-ghost" onClick={onOpenMealPlan}><Icon name="calendar" size={16} /> Planifier</button>
+          {onOpenServeAt && <button className="action-dock-btn action-dock-ghost" onClick={onOpenServeAt}><Icon name="clock" size={16} /> Servir à…</button>}
           <button className="action-dock-close" title="Réduire" onClick={close}><Icon name="close" size={15} /></button>
         </div>
       ) : (

@@ -18,7 +18,7 @@ Réponds UNIQUEMENT par un objet JSON valide (aucun texte ni Markdown autour), a
   "prepTime": number, "cookTime": number, "servings": number,
   "ingredients": [{ "name": string, "amount": string, "unit": string, "group": string, "cut"?: { "forme": string, "calibre"?: string } }],
   "utensils": [{ "name": string }],
-  "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string], "utensilParams": object, "group": string }]
+  "steps": [{ "text": string, "tip": string, "image": string, "ingredients": [string], "utensils": [string], "utensilParams": object, "group": string, "duration": number, "activeTime": number, "durationEstimated": boolean }]
 }
 ```
 
@@ -83,6 +83,9 @@ APPAREILS (réglages d'étape)
 - **Regroupe** les actions d'une même phase en UNE étape (ex. « laver puis couper tous les légumes »). Vise un déroulé **synthétique**, en général **3 à 8 étapes** pour une recette simple. Ne crée jamais d'étape pour une action triviale, ne coupe pas une phrase en deux, et n'éclate pas une recette de salade en 15 étapes.
 - `text` : l'instruction, rédigée à l'**INFINITIF** (« Préparer », « Mélanger », « Enfourner »), **jamais** à l'impératif en « -ez » (« Préparez », « Mélangez »). Peut regrouper plusieurs gestes liés. **Ne répète PAS les quantités chiffrées** dans le texte : elles sont déjà affichées sous l'étape via les ingrédients liés (et sont ajustables). Écris « ajouter la farine et le beurre » plutôt que « ajouter 250 g de farine et 100 g de beurre ». Une indication *relative* reste permise si utile (« la moitié du beurre », « le reste du sucre »).
 - `ingredients` / `utensils` : les noms (repris EXACTEMENT de tes listes ci-dessus) utilisés dans l'étape ; `[]` sinon. **Relie CHAQUE ingrédient nommé dans le texte de l'étape**, y compris quand il est désigné par un article ou un pronom (« peler et émincer **l'oignon** », « écraser **l'ail** » → relie `oignon` et `ail`) : un ingrédient présent dans la liste et cité dans le geste ne doit JAMAIS être laissé sans lien, **même si son `group` diffère de celui de l'étape** (un « oignon » rangé dans « Les légumes » mais employé dans une étape « La sauce tomate » se relie bien à cette étape). Le seul garde-fou est le cloisonnement des HOMONYMES ci-dessous.
+- `duration` : durée TOTALE de l'étape en minutes (entier), attente comprise : cuisson, repos, marinade, prise au froid, levée. Reprends-la du texte quand il la donne (une fourchette « 20 à 25 min » → la valeur haute ; « une nuit » → 720). Sinon, ESTIME une durée réaliste pour un cuisinier amateur, sans optimisme (éplucher et tailler 1 kg de légumes ≈ 15 min, préchauffer un four ≈ 15 min).
+- `activeTime` : la part de `duration` où le cuisinier a les **mains occupées** (tailler, pétrir, mélanger, saisir en remuant, dresser). Four, repos, mijotage à couvert, frigo, levée = mains LIBRES. Exemples : « Enfourner pour 40 min » → `duration` 41, `activeTime` 1 ; « Faire revenir l'oignon 5 min en remuant » → 5 et 5 ; « Laisser mariner 2 h au frais » → 120 et 0 ; « Couper les légumes puis cuire 20 min à couvert » → 30 et 10. Toujours `activeTime` ≤ `duration`.
+- `durationEstimated` : `false` si la durée de l'étape figure dans la source, `true` si tu l'as estimée.
 - `tip` : seulement une **vraie** astuce technique non évidente (température, repère de cuisson, erreur classique). La PLUPART des étapes → `""`. Jamais à chaque étape, jamais inventée.
 - `image` : si une photo `⟦IMG:url⟧` figurant à proximité illustre le **geste ou le résultat** de CETTE étape et apporte une vraie valeur, mets son url exacte ; sinon `""`. Jamais une image décorative, un logo, une photo d'ambiance, ni l'image principale du plat. La plupart des étapes n'ont pas d'image.
 

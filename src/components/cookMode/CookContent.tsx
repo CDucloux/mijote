@@ -259,11 +259,20 @@ export function CookContent(props: CookContentProps) {
               {overviewUts.map(u => {
                 const gathered = checkedUtIds.has(u.id);
                 return (
-                  <button key={u.id} type="button" onClick={() => toggleUtChecked(u.id)} className="pressable"
-                    style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: gathered ? "rgba(var(--ok-rgb),0.12)" : "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: gathered ? "var(--ok)" : "var(--text)", cursor: "pointer", textDecoration: gathered ? "line-through" : "none" }}>
-                    <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} style={{ opacity: gathered ? 0.6 : 1 }} />
-                    {gathered && <Icon name="check" size={11} color="var(--ok)" />}
-                    {u.name}
+                  <button key={u.id} type="button" onClick={() => toggleUtChecked(u.id)} className="pressable" aria-pressed={gathered}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13, background: gathered ? "rgba(var(--ok-rgb),0.12)" : "var(--surface2)", borderRadius: 20, padding: "5px 12px 5px 5px", fontWeight: 500, color: gathered ? "var(--ok)" : "var(--text)", cursor: "pointer", transition: "background-color 0.28s ease, color 0.28s ease" }}>
+                    {/* Coche posée SUR l'image : la pastille garde sa largeur, les voisines ne sautent pas. */}
+                    <span style={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
+                      <UtImage src={getUtImage(u.dbId, u.name)} alt={u.name} size={24} style={{ opacity: gathered ? 0.6 : 1, transition: "opacity 0.28s ease" }} />
+                      <span aria-hidden="true" style={{ position: "absolute", right: -3, bottom: -3, width: 13, height: 13, borderRadius: "50%", background: "var(--ok)", display: "grid", placeItems: "center", transform: gathered ? "scale(1)" : "scale(0)", transition: "transform 0.22s cubic-bezier(0.34, 1.5, 0.5, 1)" }}>
+                        <Icon name="check" size={8} color="#fff" weight="bold" />
+                      </span>
+                    </span>
+                    {/* Barré progressif, comme les ingrédients et les découpes. */}
+                    <span style={{ position: "relative" }}>
+                      {u.name}
+                      <span aria-hidden="true" style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", height: 1.5, background: "var(--ok)", width: gathered ? "100%" : "0%", transition: "width 0.28s ease" }} />
+                    </span>
                   </button>
                 );
               })}

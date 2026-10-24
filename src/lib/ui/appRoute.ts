@@ -73,3 +73,19 @@ export function parseAppRoute(pathname: string): AppRoute {
 export function originPathOf(state: unknown): string | null {
   return state && typeof state === "object" && "originPath" in state && typeof state.originPath === "string" ? state.originPath : null;
 }
+
+/**
+ * Recette à garder affichée SOUS une fiche ingrédient ouverte depuis sa fiche
+ * recette : à la sortie (geste ou bouton retour), la fiche glisse et laisse voir la
+ * recette, comme une fiche recette laisse voir sa liste.
+ *
+ * @param originPath - Page d'origine de la fiche ingrédient (cf. {@link originPathOf}).
+ * @returns L'id de la recette, ou null si l'origine n'est pas une fiche recette simple
+ *   (liste, éditeur, pas à pas, import…).
+ */
+export function recipeUnderIngredient(originPath: string | null): string | null {
+  if (!originPath) return null;
+  const route = parseAppRoute(originPath);
+  if (route.editRoute || route.cookModeRoute || route.ingredientId) return null;
+  return route.recipeId;
+}

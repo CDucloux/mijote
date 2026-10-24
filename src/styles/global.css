@@ -511,6 +511,17 @@ select {
   border: none;
 }
 
+/* Pastilles du hero de fiche recette (Vegan, De saison, Base, difficulté, catégorie,
+   cuisine, carnets) : une hauteur fixe commune. Leurs polices, icônes et bordures
+   diffèrent, et la hauteur suivait chacune : Vegan et De saison sortaient plus petits. */
+.hero-chip,
+.tag.hero-chip {
+  height: 24px;
+  box-sizing: border-box;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .tag.accent {
   background: rgba(var(--accent-rgb), 0.15);
   color: var(--accent);
@@ -3146,7 +3157,9 @@ html.light .sheet-sticky-head::after {
 .voice-help__also { display: block; margin-top: 2px; font-size: 12px; color: var(--text3); }
 
 /* Micro du mode mains libres (en-tête du pas à pas). Allumé : pastille accent, et
-   une onde qui s'étend pour dire que le micro écoute. */
+   une onde qui s'étend pour dire que le micro écoute. L'onde est une ombre portée
+   animée (et non un pseudo-élément agrandi) : le bouton porte `.ripple`, dont
+   l'`overflow: hidden` rognerait tout ce qui déborde, mais jamais sa propre ombre. */
 .cook-voice-btn {
   position: relative;
   width: 36px;
@@ -3162,24 +3175,23 @@ html.light .sheet-sticky-head::after {
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
-.cook-voice-btn.on { background: var(--accent); color: #fff; }
-.cook-voice-btn.on::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid var(--accent);
+.cook-voice-btn.on {
+  background: var(--accent);
+  color: #fff;
   animation: cookVoiceListen 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-  pointer-events: none;
 }
 /* Voix détectée : l'onde s'accélère et s'élargit, le micro dit « je t'entends ». */
-.cook-voice-btn.on.hearing::after { animation-duration: 0.9s; border-width: 3px; }
+.cook-voice-btn.on.hearing { animation-name: cookVoiceHear; animation-duration: 0.9s; }
 @keyframes cookVoiceListen {
-  from { transform: scale(1); opacity: 0.7; }
-  to { transform: scale(1.6); opacity: 0; }
+  from { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.55); }
+  to { box-shadow: 0 0 0 11px rgba(var(--accent-rgb), 0); }
+}
+@keyframes cookVoiceHear {
+  from { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.75); }
+  to { box-shadow: 0 0 0 15px rgba(var(--accent-rgb), 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cook-voice-btn.on::after { animation: none; opacity: 0; }
+  .cook-voice-btn.on { animation: none; }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -5073,6 +5085,23 @@ html.light .sheet-sticky-head::after {
   .step-remove-pill:hover { color: var(--text2); }
 }
 
+/* Durée d'une étape (éditeur) : une ligne de saisie compacte, minutes au total et
+   « mains occupées », qui nourrit le rétro planning. Ambre tant qu'elle est estimée. */
+.step-timing { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin: -2px 0 14px; padding: 8px 12px; border-radius: 14px; background: var(--surface2); font-size: 12.5px; color: var(--text2); }
+.step-timing[data-estimated] { background: rgba(var(--spice-rgb), 0.12); }
+.step-timing__field { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+.step-timing__input { width: 54px; height: 30px; padding: 0 8px; border: none; border-radius: 9px; background: var(--float-surface); color: var(--text); font: 600 13.5px var(--ff-body); text-align: center; font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.step-timing__input::-webkit-outer-spin-button, .step-timing__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.step-timing__input::placeholder { color: var(--text3); font-weight: 500; }
+.step-timing__input:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.5); }
+.step-timing__input:disabled { opacity: 0.5; }
+.step-timing__sep { color: var(--text3); }
+.step-timing__hint { margin-left: auto; font-size: 11.5px; color: var(--text3); }
+.step-timing__flag { margin-left: auto; height: 26px; padding: 0 11px; border: none; border-radius: 999px; cursor: pointer; font: 600 11.5px var(--ff-body); color: var(--spice); background: rgba(var(--spice-rgb), 0.18); transition: background-color 0.15s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .step-timing__flag:hover { background: rgba(var(--spice-rgb), 0.28); }
+}
+
 /* Boutons flottants sur une photo d'étape (le « x » et la pill « Changer ») : fond
    sombre translucide piloté en CSS pour un survol desktop qui l'appuie. */
 .img-overlay-btn { background: rgba(0, 0, 0, 0.6); transition: background-color 0.15s ease; }
@@ -5728,3 +5757,61 @@ html.light .sheet-sticky-head::after {
 @media (prefers-reduced-motion: reduce) {
   .reset-pill, .reset-pill svg { transition: none; }
 }
+
+/* ── Feuille « Servir à… » (rétro planning d'une recette) ─────────────────────
+   Une réponse en gros (l'heure de départ), puis le déroulé à rebours. Vert : mains
+   occupées ; gris : attente ; ambre : la recette se prépare la veille ; rouge : en
+   retard. La barre fine sous l'heure situe les minutes de travail dans la durée. */
+.serve-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.serve-head__badge { width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0; display: grid; place-items: center; background: rgba(var(--accent-rgb), 0.12); }
+.serve-head__title { font-family: var(--ff-display); font-size: 21px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.serve-head__sub { font-size: 12.5px; color: var(--text3); margin: 2px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.serve-days { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface2); margin-bottom: 10px; }
+.serve-day { border: none; background: none; border-radius: 999px; padding: 6px 14px; font: 600 12.5px var(--ff-body); color: var(--text2); cursor: pointer; }
+.serve-day.on { background: var(--float-surface); color: var(--text); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+.serve-times { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 0 20px 2px; }
+.serve-times::-webkit-scrollbar { display: none; }
+.serve-time { flex-shrink: 0; display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border: none; border-radius: 999px; background: var(--surface2); color: var(--text2); font: 600 13.5px var(--ff-body); font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; }
+.serve-time.on { background: var(--accent); color: #fff; }
+.serve-time--custom { padding: 0 6px 0 10px; }
+.serve-time--custom input { border: none; background: transparent; color: inherit; font: inherit; height: 100%; cursor: pointer; }
+.serve-time--custom input::-webkit-calendar-picker-indicator { filter: none; opacity: 0.6; cursor: pointer; }
+.serve-time.on input::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.9; }
+@media (hover: hover) and (pointer: fine) {
+  .serve-time:not(.on):hover, .serve-day:not(.on):hover { color: var(--text); }
+}
+
+.serve-verdict { --tone: var(--accent-rgb); display: flex; flex-direction: column; margin: 16px 0 4px; padding: 14px 16px 15px; border-radius: 18px; background: rgba(var(--tone), 0.11); }
+.serve-verdict.is-late { --tone: var(--red-rgb); }
+.serve-verdict.is-eve { --tone: var(--spice-rgb); }
+.serve-verdict__k { font-size: 12px; font-weight: 700; color: rgb(var(--tone)); }
+.serve-verdict__big { font-family: var(--ff-display); font-weight: 600; font-size: 29px; line-height: 1.1; letter-spacing: -0.01em; margin: 3px 0 5px; font-variant-numeric: tabular-nums; }
+.serve-verdict__sub { font-size: 12.5px; line-height: 1.45; color: var(--text2); }
+.serve-verdict__sub b { color: var(--text); font-weight: 600; }
+.serve-verdict__act { align-self: flex-start; margin-top: 11px; height: 32px; padding: 0 15px; border: none; border-radius: 999px; background: rgb(var(--tone)); color: #fff; font: 600 12.5px var(--ff-body); cursor: pointer; }
+.serve-handbar { position: relative; display: block; height: 5px; margin-top: 11px; border-radius: 5px; overflow: hidden; background: rgba(var(--accent-rgb), 0.18); }
+.serve-handbar i { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: var(--accent); }
+
+.serve-warning { display: flex; align-items: center; gap: 9px; margin-top: 10px; padding: 9px 10px 9px 12px; border-radius: 14px; background: rgba(var(--spice-rgb), 0.12); color: var(--spice); font-size: 12.5px; line-height: 1.4; }
+.serve-warning span { flex: 1; color: var(--text2); }
+.serve-warning button { flex-shrink: 0; height: 28px; padding: 0 12px; border: none; border-radius: 999px; background: rgba(var(--spice-rgb), 0.2); color: var(--spice); font: 600 12px var(--ff-body); cursor: pointer; }
+
+.serve-tl { list-style: none; margin: 16px 0 0; padding: 0; }
+.serve-tl__day { font-family: var(--ff-hand); font-size: 19px; color: var(--spice); margin: 4px 0 8px 64px; }
+.serve-tl__row { position: relative; display: grid; grid-template-columns: 52px 16px 1fr; gap: 0 10px; align-items: start; padding-bottom: 15px; }
+.serve-tl__row::before { content: ""; position: absolute; left: 69px; top: 17px; bottom: -1px; width: 2px; border-radius: 2px; background: var(--surface2); }
+.serve-tl__row.is-end::before, .serve-tl__row:has(+ .serve-tl__day)::before { display: none; }
+.serve-tl__time { text-align: right; font-weight: 700; font-size: 13.5px; font-variant-numeric: tabular-nums; padding-top: 1px; }
+.serve-tl__dot { position: relative; z-index: 1; width: 12px; height: 12px; margin: 4px 0 0 2px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 2.5px var(--accent); }
+.serve-tl__dot.is-wait { box-shadow: inset 0 0 0 2.5px var(--surface3); }
+.serve-tl__row.is-end .serve-tl__dot { background: var(--accent); box-shadow: none; }
+.serve-tl__body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.serve-tl__what { font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+.serve-tl__row.is-past .serve-tl__time, .serve-tl__row.is-past .serve-tl__what { color: var(--text3); text-decoration: line-through; text-decoration-color: var(--surface3); }
+.serve-tl__bell { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text3); }
+.serve-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.serve-tag { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: 999px; background: var(--surface2); color: var(--text2); font-size: 11px; font-weight: 600; }
+.serve-tag.is-hands { background: rgba(var(--accent-rgb), 0.13); color: var(--accent); }
+.serve-tag.is-estimated { background: rgba(var(--spice-rgb), 0.15); color: var(--spice); }
+.serve-cta { width: 100%; margin-top: 8px; height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 999px; background: var(--accent); color: #fff; font: 600 14.5px var(--ff-body); cursor: pointer; }
+.serve-cta:disabled { opacity: 0.7; cursor: default; }

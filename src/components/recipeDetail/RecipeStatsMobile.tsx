@@ -12,13 +12,15 @@ interface RecipeStatsMobileProps {
   onOpenNutrition: () => void;
   onOpenShopping: () => void;
   onOpenMealPlan: () => void;
+  /** Ouvre la feuille « Servir à… » (rétro planning) ; absent pour une recette sans étapes. */
+  onOpenServeAt?: () => void;
 }
 
 /**
  * Bloc mobile juste sous le hero : stats (préparation, cuisson, Nutri-Score) et actions
- * principales (Courses / Planifier), ou le CTA « Garder » en mode public. Présentationnel.
+ * principales (Courses / Planifier / Servir à), ou le CTA « Garder » en mode public. Présentationnel.
  */
-export function RecipeStatsMobile({ recipe, nutriLetter, publicMode, keepCta, onOpenNutrition, onOpenShopping, onOpenMealPlan }: RecipeStatsMobileProps) {
+export function RecipeStatsMobile({ recipe, nutriLetter, publicMode, keepCta, onOpenNutrition, onOpenShopping, onOpenMealPlan, onOpenServeAt }: RecipeStatsMobileProps) {
   return (
     <div style={{
       // Chevauchement du bas du hero AU MOINS égal au rayon des coins (20px) : sinon le
@@ -57,6 +59,9 @@ export function RecipeStatsMobile({ recipe, nutriLetter, publicMode, keepCta, on
         <button onClick={onOpenMealPlan} className="tap float-pill" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, color: "var(--text)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer" }}>
           <Icon name="calendar" size={14} color="var(--text)" /> Planifier
         </button>
+        {onOpenServeAt && <button onClick={onOpenServeAt} className="tap float-pill" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 30, color: "var(--accent)", fontSize: 13, fontWeight: 600, fontFamily: "var(--ff-body)", cursor: "pointer" }}>
+          <Icon name="clock" size={14} color="var(--accent)" /> Servir à…
+        </button>}
       </div>
       )}
     </div>

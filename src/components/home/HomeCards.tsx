@@ -138,7 +138,7 @@ export function CalmDayCard({ onPlan, onNewRecipe, onStock, onShopping }: CalmDa
           <Icon name="check" size={18} color="var(--ok)" />
         </span>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.15 }}>Rien de prévu aujourd'hui</div>
+          <div style={{ fontFamily: "var(--ff-display)", fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.15 }}>Rien de prévu aujourd'hui</div>
           <div style={{ fontSize: 12.5, color: "var(--text3)" }}>Ta journée est libre. Prends un peu d'avance.</div>
         </div>
       </div>

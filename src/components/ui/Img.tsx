@@ -64,9 +64,12 @@ export const IngImage = ({ src, alt, size = 48, cover = false }: IngImageProps) 
       {src && !err
         ? <img ref={imgRef} src={src} alt={alt || ""} onLoad={onLoad} onError={onError} referrerPolicy="no-referrer"
           loading="lazy" decoding="async" className="ing-img-reveal" data-loaded={loaded ? "1" : undefined}
+          // Taille entière en px (≈ 82 %), avec une marge paire de chaque côté : centrée,
+          // l'image tombe pile sur un pixel. À 34,44 px ou décalée d'un demi-pixel, elle
+          // était re-rastérisée différemment à chaque appui et semblait « gigoter ».
           style={cover
             ? { width: "100%", height: "100%", objectFit: "cover" }
-            : { width: "82%", height: "82%", objectFit: "contain" }} />
+            : { width: size - 2 * Math.round(size * 0.09), height: size - 2 * Math.round(size * 0.09), objectFit: "contain", display: "block" }} />
         : <Icon name="photo" size={Math.round(size * 0.42)} color="#b3afaa" />}
     </div>
   );

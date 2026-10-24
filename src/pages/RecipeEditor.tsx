@@ -14,6 +14,7 @@ import { cleanEditorIngredients } from "@/lib/recipes/editorIngredients.js";
 import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useEditorSwiper } from "../hooks/useEditorSwiper.js";
+import { withEditedTiming } from "@/lib/planning/stepTiming.js";
 import type { Cut, IngredientDbItem, Recipe, RecipeYield, UtensilDbItem } from "@/lib/types.js";
 import type { EditorForm, EditorFormUpdate, EditorIngredient, EditorYield } from "../components/recipeEditor/editorForm.js";
 
@@ -156,6 +157,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
     });
   }, []);
   const updStep = useCallback((id: string | undefined, f: string, v: unknown) => setForm(p => ({ ...p, steps: p.steps.map(s => s.id === id ? { ...s, [f]: v } : s) })), []);
+  const setStepTiming = useCallback((id: string | undefined, duration: number | null, activeTime: number | null) =>
+    setForm(p => ({ ...p, steps: p.steps.map(s => s.id === id ? withEditedTiming(s, duration, activeTime) : s) })), []);
   const remStep = useCallback((id: string | undefined) => setForm(p => ({ ...p, steps: p.steps.filter(s => s.id !== id) })), []);
   const moveStepGlobal = useCallback((from: number, to: number) => setForm(p => ({ ...p, steps: moveWithAdopt(p.steps, from, to) })), []);
 
@@ -337,7 +340,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                         ingredients={stepIngredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
                         draggable={!isDesktop}
                         isDropTarget={stepDropIdx === gi} onTargetChange={setStepDropIdx}
-                        onUpdate={updStep} onRemove={remStep} onMove={moveStepGlobal} />
+                        onUpdate={updStep} onTimingChange={setStepTiming} onRemove={remStep} onMove={moveStepGlobal} />
                     );
                   })}
                   {g != null && <button className="editor-add" onClick={() => addStepAt(endIdx, g)}><Icon name="plus" size={16} /> Ajouter une étape</button>}

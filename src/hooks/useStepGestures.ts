@@ -51,8 +51,12 @@ export function useStepGestures(
     };
     const onDown = (e: TouchEvent): void => {
       dragging = true; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; axis = null; edge = null; pull = 0;
-      // `will-change` posé UNIQUEMENT le temps du drag : une couche GPU permanente
-      // sur ce conteneur dégradait le rendu du texte (chiffres « qui bavent »).
+    };
+    // `will-change` posé UNIQUEMENT quand l'élastique démarre vraiment (bord atteint),
+    // jamais sur un simple tap ou un swipe horizontal : chaque bascule de couche GPU
+    // re-rastérise les images à un sous-pixel différent, elles « gigotaient » alors à
+    // chaque appui. Une couche permanente, elle, faisait baver le texte.
+    const startElastic = (): void => {
       const p = stepElasticRef.current; if (p) { p.style.transition = "none"; p.style.willChange = "transform"; }
     };
     const onMove = (e: TouchEvent): void => {
@@ -60,7 +64,10 @@ export function useStepGestures(
       const dx = e.touches[0].clientX - x0, dy = e.touches[0].clientY - y0;
       if (!axis) { if (Math.abs(dx) > 8 || Math.abs(dy) > 8) axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y"; }
       if (axis !== "y") return;
-      if (!edge) edge = atTop() && dy > 0 ? "top" : atBottom() && dy < 0 ? "bottom" : "scroll";
+      if (!edge) {
+        edge = atTop() && dy > 0 ? "top" : atBottom() && dy < 0 ? "bottom" : "scroll";
+        if (edge !== "scroll") startElastic();
+      }
       if (edge === "top") { setPull(damp(dy, MAX_PULL)); if (e.cancelable) e.preventDefault(); }
       else if (edge === "bottom") { setPull(-damp(-dy, MAX_PULL)); if (e.cancelable) e.preventDefault(); }
     };
@@ -73,7 +80,6 @@ export function useStepGestures(
         else if (dx > 50) onPrev();
       }
       if (edge === "top" || edge === "bottom") springBack();
-      else { const p = stepElasticRef.current; if (p) p.style.willChange = ""; } // pas de ressort → on retire la couche GPU tout de suite
       axis = null; edge = null;
     };
     el.addEventListener("touchstart", onDown, { passive: true });
