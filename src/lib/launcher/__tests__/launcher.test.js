@@ -84,12 +84,22 @@ describe("buildWidgetSnapshot", () => {
       { slot: "Soir", color: "#c56b46", title: "Risotto aux cèpes", meta: "", image: "", path: "/recipes/r1" },
     ]);
   });
-  it("liste les articles restants avec de quoi les cocher, et compte tout", () => {
+  it("liste les restants puis les achetés (barrés, non effacés), avec de quoi les cocher", () => {
     const items = ["Riz", "Beurre", "Cèpes"].map((name, i) => ({ id: String(i), name, checked: i === 1 }));
     const snap = buildWidgetSnapshot({ shoppingLists: [{ id: "l1", items }], date: at(10) });
     expect(snap.shopping.remaining).toBe(2);
-    expect(snap.shopping.items.map(i => i.name)).toEqual(["Riz", "Cèpes"]);
+    expect(snap.shopping.items.map(i => [i.name, i.checked])).toEqual([["Riz", false], ["Cèpes", false], ["Beurre", true]]);
     expect(snap.shopping.items[0]).toMatchObject({ key: "n:riz", refs: [{ listId: "l1", itemId: "0" }] });
+  });
+  it("garde à cocher un article acheté en partie seulement", () => {
+    const lists = [{ id: "a", items: [{ id: "x", name: "Riz", checked: true }] }, { id: "b", items: [{ id: "y", name: "riz" }] }];
+    expect(buildWidgetSnapshot({ shoppingLists: lists, date: at(10) }).shopping.items[0].checked).toBe(false);
+  });
+  it("sacrifie les achetés, jamais les restants, quand la liste déborde", () => {
+    const items = Array.from({ length: WIDGET_ITEMS + 2 }, (_, i) => ({ id: String(i), name: `Article ${i}`, checked: i < 2 }));
+    const snap = buildWidgetSnapshot({ shoppingLists: [{ id: "l1", items }], date: at(10) });
+    expect(snap.shopping.items).toHaveLength(WIDGET_ITEMS);
+    expect(snap.shopping.items.every(i => !i.checked)).toBe(true);
   });
   it("capitalise le nom des articles, comme l'onglet Courses (non-régression)", () => {
     const items = [{ id: "a", name: "sucre en poudre" }, { id: "b", name: "" }];
