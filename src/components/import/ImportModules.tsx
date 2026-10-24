@@ -7,7 +7,7 @@ import { PlusBadge } from "../badges/PlusBadge.jsx";
 import { monogramOf, tintOf, type RecommendedSource } from "@/lib/sources/recommendedSources.js";
 import { outboundSourceHref } from "@/lib/sources/outboundLink.js";
 import { recordSourceClick } from "@/lib/firebase/sourceClicks.js";
-import { CREDIT_COST, type ImportKind, type CreditState } from "@/lib/aiQuota.js";
+import { creditSummary, type ImportKind, type CreditState } from "@/lib/aiQuota.js";
 import { GIFT_OFFER } from "@/lib/onboarding/giftRecipe.js";
 
 // Mode d'onglet de la page d'import (clés françaises de l'UI, distinctes de ImportKind).
@@ -105,30 +105,19 @@ export function QuotaBar({ credits, kind, unlimited }: { credits?: CreditState |
     );
   }
   if (!credits) return null;
-  const cost = CREDIT_COST[kind] ?? 1;
-  const monthGone = credits.monthLeft < cost;
-  const dayGone = !monthGone && credits.dayLeft < cost;
-  const blocked = monthGone || dayGone;
-  const pct = credits.monthLimit ? Math.min(100, Math.round((credits.monthUsed / credits.monthLimit) * 100)) : 100;
-  const low = !blocked && credits.monthLeft <= 10;
-  const count = credits.monthLeft <= 0
-    ? "Crédits épuisés"
-    : `${credits.monthLeft} crédit${credits.monthLeft > 1 ? "s" : ""} ce mois-ci`;
-  const reset = credits.monthLeft <= 0
-    ? "Ça repart le 1er du mois"
-    : monthGone
-    ? `Il te reste ${credits.monthLeft} crédit, une photo en coûte 2`
-    : dayGone
-    ? "Beaucoup d'imports aujourd'hui, reprends demain (tes crédits du mois sont intacts)"
-    : "Lien, texte ou PDF : 1 crédit · photo : 2 crédits";
+  const { tone, count, note, leftPct } = creditSummary(credits, kind);
   return (
-    <div className={`imp-quota${low ? " low" : ""}${blocked ? " blocked" : ""}`}>
-      <div className="imp-q-top">
-        <span className="imp-q-label"><span className="spark"><Icon name="sparkle" size={13} color="currentColor" /></span>Crédits intelligents</span>
-        <span className="imp-q-count">{count}</span>
-      </div>
-      <div className="imp-q-track"><div className="imp-q-fill" style={{ width: `${pct}%` }} /></div>
-      <div className="imp-q-reset">{reset}</div>
+    <div className={`imp-quota tone-${tone}`}>
+      <span className="imp-q-ic" aria-hidden="true"><Icon name="sparkle" size={14} color="currentColor" /></span>
+      <span className="imp-q-txt">
+        <span className="imp-q-row">
+          <span className="imp-q-count">{count}</span>
+          <span className="imp-q-note">{note}</span>
+        </span>
+        <span className="imp-q-track" role="progressbar" aria-label="Crédits restants ce mois-ci" aria-valuenow={leftPct} aria-valuemin={0} aria-valuemax={100}>
+          <span className="imp-q-fill" style={{ width: `${leftPct}%` }} />
+        </span>
+      </span>
     </div>
   );
 }
