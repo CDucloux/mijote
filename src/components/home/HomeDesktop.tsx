@@ -81,7 +81,7 @@ function NoMealHero({ onPlan }: { onPlan: () => void }) {
         <Icon name="calendar" size={24} color="var(--accent)" />
       </span>
       <div style={{ flex: "1 1 220px", minWidth: 0 }}>
-        <div style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.01em" }}>Rien de prévu aujourd'hui</div>
+        <div style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em" }}>Rien de prévu aujourd'hui</div>
         <div style={{ fontSize: 13.5, color: "var(--text3)", marginTop: 4 }}>Choisis une recette pour ce soir, ou laisse la semaine se remplir.</div>
       </div>
       <button className="btn btn-primary btn-pill" onClick={onPlan} style={{ padding: "10px 20px", fontSize: 14 }}>Planifier</button>
