@@ -4,7 +4,7 @@ import { Icon } from "../components/ui/Icon.jsx";
 import { ErrorModal } from "../components/modals/ErrorModal.jsx";
 import { LoadingOverlay } from "../components/import/ImportUI.jsx";
 import { ImportDropzone } from "../components/import/ImportDropzone.jsx";
-import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError, ImportPlusGate, ImportGiftOffer } from "../components/import/ImportModules.jsx";
+import { Segmented, Lede, QuotaBar, SourcesShelf, Tips, ImpInlineError, ImportPlusGate, ImportGiftOffer, SocialLinkHint } from "../components/import/ImportModules.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useAiUsage } from "../hooks/useAiUsage.js";
 import { CREDIT_COST } from "@/lib/aiQuota.js";
@@ -14,6 +14,7 @@ import { extractPdfText } from "@/lib/recipes/pdfImport.js";
 import { hasUsablePdfText } from "@/lib/recipes/pdfText.js";
 import { visibleSources, prettyHost } from "@/lib/sources/recommendedSources.js";
 import { importFailureFor } from "@/lib/recipes/importInterruption.js";
+import { socialPlatformOf, isSocialCaptionError } from "@/lib/recipes/socialLink.js";
 import { readClipboardLink, readClipboardText } from "@/lib/launcher/plugin.js";
 import { DEFAULT_SOURCES } from "@/constants/recommendedSources.js";
 import type { ImportMode } from "../components/import/ImportModules.jsx";
@@ -63,6 +64,7 @@ export function ImportPage({ mode = "lien" }: { mode?: ImportMode }) {
   const [pdf, setPdf] = useState<File | null>(null);
   const [error, setError] = useState("");          // hint de saisie (inline)
   const [importError, setImportError] = useState<{ message: string; code: string } | null>(null); // échec réel → popup
+  const [socialFailure, setSocialFailure] = useState(""); // légende sociale illisible → aide inline
   const [gate, setGate] = useState(false);         // mur d'offre (non-abonné)
   const [giftOffer, setGiftOffer] = useState(false); // feuille d'offre cadeau (non-abonné)
   const [gifting, setGifting] = useState(false);   // import cadeau en cours (overlay simulé)
@@ -208,7 +210,8 @@ export function ImportPage({ mode = "lien" }: { mode?: ImportMode }) {
       else { await importFromText(text.trim()); notify?.("Recette extraite, à relire"); }
     } catch (e) {
       setLoading(false);
-      setImportError(importFailureFor(e, wentHiddenRef.current));
+      if (mode === "lien" && !wentHiddenRef.current && isSocialCaptionError(e)) setSocialFailure(importFailureFor(e, false).message);
+      else setImportError(importFailureFor(e, wentHiddenRef.current));
     }
   };
 
@@ -231,16 +234,23 @@ export function ImportPage({ mode = "lien" }: { mode?: ImportMode }) {
     <div className="imp-field">
       <span className="imp-glyph"><Icon name="link" size={19} color="currentColor" /></span>
       <input ref={urlRef} className="imp-urlfield" type="url" inputMode="url" placeholder="https://exemple.com/recette…"
-        value={url} onChange={e => { setUrl(e.target.value); if (error) setError(""); }}
+        value={url} onChange={e => { setUrl(e.target.value); setSocialFailure(""); if (error) setError(""); }}
         onKeyDown={e => e.key === "Enter" && go()} />
     </div>
   );
   const clipBtn = (clip && clip !== url) ? (
-    <button className="imp-clip" onClick={() => { setUrl(clip); setError(""); }}>
+    <button className="imp-clip" onClick={() => { setUrl(clip); setSocialFailure(""); setError(""); }}>
       <Icon name="copy" size={18} color="var(--accent)" />
       <span className="t"><b>Coller le lien copié</b><span>{prettyHost(clip)}</span></span>
       <Icon name="forward" size={16} color="var(--accent)" />
     </button>
+  ) : null;
+
+  // Post Instagram / TikTok : seule la légende est lisible, on le dit et on offre
+  // le raccourci vers l'onglet Texte.
+  const platform = socialPlatformOf(url);
+  const socialHint = platform ? (
+    <SocialLinkHint platform={platform} failure={socialFailure || undefined} onUseText={() => selectMode("texte")} />
   ) : null;
 
   const photoInput = (
@@ -343,7 +353,7 @@ export function ImportPage({ mode = "lien" }: { mode?: ImportMode }) {
           <div className="imp-panes">
             <div className="imp-pane-action">
               <Lede mode={mode} />
-              {mode === "lien" && <>{linkField}{clipBtn}</>}
+              {mode === "lien" && <>{linkField}{clipBtn}{socialHint}</>}
               {mode === "photo" && <>{photoInput}{photos.length ? photoGrid : dropzone}</>}
               {mode === "pdf" && <>{pdfInput}{pdfPicker}</>}
               {mode === "texte" && textArea}
@@ -368,7 +378,7 @@ export function ImportPage({ mode = "lien" }: { mode?: ImportMode }) {
       <div className="imp-body" data-elastic-scroll>
         <div className="imp-col">
           <Lede mode={mode} />
-          {mode === "lien" && <>{linkField}{clipBtn}<SourcesShelf sources={sourceList} layout="shelf" /></>}
+          {mode === "lien" && <>{linkField}{clipBtn}{socialHint}<SourcesShelf sources={sourceList} layout="shelf" /></>}
           {mode === "photo" && <>{photoInput}{photoGrid}</>}
           {mode === "pdf" && <>{pdfInput}{pdfPicker}</>}
           {mode === "texte" && textArea}

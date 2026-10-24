@@ -11,8 +11,11 @@ import { prepareImageForUpload, blobToBase64 } from "@/lib/firebase/imageResize.
 import { importRequestId } from "@/lib/recipes/importIdempotency.js";
 import type { ApplianceImportInfo } from "@/lib/utensils/appliances.js";
 
-/** Erreur d'import : conserve le `code` canonique Firebase (origine visible). */
-export interface ImportError extends Error { code: string }
+/**
+ * Erreur d'import : conserve le `code` canonique Firebase (origine visible) et, le
+ * cas échéant, le motif serveur (`details.reason`) qui appelle une aide dédiée.
+ */
+export interface ImportError extends Error { code: string; reason?: string }
 
 /**
  * Messages par défaut, par code canonique, utilisés quand le serveur n'a pas
@@ -35,16 +38,19 @@ const ERROR_MESSAGES: Record<string, string> = {
  * visible) ; un message serveur en français prime, sinon on retombe sur la table.
  *
  * @param error - L'erreur brute remontée par le SDK callable.
- * @returns Une `Error` avec un message lisible et un champ `code` canonique.
+ * @returns Une `Error` avec un message lisible, un champ `code` canonique et le
+ *   motif serveur `reason` s'il est fourni.
  */
 export function mapImportError(error: unknown): ImportError {
-  const err = error as { code?: string; message?: string } | null;
+  const err = error as { code?: string; message?: string; details?: unknown } | null;
   const code = String(err?.code || "").replace(/^functions\//, "") || "internal";
   const serverMsg = String(err?.message || "").trim();
   const lisible = serverMsg && serverMsg.toLowerCase() !== code && !/^functions\//.test(serverMsg);
   const message = lisible ? serverMsg : (ERROR_MESSAGES[code] || "L'import a échoué. Réessaie.");
   const out = new Error(message, { cause: error }) as ImportError;
   out.code = code;
+  const details = err?.details;
+  if (details && typeof details === "object" && "reason" in details && typeof details.reason === "string") out.reason = details.reason;
   return out;
 }
 
@@ -55,7 +61,8 @@ export function mapImportError(error: unknown): ImportError {
  * @param url - URL de la page recette.
  * @param knownUtensils - Noms d'ustensiles connus (aide au rapprochement serveur).
  * @param appliances - Descripteurs d'appareils connus (réglages à déduire par étape).
- * @returns La charge utile serveur `{ recipe, method: "jsonld" | "llm" }`.
+ * @returns La charge utile serveur `{ recipe, method: "llm" }`, ou pour un post
+ *   social `{ recipe, method: "social", cover }` (miniature en base64 ou `null`).
  * @throws Une {@link ImportError} (via {@link mapImportError}) en cas d'échec.
  */
 export async function importRecipeFromUrl(url: string, knownUtensils: string[] = [], appliances: ApplianceImportInfo[] = []): Promise<unknown> {

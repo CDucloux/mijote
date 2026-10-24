@@ -9,6 +9,7 @@ import { outboundSourceHref } from "@/lib/sources/outboundLink.js";
 import { recordSourceClick } from "@/lib/firebase/sourceClicks.js";
 import { creditSummary, type ImportKind, type CreditState } from "@/lib/aiQuota.js";
 import { GIFT_OFFER } from "@/lib/onboarding/giftRecipe.js";
+import { SOCIAL_LABEL, type SocialPlatform } from "@/lib/recipes/socialLink.js";
 
 // Mode d'onglet de la page d'import (clés françaises de l'UI, distinctes de ImportKind).
 export type ImportMode = "lien" | "photo" | "texte" | "pdf";
@@ -31,6 +32,7 @@ export const TIPS: Record<ImportMode, { h: string; items: [string, string][] }> 
   lien: { h: "Bien importer un lien", items: [
     ["Vise la page de la recette", " : pas la page d'accueil ni une liste."],
     ["Blogs, magazines, sites perso", " : ça passe en général sans souci."],
+    ["Un reel Instagram ou TikTok", " : on lit la recette dans sa légende."],
     ["Un site qui bloque ?", " Copie le texte de la recette et passe par l'onglet Texte."],
   ] },
   photo: { h: "Pour une bonne extraction", items: [
@@ -286,6 +288,28 @@ export function ImpInlineError({ children }: { children: ReactNode }) {
     <div className="imp-inline-err">
       <Icon name="warning" size={15} color="var(--red)" />
       <span>{children}</span>
+    </div>
+  );
+}
+
+/**
+ * Aide sous le champ lien pour un post Instagram ou TikTok : on n'y lit que la
+ * légende. Avant l'import, elle prévient ; après un échec de lecture (`failure`),
+ * elle porte le message serveur. Dans les deux cas, un raccourci vers l'onglet
+ * Texte pour coller la description à la main.
+ */
+export function SocialLinkHint({ platform, failure, onUseText }: { platform: SocialPlatform; failure?: string; onUseText: () => void }) {
+  const label = SOCIAL_LABEL[platform];
+  return (
+    <div className={`imp-social${failure ? " is-failed" : ""}`} role={failure ? "alert" : undefined}>
+      <span className="ic"><Icon name={failure ? "warning" : "info"} size={17} color="currentColor" /></span>
+      <span className="t">
+        <b>{failure ? "Légende introuvable" : `Lien ${label}`}</b>
+        <span>{failure || "On lit la recette dans la légende du post. Si elle n'y est pas en entier, copie la description et colle-la ici."}</span>
+      </span>
+      <button className="imp-social-btn ripple" onClick={onUseText}>
+        <Icon name="paste" size={14} color="currentColor" /> Coller la légende
+      </button>
     </div>
   );
 }

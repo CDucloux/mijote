@@ -83,9 +83,18 @@ export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeI
   // déduise les réglages d'étape ; recalculés à chaque appel (base à jour).
   const appliancesOf = (): ReturnType<typeof applianceImportInfos> => applianceImportInfos(utensilDB);
 
+  // Couverture reçue en base64, ré-uploadée vers Storage comme toute image de
+  // recette. Best-effort : un échec d'upload n'empêche pas l'ouverture du brouillon.
+  const uploadCover = async (cover: ImagePart | null | undefined): Promise<string> => {
+    if (!cover?.data) return "";
+    try { return await uploadImage(base64ToBlob(cover.data, cover.mediaType), "recipes"); }
+    catch { return ""; }
+  };
+
   const importFromUrl = async (url: string): Promise<{ method: string }> => {
-    const { recipe, method } = await importRecipeFromUrl(url, utensilDB.map(u => u.name), appliancesOf()) as { recipe: Recipe; method: string };
-    openImportedDraft(recipe);
+    const { recipe, method, cover } = await importRecipeFromUrl(url, utensilDB.map(u => u.name), appliancesOf()) as { recipe: Recipe; method: string; cover?: ImagePart | null };
+    // Post social : la miniature (URL signée qui expire) est ré-hébergée.
+    openImportedDraft(recipe, await uploadCover(cover));
     return { method };
   };
   const importFromText = async (text: string): Promise<{ method: string }> => {
@@ -100,16 +109,8 @@ export function useRecipeImport({ ingredientDB, utensilDB, openEditor }: RecipeI
   };
   const importFromImages = async (images: ImagePart[]): Promise<{ method: string }> => {
     const { recipe, method, coverIndex } = await importRecipeFromImages(images, utensilDB.map(u => u.name), appliancesOf()) as { recipe: Recipe; method: string; coverIndex: number };
-    // La page identifiée comme photo du plat devient l'image de couverture : on la
-    // ré-upload vers Storage (comme n'importe quelle image de recette). Best-effort :
-    // un échec d'upload n'empêche pas l'ouverture du brouillon (couverture vide).
-    let coverUrl = "";
-    const cover = coverIndex >= 0 ? images[coverIndex] : null;
-    if (cover?.data) {
-      try { coverUrl = await uploadImage(base64ToBlob(cover.data, cover.mediaType), "recipes"); }
-      catch { coverUrl = ""; }
-    }
-    openImportedDraft(recipe, coverUrl);
+    // La page identifiée comme photo du plat devient l'image de couverture.
+    openImportedDraft(recipe, await uploadCover(coverIndex >= 0 ? images[coverIndex] : null));
     return { method };
   };
 
