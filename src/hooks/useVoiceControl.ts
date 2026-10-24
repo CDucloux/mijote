@@ -11,24 +11,27 @@
  * Le micro reste ouvert pendant la lecture à voix haute (on peut l'interrompre
  * d'un « suivant ») : les mots-clés présents dans le texte lu sont ignorés tant
  * qu'il est lu, pour que la synthèse captée ne soit pas prise pour une commande
- * (cf. `parseVoiceTail`).
+ * (cf. `parseVoiceTail`). Toutes les hypothèses de la dictée sont examinées, pas
+ * seulement la première : un mot court dit sans forcer y figure souvent en second
+ * (cf. `parseVoiceAlternatives`).
  *
  * @module useVoiceControl
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { parseVoiceTail, type VoiceCommand } from "@/lib/cookSession/voiceCommands.js";
+import { parseVoiceAlternatives, type VoiceCommand } from "@/lib/cookSession/voiceCommands.js";
 import { pickFrenchVoice } from "@/lib/cookSession/speechVoice.js";
 import { isNativeVoice, nativeSpeech, NativeRecognition } from "@/lib/voice/plugin.js";
 
 // La Web Speech API n'est pas typée par lib.dom : on décrit le strict nécessaire.
 interface RecognitionAlternative { transcript: string }
-interface RecognitionResult { readonly isFinal: boolean; readonly 0: RecognitionAlternative }
+interface RecognitionResult extends ArrayLike<RecognitionAlternative> { readonly isFinal: boolean }
 interface RecognitionEvent { readonly resultIndex: number; readonly results: ArrayLike<RecognitionResult> }
 interface RecognitionErrorEvent { readonly error: string }
 interface Recognition {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
+  maxAlternatives: number;
   onresult: ((event: RecognitionEvent) => void) | null;
   onerror: ((event: RecognitionErrorEvent) => void) | null;
   onend: (() => void) | null;
@@ -40,6 +43,8 @@ interface Recognition {
 type RecognitionCtor = new () => Recognition;
 
 const LANG = "fr-FR";
+/** Hypothèses demandées à la dictée pour chaque phrase. */
+const MAX_ALTERNATIVES = 5;
 /** Une même commande répétée dans ce délai est ignorée (doublon de dictée). */
 const DUPLICATE_MS = 1200;
 /** Après la lecture, le micro peut encore rendre un écho pendant ce délai (latence de dictée). */
@@ -152,6 +157,7 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
     // Résultats provisoires : la commande part dès qu'elle est entendue, sans attendre
     // la fin de phrase (que certains navigateurs ne posent qu'après un long silence).
     recognition.interimResults = true;
+    recognition.maxAlternatives = MAX_ALTERNATIVES;
     recognition.onaudiostart = () => {
       sessionRef.current.gotAudio = true;
       sessionRef.current.fastEnds = 0;
@@ -162,10 +168,10 @@ export function useVoiceControl({ onCommand, onError, paused = false }: UseVoice
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (!result) continue;
-        const transcript = result[0].transcript.trim();
+        const transcripts = Array.from(result, alternative => alternative.transcript);
         const spoken = spokenRef.current;
         const reading = isSpeaking() || Date.now() - spoken.lastAt < ECHO_GRACE_MS;
-        const { command, words } = parseVoiceTail(transcript, consumedRef.current.get(i) ?? 0, reading ? spoken.text : null);
+        const { command, words } = parseVoiceAlternatives(transcripts, consumedRef.current.get(i) ?? 0, reading ? spoken.text : null);
         if (!command) continue;
         consumedRef.current.set(i, words);
         const now = Date.now();

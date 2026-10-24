@@ -18,16 +18,18 @@ vi.mock("@capacitor/core", () => ({
 }));
 
 const { isNativeVoice, NativeRecognition, nativeSpeech } = await import("@/lib/voice/plugin.js");
+const { VOICE_PHRASES } = await import("@/lib/cookSession/voiceCommands.js");
 const emit = (name: string, event: unknown = {}) => bridge.listeners.get(name)?.(event);
 
 describe("NativeRecognition", () => {
   beforeEach(() => { bridge.calls = []; bridge.failStart = false; });
 
-  it("lance la dictée native dans la langue demandée", () => {
+  it("lance la dictée native dans la langue demandée, en favorisant les commandes", () => {
     const recognition = new NativeRecognition();
     recognition.lang = "fr-FR";
+    recognition.maxAlternatives = 5;
     recognition.start();
-    expect(bridge.calls).toContainEqual(["start", { lang: "fr-FR" }]);
+    expect(bridge.calls).toContainEqual(["start", { lang: "fr-FR", phrases: VOICE_PHRASES, maxResults: 5 }]);
   });
   it("relaie les événements natifs au format du navigateur", () => {
     const recognition = new NativeRecognition();
@@ -41,9 +43,22 @@ describe("NativeRecognition", () => {
     emit("end");
     expect(onaudiostart).toHaveBeenCalledOnce();
     expect(onspeechstart).toHaveBeenCalledOnce();
-    expect(onresult).toHaveBeenCalledWith({ resultIndex: 0, results: [{ isFinal: false, 0: { transcript: "suivant" } }] });
+    const [{ resultIndex, results }] = onresult.mock.calls[0];
+    expect(resultIndex).toBe(0);
+    expect(results[0].isFinal).toBe(false);
+    expect(Array.from(results[0])).toEqual([{ transcript: "suivant" }]);
     expect(onerror).toHaveBeenCalledWith({ error: "no-speech" });
     expect(onend).toHaveBeenCalledOnce();
+  });
+  it("relaie toutes les hypothèses de la dictée, dans l'ordre", () => {
+    const recognition = new NativeRecognition();
+    const onresult = vi.fn();
+    recognition.onresult = onresult;
+    recognition.start();
+    emit("result", { transcript: "suis vent", alternatives: ["suis vent", 7, "suivant"], isFinal: true });
+    const [{ results }] = onresult.mock.calls[0];
+    expect(results[0].isFinal).toBe(true);
+    expect(Array.from(results[0])).toEqual([{ transcript: "suis vent" }, { transcript: "suivant" }]);
   });
   it("ignore les événements natifs malformés", () => {
     const recognition = new NativeRecognition();
@@ -51,6 +66,7 @@ describe("NativeRecognition", () => {
     Object.assign(recognition, { onresult, onerror });
     recognition.start();
     emit("result", { transcript: 42 });
+    emit("result", { alternatives: [] });
     emit("result", null);
     emit("error", {});
     expect(onresult).not.toHaveBeenCalled();

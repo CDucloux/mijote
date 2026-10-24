@@ -65,7 +65,7 @@ const VOCABULARY: readonly [Exclude<VoiceCommand["kind"], "goto">, readonly stri
   ["ingredients", ["ingredients", "ingredient", "combien de", "combien d"]],
   ["utensils", ["ustensiles", "ustensile"]],
   ["repeat", ["repete", "repetes", "repeter", "relis", "relire", "redis", "redire"]],
-  ["prev", ["precedent", "precedente", "retour", "reviens", "arriere"]],
+  ["prev", ["precedent", "precedente", "precedant", "retour", "reviens", "arriere"]],
   ["next", ["suivant", "suivante", "ensuite", "continue", "continuer"]],
 ];
 
@@ -162,6 +162,30 @@ export function parseVoiceTail(transcript: string | null | undefined, fromWord =
   return { command: parseVoiceCommand(fresh.join(" "), ignored), words: words.length };
 }
 
+/**
+ * Commande portée par l'une des transcriptions candidates d'une même dictée.
+ *
+ * La dictée classe ses hypothèses : sur un mot court dit de loin (« suivant »),
+ * la première est souvent une phrase voisine (« suis vent ») et la bonne arrive
+ * deuxième ou troisième. Les candidates sont examinées dans l'ordre et la
+ * première commande trouvée gagne.
+ * @param transcripts - Transcriptions candidates, la plus probable d'abord.
+ * @param fromWord - Nombre de mots déjà analysés dans cette dictée.
+ * @param spoken - Texte en cours de lecture à voix haute, s'il y en a un.
+ * @returns La commande trouvée (ou `null`) et le plus grand nombre de mots des
+ *   candidates : on reprend après, pour ne jamais redéclencher une commande.
+ */
+export function parseVoiceAlternatives(transcripts: readonly (string | null | undefined)[], fromWord = 0, spoken?: string | null): VoiceTail {
+  let command: VoiceCommand | null = null;
+  let words = 0;
+  for (const transcript of transcripts) {
+    const tail = parseVoiceTail(transcript, fromWord, spoken);
+    words = Math.max(words, tail.words);
+    command ??= tail.command;
+  }
+  return { command, words };
+}
+
 const soonest = (timers: readonly CookTimer[], remaining: (timer: CookTimer) => number): CookTimer | null =>
   timers.reduce<CookTimer | null>((best, timer) => (best === null || remaining(timer) < remaining(best) ? timer : best), null);
 
@@ -248,6 +272,15 @@ export const VOICE_HELP: readonly VoiceHelpGroup[] = [
       { say: "Ferme", does: "Revenir à la recette", kind: "close" },
     ],
   },
+];
+
+/**
+ * Phrases des commandes, telles qu'on les dit (aide et variantes). Transmises à
+ * la dictée du système, qui favorise ces mots sur ses hypothèses voisines : un
+ * « suivant » dit sans forcer la voix l'emporte sur « suis vent ».
+ */
+export const VOICE_PHRASES: readonly string[] = [
+  ...new Set(VOICE_HELP.flatMap(group => group.entries.flatMap(entry => [entry.say, ...(entry.also ?? [])])).map(phrase => phrase.toLowerCase())),
 ];
 
 /**
