@@ -151,6 +151,12 @@ export interface Step {
   image?: string;
   /** Libellé de la section/groupe (« Pour la pâte »). Vide/absent = section principale. */
   group?: string;
+  /** Durée totale de l'étape en minutes, attente comprise (four, repos, froid). */
+  duration?: number;
+  /** Minutes « mains occupées » dans `duration` (le reste est de l'attente). */
+  activeTime?: number;
+  /** Durée estimée (par l'import) plutôt que lue dans la source : à relire. */
+  durationEstimated?: boolean;
 }
 
 /**

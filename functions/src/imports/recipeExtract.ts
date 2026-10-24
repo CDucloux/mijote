@@ -72,6 +72,10 @@ export interface DraftStep {
   utensilParams?: Record<string, Record<string, unknown>>;
   /** Section/sous-préparation (« La pâte »…). Vide/absent = pas de groupement. */
   group?: string;
+  /** Durée totale (min) et part « mains occupées », bornées par {@link sanitizeStepTiming}. */
+  duration?: number;
+  activeTime?: number;
+  durationEstimated?: boolean;
 }
 
 /** Rendement d'une base au fil de l'assemblage (valeurs lâches côté LLM). */
@@ -145,6 +149,12 @@ export interface RecipeStep {
    */
   utensilParams?: Record<string, Record<string, unknown>>;
   group?: string;
+  /** Durée totale de l'étape en minutes, attente comprise. */
+  duration?: number;
+  /** Minutes « mains occupées » dans `duration`. */
+  activeTime?: number;
+  /** Durée estimée par le modèle (absente de la source) : à relire. */
+  durationEstimated?: boolean;
 }
 
 /** Recette finale assemblée. */
@@ -166,6 +176,37 @@ export interface Recipe {
   isComponent?: boolean;
   /** Rendement de la base (présent seulement si `isComponent`). */
   yield?: YieldValue;
+}
+
+/** Durée maximale d'une étape (deux jours : marinade, levée lente, maturation). */
+export const MAX_STEP_MINUTES = 48 * 60;
+
+/** Durées d'une étape retenues après validation (champs absents si inexploitables). */
+export type StepTiming = Pick<DraftStep, "duration" | "activeTime" | "durationEstimated">;
+
+/**
+ * Valide les durées d'étape renvoyées par le modèle (données non fiables). Elles
+ * alimentent le rétro planning : une valeur absurde y décalerait tout un service,
+ * on préfère donc l'omettre (le client retombe sur ses propres estimations).
+ *
+ * @param duration - Durée totale brute (minutes attendues).
+ * @param activeTime - Part « mains occupées » brute (minutes, ≤ `duration`).
+ * @param estimated - Marqueur brut « durée estimée ».
+ * @returns `duration` (entier, 1 à {@link MAX_STEP_MINUTES}) si valide ; `activeTime`
+ *   seulement si `duration` l'est (borné à `duration`) ; `durationEstimated` à
+ *   `true` sauf `false` explicite. Objet vide sinon.
+ */
+export function sanitizeStepTiming(duration: unknown, activeTime: unknown, estimated: unknown): StepTiming {
+  const minutes = (raw: unknown): number | null => {
+    const n = typeof raw === "number" ? raw : typeof raw === "string" && raw.trim() ? Number(raw.replace(",", ".")) : NaN;
+    return Number.isFinite(n) ? Math.round(n) : null;
+  };
+  const total = minutes(duration);
+  if (total == null || total < 1 || total > MAX_STEP_MINUTES) return {};
+  const timing: StepTiming = { duration: total, durationEstimated: estimated !== false };
+  const active = minutes(activeTime);
+  if (active != null && active >= 0) timing.activeTime = Math.min(active, total);
+  return timing;
 }
 
 // Styles de cuisine reconnus (miroir de src/constants/cuisines.js, garder aligné).
@@ -515,6 +556,7 @@ export function assignIdsAndLink(d: Partial<Intermediate>, knownUtensils: readon
     const utIds = utensils.filter((u) => u.name && (explicitUt.has(norm(u.name)) || mentions(text, u.name))).map((u) => u.id);
     const rs: RecipeStep = { id: `s${k}`, title: "", text: (s.text || "").toString(), tip: (s.tip || "").toString(), image: (s.image || "").toString(), ingredients: [...new Set(ingIds)], utensils: [...new Set(utIds)] };
     if (stepGroup) rs.group = stepGroup;
+    Object.assign(rs, sanitizeStepTiming(s.duration, s.activeTime, s.durationEstimated));
     // Réglages d'appareils : le LLM les indexe par NOM d'appareil ; on les re-clé
     // vers l'id d'ustensile de recette et on ne garde QUE ceux liés à cette étape.
     // Les valeurs restent brutes (validées côté client contre le schéma de l'appareil).

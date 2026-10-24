@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   matchCuisine, matchCategory, matchBaseCategory, validateYield, extractOgImage, assignIdsAndLink, collectUtensils, filterUtensilsToKnown, htmlToText, imageUrlsInText, stripComments,
-  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, sanitizeCut, sanitizeChef, parseJsonLoose, modelText,
+  parseApplianceInfos, formatAppliancesForPrompt, canonicalizeUnit, sanitizeCut, sanitizeChef, parseJsonLoose, modelText, sanitizeStepTiming, MAX_STEP_MINUTES,
 } from "../recipeExtract.js";
 
 describe("collectUtensils", () => {
@@ -499,5 +499,43 @@ describe("modelText", () => {
     expect(modelText({ stop_reason: "end_turn", content: [{ type: "text", text: "   " }] })).toEqual({ ok: false, reason: "empty" });
     expect(modelText({ stop_reason: "max_tokens", content: null })).toEqual({ ok: false, reason: "empty" });
     expect(modelText({})).toEqual({ ok: false, reason: "empty" });
+  });
+});
+
+describe("sanitizeStepTiming", () => {
+  it("garde une durée entière et sa part mains occupées", () => {
+    expect(sanitizeStepTiming(41, 1, false)).toEqual({ duration: 41, activeTime: 1, durationEstimated: false });
+    expect(sanitizeStepTiming("12,6", "3", true)).toEqual({ duration: 13, activeTime: 3, durationEstimated: true });
+  });
+
+  it("borne la part active à la durée et considère la durée estimée par défaut", () => {
+    expect(sanitizeStepTiming(10, 25, undefined)).toEqual({ duration: 10, activeTime: 10, durationEstimated: true });
+  });
+
+  it("omet une part active absente ou négative", () => {
+    expect(sanitizeStepTiming(30, undefined, false)).toEqual({ duration: 30, durationEstimated: false });
+    expect(sanitizeStepTiming(30, -4, false)).toEqual({ duration: 30, durationEstimated: false });
+  });
+
+  it("rejette une durée absente, nulle, absurde ou non numérique", () => {
+    expect(sanitizeStepTiming(undefined, 5, false)).toEqual({});
+    expect(sanitizeStepTiming(0, 0, false)).toEqual({});
+    expect(sanitizeStepTiming(MAX_STEP_MINUTES + 1, 0, false)).toEqual({});
+    expect(sanitizeStepTiming("vingt", 0, false)).toEqual({});
+    expect(sanitizeStepTiming({}, 0, false)).toEqual({});
+  });
+});
+
+describe("assignIdsAndLink, durées d'étape", () => {
+  it("reporte les durées validées et ignore les valeurs inexploitables", () => {
+    const r = assignIdsAndLink({
+      name: "Gratin", ingredients: [], utensils: [],
+      steps: [
+        { text: "Trancher les pommes de terre.", duration: 20, activeTime: 20, durationEstimated: true },
+        { text: "Enfourner 1 h 15.", duration: 76, activeTime: 1, durationEstimated: false },
+        { text: "Servir.", duration: -3 },
+      ],
+    });
+    expect(r.steps.map((s) => [s.duration, s.activeTime, s.durationEstimated])).toEqual([[20, 20, true], [76, 1, false], [undefined, undefined, undefined]]);
   });
 });

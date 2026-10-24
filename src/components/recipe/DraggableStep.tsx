@@ -9,6 +9,7 @@ import { MoveArrows } from "../ui/MoveArrows.jsx";
 import { IngImage } from "../ui/Img.jsx";
 import { UtImage } from "./StepPills.jsx";
 import { ApplianceParamsEditor } from "./ApplianceParams.jsx";
+import { StepTimingField } from "./StepTimingField.jsx";
 import { isApplianceKey } from "@/lib/utensils/appliances.js";
 import { findIngredientMatch, type DbEntry } from "@/lib/food/nameMatcher.js";
 import { useDragReorder, LIFTED_ROW_STYLE } from "../../hooks/useDragReorder.js";
@@ -46,12 +47,14 @@ interface DraggableStepProps {
   draggable?: boolean;
   isDropTarget?: boolean;
   onUpdate: (stepId: string | undefined, field: string, value: unknown) => void;
+  /** Durées saisies (minutes), appliquées par le parent via `withEditedTiming`. */
+  onTimingChange: (stepId: string | undefined, duration: number | null, activeTime: number | null) => void;
   onRemove: (stepId: string | undefined) => void;
   onMove: (from: number, to: number) => void;
   onTargetChange?: (index: number | null) => void;
 }
 
-function DraggableStepBase({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, isDropTarget = false, onUpdate, onRemove, onMove, onTargetChange }: DraggableStepProps) {
+function DraggableStepBase({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, isDropTarget = false, onUpdate, onTimingChange, onRemove, onMove, onTargetChange }: DraggableStepProps) {
   const { dragging, rowProps, handleProps } = useDragReorder({ index, enabled: isDraggable, onMove, onTargetChange });
   // La carte saisie se soulève ; la carte VISÉE s'entoure d'accent.
   const aimed = isDropTarget && !dragging;
@@ -103,6 +106,8 @@ function DraggableStepBase({ step, index, total, ingredients, utensils, recipes,
       {/* Instructions, surface douce, sans bordure dure */}
       <AutoResizeTextarea className="field-input field-soft step-instructions" placeholder="Décris cette étape…" value={step.text || ""} onChange={e => onUpdate(step.id, "text", e.target.value)}
         style={{ marginBottom: 12, background: "var(--surface2)", borderRadius: 14, padding: "13px 15px", fontSize: 14.5, lineHeight: 1.55, minHeight: 88 }} />
+
+      <StepTimingField step={step} onChange={(duration, activeTime) => onTimingChange(step.id, duration, activeTime)} />
 
       {/* Add-ons optionnels : chips discrètes tant qu'ils ne sont pas utilisés */}
       {(!showPhoto || !showTip) && (

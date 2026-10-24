@@ -28,7 +28,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   htmlToText, imageUrlsInText, extractOgImage,
   assignIdsAndLink, collectUtensils, filterUtensilsToKnown, CUISINE_LABELS,
-  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut, sanitizeChef, parseJsonLoose, modelText,
+  parseApplianceInfos, formatAppliancesForPrompt, sanitizeCut, sanitizeChef, sanitizeStepTiming, parseJsonLoose, modelText,
   type Intermediate, type ApplianceInfo,
 } from "./recipeExtract.js";
 import { assertImportAllowed } from "../quota/access.js";
@@ -238,7 +238,7 @@ type LlmDraft = Record<string, unknown> & {
   chef?: unknown;
   ingredients?: { name?: string; amount?: unknown; unit?: unknown; raw?: string; group?: unknown; cut?: unknown }[];
   utensils?: { name?: string }[];
-  steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; utensilParams?: unknown; group?: unknown }[];
+  steps?: { text?: string; tip?: string; image?: unknown; ingredients?: unknown[]; utensils?: unknown[]; utensilParams?: unknown; group?: unknown; duration?: unknown; activeTime?: unknown; durationEstimated?: unknown }[];
   /** Numéro (1-based) de l'image qui est la photo du plat, 0/absent si aucune. */
   coverPhoto?: unknown;
   /** Préparation de base réutilisable (caramel, pâte, fond…) plutôt qu'un plat fini. */
@@ -312,6 +312,7 @@ function llmToIntermediate(d: LlmDraft, sourceUrl: string): Intermediate {
       };
       const params = sanitizeUtensilParams(s.utensilParams); if (params) step.utensilParams = params;
       const group = (typeof s.group === "string" ? s.group : "").trim(); if (group) step.group = group.slice(0, 80);
+      Object.assign(step, sanitizeStepTiming(s.duration, s.activeTime, s.durationEstimated));
       return step;
     }).filter((s) => s.text),
   };
