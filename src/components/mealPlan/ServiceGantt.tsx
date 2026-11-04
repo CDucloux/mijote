@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from "react";
 import { stepSummary, clockLabel } from "@/lib/planning/serveSchedule.js";
 import { roleLabel } from "@/lib/planning/composedMeal.js";
 import { ServiceStepSheet } from "./ServiceStepSheet.jsx";
-import type { ServicePlan, ServiceTask } from "@/lib/planning/mealService.js";
+import type { ServicePlan } from "@/lib/planning/mealService.js";
 import type { Recipe } from "@/lib/types.js";
 
 /** Largeur maximale de la frise : au-delà, le début (préparations d'avance) est rogné. */
@@ -18,8 +18,6 @@ interface ServiceGanttProps {
   now?: number;
 }
 
-/** Couleur du libellé : sur le plein (mains) quand il couvre au moins la moitié de la barre. */
-const taskKind = (task: ServiceTask): string => task.oven ? "is-oven" : task.active * 2 >= task.minutes ? "is-hands" : "is-wait";
 
 /**
  * Frise du service : une ligne par plat, alignée sur l'heure de service. Chaque
@@ -70,13 +68,17 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now }: ServiceGanttP
               })}
               {dish.tasks.filter(task => task.end > windowStart).map(task => {
                 const summary = stepSummary(recipeOf(dish.id)?.steps?.[task.stepIndex]?.text);
+                const label = task.oven && task.temperature != null ? `${task.temperature} °C` : summary;
                 const hands = task.minutes > 0 ? Math.min(100, task.active / task.minutes * 100) : 0;
                 const style = { left: pos(task.start), width: width(task.start, task.end), "--hands": `${hands}%` } as CSSProperties;
                 return (
-                  <button key={task.stepIndex} type="button" className={`svc-g__bar ${taskKind(task)}`} style={style}
+                  <button key={task.stepIndex} type="button" className={`svc-g__bar${task.oven ? " is-oven" : ""}`} style={style}
                     title={`${clockLabel(task.start)} à ${clockLabel(task.end)} · ${summary}`} aria-label={`Étape ${task.stepIndex + 1} de ${dish.name} : ${summary}`}
                     onClick={() => setOpen({ dishId: dish.id, stepIndex: task.stepIndex })}>
-                    <span className="svc-g__lbl">{task.oven && task.temperature != null ? `${task.temperature} °C` : summary}</span>
+                    {/* Deux calques du même libellé, découpés à la frontière mains / attente :
+                        blanc sur le plein, teinté sur l'attente, lisible des deux côtés. */}
+                    <span className="svc-g__lbl"><span>{label}</span></span>
+                    <span className="svc-g__lbl is-on" aria-hidden="true"><span>{label}</span></span>
                   </button>
                 );
               })}
