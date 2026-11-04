@@ -188,7 +188,7 @@ describe("nature des étapes", () => {
     expect(cutAndCook).toMatchObject({ phase: "cuisson", cut: 3 });
     expect(cutAndCook.minutes).toBeGreaterThan(cutAndCook.cut);
     expect(bake).toMatchObject({ phase: "cuisson", cut: 0, oven: true });
-    expect(mix).toMatchObject({ phase: "autre", cut: 0 });
+    expect(mix).toMatchObject({ phase: "preparation", cut: 0 });
   });
 
   it("compte une découpe pure en entier", () => {

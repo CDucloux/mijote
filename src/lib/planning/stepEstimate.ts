@@ -79,22 +79,22 @@ export function stepUsesOven(step: Pick<Step, "text" | "utensilParams">): boolea
   return OVEN_RE.test(normalizeStr(step.text));
 }
 
-/** Nature d'une étape dans la frise : ce qui chauffe, ce qui se taille, le reste. */
-export type StepPhase = "cuisson" | "decoupe" | "autre";
+/** Nature d'une étape dans la frise : ce qui chauffe, ce qui se taille, la préparation (gestes et attentes). */
+export type StepPhase = "cuisson" | "decoupe" | "preparation";
 
 /** Gestes de cuisson sur le feu (le four est reconnu à part). */
 const COOK_RE = /\b(cuire|revenir|dorer|saisir|rissoler|sauter|colorer|suer|fondre|roux|deglacer|reduire|mijoter|bouillir|ebullition|bouillante|blanchir|precuire|pocher|frire|griller|poeler|braiser|caramelis\w*|compoter|chauffer|rechauffer|vapeur)\b/;
 
 /**
- * Nature d'une étape : la cuisson (four ou feu) prime, puis la découpe, sinon
- * « autre » (mélanger, monter, dresser, laisser reposer…).
+ * Nature d'une étape : la cuisson (four ou feu) prime, puis la découpe, sinon la
+ * préparation (mélanger, monter, dresser, laisser reposer…).
  *
  * @param step - L'étape (texte et réglages d'appareils).
- * @returns `"cuisson"`, `"decoupe"` ou `"autre"`.
+ * @returns `"cuisson"`, `"decoupe"` ou `"preparation"`.
  */
 export function stepPhase(step: Pick<Step, "text" | "utensilParams">): StepPhase {
   if (stepUsesOven(step) || COOK_RE.test(normalizeStr(step.text))) return "cuisson";
-  return mentionsCutGesture(step.text) ? "decoupe" : "autre";
+  return mentionsCutGesture(step.text) ? "decoupe" : "preparation";
 }
 
 const PREHEAT_RE = /\bprechauff\w*/;
