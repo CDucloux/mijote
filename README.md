@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.82.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.83.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -111,7 +111,9 @@ toujours avec vous.
   découpe groupée dans un ordre de travail, cuisson en feuille de route ou en
   frise avec four partagé, rangement frigo ou congélateur repas par repas),
   **organiser le service** d'un repas à plusieurs plats (rétro planning : heure
-  de départ de chaque plat, four et mains partagés), **apports du jour**
+  de départ de chaque plat, four et mains partagés ; durées d'étape chiffrées :
+  préchauffage selon la température, calé juste avant l'enfournement, découpe
+  ingrédient par ingrédient selon la forme, gestes courants), **apports du jour**
   (repère par journée pour le sel, les protéines, les fibres et l'énergie, détail au tap) et
   export `.ics`.
 - 🛒 **Listes de courses** : ajout par collage, tri par rayon, gestes de swipe
