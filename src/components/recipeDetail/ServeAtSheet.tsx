@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon } from "../ui/Icon.jsx";
-import { ClockPicker } from "../ui/ClockPicker.jsx";
+import { TimeStepper } from "../ui/TimeStepper.jsx";
 import { fmtTime } from "../../lib/format.js";
 import {
   scheduleService, clockToTime, timeToClock, clockLabel, dayLabel, scheduleDays, serveReminders,
@@ -18,7 +18,6 @@ interface ServeAtSheetProps {
   onEditTimings?: () => void;
 }
 
-const TIME_CHOICES = ["12:00", "12:30", "13:00", "19:00", "19:30", "20:00", "20:30", "21:00"];
 const DEFAULT_CLOCK = "20:00";
 const TICK_MS = 30_000;
 
@@ -120,15 +119,7 @@ export function ServeAtSheet({ recipe, onClose, onEditTimings }: ServeAtSheetPro
           <button key={label} type="button" role="tab" aria-selected={dayOffset === offset} className={`serve-day${dayOffset === offset ? " on" : ""}`} onClick={() => pick(clock, offset)}>{label}</button>
         ))}
       </div>
-      <div className="serve-times">
-        {TIME_CHOICES.map(choice => (
-          <button key={choice} type="button" className={`serve-time${clock === choice ? " on" : ""}`} onClick={() => pick(choice)}>{choice.replace(":", " h ").replace(" h 00", " h")}</button>
-        ))}
-        <label className={`serve-time serve-time--custom${TIME_CHOICES.includes(clock) ? "" : " on"}`}>
-          <span className="serve-time--custom__k">Autre</span>
-          <ClockPicker value={clock} label="Autre heure" onChange={value => pick(value)} />
-        </label>
-      </div>
+      <TimeStepper value={clock} label="Heure de service" onChange={value => pick(value)} />
 
       {verdict}
 

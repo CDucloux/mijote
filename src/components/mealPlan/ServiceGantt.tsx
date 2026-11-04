@@ -126,7 +126,9 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now, references, isC
       )}
       <div className="svc-g__legend">
         {PHASES.map(entry => (
-          <span key={entry.phase}><i style={{ background: techniqueVisual(entry.phase).color }}><Icon name={techniqueVisual(entry.phase).icon} size={11} color="currentColor" /></i>{entry.label}</span>
+          <span key={entry.phase} className="svc-g__key" style={{ "--c": techniqueVisual(entry.phase).color } as CSSProperties}>
+            <i><Icon name={techniqueVisual(entry.phase).icon} size={11} color="currentColor" /></i>{entry.label}
+          </span>
         ))}
         {plan.ovenConflicts.length > 0 && <span><i className="is-moved" />Créneau cédé au four</span>}
         <span className="svc-g__hint">Touche une étape pour l'ouvrir</span>

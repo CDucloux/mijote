@@ -11,7 +11,7 @@ import type { RoleId } from "@/lib/planning/composedMeal.js";
 import { deriveNotifId, ensureTimerNotificationPermission, scheduleTimerNotification } from "@/lib/notifications/localNotifications.js";
 import { SLOT_BY_ID } from "../../constants/mealSlots.js";
 import { ServiceGantt } from "./ServiceGantt.jsx";
-import { ClockPicker } from "../ui/ClockPicker.jsx";
+import { TimeStepper } from "../ui/TimeStepper.jsx";
 import type { StepReferences } from "./ServiceStepModal.jsx";
 import type { Recipe } from "@/lib/types.js";
 import "../../styles/service.css";
@@ -33,11 +33,6 @@ interface ServicePlanViewProps {
   onClose: () => void;
 }
 
-const TIME_CHOICES: Record<string, string[]> = {
-  matin: ["08:00", "08:30", "09:00", "09:30"],
-  midi: ["12:00", "12:30", "13:00", "13:30"],
-  soir: ["19:00", "19:30", "20:00", "20:30", "21:00"],
-};
 const TICK_MS = 30_000;
 
 /**
@@ -95,15 +90,8 @@ export function ServicePlanView({ date, slot, dishes, references, onClose }: Ser
         <div className="svc-col">
           <div className="svc-controls">
             <span className="svc-controls__label">À table à</span>
-            <div className="serve-times">
-              {(TIME_CHOICES[slot] ?? TIME_CHOICES.soir).map(choice => (
-                <button key={choice} type="button" className={`serve-time${clock === choice ? " on" : ""}`} onClick={() => { setClock(choice); reset(); }}>{clockLabel(dateAtClock(date, choice) ?? now)}</button>
-              ))}
-              <label className={`serve-time serve-time--custom${(TIME_CHOICES[slot] ?? TIME_CHOICES.soir).includes(clock) ? "" : " on"}`}>
-                <span className="serve-time--custom__k">Autre</span>
-                <ClockPicker value={clock} label="Autre heure" onChange={value => { setClock(value); reset(); }} />
-              </label>
-            </div>
+            <TimeStepper value={clock} label="Heure de service" onChange={value => { setClock(value); reset(); }}
+              hint={plan.lateBy > 0 ? undefined : `premier geste à ${clockLabel(plan.start)}`} />
           </div>
 
           {plan.lateBy > 0 && (
