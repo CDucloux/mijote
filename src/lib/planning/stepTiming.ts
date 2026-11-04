@@ -63,7 +63,7 @@ export const DEFAULT_STEP_MINUTES = 10;
 const WAIT_ACTIVE_MINUTES = 5;
 
 /** Gestes où l'on attend plus qu'on ne travaille (texte normalisé, sans accents). */
-const WAIT_RE = /\b(enfourn\w*|au four|repos\w*|marin\w*|refrigere\w*|refrigerat\w*|au frais|au frigo|congel\w*|mijot\w*|a couvert|infuse\w*|lever|levee|pousser|pousse|tiedir|refroidir|prendre au)/;
+const WAIT_RE = /\b(enfourn\w*|au four|degorg\w*|repos\w*|marin\w*|refrigere\w*|refrigerat\w*|au frais|au frigo|congel\w*|mijot\w*|a couvert|infuse\w*|lever|levee|pousser|pousse|tiedir|refroidir|prendre au)/;
 
 /**
  * L'étape est-elle surtout de l'attente (four, repos, froid, mijotage) ?
