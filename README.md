@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.81.1-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.82.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -139,7 +139,9 @@ toujours avec vous.
   cuillères à soupe ou à café au choix), avec un **poste « Découpe »** qui
   regroupe tous les gestes de taille (émincer, ciseler, tailler en dés,
   râper…) dans l'ordre des étapes, mis à l'échelle du nombre de convives, photos et astuces d'étape incluses, et
-  **minuteurs à notification native** (l'alerte sonne même écran verrouillé), et
+  **minuteurs à notification native** (l'alerte sonne même écran verrouillé),
+  proposés d'après les durées de la consigne et des appareils réglés (« Four
+  180 °C · 45 min ») ou lancés librement à n'importe quelle étape, et
   sur mobile une **barre de suivi façon lecteur média** dans les notifications
   (pochette de la recette, barre de progression du minuteur, texte de l'étape,
   boutons précédent / pause / suivant) pour garder un œil sur la cuisson en
@@ -162,7 +164,8 @@ toujours avec vous.
 - 📱 **Lanceur Android** : à l'appui long sur l'icône, des **raccourcis qui suivent
   le foyer** (prochain repas planifié, courses restantes, ajout en photo, planning),
   et trois **widgets** d'écran d'accueil : « Au menu » (repas du jour avec photos),
-  « Courses » (liste qui défile, articles à cocher sans ouvrir l'app) et
+  « Courses » (liste qui défile, articles à cocher ou décocher sans ouvrir l'app,
+  achetés barrés en fin de liste) et
   « Import intelligent » (photo, lien copié collé tout seul, texte ou PDF).
 - 🖨️ **Export** : impression PDF propre (texte sélectionnable, étapes non
   coupées, badges vegan / cuisine (drapeau compris) / difficulté, chef sous le
