@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { preheatMinutes, gestureEstimate, mentionsPreheat, DEFAULT_PREHEAT_MINUTES } from "../stepEstimate.js";
+import { preheatMinutes, gestureEstimate, mentionsPreheat, stepPhase, DEFAULT_PREHEAT_MINUTES } from "../stepEstimate.js";
 
 describe("preheatMinutes", () => {
   it("suit la table de préchauffage (milieu des fourchettes)", () => {
@@ -53,5 +53,28 @@ describe("gestureEstimate", () => {
     expect(gestureEstimate("Pétrir, étaler, garnir, mijoter, réduire, porter à ébullition")?.minutes).toBe(45);
     expect(gestureEstimate("")).toBeNull();
     expect(gestureEstimate("Finir le plat")).toBeNull();
+  });
+});
+
+describe("stepPhase", () => {
+  it("classe le four et le feu en cuisson, en priorité", () => {
+    expect(stepPhase({ text: "Enfourner l'aubergine entière" })).toBe("cuisson");
+    expect(stepPhase({ text: "Laisser", utensilParams: { u1: { temperature: 180 } } })).toBe("cuisson");
+    expect(stepPhase({ text: "Ajouter les viandes et les faire revenir à feu vif" })).toBe("cuisson");
+    expect(stepPhase({ text: "Couper l'oignon et le faire suer" })).toBe("cuisson");
+    expect(stepPhase({ text: "Précuire les feuilles de lasagne dans l'eau bouillante" })).toBe("cuisson");
+  });
+
+  it("classe la taille sans cuisson en découpe", () => {
+    expect(stepPhase({ text: "Éplucher les légumes et les couper en brunoise" })).toBe("decoupe");
+    expect(stepPhase({ text: "Râper le concombre" })).toBe("decoupe");
+  });
+
+  it("range le reste en « autre », sans confondre la cuisson évoquée ni l'adjectif", () => {
+    expect(stepPhase({ text: "Mélanger le yaourt et l'ail" })).toBe("autre");
+    expect(stepPhase({ text: "Pendant la cuisson, mélanger la sauce" })).toBe("autre");
+    expect(stepPhase({ text: "Servir avec les aubergines rôties" })).toBe("autre");
+    expect(stepPhase({ text: "Écraser à la fourchette" })).toBe("autre");
+    expect(stepPhase({})).toBe("autre");
   });
 });

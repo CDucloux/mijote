@@ -23,11 +23,10 @@ interface ServiceGanttProps {
   onToggle?: (task: ServiceTask) => void;
 }
 
-
 /**
  * Frise du service : une ligne par plat, alignée sur l'heure de service. Chaque
- * barre montre en plein la part « mains occupées » (en tête d'étape) puis l'attente ;
- * un tap ouvre l'étape comme dans le mode cuisine (et la coche, dans la session
+ * barre dit la nature de l'étape (découpe, cuisson au four ou au feu, autre), la
+ * découpe en tête quand l'étape enchaîne taille et cuisson ; un tap ouvre l'étape comme dans le mode cuisine (et la coche, dans la session
  * batch : une étape faite s'efface). Les créneaux qu'un plat a dû
  * céder au four sont hachurés à leur place d'origine.
  */
@@ -75,15 +74,15 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now, references, isC
               })}
               {dish.tasks.filter(task => task.end > windowStart).map(task => {
                 const summary = stepSummary(recipeOf(dish.id)?.steps?.[task.stepIndex]?.text);
-                const label = task.oven && task.temperature != null ? `${task.temperature} °C` : summary;
-                const hands = task.minutes > 0 ? Math.min(100, task.active / task.minutes * 100) : 0;
-                const style = { left: pos(task.start), width: width(task.start, task.end), "--hands": `${hands}%` } as CSSProperties;
+                const label = task.oven && task.temperature != null ? `${task.temperature} °C · ${summary}` : summary;
+                const cut = task.minutes > 0 ? Math.min(100, task.cut / task.minutes * 100) : 0;
+                const style = { left: pos(task.start), width: width(task.start, task.end), "--cut": `${cut}%` } as CSSProperties;
                 return (
-                  <button key={task.stepIndex} type="button" className={`svc-g__bar${task.oven ? " is-oven" : ""}${isChecked?.(task) ? " is-done" : ""}`} style={style}
+                  <button key={task.stepIndex} type="button" className={`svc-g__bar is-${task.phase}${isChecked?.(task) ? " is-done" : ""}`} style={style}
                     title={`${clockLabel(task.start)} à ${clockLabel(task.end)} · ${summary}`} aria-label={`Étape ${task.stepIndex + 1} de ${dish.name} : ${summary}`}
                     onClick={() => setOpen({ dishId: dish.id, stepIndex: task.stepIndex })}>
-                    {/* Deux calques du même libellé, découpés à la frontière mains / attente :
-                        blanc sur le plein, teinté sur l'attente, lisible des deux côtés. */}
+                    {/* Deux calques du même libellé, découpés à la frontière découpe / reste :
+                        chaque part garde un texte lisible sur sa couleur. */}
                     <span className="svc-g__lbl"><span>{label}</span></span>
                     <span className="svc-g__lbl is-on" aria-hidden="true"><span>{label}</span></span>
                   </button>
@@ -96,9 +95,9 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now, references, isC
         ))}
       </div>
       <div className="svc-g__legend">
-        <span><i className="is-hands" />Mains occupées</span>
-        <span><i className="is-wait" />Attente, tu es libre</span>
-        <span><i className="is-oven" />Au four</span>
+        <span><i className="is-decoupe" />Découpe</span>
+        <span><i className="is-cuisson" />Cuisson, four ou feu</span>
+        <span><i className="is-autre" />Autre</span>
         {plan.ovenConflicts.length > 0 && <span><i className="is-moved" />Créneau cédé au four</span>}
         <span className="svc-g__hint">Touche une étape pour l'ouvrir</span>
       </div>

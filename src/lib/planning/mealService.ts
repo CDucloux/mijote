@@ -14,11 +14,11 @@
  *
  * @module planning/mealService
  */
-import type { Recipe, Step } from "@/lib/types.js";
+import type { Recipe } from "@/lib/types.js";
 import { isPreheatOnly, recipeTiming, type RecipeTiming, type TimingSource } from "@/lib/planning/stepTiming.js";
-import { stepOvenTemperature } from "@/lib/planning/stepEstimate.js";
+import { stepOvenTemperature, stepPhase, stepUsesOven, type StepPhase } from "@/lib/planning/stepEstimate.js";
+import { recipeCutMinutes } from "@/lib/planning/cutTiming.js";
 import { roleOrder, type RoleId } from "@/lib/planning/composedMeal.js";
-import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
 const MINUTE = 60_000;
 const STEP_MS = 5 * MINUTE;
@@ -72,6 +72,10 @@ export interface ServiceTask {
   oven: boolean;
   /** Température du four (°C), `null` si inconnue. */
   temperature: number | null;
+  /** Nature de l'étape (cuisson, découpe, autre) pour la frise. */
+  phase: StepPhase;
+  /** Minutes de découpe en tête d'étape (toute l'étape pour une découpe pure). */
+  cut: number;
 }
 
 /** Un plat placé. */
@@ -118,20 +122,6 @@ export interface ServicePlan {
   lateBy: number;
 }
 
-const OVEN_RE = /\b(enfourn\w*|au four|four|prechauff\w*|gratiner|rotir)\b/;
-
-/**
- * L'étape occupe-t-elle le four ? Une température lue en vaut indice, comme les
- * gestes du four nommés dans le texte (enfourner, préchauffer, gratiner…).
- *
- * @param step - L'étape.
- * @returns `true` si l'étape se passe au four.
- */
-export function stepUsesOven(step: Pick<Step, "text" | "utensilParams">): boolean {
-  if (stepOvenTemperature(step) != null) return true;
-  return OVEN_RE.test(normalizeStr(step.text));
-}
-
 interface Interval { start: number; end: number }
 interface OvenInterval extends Interval { temperature: number | null; dishId: string }
 
@@ -173,6 +163,7 @@ export function planMealService(dishes: ServiceDishInput[], options: ServiceOpti
   for (const { dish, timing, serveAt } of order) {
     const steps = dish.recipe.steps ?? [];
     const tasks: ServiceTask[] = [];
+    const cuts = recipeCutMinutes(dish.recipe);
     const consumers = (dish.feeds ?? []).map(id => placed.get(id)?.start).filter((start): start is number => start != null);
     let latestEnd = Math.min(serveAt, ...consumers);
     for (let index = timing.steps.length - 1; index >= 0; index--) {
@@ -196,7 +187,9 @@ export function planMealService(dishes: ServiceDishInput[], options: ServiceOpti
         handBlocked ||= busy;
         end -= STEP_MS;
       }
-      const task: ServiceTask = { dishId: dish.id, stepIndex: index, start: end - minutes * MINUTE, end, minutes, active, source, oven: usesOven, temperature };
+      const phase = stepPhase(step);
+      const cut = phase === "decoupe" ? minutes : Math.min(cuts[index] ?? 0, minutes);
+      const task: ServiceTask = { dishId: dish.id, stepIndex: index, start: end - minutes * MINUTE, end, minutes, active, source, oven: usesOven, temperature, phase, cut };
       const shift = Math.round((target - end) / MINUTE);
       if (shift > 0 && blockedBy) ovenConflicts.push({ dishId: dish.id, stepIndex: index, withDishId: blockedBy.dishId, shift, temperature, otherTemperature: blockedBy.temperature });
       else if (shift > 0 && handBlocked) handShifts++;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { planMealService, serviceReminders, stepUsesOven, dateAtClock, ovenConflictMessage, holdAdvice, shiftPlan, serviceTaskKey, type ServiceDishInput } from "../mealService.js";
-import { stepOvenTemperature } from "../stepEstimate.js";
+import { planMealService, serviceReminders, dateAtClock, ovenConflictMessage, holdAdvice, shiftPlan, serviceTaskKey, type ServiceDishInput } from "../mealService.js";
+import { stepOvenTemperature, stepUsesOven } from "../stepEstimate.js";
 import type { Step } from "@/lib/types.js";
 
 const at = (hours: number, minutes = 0): number => new Date(2026, 9, 24, hours, minutes).getTime();
@@ -181,5 +181,27 @@ describe("préchauffage", () => {
     expect(preheat.start).toBeGreaterThan(cut.start);
     expect(plan.dishes[0].start).toBe(cut.start);
     expect(plan.start).toBe(at(19, 10));
+  });
+});
+
+describe("nature des étapes", () => {
+  it("porte la nature de chaque étape et la part de découpe en tête", () => {
+    const meze = dish("meze", "plat", [
+      { text: "Couper l'aubergine et le faire dorer" },
+      { text: "Enfourner à 200 °C", duration: 20, durationEstimated: false },
+      { text: "Mélanger avec le yaourt" },
+    ]);
+    meze.recipe.ingredients = [{ id: "a", name: "Aubergine", amount: 1, cut: { forme: "des" } }];
+    meze.recipe.steps![0].ingredients = ["a"];
+    const [cutAndCook, bake, mix] = planMealService([meze], { serveAt: at(20), now: at(12) }).dishes[0].tasks;
+    expect(cutAndCook).toMatchObject({ phase: "cuisson", cut: 3 });
+    expect(cutAndCook.minutes).toBeGreaterThan(cutAndCook.cut);
+    expect(bake).toMatchObject({ phase: "cuisson", cut: 0, oven: true });
+    expect(mix).toMatchObject({ phase: "autre", cut: 0 });
+  });
+
+  it("compte une découpe pure en entier", () => {
+    const salad = dish("salade", "entree", [{ text: "Émincer le concombre", duration: 4, durationEstimated: false }]);
+    expect(planMealService([salad], { serveAt: at(20), now: at(12) }).dishes[0].tasks[0]).toMatchObject({ phase: "decoupe", cut: 4 });
   });
 });
