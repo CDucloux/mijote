@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.83.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.84.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -109,7 +109,8 @@ toujours avec vous.
   priorité aux ingrédients déjà en stock hors basiques de placard),
   **session batch** (une session calée sur un jour et une heure, en trois temps :
   découpe groupée dans un ordre de travail, cuisson en feuille de route ou en
-  frise avec four partagé, rangement frigo ou congélateur repas par repas),
+  frise avec four partagé, chaque étape de la frise s'ouvrant au tap comme dans
+  le mode cuisine, rangement frigo ou congélateur repas par repas),
   **organiser le service** d'un repas à plusieurs plats (rétro planning : heure
   de départ de chaque plat, four et mains partagés ; durées d'étape chiffrées :
   préchauffage selon la température, calé juste avant l'enfournement, découpe
