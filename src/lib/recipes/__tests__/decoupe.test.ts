@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  parseCut, buildPostesDecoupe, findDecoupeStepIndex, posteLabel, sortPostesByStep,
+  parseCut, buildPostesDecoupe, findDecoupeStepIndex, posteLabel, sortPostesByStep, formeInText, mentionsCutGesture,
 } from "@/lib/recipes/decoupe.js";
 import type { IngredientLine, Step } from "@/lib/types.js";
 
@@ -144,5 +144,28 @@ describe("sortPostesByStep", () => {
     expect(sorted.map(p => p.name)).toEqual(postes.map(p => p.name));
     expect(sorted).not.toBe(postes);
     expect(sortPostesByStep([], new Map())).toEqual([]);
+  });
+});
+
+describe("formeInText", () => {
+  it("lit la forme la plus spécifique d'une consigne", () => {
+    expect(formeInText("Éplucher les légumes et les couper en brunoise")).toBe("brunoise");
+    expect(formeInText("Tailler en très petits dés")).toBe("brunoise");
+    expect(formeInText("Couper en rondelles")).toBe("rondelle");
+    expect(formeInText("Ciseler l'échalote")).toBe("cisele");
+  });
+
+  it("ne prend pas l'article « des » pour des dés", () => {
+    expect(formeInText("Couper des tomates")).toBeNull();
+    expect(formeInText("")).toBeNull();
+    expect(formeInText(undefined)).toBeNull();
+  });
+});
+
+describe("mentionsCutGesture", () => {
+  it("repère un geste de découpe", () => {
+    expect(mentionsCutGesture("Émincer l'oignon")).toBe(true);
+    expect(mentionsCutGesture("Mélanger")).toBe(false);
+    expect(mentionsCutGesture(null)).toBe(false);
   });
 });

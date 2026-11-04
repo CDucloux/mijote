@@ -5,14 +5,19 @@
  * durées, d'où une source et un niveau de fiabilité sur chacune, pour dire au
  * cuisinier quand vérifier.
  *
- * Ordre de confiance : durée saisie ou lue dans la source, durée estimée à
- * l'import, durée repérée dans le texte de l'étape, puis repli sur les temps
- * déclarés de la recette répartis entre les étapes restantes.
+ * Ordre de confiance : durée saisie ou lue dans la source ; puis, faute de mieux,
+ * un MODÈLE quand l'étape s'y prête (découpe chiffrée poste par poste, préchauffage
+ * réglé sur la température), prioritaire sur une estimation d'import qui ne voit
+ * ni les quantités ni la règle du four ; puis la durée estimée à l'import, celle
+ * repérée dans le texte, les gestes nommés, et enfin le repli sur les temps
+ * déclarés répartis entre les étapes restantes.
  *
  * @module planning/stepTiming
  */
 import type { Recipe, Step } from "@/lib/types.js";
 import { parseDurations } from "@/lib/planning/stepTimers.js";
+import { recipeCutMinutes } from "@/lib/planning/cutTiming.js";
+import { gestureEstimate, mentionsPreheat, preheatMinutes, stepOvenTemperature } from "@/lib/planning/stepEstimate.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
 /** Origine d'une durée d'étape, de la plus sûre à la plus approximative. */
@@ -73,26 +78,62 @@ export function isWaitingStep(text: string | null | undefined): boolean {
 const validMinutes = (value: unknown): number | null =>
   typeof value === "number" && Number.isFinite(value) && value > 0 ? Math.round(value) : null;
 
+/** Durée lue dans le texte : la plus longue mentionnée, l'attente laissant les mains libres. */
+function textTiming(text: string | null | undefined): { minutes: number; active: number } | null {
+  // Plusieurs durées dans une même étape (« cuire 6 min puis reposer 1 h 30 ») :
+  // la plus longue, jamais la somme (« vérifier au bout de 25 min » sur 30 min).
+  const found = parseDurations(text);
+  if (!found.length) return null;
+  const longest = Math.round(Math.max(...found.map(d => d.minutes))) || 1;
+  return { minutes: longest, active: isWaitingStep(text) ? Math.min(WAIT_ACTIVE_MINUTES, longest) : longest };
+}
+
 /**
- * Durée d'une étape seule : portée par l'étape, sinon lue dans son texte.
+ * L'étape ne fait que préchauffer le four (rien d'autre à faire ni à attendre) :
+ * le planning peut alors la caler juste avant l'enfournement plutôt qu'en tête.
  *
- * @param step - L'étape (durées éventuelles et texte).
+ * Une découpe nomme toujours son geste : elle suffit à l'exclure.
+ *
+ * @param step - L'étape.
+ * @returns `true` pour un préchauffage seul.
+ */
+export function isPreheatOnly(step: Pick<Step, "text">): boolean {
+  return mentionsPreheat(step.text) && !textTiming(step.text) && !gestureEstimate(step.text);
+}
+
+/**
+ * Durée d'une étape seule.
+ *
+ * @param step - L'étape (durées éventuelles, texte, réglages d'appareils).
+ * @param cutMinutes - Minutes de découpe de l'étape (cf. `recipeCutMinutes`), s'il y en a.
  * @returns La durée retenue, ou `null` si rien d'exploitable (la recette entière
  *   permet alors un repli, cf. {@link recipeTiming}).
  */
-export function stepTiming(step: Pick<Step, "duration" | "activeTime" | "durationEstimated" | "text">): StepTimingInfo | null {
+export function stepTiming(step: Pick<Step, "duration" | "activeTime" | "durationEstimated" | "text" | "utensilParams">, cutMinutes?: number | null): StepTimingInfo | null {
   const minutes = validMinutes(step.duration);
-  if (minutes != null) {
-    const active = typeof step.activeTime === "number" && step.activeTime >= 0 ? Math.min(Math.round(step.activeTime), minutes) : minutes;
-    return { minutes, active, source: step.durationEstimated ? "estimated" : "recipe" };
+  if (minutes != null && !step.durationEstimated) return { minutes, active: activeOf(step, minutes), source: "recipe" };
+
+  // Modèle : découpe et préchauffage se mènent de front, le reste de l'étape
+  // (durée lue, sinon gestes hors découpe) s'enchaîne après la découpe.
+  const cut = cutMinutes && cutMinutes > 0 ? cutMinutes : 0;
+  const preheat = mentionsPreheat(step.text) ? preheatMinutes(stepOvenTemperature(step)) : 0;
+  if (cut || preheat) {
+    const rest = textTiming(step.text) ?? gestureEstimate(step.text, { skipCut: cut > 0 }) ?? { minutes: 0, active: 0 };
+    const work = cut + rest.minutes;
+    // « Préchauffer puis enfourner » : la cuisson attend le four chaud.
+    const total = /\benfourn/.test(normalizeStr(step.text)) ? preheat + work : Math.max(work, preheat);
+    // Allumer le four ne prend pas les mains : le préchauffage est de l'attente.
+    return { minutes: total, active: Math.min(total, cut + rest.active), source: "estimated" };
   }
-  // Plusieurs durées dans une même étape (« cuire 6 min puis reposer 1 h 30 ») :
-  // la plus longue, jamais la somme (« vérifier au bout de 25 min » sur 30 min).
-  const found = parseDurations(step.text);
-  if (!found.length) return null;
-  const longest = Math.max(...found.map(d => d.minutes));
-  return { minutes: longest, active: isWaitingStep(step.text) ? Math.min(WAIT_ACTIVE_MINUTES, longest) : longest, source: "text" };
+  if (minutes != null) return { minutes, active: activeOf(step, minutes), source: "estimated" };
+  const read = textTiming(step.text);
+  if (read) return { ...read, source: "text" };
+  const gestures = gestureEstimate(step.text);
+  return gestures ? { ...gestures, source: "estimated" } : null;
 }
+
+const activeOf = (step: Pick<Step, "activeTime">, minutes: number): number =>
+  typeof step.activeTime === "number" && step.activeTime >= 0 ? Math.min(Math.round(step.activeTime), minutes) : minutes;
 
 /**
  * Durées de chaque étape d'une recette et fiabilité d'ensemble. Les étapes sans
@@ -100,12 +141,13 @@ export function stepTiming(step: Pick<Step, "duration" | "activeTime" | "duratio
  * moins 5 min chacune, comptées entièrement « mains occupées » : c'est l'hypothèse
  * prudente pour un planning (on ne promet pas des mains libres qu'on n'a pas).
  *
- * @param recipe - La recette (étapes et temps déclarés).
+ * @param recipe - La recette (étapes, temps déclarés, ingrédients pour chiffrer la découpe).
  * @returns Les durées par étape, les totaux, la fiabilité et les étapes à relire.
  */
-export function recipeTiming(recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime">): RecipeTiming {
+export function recipeTiming(recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime" | "ingredients">): RecipeTiming {
   const steps = recipe.steps ?? [];
-  const known = steps.map(stepTiming);
+  const cuts = recipeCutMinutes(recipe);
+  const known = steps.map((step, index) => stepTiming(step, cuts[index]));
   const declared = (validMinutes(recipe.prepTime) ?? 0) + (validMinutes(recipe.cookTime) ?? 0);
   const knownTotal = known.reduce((sum, timing) => sum + (timing?.minutes ?? 0), 0);
   const missing = known.filter(timing => !timing).length;

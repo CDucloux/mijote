@@ -48,7 +48,7 @@ const ceilTo5 = (ms: number): number => Math.ceil(ms / (5 * MINUTE)) * 5 * MINUT
  * @param now - Instant présent (ms), pour savoir si l'on est en retard.
  * @returns Le déroulé, avec l'heure de départ et le statut.
  */
-export function scheduleService(recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime">, serveAt: number, now: number): ServeSchedule {
+export function scheduleService(recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime" | "ingredients">, serveAt: number, now: number): ServeSchedule {
   const timing = recipeTiming(recipe);
   const start = serveAt - timing.total * MINUTE;
   let cursor = start;

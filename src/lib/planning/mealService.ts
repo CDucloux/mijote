@@ -15,7 +15,8 @@
  * @module planning/mealService
  */
 import type { Recipe, Step } from "@/lib/types.js";
-import { recipeTiming, type RecipeTiming, type TimingSource } from "@/lib/planning/stepTiming.js";
+import { isPreheatOnly, recipeTiming, type RecipeTiming, type TimingSource } from "@/lib/planning/stepTiming.js";
+import { stepOvenTemperature } from "@/lib/planning/stepEstimate.js";
 import { roleOrder, type RoleId } from "@/lib/planning/composedMeal.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
@@ -35,7 +36,7 @@ export interface ServiceDishInput {
   id: string;
   name: string;
   role: RoleId;
-  recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime">;
+  recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime" | "ingredients">;
   /** Décalage propre au plat (minutes après l'entrée), prioritaire sur celui du rôle. */
   offset?: number;
   /**
@@ -120,32 +121,6 @@ export interface ServicePlan {
 const OVEN_RE = /\b(enfourn\w*|au four|four|prechauff\w*|gratiner|rotir)\b/;
 
 /**
- * Température du four lue dans les réglages d'appareil de l'étape, sinon dans son
- * texte (« 180 °C », « th. 6 »).
- *
- * @param step - L'étape.
- * @returns La température en °C (50 à 300), ou `null`.
- */
-export function stepOvenTemperature(step: Pick<Step, "text" | "utensilParams">): number | null {
-  for (const params of Object.values(step.utensilParams ?? {})) {
-    const value = params?.temperature;
-    if (typeof value === "number" && value >= 50 && value <= 300) return Math.round(value);
-  }
-  const text = step.text ?? "";
-  const celsius = /(\d{2,3})\s*°\s*c?/i.exec(text);
-  if (celsius) {
-    const value = Number(celsius[1]);
-    if (value >= 50 && value <= 300) return value;
-  }
-  const thermostat = /\bth(?:ermostat)?\.?\s*(\d{1,2})\b/i.exec(text);
-  if (thermostat) {
-    const value = Number(thermostat[1]) * 30;
-    if (value >= 50 && value <= 300) return value;
-  }
-  return null;
-}
-
-/**
  * L'étape occupe-t-elle le four ? Une température lue en vaut indice, comme les
  * gestes du four nommés dans le texte (enfourner, préchauffer, gratiner…).
  *
@@ -205,29 +180,33 @@ export function planMealService(dishes: ServiceDishInput[], options: ServiceOpti
       const step = steps[index] ?? {};
       const usesOven = stepUsesOven(step);
       const temperature = usesOven ? stepOvenTemperature(step) : null;
-      let end = latestEnd;
+      // Un préchauffage seul se cale sur l'enfournement qui le suit, en parallèle
+      // des étapes intermédiaires, au lieu d'allonger la chaîne de tout son temps.
+      const bake = usesOven && isPreheatOnly(step) ? tasks.find(task => task.oven) : undefined;
+      const target = bake ? bake.start : latestEnd;
+      let end = target;
       let blockedBy: OvenInterval | null = null;
       let handBlocked = false;
       for (;;) {
         const start = end - minutes * MINUTE;
         const clash = usesOven ? ovenClash(oven, { start, end }, temperature) : null;
         const busy = handsFull(hands, { start, end: start + active * MINUTE }, cooks);
-        if ((!clash && !busy) || latestEnd - end >= MAX_SHIFT_MS) break;
+        if ((!clash && !busy) || target - end >= MAX_SHIFT_MS) break;
         blockedBy ??= clash;
         handBlocked ||= busy;
         end -= STEP_MS;
       }
       const task: ServiceTask = { dishId: dish.id, stepIndex: index, start: end - minutes * MINUTE, end, minutes, active, source, oven: usesOven, temperature };
-      const shift = Math.round((latestEnd - end) / MINUTE);
+      const shift = Math.round((target - end) / MINUTE);
       if (shift > 0 && blockedBy) ovenConflicts.push({ dishId: dish.id, stepIndex: index, withDishId: blockedBy.dishId, shift, temperature, otherTemperature: blockedBy.temperature });
       else if (shift > 0 && handBlocked) handShifts++;
       if (active > 0) hands.push({ start: task.start, end: task.start + active * MINUTE });
       if (usesOven) oven.push({ start: task.start, end: task.end, temperature, dishId: dish.id });
       tasks.unshift(task);
-      latestEnd = task.start;
+      if (!bake) latestEnd = task.start;
     }
-    const start = tasks[0]?.start ?? serveAt;
-    const end = tasks[tasks.length - 1]?.end ?? serveAt;
+    const start = tasks.length ? Math.min(...tasks.map(task => task.start)) : serveAt;
+    const end = tasks.length ? Math.max(...tasks.map(task => task.end)) : serveAt;
     placed.set(dish.id, { id: dish.id, name: dish.name, role: dish.role, serveAt, start, end, hold: Math.round((serveAt - end) / MINUTE), tasks, timing });
   }
 

@@ -7,6 +7,7 @@
 
 import { fillStepGroupGaps } from "./stepGroups.js";
 import { linkCutBowl } from "./cutBowl.js";
+import { withPreheatTiming } from "./preheat.js";
 
 // ── Types (les payloads LLM sont volontairement lâches : JSON externe non fiable)
 
@@ -572,7 +573,7 @@ export function assignIdsAndLink(d: Partial<Intermediate>, knownUtensils: readon
       }
       if (Object.keys(params).length) rs.utensilParams = params;
     }
-    return rs;
+    return withPreheatTiming(rs);
   });
 
   // Une base (composant réutilisable) tire sa catégorie de la liste des familles de

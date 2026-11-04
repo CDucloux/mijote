@@ -15,6 +15,7 @@ import { useIsDesktop } from "../hooks/useIsDesktop.js";
 import { useElasticScroll } from "../hooks/useElasticScroll.js";
 import { useEditorSwiper } from "../hooks/useEditorSwiper.js";
 import { withEditedTiming } from "@/lib/planning/stepTiming.js";
+import { recipeCutMinutes } from "@/lib/planning/cutTiming.js";
 import type { Cut, IngredientDbItem, Recipe, RecipeYield, UtensilDbItem } from "@/lib/types.js";
 import type { EditorForm, EditorFormUpdate, EditorIngredient, EditorYield } from "../components/recipeEditor/editorForm.js";
 
@@ -166,6 +167,8 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
   // d'un scan complet de la base PAR étape ET PAR ligne (findIngredientMatch réindexe
   // toute la base à chaque appel). Les cartes d'étape consomment `ing.image` tel quel.
   const stepIngSig = form.ingredients.map(i => `${i.id}~${i.recipeId || ""}~${i.dbId || ""}~${i.name || ""}~${i.amount}~${i.unit || ""}`).join("|");
+  // Découpe chiffrée par étape : l'éditeur montre la durée que retient le planning.
+  const cutMinutes = useMemo(() => recipeCutMinutes({ ingredients: form.ingredients, steps: form.steps }), [form.ingredients, form.steps]);
   const stepIngredients = useMemo(
     () => form.ingredients.map(ing => ({
       ...ing,
@@ -336,7 +339,7 @@ export function RecipeEditor({ recipe, onSave, onCancel, ingredientDB, utensilDB
                   {run.items.map((step, j) => {
                     const gi = run.start + j;
                     return (
-                      <DraggableStep key={step.id} step={step} index={gi} total={form.steps.length}
+                      <DraggableStep key={step.id} step={step} index={gi} total={form.steps.length} cutMinutes={cutMinutes[gi]}
                         ingredients={stepIngredients} utensils={form.utensils} recipes={recipes} ingredientDB={ingredientDB} utensilDB={utensilDB}
                         draggable={!isDesktop}
                         isDropTarget={stepDropIdx === gi} onTargetChange={setStepDropIdx}

@@ -1,5 +1,19 @@
 # Changelog – Cardamome
 
+## v4.83.0 – Cardamome · Durées chiffrées
+
+### Rétro planning et session batch
+- **Préchauffage réglé sur la température** : 180 °C 10 min, 200 °C 13, 220 °C 15, 250 °C 20 (interpolé entre les paliers), mains libres. Un préchauffage seul se cale juste avant l'enfournement, pendant la préparation, au lieu de bloquer le plat 45 min en tête de session.
+- **Découpe chiffrée** : chaque ingrédient compte selon sa quantité en pièces, son épluchage et la forme demandée (une brunoise pèse 2,5 fois un émincé, un tronçon 0,4), plus la mise en route de la planche. La brunoise oignon, carotte, céleri passe de 30 min forfaitaires à 10 min.
+- **Gestes courants** : une étape sans durée est estimée d'après ce qu'elle nomme (faire revenir, roux, déglacer, porter à ébullition…) plutôt que par une part égale des temps déclarés.
+- **Éditeur** : une durée estimée affiche la valeur retenue par le planning, et « confirmer » fige celle-ci.
+
+### Import
+- Le modèle reçoit la table de préchauffage, des temps de découpe par pièce et les gestes courants, et ne pose plus de valeur ronde par défaut. Une étape qui ne fait que préchauffer est corrigée côté serveur.
+
+### Mode cuisine
+- Survols épurés : « Autre durée » se fonce en neutre, les boutons Pause et Stop des minuteurs n'ont plus de liseré.
+
 ## v4.82.0 – Cardamome · Minuteurs à la demande
 
 ### Mode cuisine
