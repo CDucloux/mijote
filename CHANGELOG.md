@@ -1,5 +1,14 @@
 # Changelog – Cardamome
 
+## v4.84.0 – Cardamome · Frise lisible
+
+### Session batch et organiser le service
+- **Étape au tap** : toucher une étape de la frise l'ouvre comme dans le mode cuisine (consigne et gestes techniques, astuce, ingrédients et ustensiles liés, photo, créneau), avec précédente / suivante dans le plat ; la feuille se referme d'un glissement.
+- **Barres honnêtes** : chaque étape montre en plein la part « mains occupées » puis l'attente (orange pâle au four), au lieu d'une couleur unique. « Dégorger » compte comme de l'attente.
+- **Plus de libellés coupés** : texte terminé par « … », masqué sur les barres trop courtes ; fin liseré entre deux étapes qui se touchent.
+- **Repères** : grille au quart d'heure sur les sessions courtes, trait « maintenant » dans « Organiser le service ».
+- **Moins d'informations** : les lignes « Ressource » (four, mains) disparaissent de la frise.
+
 ## v4.83.0 – Cardamome · Durées chiffrées
 
 ### Rétro planning et session batch

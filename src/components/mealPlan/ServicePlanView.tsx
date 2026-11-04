@@ -174,7 +174,7 @@ export function ServicePlanView({ date, slot, dishes, onClose }: ServicePlanView
         </div>
 
         <div className={view === "frise" ? "svc-wide" : "svc-col"}>
-          {view === "frise" ? <ServiceGantt plan={plan} recipeOf={recipeOf} /> : <ServiceRoadmap plan={plan} now={now} recipeOf={recipeOf} />}
+          {view === "frise" ? <ServiceGantt plan={plan} recipeOf={recipeOf} now={now} /> : <ServiceRoadmap plan={plan} now={now} recipeOf={recipeOf} />}
         </div>
       </div>
 

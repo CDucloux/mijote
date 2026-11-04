@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { Icon } from "../ui/Icon.jsx";
 import { fmtTime } from "../../lib/format.js";
 import { stepSummary, clockLabel } from "@/lib/planning/serveSchedule.js";
-import { serviceRoadmap, serviceTaskKey, type ServicePlan, type RoadmapTask } from "@/lib/planning/mealService.js";
+import { serviceRoadmap, serviceTaskKey, type ServicePlan, type ServiceTask, type RoadmapTask } from "@/lib/planning/mealService.js";
 import { roleLabel } from "@/lib/planning/composedMeal.js";
 import type { Recipe } from "@/lib/types.js";
 
@@ -20,7 +20,7 @@ interface ServiceRoadmapProps {
 }
 
 /** Pastilles d'une tâche : mains, attente, four, durée estimée. */
-function TaskTags({ task }: { task: RoadmapTask }) {
+export function TaskTags({ task }: { task: ServiceTask }) {
   const wait = task.minutes - task.active;
   return (
     <span className="serve-tags">

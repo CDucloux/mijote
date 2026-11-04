@@ -66,7 +66,7 @@ html.light, .light {
   .btn-danger, .icon-btn-danger, .mp-remove-btn,
   /* foncé */
   .btn-primary, .btn-danger-solid, .action-dock-primary, .fab-toggle, .lp-cta, .nr-link__paste, .hero-back,
-  .img-overlay-btn, .recipe-hero-desktop button:not(.menu-row)
+  .img-overlay-btn, .recipe-hero-desktop button:not(.menu-row), .svc-g__bar
 ) {
   --veil-on: 0;
   position: relative;
@@ -129,7 +129,7 @@ html.light, .light {
 
 :where(
   .hover-deepen, .btn-primary, .btn-danger-solid, .action-dock-primary, .fab-toggle, .lp-cta, .nr-link__paste,
-  .hero-back, .img-overlay-btn, .recipe-hero-desktop button:not(.menu-row)
+  .hero-back, .img-overlay-btn, .recipe-hero-desktop button:not(.menu-row), .svc-g__bar
 ) {
   --veil-color: #000;
   --veil-max: var(--hover-veil-deepen);

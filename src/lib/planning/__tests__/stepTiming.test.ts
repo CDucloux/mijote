@@ -8,6 +8,7 @@ describe("isWaitingStep", () => {
     expect(isWaitingStep("Laisser reposer sous papier alu")).toBe(true);
     expect(isWaitingStep("Réserver 2 h au réfrigérateur")).toBe(true);
     expect(isWaitingStep("Faire mijoter à couvert")).toBe(true);
+    expect(isWaitingStep("Saler le concombre et laisser dégorger 20 min")).toBe(true);
   });
 
   it("ne confond pas un geste actif avec de l'attente", () => {
