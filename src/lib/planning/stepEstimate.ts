@@ -66,6 +66,8 @@ export function stepOvenTemperature(step: Pick<Step, "text" | "utensilParams">):
 }
 
 const OVEN_RE = /\b(enfourn\w*|au four|four|prechauff\w*|gratiner|rotir)\b/;
+/** « À la sortie du four » : l'étape suit la cuisson, elle n'occupe plus le four. */
+const OVEN_EXIT_RE = /\b(a la sortie du four|sortir du four|sorti\w* du four|hors du four|des la sortie du four)\b/g;
 
 /**
  * L'étape occupe-t-elle le four ? Une température lue en vaut indice, comme les
@@ -76,7 +78,7 @@ const OVEN_RE = /\b(enfourn\w*|au four|four|prechauff\w*|gratiner|rotir)\b/;
  */
 export function stepUsesOven(step: Pick<Step, "text" | "utensilParams">): boolean {
   if (stepOvenTemperature(step) != null) return true;
-  return OVEN_RE.test(normalizeStr(step.text));
+  return OVEN_RE.test(normalizeStr(step.text).replace(OVEN_EXIT_RE, ""));
 }
 
 /** Nature d'une étape dans la frise : ce qui chauffe, ce qui se taille, la préparation (gestes et attentes). */

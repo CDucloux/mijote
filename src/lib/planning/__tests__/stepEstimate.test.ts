@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { preheatMinutes, gestureEstimate, mentionsPreheat, stepPhase, DEFAULT_PREHEAT_MINUTES } from "../stepEstimate.js";
+import { preheatMinutes, gestureEstimate, mentionsPreheat, stepPhase, stepUsesOven, DEFAULT_PREHEAT_MINUTES } from "../stepEstimate.js";
 
 describe("preheatMinutes", () => {
   it("suit la table de préchauffage (milieu des fourchettes)", () => {
@@ -70,11 +70,18 @@ describe("stepPhase", () => {
     expect(stepPhase({ text: "Râper le concombre" })).toBe("decoupe");
   });
 
-  it("range le reste en « autre », sans confondre la cuisson évoquée ni l'adjectif", () => {
+  it("range le reste en « préparation », sans confondre la cuisson évoquée ni l'adjectif", () => {
     expect(stepPhase({ text: "Mélanger le yaourt et l'ail" })).toBe("preparation");
     expect(stepPhase({ text: "Pendant la cuisson, mélanger la sauce" })).toBe("preparation");
     expect(stepPhase({ text: "Servir avec les aubergines rôties" })).toBe("preparation");
     expect(stepPhase({ text: "Écraser à la fourchette" })).toBe("preparation");
     expect(stepPhase({})).toBe("preparation");
+  });
+
+  it("ne compte pas la sortie du four comme un passage au four", () => {
+    expect(stepUsesOven({ text: "À la sortie du four, ouvrir l'aubergine et récupérer la chair" })).toBe(false);
+    expect(stepPhase({ text: "Sortir du four et laisser tiédir" })).toBe("preparation");
+    expect(stepPhase({ text: "À la sortie du four, émincer la chair" })).toBe("decoupe");
+    expect(stepUsesOven({ text: "Enfourner, puis à la sortie du four parsemer d'herbes" })).toBe(true);
   });
 });
