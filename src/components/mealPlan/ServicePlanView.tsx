@@ -100,6 +100,7 @@ export function ServicePlanView({ date, slot, dishes, references, onClose }: Ser
                 <button key={choice} type="button" className={`serve-time${clock === choice ? " on" : ""}`} onClick={() => { setClock(choice); reset(); }}>{clockLabel(dateAtClock(date, choice) ?? now)}</button>
               ))}
               <label className={`serve-time serve-time--custom${(TIME_CHOICES[slot] ?? TIME_CHOICES.soir).includes(clock) ? "" : " on"}`}>
+                <span className="serve-time--custom__k">Autre</span>
                 <ClockPicker value={clock} label="Autre heure" onChange={value => { setClock(value); reset(); }} />
               </label>
             </div>

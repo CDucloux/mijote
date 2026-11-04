@@ -11,6 +11,7 @@
 .svc-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 16px calc(24px + env(safe-area-inset-bottom)); }
 .svc-col { max-width: 640px; }
 .svc-wide { margin-top: 4px; }
+.svc-wide + .svc-col { margin-top: 14px; }
 .svc-controls { display: flex; flex-direction: column; gap: 10px; }
 .svc-controls__label { font-size: 12px; font-weight: 700; color: var(--text2); }
 .svc-controls .serve-times { margin: 0 -16px; padding: 0 16px 2px; }
@@ -113,7 +114,7 @@
 
 @media (min-width: 900px) {
   .svc-top, .svc-body, .svc-foot { padding-left: 32px; padding-right: 32px; }
-  .svc-controls .serve-times,   .svc-foot { display: flex; justify-content: flex-end; }
+  .svc-foot { display: flex; justify-content: flex-end; }
   .svc-foot .serve-cta { width: auto; padding: 0 24px; }
 }
 

@@ -5811,6 +5811,14 @@ html.light .sheet-sticky-head::after {
 .serve-time { flex-shrink: 0; display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border: none; border-radius: 999px; background: var(--surface2); color: var(--text2); font: 600 13.5px var(--ff-body); font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; }
 .serve-time.on { background: var(--accent); color: #fff; }
 .serve-time--custom { padding: 0 12px; }
+/* Pilule « Autre » au repos : les listes, invisibles, couvrent la pilule (moitié
+   heures, moitié minutes) pour ne pas répéter l'heure déjà allumée à côté. */
+.serve-time--custom { position: relative; }
+.serve-time--custom__k { display: none; }
+.serve-time--custom:not(.on) .serve-time--custom__k { display: inline; }
+.serve-time--custom:not(.on) .clock-pick { position: absolute; inset: 0; opacity: 0; }
+.serve-time--custom:not(.on) .clock-pick select { flex: 1; height: 100%; }
+.serve-time--custom:not(.on) .clock-pick > span { display: none; }
 /* Heure à la française (ClockPicker) : deux listes sans chrome natif, qui héritent
    de la pilule hôte. */
 .clock-pick { display: inline-flex; align-items: center; gap: 2px; font-variant-numeric: tabular-nums; }
