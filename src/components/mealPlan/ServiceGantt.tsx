@@ -1,5 +1,5 @@
 import { stepSummary, clockLabel } from "@/lib/planning/serveSchedule.js";
-import { ovenSpans, type ServicePlan, type ServiceTask } from "@/lib/planning/mealService.js";
+import type { ServicePlan, ServiceTask } from "@/lib/planning/mealService.js";
 import { roleLabel } from "@/lib/planning/composedMeal.js";
 import type { Recipe } from "@/lib/types.js";
 
@@ -16,9 +16,8 @@ interface ServiceGanttProps {
 const taskKind = (task: ServiceTask): string => task.oven ? "is-oven" : task.active * 2 >= task.minutes ? "is-hands" : "is-wait";
 
 /**
- * Frise du service : une ligne par plat, alignée sur l'heure de service, puis deux
- * lignes de ressources (le four et ses températures, les mains). Les créneaux
- * qu'un plat a dû céder au four sont hachurés à leur place d'origine.
+ * Frise du service : une ligne par plat, alignée sur l'heure de service. Les
+ * créneaux qu'un plat a dû céder au four sont hachurés à leur place d'origine.
  */
 export function ServiceGantt({ plan, recipeOf, dishCaption }: ServiceGanttProps) {
   const windowStart = Math.max(plan.start, plan.end - MAX_WINDOW_MS);
@@ -62,26 +61,6 @@ export function ServiceGantt({ plan, recipeOf, dishCaption }: ServiceGanttProps)
             </span>
           </div>
         ))}
-        <div className="svc-g__row svc-g__row--res">
-          <span className="svc-g__label"><span className="svc-g__role">Ressource</span><span className="svc-g__name">Four</span></span>
-          <span className="svc-g__track">
-            {grid}
-            {ovenSpans(plan).filter(oven => oven.end > windowStart).map(oven => (
-              <span key={oven.start} className="svc-g__bar is-oven" style={{ left: pos(oven.start), width: width(oven.start, oven.end) }}>
-                {oven.temperature != null ? `${oven.temperature} °C` : "Four"}
-              </span>
-            ))}
-          </span>
-        </div>
-        <div className="svc-g__row svc-g__row--res">
-          <span className="svc-g__label"><span className="svc-g__role">Ressource</span><span className="svc-g__name">Tes mains</span></span>
-          <span className="svc-g__track">
-            {grid}
-            {plan.dishes.flatMap(dish => dish.tasks.filter(task => task.active > 0 && task.end > windowStart).map(task => (
-              <span key={`${dish.id}${task.stepIndex}`} className="svc-g__bar is-hands" style={{ left: pos(task.start), width: width(task.start, task.start + task.active * 60_000) }} />
-            )))}
-          </span>
-        </div>
       </div>
       <div className="svc-g__legend">
         <span><i className="is-hands" />Mains occupées</span>
