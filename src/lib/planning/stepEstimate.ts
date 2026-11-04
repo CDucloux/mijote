@@ -8,6 +8,7 @@
  */
 import type { Step } from "@/lib/types.js";
 import { normalizeStr } from "@/lib/food/parseIngredient.js";
+import { mentionsCutGesture } from "@/lib/recipes/decoupe.js";
 
 /**
  * Temps de préchauffage typique (°C → minutes), milieu des fourchettes d'un four
@@ -62,6 +63,38 @@ export function stepOvenTemperature(step: Pick<Step, "text" | "utensilParams">):
     if (value >= 50 && value <= 300) return value;
   }
   return null;
+}
+
+const OVEN_RE = /\b(enfourn\w*|au four|four|prechauff\w*|gratiner|rotir)\b/;
+
+/**
+ * L'étape occupe-t-elle le four ? Une température lue en vaut indice, comme les
+ * gestes du four nommés dans le texte (enfourner, préchauffer, gratiner…).
+ *
+ * @param step - L'étape.
+ * @returns `true` si l'étape se passe au four.
+ */
+export function stepUsesOven(step: Pick<Step, "text" | "utensilParams">): boolean {
+  if (stepOvenTemperature(step) != null) return true;
+  return OVEN_RE.test(normalizeStr(step.text));
+}
+
+/** Nature d'une étape dans la frise : ce qui chauffe, ce qui se taille, le reste. */
+export type StepPhase = "cuisson" | "decoupe" | "autre";
+
+/** Gestes de cuisson sur le feu (le four est reconnu à part). */
+const COOK_RE = /\b(cuire|revenir|dorer|saisir|rissoler|sauter|colorer|suer|fondre|roux|deglacer|reduire|mijoter|bouillir|ebullition|bouillante|blanchir|precuire|pocher|frire|griller|poeler|braiser|caramelis\w*|compoter|chauffer|rechauffer|vapeur)\b/;
+
+/**
+ * Nature d'une étape : la cuisson (four ou feu) prime, puis la découpe, sinon
+ * « autre » (mélanger, monter, dresser, laisser reposer…).
+ *
+ * @param step - L'étape (texte et réglages d'appareils).
+ * @returns `"cuisson"`, `"decoupe"` ou `"autre"`.
+ */
+export function stepPhase(step: Pick<Step, "text" | "utensilParams">): StepPhase {
+  if (stepUsesOven(step) || COOK_RE.test(normalizeStr(step.text))) return "cuisson";
+  return mentionsCutGesture(step.text) ? "decoupe" : "autre";
 }
 
 const PREHEAT_RE = /\bprechauff\w*/;

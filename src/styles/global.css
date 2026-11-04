@@ -5810,10 +5810,13 @@ html.light .sheet-sticky-head::after {
 .serve-times::-webkit-scrollbar { display: none; }
 .serve-time { flex-shrink: 0; display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border: none; border-radius: 999px; background: var(--surface2); color: var(--text2); font: 600 13.5px var(--ff-body); font-variant-numeric: tabular-nums; cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease; }
 .serve-time.on { background: var(--accent); color: #fff; }
-.serve-time--custom { padding: 0 6px 0 10px; }
-.serve-time--custom input { border: none; background: transparent; color: inherit; font: inherit; height: 100%; cursor: pointer; }
-.serve-time--custom input::-webkit-calendar-picker-indicator { filter: none; opacity: 0.6; cursor: pointer; }
-.serve-time.on input::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.9; }
+.serve-time--custom { padding: 0 12px; }
+/* Heure à la française (ClockPicker) : deux listes sans chrome natif, qui héritent
+   de la pilule hôte. */
+.clock-pick { display: inline-flex; align-items: center; gap: 2px; font-variant-numeric: tabular-nums; }
+.clock-pick select { appearance: none; -webkit-appearance: none; border: none; background: transparent; color: inherit; font: inherit; padding: 0 1px; cursor: pointer; text-align: center; }
+.clock-pick select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.clock-pick option { background: var(--surface); color: var(--text); }
 @media (hover: hover) and (pointer: fine) {
   .serve-time:not(.on):hover, .serve-day:not(.on):hover { color: var(--text); }
 }

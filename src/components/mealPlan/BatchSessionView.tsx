@@ -9,6 +9,7 @@ import { deriveNotifId, ensureTimerNotificationPermission, scheduleTimerNotifica
 import { BatchPrepTab } from "./BatchPrepTab.jsx";
 import { BatchStoreTab } from "./BatchStoreTab.jsx";
 import { ServiceGantt } from "./ServiceGantt.jsx";
+import { ClockPicker } from "../ui/ClockPicker.jsx";
 import type { StepReferences } from "./ServiceStepModal.jsx";
 import type { Recipe } from "@/lib/types.js";
 import "../../styles/service.css";
@@ -125,7 +126,7 @@ export function BatchSessionView(props: BatchSessionViewProps) {
                 </select>
               </label>
               <label className="bt-pill"><Icon name="clock" size={13} color="currentColor" />
-                <input type="time" value={settings.clock} aria-label="Heure de début" onChange={e => e.target.value && onSettings({ clock: e.target.value })} />
+                <ClockPicker value={settings.clock} label="Heure de début" onChange={clock => onSettings({ clock })} />
               </label>
             </div>
             <span className="bt-hero__k">Pour {mealOccasions} repas · {dishCount} plat{dishCount > 1 ? "s" : ""}{bases ? ` + ${bases} base${bases > 1 ? "s" : ""}` : ""}</span>
@@ -144,13 +145,6 @@ export function BatchSessionView(props: BatchSessionViewProps) {
         {tab === "prep" && <div className="svc-col"><BatchPrepTab stages={prepStages} decoupeByName={decoupeByName} isChecked={isChecked} onToggle={onToggle} /></div>}
         {tab === "cook" && (
           <>
-            <div className="svc-col">
-              <div className="bt-cookbar">
-                <div className="serve-days" role="group" aria-label="Cuisiniers">
-                  {[1, 2].map(n => <button key={n} type="button" className={`serve-day${settings.cooks === n ? " on" : ""}`} onClick={() => onSettings({ cooks: n })}>{n === 1 ? "Seul" : "À deux"}</button>)}
-                </div>
-              </div>
-            </div>
             <div className="svc-wide">
               <ServiceGantt plan={plan} recipeOf={recipeOf} dishCaption={dish => `${baseIds.has(dish.id) ? "Base" : "Plat"} · prêt à ${clockLabel(dish.end)}`}
                 references={references} isChecked={task => isChecked(serviceTaskKey(task))} onToggle={toggleTask} />

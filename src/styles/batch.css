@@ -5,7 +5,9 @@
 .bt-hero { display: flex; flex-direction: column; margin-top: 4px; padding: 15px 16px 14px; border-radius: 20px; background: rgba(var(--accent-rgb), 0.11); }
 .bt-when { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 11px; }
 .bt-pill { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 6px 0 11px; border-radius: 999px; background: var(--float-surface); box-shadow: var(--float-shadow); color: var(--text2); cursor: pointer; }
-.bt-pill select, .bt-pill input { border: none; background: transparent; color: var(--text); font: 600 12.5px var(--ff-body); cursor: pointer; padding: 0 4px 0 0; }
+.bt-pill select { border: none; background: transparent; color: var(--text); font: 600 12.5px var(--ff-body); cursor: pointer; padding: 0 4px 0 0; }
+.bt-pill .clock-pick { color: var(--text); font: 600 12.5px var(--ff-body); padding-right: 6px; }
+.bt-pill .clock-pick select { padding: 0 1px; }
 .bt-hero__k { font-size: 12px; font-weight: 700; color: var(--accent); }
 .bt-hero__big { font-family: var(--ff-display); font-weight: 600; font-size: 30px; line-height: 1.1; letter-spacing: -0.01em; margin: 2px 0 4px; font-variant-numeric: tabular-nums; }
 .bt-hero__sub { font-size: 12.5px; color: var(--text2); line-height: 1.45; }
@@ -46,8 +48,6 @@
 .bt-saved__hand { flex-shrink: 0; font-family: var(--ff-hand); font-size: 24px; line-height: 1; color: var(--accent); transform: rotate(-4deg); }
 
 /* Cuisiner */
-.bt-cookbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-top: 10px; }
-.bt-cookbar .serve-days { margin: 0; }
 
 /* Ranger */
 .bt-boxes { display: flex; gap: 8px; margin-top: 14px; }

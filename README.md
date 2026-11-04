@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.85.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.86.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -111,8 +111,9 @@ toujours avec vous.
   découpe groupée dans un ordre de travail, cuisson en frise avec four partagé,
   chaque étape s'ouvrant au tap dans l'habit du mode cuisine et se cochant une
   fois faite, rangement frigo ou congélateur repas par repas),
-  **organiser le service** d'un repas à plusieurs plats (rétro planning : heure
-  de départ de chaque plat, four et mains partagés ; durées d'étape chiffrées :
+  **organiser le service** d'un repas à plusieurs plats (rétro planning : tout le
+  repas prêt à l'heure choisie, heure de départ de chaque plat, four et mains
+  partagés, frise colorée par nature d'étape, découpe, cuisson ou autre ; durées d'étape chiffrées :
   préchauffage selon la température, calé juste avant l'enfournement, découpe
   ingrédient par ingrédient selon la forme, gestes courants), **apports du jour**
   (repère par journée pour le sel, les protéines, les fibres et l'énergie, détail au tap) et

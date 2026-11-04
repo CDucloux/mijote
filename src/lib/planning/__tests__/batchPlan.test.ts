@@ -125,11 +125,11 @@ describe("recipeHasFish", () => {
 
 describe("batchSettingsFor / withBatchSettings", () => {
   it("complète des réglages absents ou malformés", () => {
-    expect(batchSettingsFor(undefined, "2026-10-26")).toEqual({ day: "2026-10-25", clock: "14:00", cooks: 1, checked: [], done: false });
+    expect(batchSettingsFor(undefined, "2026-10-26")).toEqual({ day: "2026-10-25", clock: "14:00", checked: [], done: false });
     expect(batchSettingsFor({ day: "demain", clock: 14, cooks: 3, checked: ["p:a", 4], done: "oui" }, "2026-10-26"))
-      .toEqual({ day: "2026-10-25", clock: "14:00", cooks: 1, checked: ["p:a"], done: false });
+      .toEqual({ day: "2026-10-25", clock: "14:00", checked: ["p:a"], done: false });
     expect(batchSettingsFor({ day: "2026-10-24", clock: "10:30", cooks: 2, checked: [], done: true }, "2026-10-26"))
-      .toMatchObject({ day: "2026-10-24", clock: "10:30", cooks: 2, done: true });
+      .toEqual({ day: "2026-10-24", clock: "10:30", checked: [], done: true });
   });
 
   it("ne garde que les huit semaines les plus récentes", () => {

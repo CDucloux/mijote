@@ -1,8 +1,8 @@
 /**
- * Rétro planning d'un repas à plusieurs plats (« Organiser le service ») : chaque
- * plat a son heure de service (décalée selon son rôle), et ses étapes sont placées
+ * Rétro planning d'un repas à plusieurs plats (« Organiser le service ») : tout le
+ * repas est prêt à l'heure de service, et les étapes de chaque plat sont placées
  * à rebours en partageant deux ressources :
- * - **les mains** : `cooks` tâches « mains occupées » au plus en même temps ;
+ * - **les mains** : une seule tâche « mains occupées » à la fois ;
  * - **le four** : une seule température à la fois (deux plats au même degré
  *   cohabitent, une étape au four sans température connue s'adapte à tout).
  *
@@ -14,19 +14,16 @@
  *
  * @module planning/mealService
  */
-import type { Recipe, Step } from "@/lib/types.js";
+import type { Recipe } from "@/lib/types.js";
 import { isPreheatOnly, recipeTiming, type RecipeTiming, type TimingSource } from "@/lib/planning/stepTiming.js";
-import { stepOvenTemperature } from "@/lib/planning/stepEstimate.js";
+import { stepOvenTemperature, stepPhase, stepUsesOven, type StepPhase } from "@/lib/planning/stepEstimate.js";
+import { recipeCutMinutes } from "@/lib/planning/cutTiming.js";
 import { roleOrder, type RoleId } from "@/lib/planning/composedMeal.js";
-import { normalizeStr } from "@/lib/food/parseIngredient.js";
 
 const MINUTE = 60_000;
 const STEP_MS = 5 * MINUTE;
 /** Recul maximal d'une étape avant d'abandonner la recherche (deux jours). */
 const MAX_SHIFT_MS = 48 * 60 * MINUTE;
-
-/** Décalage par défaut (minutes) de l'heure de service de chaque rôle après l'entrée. */
-export const DEFAULT_ROLE_OFFSETS: Record<RoleId, number> = { entree: 0, plat: 30, accompagnement: 30, dessert: 75 };
 
 /** Attente au-delà de laquelle un plat prêt trop tôt doit être gardé au chaud. */
 export const HOLD_WARNING_MINUTES = 15;
@@ -37,8 +34,6 @@ export interface ServiceDishInput {
   name: string;
   role: RoleId;
   recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime" | "ingredients">;
-  /** Décalage propre au plat (minutes après l'entrée), prioritaire sur celui du rôle. */
-  offset?: number;
   /**
    * Plats qui consomment celui-ci (une base : fond, pâte, sauce). Il est alors placé
    * après eux dans le calcul, pour finir avant le premier d'entre eux.
@@ -48,12 +43,8 @@ export interface ServiceDishInput {
 
 /** Options du calcul. */
 export interface ServiceOptions {
-  /** Heure de service de l'entrée (le premier rôle), en ms. */
+  /** Heure de service du repas (tous les plats prêts), en ms. */
   serveAt: number;
-  /** Décalages par rôle, en minutes (défaut {@link DEFAULT_ROLE_OFFSETS}). */
-  offsets?: Partial<Record<RoleId, number>>;
-  /** Nombre de cuisiniers (paires de mains), 1 par défaut. */
-  cooks?: number;
   /** Instant présent (ms), pour le retard. */
   now: number;
 }
@@ -72,6 +63,10 @@ export interface ServiceTask {
   oven: boolean;
   /** Température du four (°C), `null` si inconnue. */
   temperature: number | null;
+  /** Nature de l'étape (cuisson, découpe, autre) pour la frise. */
+  phase: StepPhase;
+  /** Minutes de découpe en tête d'étape (toute l'étape pour une découpe pure). */
+  cut: number;
 }
 
 /** Un plat placé. */
@@ -118,20 +113,6 @@ export interface ServicePlan {
   lateBy: number;
 }
 
-const OVEN_RE = /\b(enfourn\w*|au four|four|prechauff\w*|gratiner|rotir)\b/;
-
-/**
- * L'étape occupe-t-elle le four ? Une température lue en vaut indice, comme les
- * gestes du four nommés dans le texte (enfourner, préchauffer, gratiner…).
- *
- * @param step - L'étape.
- * @returns `true` si l'étape se passe au four.
- */
-export function stepUsesOven(step: Pick<Step, "text" | "utensilParams">): boolean {
-  if (stepOvenTemperature(step) != null) return true;
-  return OVEN_RE.test(normalizeStr(step.text));
-}
-
 interface Interval { start: number; end: number }
 interface OvenInterval extends Interval { temperature: number | null; dishId: string }
 
@@ -142,28 +123,26 @@ function ovenClash(oven: OvenInterval[], slot: Interval, temperature: number | n
   return oven.find(use => overlaps(use, slot) && use.temperature != null && temperature != null && use.temperature !== temperature) ?? null;
 }
 
-/** Les mains sont-elles déjà toutes prises sur l'intervalle ? */
-function handsFull(hands: Interval[], slot: Interval, cooks: number): boolean {
+/** Les mains sont-elles déjà prises sur l'intervalle ? */
+function handsFull(hands: Interval[], slot: Interval): boolean {
   if (slot.end <= slot.start) return false;
-  return hands.filter(task => overlaps(task, slot)).length >= cooks;
+  return hands.some(task => overlaps(task, slot));
 }
 
 /**
  * Organise le service d'un repas à plusieurs plats.
  *
  * @param dishes - Les plats du repas.
- * @param options - Heure de service, décalages par rôle, nombre de cuisiniers, instant présent.
+ * @param options - Heure de service, instant présent.
  * @returns Le plan : plats placés, conflits de four résolus, retard éventuel.
  */
 export function planMealService(dishes: ServiceDishInput[], options: ServiceOptions): ServicePlan {
-  const offsets = { ...DEFAULT_ROLE_OFFSETS, ...options.offsets };
-  const cooks = Math.max(1, Math.round(options.cooks ?? 1));
   const hands: Interval[] = [];
   const oven: OvenInterval[] = [];
   const ovenConflicts: OvenConflict[] = [];
   let handShifts = 0;
 
-  const prepared = dishes.map(dish => ({ dish, timing: recipeTiming(dish.recipe), serveAt: options.serveAt + (dish.offset ?? offsets[dish.role] ?? 0) * MINUTE }));
+  const prepared = dishes.map(dish => ({ dish, timing: recipeTiming(dish.recipe), serveAt: options.serveAt }));
   // Le plus long d'abord : il a le moins de marge, il choisit ses créneaux. Les
   // bases passent après les plats qui les consomment, pour finir avant eux.
   const feeder = (input: ServiceDishInput): number => input.feeds?.length ? 1 : 0;
@@ -173,6 +152,7 @@ export function planMealService(dishes: ServiceDishInput[], options: ServiceOpti
   for (const { dish, timing, serveAt } of order) {
     const steps = dish.recipe.steps ?? [];
     const tasks: ServiceTask[] = [];
+    const cuts = recipeCutMinutes(dish.recipe);
     const consumers = (dish.feeds ?? []).map(id => placed.get(id)?.start).filter((start): start is number => start != null);
     let latestEnd = Math.min(serveAt, ...consumers);
     for (let index = timing.steps.length - 1; index >= 0; index--) {
@@ -190,13 +170,15 @@ export function planMealService(dishes: ServiceDishInput[], options: ServiceOpti
       for (;;) {
         const start = end - minutes * MINUTE;
         const clash = usesOven ? ovenClash(oven, { start, end }, temperature) : null;
-        const busy = handsFull(hands, { start, end: start + active * MINUTE }, cooks);
+        const busy = handsFull(hands, { start, end: start + active * MINUTE });
         if ((!clash && !busy) || target - end >= MAX_SHIFT_MS) break;
         blockedBy ??= clash;
         handBlocked ||= busy;
         end -= STEP_MS;
       }
-      const task: ServiceTask = { dishId: dish.id, stepIndex: index, start: end - minutes * MINUTE, end, minutes, active, source, oven: usesOven, temperature };
+      const phase = stepPhase(step);
+      const cut = phase === "decoupe" ? minutes : Math.min(cuts[index] ?? 0, minutes);
+      const task: ServiceTask = { dishId: dish.id, stepIndex: index, start: end - minutes * MINUTE, end, minutes, active, source, oven: usesOven, temperature, phase, cut };
       const shift = Math.round((target - end) / MINUTE);
       if (shift > 0 && blockedBy) ovenConflicts.push({ dishId: dish.id, stepIndex: index, withDishId: blockedBy.dishId, shift, temperature, otherTemperature: blockedBy.temperature });
       else if (shift > 0 && handBlocked) handShifts++;
