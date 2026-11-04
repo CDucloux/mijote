@@ -115,7 +115,7 @@ export function useMealBatchSession({ mealPlan, weekDays, recipes, recipesById, 
   // Le retard n'a pas de sens pour une session qu'on lance quand on veut : `now`
   // vaut le début, le plan ne dépend que des réglages.
   const startAt = dateAtClock(settings.day, settings.clock) ?? 0;
-  const cookingPlan = useMemo(() => planBatchCooking(cookInputs, { startAt, cooks: settings.cooks, now: startAt }), [cookInputs, startAt, settings.cooks]);
+  const cookingPlan = useMemo(() => planBatchCooking(cookInputs, { startAt, now: startAt }), [cookInputs, startAt]);
 
   // Rangement : chaque repas de la semaine servi par un plat de la session.
   const meals = useMemo<BatchMeal[]>(() => {

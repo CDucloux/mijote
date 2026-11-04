@@ -2,7 +2,7 @@
  * Rétro planning d'un repas à plusieurs plats (« Organiser le service ») : tout le
  * repas est prêt à l'heure de service, et les étapes de chaque plat sont placées
  * à rebours en partageant deux ressources :
- * - **les mains** : `cooks` tâches « mains occupées » au plus en même temps ;
+ * - **les mains** : une seule tâche « mains occupées » à la fois ;
  * - **le four** : une seule température à la fois (deux plats au même degré
  *   cohabitent, une étape au four sans température connue s'adapte à tout).
  *
@@ -45,8 +45,6 @@ export interface ServiceDishInput {
 export interface ServiceOptions {
   /** Heure de service du repas (tous les plats prêts), en ms. */
   serveAt: number;
-  /** Nombre de cuisiniers (paires de mains), 1 par défaut. */
-  cooks?: number;
   /** Instant présent (ms), pour le retard. */
   now: number;
 }
@@ -125,21 +123,20 @@ function ovenClash(oven: OvenInterval[], slot: Interval, temperature: number | n
   return oven.find(use => overlaps(use, slot) && use.temperature != null && temperature != null && use.temperature !== temperature) ?? null;
 }
 
-/** Les mains sont-elles déjà toutes prises sur l'intervalle ? */
-function handsFull(hands: Interval[], slot: Interval, cooks: number): boolean {
+/** Les mains sont-elles déjà prises sur l'intervalle ? */
+function handsFull(hands: Interval[], slot: Interval): boolean {
   if (slot.end <= slot.start) return false;
-  return hands.filter(task => overlaps(task, slot)).length >= cooks;
+  return hands.some(task => overlaps(task, slot));
 }
 
 /**
  * Organise le service d'un repas à plusieurs plats.
  *
  * @param dishes - Les plats du repas.
- * @param options - Heure de service, nombre de cuisiniers, instant présent.
+ * @param options - Heure de service, instant présent.
  * @returns Le plan : plats placés, conflits de four résolus, retard éventuel.
  */
 export function planMealService(dishes: ServiceDishInput[], options: ServiceOptions): ServicePlan {
-  const cooks = Math.max(1, Math.round(options.cooks ?? 1));
   const hands: Interval[] = [];
   const oven: OvenInterval[] = [];
   const ovenConflicts: OvenConflict[] = [];
@@ -173,7 +170,7 @@ export function planMealService(dishes: ServiceDishInput[], options: ServiceOpti
       for (;;) {
         const start = end - minutes * MINUTE;
         const clash = usesOven ? ovenClash(oven, { start, end }, temperature) : null;
-        const busy = handsFull(hands, { start, end: start + active * MINUTE }, cooks);
+        const busy = handsFull(hands, { start, end: start + active * MINUTE });
         if ((!clash && !busy) || target - end >= MAX_SHIFT_MS) break;
         blockedBy ??= clash;
         handBlocked ||= busy;

@@ -48,8 +48,6 @@
 .bt-saved__hand { flex-shrink: 0; font-family: var(--ff-hand); font-size: 24px; line-height: 1; color: var(--accent); transform: rotate(-4deg); }
 
 /* Cuisiner */
-.bt-cookbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-top: 10px; }
-.bt-cookbar .serve-days { margin: 0; }
 
 /* Ranger */
 .bt-boxes { display: flex; gap: 8px; margin-top: 14px; }

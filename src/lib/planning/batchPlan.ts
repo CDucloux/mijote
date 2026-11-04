@@ -105,13 +105,13 @@ export interface BatchCookInput {
  * à l'heure dite.
  *
  * @param dishes - Les plats et les bases de la session.
- * @param options - Heure de début (ms), nombre de cuisiniers, instant présent.
+ * @param options - Heure de début (ms), instant présent.
  * @returns Le plan, qui commence à `startAt`.
  */
-export function planBatchCooking(dishes: BatchCookInput[], options: { startAt: number; cooks?: number; now: number }): ServicePlan {
+export function planBatchCooking(dishes: BatchCookInput[], options: { startAt: number; now: number }): ServicePlan {
   const plan = planMealService(
     dishes.map(dish => ({ id: dish.id, name: dish.name, role: "plat", recipe: dish.recipe, feeds: dish.feeds })),
-    { serveAt: options.startAt, cooks: options.cooks, now: options.now },
+    { serveAt: options.startAt, now: options.now },
   );
   return { ...shiftPlan(plan, options.startAt - plan.start), lateBy: 0 };
 }
@@ -292,7 +292,6 @@ export interface BatchSettings {
   day: string;
   /** Heure de début, `HH:MM`. */
   clock: string;
-  cooks: number;
   /** Clés cochées (découpe, étapes, boîtes rangées). */
   checked: string[];
   done: boolean;
@@ -316,7 +315,6 @@ export function batchSettingsFor(stored: unknown, weekStart: string): BatchSetti
   return {
     day: typeof raw.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.day) ? raw.day : defaultBatchDay(weekStart),
     clock: typeof raw.clock === "string" && /^\d{1,2}:\d{2}$/.test(raw.clock) ? raw.clock : DEFAULT_BATCH_CLOCK,
-    cooks: raw.cooks === 2 ? 2 : 1,
     checked: Array.isArray(raw.checked) ? raw.checked.filter((key): key is string => typeof key === "string") : [],
     done: raw.done === true,
   };

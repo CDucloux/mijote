@@ -67,16 +67,14 @@ describe("planMealService", () => {
     expect(shared.ovenConflicts).toEqual([]);
   });
 
-  it("n'attribue jamais deux tâches en main en même temps, sauf à deux en cuisine", () => {
+  it("n'attribue jamais deux tâches en main en même temps", () => {
     const salade = dish("salade", "entree", [step(20, 20, "Tailler les crudités")]);
     const tartare = dish("tartare", "plat", [step(20, 20, "Hacher la viande")]);
     const alone = planMealService([salade, tartare], { serveAt: at(20), now: at(12) });
     const [first, second] = alone.dishes.map(d => d.tasks[0]);
     expect(first.end <= second.start || second.end <= first.start).toBe(true);
     expect(alone.handShifts).toBe(1);
-    const together = planMealService([salade, tartare], { serveAt: at(20), cooks: 2, now: at(12) });
-    expect(together.handShifts).toBe(0);
-    expect(together.start).toBe(at(19, 40));
+    expect(alone.start).toBe(at(19, 20));
   });
 
   it("chiffre le retard au pas de 5 min", () => {

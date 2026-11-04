@@ -145,13 +145,6 @@ export function BatchSessionView(props: BatchSessionViewProps) {
         {tab === "prep" && <div className="svc-col"><BatchPrepTab stages={prepStages} decoupeByName={decoupeByName} isChecked={isChecked} onToggle={onToggle} /></div>}
         {tab === "cook" && (
           <>
-            <div className="svc-col">
-              <div className="bt-cookbar">
-                <div className="serve-days" role="group" aria-label="Cuisiniers">
-                  {[1, 2].map(n => <button key={n} type="button" className={`serve-day${settings.cooks === n ? " on" : ""}`} onClick={() => onSettings({ cooks: n })}>{n === 1 ? "Seul" : "À deux"}</button>)}
-                </div>
-              </div>
-            </div>
             <div className="svc-wide">
               <ServiceGantt plan={plan} recipeOf={recipeOf} dishCaption={dish => `${baseIds.has(dish.id) ? "Base" : "Plat"} · prêt à ${clockLabel(dish.end)}`}
                 references={references} isChecked={task => isChecked(serviceTaskKey(task))} onToggle={toggleTask} />
