@@ -71,10 +71,10 @@ describe("stepPhase", () => {
   });
 
   it("range le reste en « autre », sans confondre la cuisson évoquée ni l'adjectif", () => {
-    expect(stepPhase({ text: "Mélanger le yaourt et l'ail" })).toBe("autre");
-    expect(stepPhase({ text: "Pendant la cuisson, mélanger la sauce" })).toBe("autre");
-    expect(stepPhase({ text: "Servir avec les aubergines rôties" })).toBe("autre");
-    expect(stepPhase({ text: "Écraser à la fourchette" })).toBe("autre");
-    expect(stepPhase({})).toBe("autre");
+    expect(stepPhase({ text: "Mélanger le yaourt et l'ail" })).toBe("preparation");
+    expect(stepPhase({ text: "Pendant la cuisson, mélanger la sauce" })).toBe("preparation");
+    expect(stepPhase({ text: "Servir avec les aubergines rôties" })).toBe("preparation");
+    expect(stepPhase({ text: "Écraser à la fourchette" })).toBe("preparation");
+    expect(stepPhase({})).toBe("preparation");
   });
 });

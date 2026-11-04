@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.88.0 – Cardamome · Frise lisible d'un coup d'œil
+
+### Organiser le service et session batch
+- **Icône sur chaque étape** : couteau pour la découpe, flamme pour la cuisson, cuillère pour la préparation, en tête de barre ; une barre trop courte garde l'icône seule. La légende reprend les mêmes icônes, la nature d'une étape ne repose plus sur la couleur seule.
+- **« Préparation » remplace « Autre »** : mélanger, monter, dresser, laisser reposer.
+- **Sélecteur d'heure aligné à gauche** sur grand écran, et la pilule « Autre » ne répète plus l'heure déjà choisie (aussi dans « Servir à »).
+- **Note des durées estimées** détachée de la frise.
+
 ## v4.87.0 – Cardamome · Rétro planning en pleine page
 
 ### Organiser le service

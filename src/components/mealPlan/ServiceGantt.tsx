@@ -3,6 +3,8 @@ import { stepSummary, clockLabel } from "@/lib/planning/serveSchedule.js";
 import { roleLabel } from "@/lib/planning/composedMeal.js";
 import { ServiceStepModal, type StepReferences } from "./ServiceStepModal.jsx";
 import { useIsDesktop } from "../../hooks/useIsDesktop.js";
+import { Icon, type IconName } from "../ui/Icon.jsx";
+import type { StepPhase } from "@/lib/planning/stepEstimate.js";
 import type { ServiceDish, ServicePlan, ServiceTask } from "@/lib/planning/mealService.js";
 import type { Recipe } from "@/lib/types.js";
 
@@ -23,6 +25,14 @@ interface ServiceGanttProps {
   isChecked?: (task: ServiceTask) => boolean;
   onToggle?: (task: ServiceTask) => void;
 }
+
+/** Icône et libellé de chaque nature d'étape, dans la légende comme sur les barres. */
+const PHASES: readonly { phase: StepPhase; icon: IconName; label: string }[] = [
+  { phase: "decoupe", icon: "knife", label: "Découpe" },
+  { phase: "cuisson", icon: "fire", label: "Cuisson, four ou feu" },
+  { phase: "preparation", icon: "spoon", label: "Préparation" },
+];
+const PHASE_ICON = Object.fromEntries(PHASES.map(entry => [entry.phase, entry.icon])) as Record<StepPhase, IconName>;
 
 /** Hauteur d'une minute dans la frise pivotée (téléphone) : 2 h tiennent sur ~290 px. */
 const PX_PER_MINUTE = 2.4;
@@ -92,8 +102,8 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now, references, isC
             onClick={() => setOpen({ dishId: dish.id, stepIndex: task.stepIndex })}>
             {/* Deux calques du même libellé, découpés à la frontière découpe / reste :
                 chaque part garde un texte lisible sur sa couleur. */}
-            <span className="svc-g__lbl"><span>{text}</span></span>
-            <span className="svc-g__lbl is-on" aria-hidden="true"><span>{text}</span></span>
+            <span className="svc-g__lbl"><Icon name={PHASE_ICON[task.phase]} size={12} color="currentColor" /><span>{text}</span></span>
+            <span className="svc-g__lbl is-on" aria-hidden="true"><Icon name={PHASE_ICON[task.phase]} size={12} color="currentColor" /><span>{text}</span></span>
           </button>
         );
       })}
@@ -116,9 +126,9 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now, references, isC
         </div>
       )}
       <div className="svc-g__legend">
-        <span><i className="is-decoupe" />Découpe</span>
-        <span><i className="is-cuisson" />Cuisson, four ou feu</span>
-        <span><i className="is-autre" />Autre</span>
+        {PHASES.map(entry => (
+          <span key={entry.phase}><i className={`is-${entry.phase}`}><Icon name={entry.icon} size={11} color="currentColor" /></i>{entry.label}</span>
+        ))}
         {plan.ovenConflicts.length > 0 && <span><i className="is-moved" />Créneau cédé au four</span>}
         <span className="svc-g__hint">Touche une étape pour l'ouvrir</span>
       </div>
