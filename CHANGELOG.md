@@ -1,5 +1,15 @@
 # Changelog – Cardamome
 
+## v4.82.0 – Cardamome · Minuteurs à la demande
+
+### Mode cuisine
+- **Minuteur libre** : chaque étape propose « Ajouter un minuteur » (ou « Autre durée » quand des durées sont déjà repérées). Une feuille s'ouvre avec la durée en grand, des réglages tout prêts (1 min à 1 h) et un pas −/+ qui s'adapte (à la minute sous 10 min, par 5 jusqu'à l'heure, par quart d'heure au-delà).
+- **Durée des appareils détectée** : une durée réglée sur un appareil de l'étape (« Four 180 °C · 45 min ») propose désormais son minuteur, même absente de la consigne, y compris en secondes (blender, mixeur plongeant). « Lance le minuteur » à la voix en profite aussi.
+
+### App Android
+- **Widget « Courses »** : les articles achetés restent visibles, barrés en fin de liste, au lieu de disparaître à la synchronisation, et se décochent d'un tap. Un tap ne redessine plus que le compteur et la liste : la case se barre aussitôt et le défilement est conservé.
+- **Icône** : la gousse est réduite, à mi-chemin entre l'ancienne icône Android et l'icône de la PWA.
+
 ## v4.81.1 – Cardamome · Mains libres sans forcer la voix
 
 ### Mode cuisine

@@ -27,7 +27,7 @@ final class WidgetStore {
 
     private static final String PREFS = "cardamome_launcher";
     private static final String KEY = "widget_snapshot";
-    /** Cases cochées sur le widget, pas encore relevées par l'app : clé d'article → bascule. */
+    /** Bascules faites sur le widget, pas encore relevées par l'app : clé d'article → état voulu. */
     private static final String CHECKS = "widget_checks";
     private static final int FALLBACK_COLOR = 0xFF75A63F;
     private static final long DAY_MS = 24L * 60 * 60 * 1000;
@@ -104,7 +104,10 @@ final class WidgetStore {
         }
     }
 
-    /** Articles à acheter, {@code null} tant que l'app n'a poussé aucun instantané. */
+    /**
+     * Articles de la liste (restants puis achetés), {@code null} tant que l'app
+     * n'a poussé aucun instantané.
+     */
     static List<ShopItem> shoppingItems(Context ctx) {
         JSONObject shopping = shopping(ctx);
         if (shopping == null) return null;
@@ -115,28 +118,39 @@ final class WidgetStore {
             JSONObject item = items.optJSONObject(i);
             if (item == null) continue;
             String key = item.optString("key");
-            out.add(new ShopItem(key, item.optString("name"), item.optString("qty"), checks.has(key)));
+            out.add(new ShopItem(key, item.optString("name"), item.optString("qty"), isChecked(item, checks)));
         }
         return out;
     }
 
     /**
-     * Articles restant à acheter, moins ceux cochés sur le widget depuis la
-     * dernière synchronisation ; {@code -1} sans instantané.
+     * Articles restant à acheter, corrigés des bascules faites sur le widget
+     * depuis la dernière synchronisation ; {@code -1} sans instantané.
      */
     static int shoppingRemaining(Context ctx) {
         JSONObject shopping = shopping(ctx);
         if (shopping == null) return -1;
-        int checked = 0;
-        List<ShopItem> items = shoppingItems(ctx);
-        for (ShopItem item : items) if (item.checked) checked++;
-        return Math.max(0, shopping.optInt("remaining", 0) - checked);
+        JSONObject checks = checks(ctx);
+        JSONArray items = shopping.optJSONArray("items");
+        int remaining = shopping.optInt("remaining", 0);
+        for (int i = 0; items != null && i < items.length(); i++) {
+            JSONObject item = items.optJSONObject(i);
+            JSONObject check = item == null ? null : checks.optJSONObject(item.optString("key"));
+            if (check != null) remaining += check.optBoolean("checked") ? -1 : 1;
+        }
+        return Math.max(0, remaining);
+    }
+
+    /** État affiché : la bascule en attente l'emporte sur l'instantané. */
+    private static boolean isChecked(JSONObject item, JSONObject checks) {
+        JSONObject check = checks.optJSONObject(item.optString("key"));
+        return check != null ? check.optBoolean("checked") : item.optBoolean("checked");
     }
 
     /**
      * Coche ou décoche un article depuis le widget, en attendant que l'app relève
-     * la bascule ({@link #takeChecks}). L'instantané ne liste que des articles à
-     * acheter : décocher revient donc à oublier la bascule.
+     * la bascule ({@link #takeChecks}). Rebasculer un article revient à l'état de
+     * l'instantané : la bascule en attente est alors simplement oubliée.
      */
     static void toggleShopping(Context ctx, String key) {
         JSONObject shopping = shopping(ctx);
@@ -149,7 +163,7 @@ final class WidgetStore {
                 JSONObject item = items.optJSONObject(i);
                 if (item == null || !key.equals(item.optString("key"))) continue;
                 try {
-                    checks.put(key, new JSONObject().put("checked", true).put("refs", item.optJSONArray("refs")));
+                    checks.put(key, new JSONObject().put("checked", !item.optBoolean("checked")).put("refs", item.optJSONArray("refs")));
                 } catch (JSONException e) {
                     return;
                 }
@@ -161,7 +175,7 @@ final class WidgetStore {
 
     /**
      * Rend les bascules en attente et les oublie : l'app les applique aussitôt,
-     * puis pousse un instantané où ces articles ne figurent plus.
+     * puis pousse un instantané qui porte déjà leur nouvel état.
      */
     static JSONArray takeChecks(Context ctx) {
         JSONObject checks = checks(ctx);

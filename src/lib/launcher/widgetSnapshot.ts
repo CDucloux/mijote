@@ -34,12 +34,14 @@ export interface WidgetDay {
   meals: WidgetMeal[];
 }
 
-/** Un article restant du widget « Courses », cochable depuis l'écran d'accueil. */
+/** Un article du widget « Courses », cochable et décochable depuis l'écran d'accueil. */
 export interface WidgetItem {
   /** Clé de l'article agrégé : identifie la case cochée côté natif. */
   key: string;
   name: string;
   qty: string;
+  /** Acheté : le widget le montre barré, en fin de liste, comme l'onglet Courses. */
+  checked: boolean;
   /** Articles réels à cocher dans l'app quand le widget coche celui-ci. */
   refs: Contributor[];
 }
@@ -52,7 +54,7 @@ export interface WidgetSnapshot {
 
 /** Jours fournis d'avance : le widget reste juste après minuit sans relancer l'app. */
 export const WIDGET_DAYS = 3;
-/** Articles listés au plus : la liste défile, mais l'instantané reste léger. */
+/** Articles listés au plus (les restants d'abord) : la liste défile, mais l'instantané reste léger. */
 export const WIDGET_ITEMS = 60;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -78,7 +80,8 @@ export function mealMeta(recipe: WidgetRecipe | undefined, portions: number | un
  * Construit l'instantané des widgets.
  *
  * @param input - État du foyer (planning, recettes, listes, base d'ingrédients, instant).
- * @returns Les repas des {@link WIDGET_DAYS} prochains jours et les courses restantes.
+ * @returns Les repas des {@link WIDGET_DAYS} prochains jours et les courses :
+ *   les articles restants, puis les achetés (barrés sur le widget plutôt qu'effacés).
  */
 export function buildWidgetSnapshot({ mealPlan, recipes = [], shoppingLists = [], ingredientDB = [], date = new Date() }: LauncherInput): WidgetSnapshot {
   const byId = new Map(recipes.map(recipe => [recipe.id, recipe]));
@@ -94,9 +97,9 @@ export function buildWidgetSnapshot({ mealPlan, recipes = [], shoppingLists = []
     });
     return { key, meals };
   });
-  const items = aggregateShopping(shoppingLists, ingredientDB)
-    .filter(a => !a.checked)
+  const aggregated = aggregateShopping(shoppingLists, ingredientDB);
+  const items = [...aggregated.filter(a => !a.checked), ...aggregated.filter(a => a.checked)]
     .slice(0, WIDGET_ITEMS)
-    .map(a => ({ key: a.key, name: capitalize(a.name), qty: a.qtyDisplay, refs: a.contributors }));
+    .map(a => ({ key: a.key, name: capitalize(a.name), qty: a.qtyDisplay, checked: a.checked, refs: a.contributors }));
   return { days, shopping: { remaining: countShoppingTodo(shoppingLists, ingredientDB), items } };
 }

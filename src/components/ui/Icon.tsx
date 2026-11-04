@@ -4,7 +4,7 @@
 // choisir le style selon le contexte. Un seul fichier importe Phosphor, ce qui
 // garde le tree-shaking à un seul point et l'abstraction stable côté UI.
 import {
-  House, MagnifyingGlass, CalendarBlank, BookOpen, Plus, PlusCircle, PencilSimple,
+  House, MagnifyingGlass, CalendarBlank, BookOpen, Plus, PlusCircle, Minus, PencilSimple,
   Trash, DownloadSimple, ShareNetwork, Clock, Fire, Check, FloppyDisk, CaretLeft,
   CaretRight, ArrowUUpLeft, ArrowLeft, CaretUp, CaretDown, X, Copy, TrayArrowDown, LinkSimple,
   ShoppingCartSimple, GearSix, DotsSixVertical, FilePdf, Image, GridFour, ListBullets,
@@ -106,6 +106,7 @@ const ICONS = {
   book: BookOpen,
   plus: Plus,
   plusCircle: PlusCircle,
+  minus: Minus,
   edit: PencilSimple,
   trash: Trash,
   download: DownloadSimple,
@@ -206,6 +207,7 @@ const DEFAULT_WEIGHT: Partial<Record<IconName, IconWeight>> = {
   ellipsis: "bold",
   check: "bold",
   plus: "bold",
+  minus: "bold",
   close: "bold",
 };
 

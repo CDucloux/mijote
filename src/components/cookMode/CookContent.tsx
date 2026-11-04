@@ -8,6 +8,7 @@ import { TechniqueText } from "../recipe/TechniqueText.jsx";
 import { ConvertBadge } from "../ingredient/QuantityConvertSheet.jsx";
 import { PrecautionInfoBadge } from "../recipe/QualityHints.jsx";
 import { ToggleSwitch } from "./ToggleSwitch.jsx";
+import { StepTimerButtons } from "./StepTimerButtons.jsx";
 import { capitalize, fmtQtyUnit } from "@/lib/format.js";
 import { posteLabel } from "@/lib/recipes/decoupe.js";
 import { formatParamSummary } from "@/lib/utensils/appliances.js";
@@ -56,6 +57,8 @@ interface CookContentProps {
   setSubCook: (sub: { recipe: Recipe; mult: number }) => void;
   stepDurations: StepDuration[];
   addTimer: UseCookTimersResult["addTimer"];
+  /** z-index de la feuille de minuteur libre. */
+  timerSheetZIndex: number;
   techIndex: TechniqueIndex;
   linkedIngs: IngredientLine[];
   linkedUts: Utensil[];
@@ -83,7 +86,7 @@ export function CookContent(props: CookContentProps) {
     getIngImage, getUtImage, getUtPrecaution, convOf, openConvert, displayQty,
     recipesById, recipe, mult,
     pendingComponents, doneComponents, setSubCook,
-    stepDurations, addTimer, techIndex, linkedIngs, linkedUts,
+    stepDurations, addTimer, timerSheetZIndex, techIndex, linkedIngs, linkedUts,
     utensilDB, setPrecSheet, posteStepByKey, goToStep,
   } = props;
 
@@ -358,18 +361,10 @@ export function CookContent(props: CookContentProps) {
         <div key="head-step" style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, color: "#fff", flexShrink: 0 }}>{realIdx + 1}</div>
         <h2 style={{ fontFamily: "var(--ff-display)", fontSize: 22, fontWeight: 600 }}>Étape {realIdx + 1}</h2>
       </div>
-      <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: stepDurations.length ? 14 : 24 }}><TechniqueText key={realIdx} text={step.text ?? ""} index={techIndex} /></p>
+      <p style={{ fontSize: 16, color: "var(--text)", lineHeight: 1.8, marginBottom: 14 }}><TechniqueText key={realIdx} text={step.text ?? ""} index={techIndex} /></p>
 
-      {stepDurations.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
-          {stepDurations.map(d => (
-            <button key={d.minutes} onClick={() => addTimer(d, stepIdx, realIdx >= 0 ? `Étape ${realIdx + 1}` : isOverview ? "Mise en place" : "Bases")} className="pressable cook-timer-btn"
-              style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 14px", borderRadius: 22, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--spice)" }}>
-              <Icon name="clock" size={14} color="var(--spice)" /> Minuteur {d.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <StepTimerButtons durations={stepDurations} sheetZIndex={timerSheetZIndex}
+        onStart={d => addTimer(d, stepIdx, realIdx >= 0 ? `Étape ${realIdx + 1}` : isOverview ? "Mise en place" : "Bases")} />
 
       {step.tip && <StepTip tip={step.tip} size="lg" style={{ marginBottom: 20 }} />}
 

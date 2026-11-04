@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef, type ComponentProps } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "../components/ui/Icon.jsx";
-import { parseDurations } from "@/lib/planning/stepTimers.js";
+import { applianceDurations, mergeDurations, parseDurations } from "@/lib/planning/stepTimers.js";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { buildTechniqueIndex } from "@/lib/recipes/techniques.js";
 import { buildPostesDecoupe, findDecoupeStepIndex, posteLabel, sortPostesByStep } from "@/lib/recipes/decoupe.js";
@@ -289,10 +289,13 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
     return () => window.removeEventListener("keydown", onKey);
   }, [subCook, done, iterOpen, closing, stepIdx, totalSteps, isBases, allComponentsDone]);
 
-  const stepDurations = useMemo(() => (step ? parseDurations(step.text) : []), [step]);
   // Ingrédients liés à l'étape courante (bruts + composants)
   const linkedIngs = stepLinked(recipe.ingredients, step?.ingredients);
   const linkedUts = stepLinked(recipe.utensils, step?.utensils);
+  // Durées écrites dans la consigne, et celles réglées sur un appareil (« Four · 45 min »).
+  const stepDurations = step
+    ? mergeDurations(parseDurations(step.text), applianceDurations(step, linkedUts, u => findUtensilEntry(utensilDB, u.dbId, u.name)?.appliance))
+    : [];
 
   // Ce que la voix lit sur « ingrédients » / « ustensiles » : les quantités telles qu'affichées.
   const toSpokenIngredient = (ing: IngredientLine) => ({ name: ing.name ?? "", quantity: ing.amount != null && ing.amount !== "" ? displayQty(ing, Number(ing.amount) * (mult || 1)) : "" });
@@ -397,7 +400,7 @@ function CookModeInner({ recipe, mult, ingredientDB, utensilDB, categories = DEF
                   getIngImage={getIngImage} getUtImage={getUtImage} getUtPrecaution={getUtPrecaution} convOf={convOf} openConvert={openConvert} displayQty={displayQty}
                   recipesById={recipesById} recipe={recipe} mult={mult}
                   pendingComponents={pendingComponents} doneComponents={doneComponents} setSubCook={setSubCook}
-                  stepDurations={stepDurations} addTimer={addTimer} techIndex={techIndex} linkedIngs={linkedIngs} linkedUts={linkedUts}
+                  stepDurations={stepDurations} addTimer={addTimer} timerSheetZIndex={isNested ? 720 : 620} techIndex={techIndex} linkedIngs={linkedIngs} linkedUts={linkedUts}
                   utensilDB={utensilDB} setPrecSheet={setPrecSheet} posteStepByKey={posteStepByKey} goToStep={goToStep}
                 />
               </div>
