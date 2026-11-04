@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.90.0 – Cardamome · Heure de service au quart d'heure
+
+### Organiser le service et Servir à
+- **Réglage moins / plus** : l'heure de service s'affiche en grand entre deux pastilles rondes qui reculent ou avancent d'un quart d'heure, calées sur les heures rondes ; un tap sur l'heure ouvre les listes pour un saut direct. Fin de la rangée de pilules figées et de « Autre ».
+- **Conséquence immédiate** : sous l'heure, « premier geste à … » suit le réglage.
+- **Légende de la frise redessinée** : pilules teintées de la couleur du geste, icône dans une pastille ronde.
+
 ## v4.89.0 – Cardamome · Frise aux couleurs des gestes
 
 ### Organiser le service et session batch
