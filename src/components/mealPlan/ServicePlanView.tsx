@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Icon } from "../ui/Icon.jsx";
 import { fmtTime } from "../../lib/format.js";
-import { useIsDesktop } from "../../hooks/useIsDesktop.js";
 import { clockLabel, dayLabel, timeToClock, reminderMessage } from "@/lib/planning/serveSchedule.js";
 import {
   planMealService, dateAtClock, ovenConflictMessage, holdAdvice, serviceReminders, DEFAULT_SERVE_CLOCK, DEFAULT_ROLE_OFFSETS,
@@ -12,7 +11,6 @@ import { roleLabel, type RoleId } from "@/lib/planning/composedMeal.js";
 import { deriveNotifId, ensureTimerNotificationPermission, scheduleTimerNotification } from "@/lib/notifications/localNotifications.js";
 import { SLOT_BY_ID } from "../../constants/mealSlots.js";
 import { ServiceGantt } from "./ServiceGantt.jsx";
-import { ServiceRoadmap } from "./ServiceRoadmap.jsx";
 import type { Recipe } from "@/lib/types.js";
 import "../../styles/service.css";
 
@@ -42,13 +40,11 @@ const TICK_MS = 30_000;
 /**
  * Panneau plein écran « Organiser le service » d'un repas du planning : heure de
  * service, plats placés à rebours en partageant le four et les mains, en frise
- * (ordinateur) ou en feuille de route (téléphone). Les heures de service par plat
+ * (chaque étape s'ouvre au tap). Les heures de service par plat
  * se règlent au quart d'heure ; les conflits de four résolus et les plats à garder
  * au chaud sont expliqués.
  */
 export function ServicePlanView({ date, slot, dishes, onClose }: ServicePlanViewProps) {
-  const isDesktop = useIsDesktop();
-  const [view, setView] = useState<"roadmap" | "frise">(isDesktop ? "frise" : "roadmap");
   const [clock, setClock] = useState(DEFAULT_SERVE_CLOCK[slot] ?? "20:00");
   const [cooks, setCooks] = useState(1);
   const [offsets, setOffsets] = useState<Record<string, number>>({});
@@ -166,15 +162,10 @@ export function ServicePlanView({ date, slot, dishes, onClose }: ServicePlanView
               <span>Durées estimées pour {estimated.join(", ")} : l'horaire peut bouger. Corrige-les dans l'éditeur de recette.</span>
             </div>
           )}
-
-          <div className="serve-days svc-tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={view === "roadmap"} className={`serve-day${view === "roadmap" ? " on" : ""}`} onClick={() => setView("roadmap")}>Feuille de route</button>
-            <button type="button" role="tab" aria-selected={view === "frise"} className={`serve-day${view === "frise" ? " on" : ""}`} onClick={() => setView("frise")}>Frise</button>
-          </div>
         </div>
 
-        <div className={view === "frise" ? "svc-wide" : "svc-col"}>
-          {view === "frise" ? <ServiceGantt plan={plan} recipeOf={recipeOf} now={now} /> : <ServiceRoadmap plan={plan} now={now} recipeOf={recipeOf} />}
+        <div className="svc-wide">
+          <ServiceGantt plan={plan} recipeOf={recipeOf} now={now} />
         </div>
       </div>
 

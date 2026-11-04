@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { planMealService, serviceRoadmap, ovenSpans, serviceReminders, stepUsesOven, dateAtClock, ovenConflictMessage, holdAdvice, shiftPlan, serviceTaskKey, type ServiceDishInput } from "../mealService.js";
+import { planMealService, serviceReminders, stepUsesOven, dateAtClock, ovenConflictMessage, holdAdvice, shiftPlan, serviceTaskKey, type ServiceDishInput } from "../mealService.js";
 import { stepOvenTemperature } from "../stepEstimate.js";
 import type { Step } from "@/lib/types.js";
 
@@ -88,23 +88,8 @@ describe("planMealService", () => {
   });
 });
 
-describe("serviceRoadmap / ovenSpans / serviceReminders", () => {
+describe("serviceReminders", () => {
   const plan = planMealService([veloute, gigot, gratin, mousse], { serveAt: at(20), now: at(12) });
-
-  it("mêle les étapes de tous les plats dans l'ordre chronologique", () => {
-    const roadmap = serviceRoadmap(plan);
-    expect(roadmap[0]).toMatchObject({ dishName: "mousse", start: at(16, 55) });
-    expect(roadmap.map(t => t.start)).toEqual([...roadmap.map(t => t.start)].sort((a, b) => a - b));
-    // À 17 h 55 : le gigot sort du frigo et le gratin part au four ; le plat passe avant l'accompagnement.
-    expect(roadmap.filter(t => t.start === at(17, 55)).map(t => t.dishName)).toEqual(["gigot", "gratin"]);
-  });
-
-  it("fusionne les plages de four à même température", () => {
-    expect(ovenSpans(plan).map(s => [s.start, s.end, s.temperature, s.dishIds])).toEqual([
-      [at(17, 55), at(19, 10), 160, ["gratin"]],
-      [at(19, 10), at(20, 10), 220, ["gigot"]],
-    ]);
-  });
 
   it("rappelle le départ de chaque plat et les retours après une attente", () => {
     const reminders = serviceReminders(plan, at(17));

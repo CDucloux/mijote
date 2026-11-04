@@ -3,12 +3,25 @@ import { Img } from "../ui/Img.jsx";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { TechniqueText } from "../recipe/TechniqueText.jsx";
 import { StepTip } from "../recipe/StepTip.jsx";
-import { TaskTags } from "./ServiceRoadmap.jsx";
-import { fmtQtyUnit } from "@/lib/format.js";
+import { fmtQtyUnit, fmtTime } from "@/lib/format.js";
 import { clockLabel } from "@/lib/planning/serveSchedule.js";
 import { stepLinked } from "@/lib/recipes/stepLinks.js";
 import type { ServiceTask } from "@/lib/planning/mealService.js";
 import type { Recipe } from "@/lib/types.js";
+
+/** Pastilles d'une étape : mains, attente, four, durée estimée. */
+function TaskTags({ task }: { task: ServiceTask }) {
+  const wait = task.minutes - task.active;
+  return (
+    <span className="serve-tags">
+      {task.active > 0 && <span className="serve-tag is-hands"><Icon name="utensils" size={11} color="currentColor" />{fmtTime(task.active)} mains</span>}
+      {wait > 0 && (task.oven
+        ? <span className="serve-tag is-oven"><Icon name="fire" size={11} color="currentColor" />{task.temperature != null ? `${task.temperature} °C · ` : ""}{fmtTime(wait)}</span>
+        : <span className="serve-tag"><Icon name="clock" size={11} color="currentColor" />{fmtTime(wait)} d'attente</span>)}
+      {task.source !== "recipe" && <span className="serve-tag is-estimated">estimée</span>}
+    </span>
+  );
+}
 
 interface ServiceStepSheetProps {
   dishName: string;
@@ -18,15 +31,18 @@ interface ServiceStepSheetProps {
   stepIndex: number;
   onNavigate: (stepIndex: number) => void;
   onClose: () => void;
+  /** Étape cochable (session batch) : état et bascule. */
+  checked?: boolean;
+  onToggle?: () => void;
 }
 
 /**
  * Étape d'un plat ouverte depuis la frise, rendue comme dans le mode cuisine :
  * consigne avec ses gestes techniques, astuce, ingrédients et ustensiles liés,
  * photo, et son créneau dans le plan. On passe d'une étape du plat à l'autre
- * sans refermer.
+ * sans refermer ; dans la session batch, on la marque faite.
  */
-export function ServiceStepSheet({ dishName, recipe, tasks, stepIndex, onNavigate, onClose }: ServiceStepSheetProps) {
+export function ServiceStepSheet({ dishName, recipe, tasks, stepIndex, onNavigate, onClose, checked = false, onToggle }: ServiceStepSheetProps) {
   const position = tasks.findIndex(task => task.stepIndex === stepIndex);
   const task = tasks[position];
   const step = recipe?.steps?.[stepIndex];
@@ -67,6 +83,11 @@ export function ServiceStepSheet({ dishName, recipe, tasks, stepIndex, onNavigat
           <h4 className="svc-step__label">Ustensiles</h4>
           <div className="svc-step__uts">{utensils.map(utensil => <span key={utensil.id}>{utensil.name}</span>)}</div>
         </section>
+      )}
+      {onToggle && (
+        <button type="button" className={`serve-cta svc-step__done${checked ? " is-checked" : ""}`} aria-pressed={checked} onClick={onToggle}>
+          <Icon name="check" size={16} color="currentColor" />{checked ? "Faite · annuler" : "Marquer comme faite"}
+        </button>
       )}
       {step.image && <Img src={step.image} alt={`Étape ${stepIndex + 1}`} style={{ width: "100%", maxHeight: 280, objectFit: "cover", borderRadius: 14, marginBottom: 18 }} />}
       <nav className="svc-step__nav">

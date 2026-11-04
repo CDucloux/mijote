@@ -48,10 +48,6 @@
 /* Cuisiner */
 .bt-cookbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-top: 10px; }
 .bt-cookbar .serve-days { margin: 0; }
-.bt-oven { display: block; margin: 12px 0 0; padding: 10px 12px; border-radius: 15px; background: var(--float-surface); box-shadow: var(--float-shadow); }
-.bt-oven__l { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; font-weight: 600; color: var(--text3); }
-.bt-oven__track { position: relative; display: block; height: 20px; border-radius: 6px; background: var(--surface2); }
-.bt-oven__track i { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: rgba(var(--spice-rgb), 0.25); color: var(--spice); font-style: normal; font-size: 10px; font-weight: 700; overflow: hidden; }
 
 /* Ranger */
 .bt-boxes { display: flex; gap: 8px; margin-top: 14px; }

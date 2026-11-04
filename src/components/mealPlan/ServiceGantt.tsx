@@ -2,7 +2,7 @@ import { useState, type CSSProperties } from "react";
 import { stepSummary, clockLabel } from "@/lib/planning/serveSchedule.js";
 import { roleLabel } from "@/lib/planning/composedMeal.js";
 import { ServiceStepSheet } from "./ServiceStepSheet.jsx";
-import type { ServicePlan } from "@/lib/planning/mealService.js";
+import type { ServicePlan, ServiceTask } from "@/lib/planning/mealService.js";
 import type { Recipe } from "@/lib/types.js";
 
 /** Largeur maximale de la frise : au-delà, le début (préparations d'avance) est rogné. */
@@ -16,16 +16,20 @@ interface ServiceGanttProps {
   dishCaption?: (dish: ServicePlan["dishes"][number]) => string;
   /** Instant présent (ms) : repère « maintenant » quand il tombe dans la frise. */
   now?: number;
+  /** Étapes cochables (session batch) : état et bascule. */
+  isChecked?: (task: ServiceTask) => boolean;
+  onToggle?: (task: ServiceTask) => void;
 }
 
 
 /**
  * Frise du service : une ligne par plat, alignée sur l'heure de service. Chaque
  * barre montre en plein la part « mains occupées » (en tête d'étape) puis l'attente ;
- * un tap ouvre l'étape comme dans le mode cuisine. Les créneaux qu'un plat a dû
+ * un tap ouvre l'étape comme dans le mode cuisine (et la coche, dans la session
+ * batch : une étape faite s'efface). Les créneaux qu'un plat a dû
  * céder au four sont hachurés à leur place d'origine.
  */
-export function ServiceGantt({ plan, recipeOf, dishCaption, now }: ServiceGanttProps) {
+export function ServiceGantt({ plan, recipeOf, dishCaption, now, isChecked, onToggle }: ServiceGanttProps) {
   const [open, setOpen] = useState<{ dishId: string; stepIndex: number } | null>(null);
   const windowStart = Math.max(plan.start, plan.end - MAX_WINDOW_MS);
   const span = Math.max(1, plan.end - windowStart);
@@ -41,6 +45,7 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now }: ServiceGanttP
   const moved = new Map(plan.ovenConflicts.map(conflict => [`${conflict.dishId}:${conflict.stepIndex}`, conflict.shift]));
   const showNow = now != null && now > windowStart && now < plan.end;
   const openDish = open ? plan.dishes.find(dish => dish.id === open.dishId) : undefined;
+  const openTask = openDish?.tasks.find(task => task.stepIndex === open?.stepIndex);
 
   return (
     <div className="svc-g">
@@ -72,7 +77,7 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now }: ServiceGanttP
                 const hands = task.minutes > 0 ? Math.min(100, task.active / task.minutes * 100) : 0;
                 const style = { left: pos(task.start), width: width(task.start, task.end), "--hands": `${hands}%` } as CSSProperties;
                 return (
-                  <button key={task.stepIndex} type="button" className={`svc-g__bar${task.oven ? " is-oven" : ""}`} style={style}
+                  <button key={task.stepIndex} type="button" className={`svc-g__bar${task.oven ? " is-oven" : ""}${isChecked?.(task) ? " is-done" : ""}`} style={style}
                     title={`${clockLabel(task.start)} à ${clockLabel(task.end)} · ${summary}`} aria-label={`Étape ${task.stepIndex + 1} de ${dish.name} : ${summary}`}
                     onClick={() => setOpen({ dishId: dish.id, stepIndex: task.stepIndex })}>
                     {/* Deux calques du même libellé, découpés à la frontière mains / attente :
@@ -95,9 +100,10 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now }: ServiceGanttP
         {plan.ovenConflicts.length > 0 && <span><i className="is-moved" />Créneau cédé au four</span>}
         <span className="svc-g__hint">Touche une étape pour l'ouvrir</span>
       </div>
-      {open && openDish && (
+      {open && openDish && openTask && (
         <ServiceStepSheet dishName={openDish.name} recipe={recipeOf(openDish.id)} tasks={openDish.tasks} stepIndex={open.stepIndex}
-          onNavigate={stepIndex => setOpen({ dishId: openDish.id, stepIndex })} onClose={() => setOpen(null)} />
+          onNavigate={stepIndex => setOpen({ dishId: openDish.id, stepIndex })} onClose={() => setOpen(null)}
+          checked={isChecked?.(openTask)} onToggle={onToggle && (() => onToggle(openTask))} />
       )}
     </div>
   );
