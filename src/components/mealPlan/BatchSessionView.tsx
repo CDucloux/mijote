@@ -9,6 +9,7 @@ import { deriveNotifId, ensureTimerNotificationPermission, scheduleTimerNotifica
 import { BatchPrepTab } from "./BatchPrepTab.jsx";
 import { BatchStoreTab } from "./BatchStoreTab.jsx";
 import { ServiceGantt } from "./ServiceGantt.jsx";
+import type { StepReferences } from "./ServiceStepModal.jsx";
 import type { Recipe } from "@/lib/types.js";
 import "../../styles/service.css";
 import "../../styles/batch.css";
@@ -28,6 +29,8 @@ interface BatchSessionViewProps {
   onSettings: (patch: Partial<BatchSettings>) => void;
   onToggle: (key: string) => void;
   recipeOf: (recipeId: string) => Recipe | undefined;
+  /** Bases de référence pour illustrer une étape ouverte depuis la frise. */
+  references?: StepReferences;
   onClose: () => void;
 }
 
@@ -43,7 +46,7 @@ const THAW_REMINDER_HOUR = 19;
  * L'avancement est gardé pour la semaine.
  */
 export function BatchSessionView(props: BatchSessionViewProps) {
-  const { weekLabel, weekDays, mealOccasions, prepStages, decoupeByName, cookingPlan: plan, storage, baseIds, settings, onSettings, onToggle, recipeOf, onClose } = props;
+  const { weekLabel, weekDays, mealOccasions, prepStages, decoupeByName, cookingPlan: plan, storage, baseIds, settings, onSettings, onToggle, recipeOf, references, onClose } = props;
   const [tab, setTab] = useState<Tab>("prep");
   const [remindersSet, setRemindersSet] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -150,7 +153,7 @@ export function BatchSessionView(props: BatchSessionViewProps) {
             </div>
             <div className="svc-wide">
               <ServiceGantt plan={plan} recipeOf={recipeOf} dishCaption={dish => `${baseIds.has(dish.id) ? "Base" : "Plat"} · prêt à ${clockLabel(dish.end)}`}
-                isChecked={task => isChecked(serviceTaskKey(task))} onToggle={toggleTask} />
+                references={references} isChecked={task => isChecked(serviceTaskKey(task))} onToggle={toggleTask} />
             </div>
           </>
         )}

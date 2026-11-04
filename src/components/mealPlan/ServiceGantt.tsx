@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { stepSummary, clockLabel } from "@/lib/planning/serveSchedule.js";
 import { roleLabel } from "@/lib/planning/composedMeal.js";
-import { ServiceStepSheet } from "./ServiceStepSheet.jsx";
+import { ServiceStepModal, type StepReferences } from "./ServiceStepModal.jsx";
 import type { ServicePlan, ServiceTask } from "@/lib/planning/mealService.js";
 import type { Recipe } from "@/lib/types.js";
 
@@ -16,6 +16,8 @@ interface ServiceGanttProps {
   dishCaption?: (dish: ServicePlan["dishes"][number]) => string;
   /** Instant présent (ms) : repère « maintenant » quand il tombe dans la frise. */
   now?: number;
+  /** Bases de référence de l'étape ouverte (vignettes, réglages d'appareils). */
+  references?: StepReferences;
   /** Étapes cochables (session batch) : état et bascule. */
   isChecked?: (task: ServiceTask) => boolean;
   onToggle?: (task: ServiceTask) => void;
@@ -29,7 +31,7 @@ interface ServiceGanttProps {
  * batch : une étape faite s'efface). Les créneaux qu'un plat a dû
  * céder au four sont hachurés à leur place d'origine.
  */
-export function ServiceGantt({ plan, recipeOf, dishCaption, now, isChecked, onToggle }: ServiceGanttProps) {
+export function ServiceGantt({ plan, recipeOf, dishCaption, now, references, isChecked, onToggle }: ServiceGanttProps) {
   const [open, setOpen] = useState<{ dishId: string; stepIndex: number } | null>(null);
   const windowStart = Math.max(plan.start, plan.end - MAX_WINDOW_MS);
   const span = Math.max(1, plan.end - windowStart);
@@ -101,7 +103,7 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now, isChecked, onTo
         <span className="svc-g__hint">Touche une étape pour l'ouvrir</span>
       </div>
       {open && openDish && openTask && (
-        <ServiceStepSheet dishName={openDish.name} recipe={recipeOf(openDish.id)} tasks={openDish.tasks} stepIndex={open.stepIndex}
+        <ServiceStepModal dishName={openDish.name} recipe={recipeOf(openDish.id)} tasks={openDish.tasks} stepIndex={open.stepIndex} references={references}
           onNavigate={stepIndex => setOpen({ dishId: openDish.id, stepIndex })} onClose={() => setOpen(null)}
           checked={isChecked?.(openTask)} onToggle={onToggle && (() => onToggle(openTask))} />
       )}

@@ -21,8 +21,8 @@ interface CookModeHeaderProps {
   isNested: boolean;
   /** Libellé de la page courante (« Mise en place », « Étape 2 / 5 »…). */
   pageLabel: string;
-  /** Secondes écoulées depuis le lancement (chrono masqué en imbriqué). */
-  elapsed: number;
+  /** Secondes écoulées depuis le lancement (chrono masqué en imbriqué, ou absent hors pas à pas). */
+  elapsed?: number;
   progress: number;
   /** Cuisiner à deux : l'autre membre, posé sur la barre de progression. */
   companions?: CookCompanion[];
@@ -69,7 +69,7 @@ export function CookModeHeader({ recipeName, isNested, pageLabel, elapsed, progr
           </button>
         )}
         {/* Chrono global : temps écoulé depuis le lancement de la recette. */}
-        {!isNested && (
+        {!isNested && elapsed != null && (
           <div title="Temps écoulé depuis le lancement" style={{ display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0, padding: "6px 11px", borderRadius: 999, background: "var(--surface2)", fontVariantNumeric: "tabular-nums" }}>
             <Icon name="clock" size={14} color="var(--accent)" />
             <span style={{ fontSize: 13.5, fontWeight: 600, letterSpacing: "0.02em", color: "var(--text)" }}>{fmtElapsed(elapsed)}</span>

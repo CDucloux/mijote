@@ -11,6 +11,7 @@ import { roleLabel, type RoleId } from "@/lib/planning/composedMeal.js";
 import { deriveNotifId, ensureTimerNotificationPermission, scheduleTimerNotification } from "@/lib/notifications/localNotifications.js";
 import { SLOT_BY_ID } from "../../constants/mealSlots.js";
 import { ServiceGantt } from "./ServiceGantt.jsx";
+import type { StepReferences } from "./ServiceStepModal.jsx";
 import type { Recipe } from "@/lib/types.js";
 import "../../styles/service.css";
 
@@ -26,6 +27,8 @@ interface ServicePlanViewProps {
   /** Créneau du planning (`midi`, `soir`…). */
   slot: string;
   dishes: ServiceMealDish[];
+  /** Bases de référence pour illustrer une étape ouverte depuis la frise. */
+  references?: StepReferences;
   onClose: () => void;
 }
 
@@ -44,7 +47,7 @@ const TICK_MS = 30_000;
  * se règlent au quart d'heure ; les conflits de four résolus et les plats à garder
  * au chaud sont expliqués.
  */
-export function ServicePlanView({ date, slot, dishes, onClose }: ServicePlanViewProps) {
+export function ServicePlanView({ date, slot, dishes, references, onClose }: ServicePlanViewProps) {
   const [clock, setClock] = useState(DEFAULT_SERVE_CLOCK[slot] ?? "20:00");
   const [cooks, setCooks] = useState(1);
   const [offsets, setOffsets] = useState<Record<string, number>>({});
@@ -165,7 +168,7 @@ export function ServicePlanView({ date, slot, dishes, onClose }: ServicePlanView
         </div>
 
         <div className="svc-wide">
-          <ServiceGantt plan={plan} recipeOf={recipeOf} now={now} />
+          <ServiceGantt plan={plan} recipeOf={recipeOf} now={now} references={references} />
         </div>
       </div>
 
