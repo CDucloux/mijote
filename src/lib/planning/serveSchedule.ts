@@ -92,6 +92,25 @@ export function timeToClock(time: number): string {
 }
 
 /**
+ * Avance ou recule une heure `HH:MM` d'un cran, calé sur la grille du pas :
+ * « 20:07 » + 15 donne « 20:15 », pas « 20:22 », pour retomber sur des heures
+ * rondes. Passe minuit dans les deux sens (« 23:45 » + 15 donne « 00:00 »).
+ *
+ * @param clock - Heure `HH:MM` (24 h).
+ * @param step - Pas en minutes, négatif pour reculer.
+ * @returns La nouvelle heure `HH:MM`, ou `clock` tel quel s'il est mal formé ou si le pas est nul.
+ */
+export function shiftClock(clock: string, step: number): string {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(clock.trim());
+  if (!match || !step || !Number.isFinite(step)) return clock;
+  const day = 24 * 60, size = Math.abs(step);
+  const total = Number(match[1]) * 60 + Number(match[2]);
+  const next = step > 0 ? (Math.floor(total / size) + 1) * size : (Math.ceil(total / size) - 1) * size;
+  const wrapped = ((next % day) + day) % day;
+  return `${String(Math.floor(wrapped / 60)).padStart(2, "0")}:${String(wrapped % 60).padStart(2, "0")}`;
+}
+
+/**
  * Heure lisible d'un instant, à la française : `"20 h"`, `"17 h 25"`.
  *
  * @param time - Horodatage (ms).

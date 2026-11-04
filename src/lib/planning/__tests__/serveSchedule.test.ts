@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scheduleService, clockToTime, timeToClock, clockLabel, dayLabel, scheduleDays, serveReminders, timingWarning, stepSummary, reminderMessage } from "../serveSchedule.js";
+import { scheduleService, clockToTime, timeToClock, shiftClock, clockLabel, dayLabel, scheduleDays, serveReminders, timingWarning, stepSummary, reminderMessage } from "../serveSchedule.js";
 import type { Step } from "@/lib/types.js";
 
 const at = (day: number, hours: number, minutes = 0): number => new Date(2026, 9, day, hours, minutes).getTime();
@@ -48,6 +48,25 @@ describe("clockToTime / timeToClock / clockLabel", () => {
     expect(timeToClock(at(24, 8, 5))).toBe("08:05");
     expect(clockLabel(at(24, 20))).toBe("20 h");
     expect(clockLabel(at(24, 17, 5))).toBe("17 h 05");
+  });
+});
+
+describe("shiftClock", () => {
+  it("avance et recule d'un cran calé sur la grille", () => {
+    expect(shiftClock("20:00", 15)).toBe("20:15");
+    expect(shiftClock("20:00", -15)).toBe("19:45");
+    expect(shiftClock("20:07", 15)).toBe("20:15");
+    expect(shiftClock("20:07", -15)).toBe("20:00");
+  });
+
+  it("passe minuit dans les deux sens", () => {
+    expect(shiftClock("23:45", 15)).toBe("00:00");
+    expect(shiftClock("00:00", -15)).toBe("23:45");
+  });
+
+  it("laisse une heure mal formée ou un pas nul inchangés", () => {
+    expect(shiftClock("20h", 15)).toBe("20h");
+    expect(shiftClock("20:00", 0)).toBe("20:00");
   });
 });
 

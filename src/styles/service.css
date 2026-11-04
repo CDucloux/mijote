@@ -14,7 +14,6 @@
 .svc-wide + .svc-col { margin-top: 14px; }
 .svc-controls { display: flex; flex-direction: column; gap: 10px; }
 .svc-controls__label { font-size: 12px; font-weight: 700; color: var(--text2); }
-.svc-controls .serve-times { margin: 0 -16px; padding: 0 16px 2px; }
 .svc-controls .serve-days { align-self: flex-start; margin: 0; }
 
 
