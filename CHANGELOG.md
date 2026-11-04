@@ -1,5 +1,16 @@
 # Changelog – Cardamome
 
+## v4.86.0 – Cardamome · Tout le repas à l'heure
+
+### Organiser le service et session batch
+- **Une seule heure de service** : servi à 20 h, tout le repas est prêt à 20 h (entrée, plat, accompagnement, dessert). Fin des décalages par rôle et des tuiles qui les réglaient, en conflit avec l'heure choisie ; sous chaque plat, la frise dit l'heure où il est prêt.
+- **Frise par nature d'étape** : découpe en vert, cuisson au four ou au feu en ambre, le reste en neutre. Une étape qui taille puis cuit montre les deux, dans l'ordre ; la température précède le libellé d'une étape au four.
+- **Heure à la française** : « 20 h 15 » en deux listes, à la place du champ du navigateur qui affichait « 08:30 PM » ; aussi pour la session batch et « Servir à ».
+- **Fin du « À deux »** : le choix Seul / À deux disparaît du service et de la session batch, le calcul tient une seule paire de mains.
+
+### Import
+- Découpe et cuisson ne partagent plus une étape : « couper l'oignon et le faire revenir » devient deux étapes, chacune avec ses ingrédients, ustensiles et durées (actif après redéploiement des Cloud Functions).
+
 ## v4.85.0 – Cardamome · La frise, rien que la frise
 
 ### Session batch et organiser le service
