@@ -37,7 +37,7 @@ export function tabForPath(pathname: string | null | undefined): string {
   if (pathname.startsWith("/guide")) return "guide";
   if (pathname.startsWith("/notifications")) return "notifications";
   if (pathname.startsWith("/recipes")) return "recipes";
-  if (pathname.startsWith("/meal-plan")) return "meal-plan";
+  if (pathname.startsWith("/meal-plan") || pathname.startsWith("/retroplanning")) return "meal-plan";
   return "home";
 }
 

@@ -1,5 +1,12 @@
 # Changelog – Cardamome
 
+## v4.87.0 – Cardamome · Rétro planning en pleine page
+
+### Organiser le service
+- **Une vraie page** : `/retroplanning/<jour>/<créneau>` (`breakfast`, `lunch`, `dinner`), reconstruite depuis le planning ; lien direct, retour arrière et rechargement fonctionnent, un repas retiré renvoie au planning.
+- **La frise au centre** : fin des tuiles « Début » et « Mains occupées » ; la note des durées estimées passe sous la frise.
+- **Frise pivotée sur téléphone** (et dans la session batch) : une colonne par plat, le temps qui descend, heures à gauche, noms en tête ; libellés sur plusieurs lignes, plus de défilement latéral.
+
 ## v4.86.0 – Cardamome · Tout le repas à l'heure
 
 ### Organiser le service et session batch

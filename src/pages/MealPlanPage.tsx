@@ -8,7 +8,8 @@ import { LoadingSpinner } from "../components/ui/LoadingSpinner.jsx";
 import { useAppShell } from "../context/AppShellContext.jsx";
 import { useHousehold } from "../hooks/useHousehold.js";
 import { MEAL_SLOTS } from "../constants/mealSlots.js";
-import { itemRole, newGroupId, moveMealItem, addRecipeToSlot } from "@/lib/planning/composedMeal.js";
+import { itemRole, mealsForSlot, newGroupId, moveMealItem, addRecipeToSlot } from "@/lib/planning/composedMeal.js";
+import { parseRetroplanningPath, retroplanningPath } from "@/lib/planning/retroplanningRoute.js";
 import { useLongPress } from "../hooks/useLongPress.js";
 import { buildMealPlanIcs } from "@/lib/planning/mealPlanIcs.js";
 import { computeDayIntake } from "@/lib/planning/dayIntake.js";
@@ -137,16 +138,6 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
     setComposeFor({ date, slot, groupId: group.groupId || null, baseIdx: (mealPlan[date] || []).indexOf(platEntry.item), baseRecipeId: platEntry.item.recipeId });
   }, [mealPlan, recipesById]);
 
-  // « Organiser le service » : le repas figé à l'ouverture (rôles résolus).
-  const [serviceFor, setServiceFor] = useState<{ date: string; slot: string; dishes: ServiceMealDish[] } | null>(null);
-  const openService = useCallback((date: string, slot: string, group: SlotGroup) => {
-    const dishes = group.items.flatMap(({ item }): ServiceMealDish[] => {
-      const recipe = item.recipeId ? recipesById.get(item.recipeId) : undefined;
-      return recipe ? [{ recipe, role: itemRole(item, recipe) }] : [];
-    });
-    if (dishes.length) setServiceFor({ date, slot, dishes });
-  }, [recipesById]);
-
   const attachToMeal = useCallback((recipeId: string, role: string) => {
     if (!composeFor) return;
     setMealPlan(prev => {
@@ -166,6 +157,25 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
   const batchOpen = location.pathname === "/meal-plan/batch";
   const openBatch = useCallback(() => gotoRoute("/meal-plan/batch"), [gotoRoute]);
   const closeBatch = useCallback(() => gotoRoute("/meal-plan"), [gotoRoute]);
+
+  // « Organiser le service » = route /retroplanning/<jour>/<créneau> : le repas se
+  // reconstruit depuis le planning (lien direct, retour arrière, rechargement).
+  const retro = useMemo(() => parseRetroplanningPath(location.pathname, location.search), [location.pathname, location.search]);
+  const openService = useCallback((date: string, slot: string, group: SlotGroup) => {
+    gotoRoute(retroplanningPath({ date, slot, groupId: group.groupId }));
+  }, [gotoRoute]);
+  const serviceDishes = useMemo<ServiceMealDish[]>(() => {
+    if (!retro) return [];
+    const meals = mealsForSlot((mealPlan[retro.date] || []).filter(m => m.slot === retro.slot), recipesById);
+    const group = meals.find(meal => retro.groupId && meal.groupId === retro.groupId) ?? meals[0];
+    return (group?.items ?? []).flatMap(({ item }): ServiceMealDish[] => {
+      const recipe = item.recipeId ? recipesById.get(item.recipeId) : undefined;
+      return recipe ? [{ recipe, role: itemRole(item, recipe) }] : [];
+    });
+  }, [retro, mealPlan, recipesById]);
+  // Repas introuvable (retiré du planning, lien périmé) : retour au planning.
+  const retroMissing = !!retro && !loading && serviceDishes.length === 0;
+  useEffect(() => { if (retroMissing) gotoRoute("/meal-plan", { replace: true }); }, [retroMissing, gotoRoute]);
   const gen = useWeekGeneration({ generate, undo, weekDays, household, hasRecipes: recipes.length > 0, notify, logActivity, openBatch });
 
   // Session batch : vue LIVE dérivée du planning de la semaine visible (plats, bases,
@@ -380,8 +390,8 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
         document.body,
       )}
 
-      {serviceFor && createPortal(
-        <ServicePlanView date={serviceFor.date} slot={serviceFor.slot} dishes={serviceFor.dishes} references={stepReferences} onClose={() => setServiceFor(null)} />,
+      {retro && serviceDishes.length > 0 && createPortal(
+        <ServicePlanView key={location.pathname + location.search} date={retro.date} slot={retro.slot} dishes={serviceDishes} references={stepReferences} onClose={() => gotoRoute("/meal-plan")} />,
         document.body,
       )}
 

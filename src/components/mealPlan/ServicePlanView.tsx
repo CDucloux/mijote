@@ -80,9 +80,6 @@ export function ServicePlanView({ date, slot, dishes, references, onClose }: Ser
     setRemindersSet(true);
   };
 
-  // Jour du départ vu depuis le jour du repas : rien le jour même, « La veille » sinon.
-  const startDay = dayLabel(plan.start, serveAt);
-  const startPrefix = startDay === "Aujourd'hui" ? "" : startDay === "Hier" ? "La veille, " : `${startDay}, `;
   const meta = SLOT_BY_ID[slot];
   return (
     <div className="svc">
@@ -108,12 +105,6 @@ export function ServicePlanView({ date, slot, dishes, references, onClose }: Ser
             </div>
           </div>
 
-          <div className="svc-stats">
-            <div className="svc-stat"><b>{startPrefix}{clockLabel(plan.start)}</b><span>Début</span></div>
-            <div className="svc-stat"><b>{fmtTime(plan.active)}</b><span>Mains occupées</span></div>
-            {plan.ovenConflicts.length > 0 && <div className="svc-stat is-warn"><b>{plan.ovenConflicts.length}</b><span>Conflit{plan.ovenConflicts.length > 1 ? "s" : ""} de four résolu{plan.ovenConflicts.length > 1 ? "s" : ""}</span></div>}
-          </div>
-
           {plan.lateBy > 0 && (
             <div className="svc-note is-late">
               <Icon name="clock" size={16} color="currentColor" />
@@ -131,17 +122,19 @@ export function ServicePlanView({ date, slot, dishes, references, onClose }: Ser
             );
           })}
           {holds.map(advice => <div key={advice} className="svc-note"><Icon name="fire" size={16} color="currentColor" /><span>{advice}</span></div>)}
-          {estimated.length > 0 && (
-            <div className="svc-note is-soft">
-              <Icon name="info" size={16} color="currentColor" />
-              <span>Durées estimées pour {estimated.join(", ")} : l'horaire peut bouger. Corrige-les dans l'éditeur de recette.</span>
-            </div>
-          )}
         </div>
 
         <div className="svc-wide">
           <ServiceGantt plan={plan} recipeOf={recipeOf} now={now} references={references} />
         </div>
+        {estimated.length > 0 && (
+          <div className="svc-col">
+            <div className="svc-note is-soft">
+              <Icon name="info" size={16} color="currentColor" />
+              <span>Durées estimées pour {estimated.join(", ")} : l'horaire peut bouger. Corrige-les dans l'éditeur de recette.</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {native && reminders.length > 0 && (
