@@ -39,6 +39,8 @@ interface DraggableStepProps {
   step: Step;
   index: number;
   total: number;
+  /** Minutes de découpe de l'étape (cf. `recipeCutMinutes`), pour la durée proposée. */
+  cutMinutes?: number | null;
   ingredients: IngredientLine[];
   utensils: Utensil[];
   recipes?: Recipe[];
@@ -54,7 +56,7 @@ interface DraggableStepProps {
   onTargetChange?: (index: number | null) => void;
 }
 
-function DraggableStepBase({ step, index, total, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, isDropTarget = false, onUpdate, onTimingChange, onRemove, onMove, onTargetChange }: DraggableStepProps) {
+function DraggableStepBase({ step, index, total, cutMinutes, ingredients, utensils, recipes, ingredientDB, utensilDB, draggable: isDraggable = true, isDropTarget = false, onUpdate, onTimingChange, onRemove, onMove, onTargetChange }: DraggableStepProps) {
   const { dragging, rowProps, handleProps } = useDragReorder({ index, enabled: isDraggable, onMove, onTargetChange });
   // La carte saisie se soulève ; la carte VISÉE s'entoure d'accent.
   const aimed = isDropTarget && !dragging;
@@ -107,7 +109,7 @@ function DraggableStepBase({ step, index, total, ingredients, utensils, recipes,
       <AutoResizeTextarea className="field-input field-soft step-instructions" placeholder="Décris cette étape…" value={step.text || ""} onChange={e => onUpdate(step.id, "text", e.target.value)}
         style={{ marginBottom: 12, background: "var(--surface2)", borderRadius: 14, padding: "13px 15px", fontSize: 14.5, lineHeight: 1.55, minHeight: 88 }} />
 
-      <StepTimingField step={step} onChange={(duration, activeTime) => onTimingChange(step.id, duration, activeTime)} />
+      <StepTimingField step={step} cutMinutes={cutMinutes} onChange={(duration, activeTime) => onTimingChange(step.id, duration, activeTime)} />
 
       {/* Add-ons optionnels : chips discrètes tant qu'ils ne sont pas utilisés */}
       {(!showPhoto || !showTip) && (

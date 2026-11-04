@@ -117,6 +117,25 @@ const FORME_ALIASES: Record<string, FormeDecoupe> = (() => {
   return map;
 })();
 
+/** Alias lisibles dans une consigne, les plus longs d'abord (« très petits dés » avant
+ *  « dés »). Sans « des » nu, homographe de l'article. */
+const TEXT_ALIASES: [RegExp, FormeDecoupe][] = Object.entries(FORME_ALIASES)
+  .filter(([alias]) => alias !== "des")
+  .sort(([a], [b]) => b.length - a.length)
+  .map(([alias, forme]) => [new RegExp(`(^|[^a-z0-9])${alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`), forme]);
+
+/**
+ * Forme de découpe nommée dans le texte d'une étape (« couper en brunoise »), pour
+ * les recettes dont les ingrédients ne portent pas de découpe structurée.
+ *
+ * @param text - Texte de l'étape.
+ * @returns La forme la plus spécifique trouvée, ou `null`.
+ */
+export function formeInText(text: string | null | undefined): FormeDecoupe | null {
+  const haystack = normPhrase(text ?? "");
+  return TEXT_ALIASES.find(([re]) => re.test(haystack))?.[1] ?? null;
+}
+
 /** Parse un calibre grossier ; synonymes courants ramenés à fin/moyen/gros. */
 function parseCalibre(raw: unknown): Calibre | undefined {
   if (typeof raw !== "string") return undefined;
@@ -266,6 +285,17 @@ const CUT_MARKERS: readonly string[] = [
 ];
 
 /**
+ * L'étape nomme-t-elle un geste de découpe (couper, émincer, râper…) ?
+ *
+ * @param text - Texte de l'étape.
+ * @returns `true` si un marqueur de découpe y figure.
+ */
+export function mentionsCutGesture(text: string | null | undefined): boolean {
+  const normalized = normPhrase(text ?? "");
+  return CUT_MARKERS.some((marker) => normalized.includes(marker));
+}
+
+/**
  * Repère l'étape de la recette où la découpe d'un poste est décrite, pour permettre d'y
  * naviguer et de vérifier la classification. Une étape « relie » le poste si elle le cite
  * dans ses liens `ingredients` OU nomme le légume dans son `text` (beaucoup d'étapes ne
@@ -311,10 +341,7 @@ export function findDecoupeStepIndex(
 
   const linksIngredient = (step: Step): boolean =>
     (step.ingredients || []).some((n) => matchesName(normPhrase(n))) || matchesName(normPhrase(step.text || ""));
-  const mentionsCut = (step: Step): boolean => {
-    const t = normPhrase(step.text || "");
-    return CUT_MARKERS.some((m) => t.includes(m));
-  };
+  const mentionsCut = (step: Step): boolean => mentionsCutGesture(step.text);
 
   let firstLink = -1;
   for (let i = 0; i < steps.length; i++) {

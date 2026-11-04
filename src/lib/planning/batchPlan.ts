@@ -93,7 +93,7 @@ export function prepGain(item: Pick<PrepItem, "usedBy">): number {
 export interface BatchCookInput {
   id: string;
   name: string;
-  recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime">;
+  recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime" | "ingredients">;
   /** Une base : les plats qui la consomment. */
   feeds?: string[];
 }

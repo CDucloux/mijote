@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { planMealService, serviceRoadmap, ovenSpans, serviceReminders, stepOvenTemperature, stepUsesOven, dateAtClock, ovenConflictMessage, holdAdvice, shiftPlan, serviceTaskKey, type ServiceDishInput } from "../mealService.js";
+import { planMealService, serviceRoadmap, ovenSpans, serviceReminders, stepUsesOven, dateAtClock, ovenConflictMessage, holdAdvice, shiftPlan, serviceTaskKey, type ServiceDishInput } from "../mealService.js";
+import { stepOvenTemperature } from "../stepEstimate.js";
 import type { Step } from "@/lib/types.js";
 
 const at = (hours: number, minutes = 0): number => new Date(2026, 9, 24, hours, minutes).getTime();
@@ -178,5 +179,22 @@ describe("bases (feeds) et shiftPlan", () => {
 describe("serviceTaskKey", () => {
   it("identifie une étape par son plat et son index", () => {
     expect(serviceTaskKey({ dishId: "gigot", stepIndex: 2 })).toBe("t:gigot:2");
+  });
+});
+
+describe("préchauffage", () => {
+  it("cale un préchauffage seul sur l'enfournement, en parallèle de la préparation (non-régression)", () => {
+    const pasta = dish("pâtes", "plat", [
+      { text: "Préchauffer le four à 220 °C", duration: 45, durationEstimated: true },
+      step(20, 20, "Couper les aubergines"),
+      step(30, 1, "Enfourner à 220 °C"),
+    ]);
+    const plan = planMealService([pasta], { serveAt: at(20), now: at(12), offsets: { plat: 0 } });
+    const [preheat, cut, bake] = plan.dishes[0].tasks;
+    expect(preheat).toMatchObject({ minutes: 15, active: 0, oven: true, temperature: 220 });
+    expect(preheat.end).toBe(bake.start);
+    expect(preheat.start).toBeGreaterThan(cut.start);
+    expect(plan.dishes[0].start).toBe(cut.start);
+    expect(plan.start).toBe(at(19, 10));
   });
 });
