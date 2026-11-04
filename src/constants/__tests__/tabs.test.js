@@ -18,6 +18,8 @@ describe("tabForPath", () => {
     expect(tabForPath("/profile")).toBe("profile");
     expect(tabForPath("/legal")).toBe("legal");
     expect(tabForPath("/guide")).toBe("guide");
+    // Le rétro planning d'un repas vit sous l'onglet Planning.
+    expect(tabForPath("/retroplanning/2026-11-04/soir")).toBe("meal-plan");
     expect(tabForPath("/notifications")).toBe("notifications");
   });
 
