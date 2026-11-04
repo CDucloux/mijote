@@ -36,51 +36,51 @@ describe("planMealService", () => {
   const plan = planMealService([veloute, gigot, gratin, mousse], { serveAt: at(20), now: at(12) });
   const byId = Object.fromEntries(plan.dishes.map(d => [d.id, d]));
 
-  it("décale le service de chaque rôle et range les plats dans l'ordre du repas", () => {
-    expect(plan.dishes.map(d => [d.id, d.serveAt])).toEqual([["velouté", at(20)], ["gigot", at(20, 30)], ["gratin", at(20, 30)], ["mousse", at(21, 15)]]);
-    expect(plan.end).toBe(at(21, 15));
+  it("sert tout le repas à la même heure et range les plats dans l'ordre du repas", () => {
+    expect(plan.dishes.map(d => [d.id, d.serveAt])).toEqual([["velouté", at(20)], ["gigot", at(20)], ["gratin", at(20)], ["mousse", at(20)]]);
+    expect(plan.end).toBe(at(20));
   });
 
   it("place le plat le plus long au plus tard", () => {
     expect(byId.gigot.tasks.map(t => [t.start, t.end])).toEqual([
-      [at(17, 55), at(18, 55)], [at(18, 55), at(19, 10)], [at(19, 10), at(20, 10)], [at(20, 10), at(20, 25)], [at(20, 25), at(20, 30)],
+      [at(17, 25), at(18, 25)], [at(18, 25), at(18, 40)], [at(18, 40), at(19, 40)], [at(19, 40), at(19, 55)], [at(19, 55), at(20)],
     ]);
     expect(byId.gigot.hold).toBe(0);
   });
 
   it("avance le gratin pour libérer le four du gigot, et signale qu'il faudra le garder au chaud", () => {
-    expect(byId.gratin.tasks.map(t => [t.start, t.end])).toEqual([[at(17, 35), at(17, 55)], [at(17, 55), at(19, 10)]]);
+    expect(byId.gratin.tasks.map(t => [t.start, t.end])).toEqual([[at(17, 5), at(17, 25)], [at(17, 25), at(18, 40)]]);
     expect(plan.ovenConflicts).toEqual([{ dishId: "gratin", stepIndex: 1, withDishId: "gigot", shift: 80, temperature: 160, otherTemperature: 220 }]);
     expect(byId.gratin.hold).toBe(80);
   });
 
   it("commence par le dessert à préparer d'avance", () => {
-    expect(byId.mousse.start).toBe(at(16, 55));
-    expect(plan.start).toBe(at(16, 55));
+    expect(byId.mousse.start).toBe(at(15, 40));
+    expect(plan.start).toBe(at(15, 40));
     expect(plan.lateBy).toBe(0);
   });
 
   it("partage le four entre deux plats à la même température ou sans température connue", () => {
     const tarte = dish("tarte", "dessert", [step(30, 1, "Enfourner à 220 °C")]);
     const legumes = dish("légumes", "accompagnement", [step(60, 1, "Rôtir au four")]);
-    const shared = planMealService([gigot, tarte, legumes], { serveAt: at(19, 40), offsets: { dessert: 30, accompagnement: 30 }, now: at(12) });
+    const shared = planMealService([gigot, tarte, legumes], { serveAt: at(20, 10), now: at(12) });
     expect(shared.ovenConflicts).toEqual([]);
   });
 
   it("n'attribue jamais deux tâches en main en même temps, sauf à deux en cuisine", () => {
     const salade = dish("salade", "entree", [step(20, 20, "Tailler les crudités")]);
     const tartare = dish("tartare", "plat", [step(20, 20, "Hacher la viande")]);
-    const alone = planMealService([salade, tartare], { serveAt: at(20), offsets: { plat: 0 }, now: at(12) });
+    const alone = planMealService([salade, tartare], { serveAt: at(20), now: at(12) });
     const [first, second] = alone.dishes.map(d => d.tasks[0]);
     expect(first.end <= second.start || second.end <= first.start).toBe(true);
     expect(alone.handShifts).toBe(1);
-    const together = planMealService([salade, tartare], { serveAt: at(20), offsets: { plat: 0 }, cooks: 2, now: at(12) });
+    const together = planMealService([salade, tartare], { serveAt: at(20), cooks: 2, now: at(12) });
     expect(together.handShifts).toBe(0);
     expect(together.start).toBe(at(19, 40));
   });
 
   it("chiffre le retard au pas de 5 min", () => {
-    expect(planMealService([gigot], { serveAt: at(20), offsets: { plat: 0 }, now: at(17, 32) }).lateBy).toBe(10);
+    expect(planMealService([gigot], { serveAt: at(20), now: at(17, 32) }).lateBy).toBe(10);
   });
 
   it("tient un repas vide", () => {
@@ -94,21 +94,14 @@ describe("serviceReminders", () => {
   it("rappelle le départ de chaque plat et les retours après une attente", () => {
     const reminders = serviceReminders(plan, at(17));
     expect(reminders.map(r => [r.dishId, r.kind, r.at])).toEqual([
-      ["gratin", "start", at(17, 35)],
-      ["gigot", "start", at(17, 55)],
-      ["gigot", "resume", at(18, 55)],
-      ["velouté", "start", at(19, 15)],
-      ["velouté", "resume", at(19, 55)],
-      ["gigot", "resume", at(20, 10)],
-      ["gigot", "resume", at(20, 25)],
+      ["gratin", "start", at(17, 5)],
+      ["gigot", "start", at(17, 25)],
+      ["gigot", "resume", at(18, 25)],
+      ["velouté", "start", at(19, 10)],
+      ["gigot", "resume", at(19, 40)],
+      ["velouté", "resume", at(19, 50)],
+      ["gigot", "resume", at(19, 55)],
     ]);
-  });
-});
-
-describe("décalage propre à un plat", () => {
-  it("prime sur celui du rôle", () => {
-    const plan = planMealService([{ ...mousse, offset: 120 }], { serveAt: at(20), now: at(12) });
-    expect(plan.dishes[0].serveAt).toBe(at(22));
   });
 });
 
@@ -144,7 +137,7 @@ describe("bases (feeds) et shiftPlan", () => {
   it("place une base pour qu'elle finisse avant le premier plat qui la consomme", () => {
     const bouillon = { ...dish("bouillon", "plat", [step(10, 10, "Légumes dans la marmite"), step(45, 0, "Frémir")]), feeds: ["soupe"] };
     const soupe = dish("soupe", "plat", [step(5, 5, "Verser le bouillon"), step(25, 0, "Cuire")]);
-    const plan = planMealService([bouillon, soupe], { serveAt: at(17), offsets: { plat: 0 }, now: at(12) });
+    const plan = planMealService([bouillon, soupe], { serveAt: at(17), now: at(12) });
     const byId = Object.fromEntries(plan.dishes.map(d => [d.id, d]));
     expect(byId.soupe.start).toBe(at(16, 30));
     expect(byId.bouillon.end).toBe(at(16, 30));
@@ -152,7 +145,7 @@ describe("bases (feeds) et shiftPlan", () => {
   });
 
   it("décale tout le plan sans changer son placement relatif", () => {
-    const plan = planMealService([gigot], { serveAt: at(20), offsets: { plat: 0 }, now: at(12) });
+    const plan = planMealService([gigot], { serveAt: at(20), now: at(12) });
     const shifted = shiftPlan(plan, -60 * 60_000);
     expect(shifted.start).toBe(plan.start - 60 * 60_000);
     expect(shifted.dishes[0].tasks.map(t => t.end - t.start)).toEqual(plan.dishes[0].tasks.map(t => t.end - t.start));
@@ -174,7 +167,7 @@ describe("préchauffage", () => {
       step(20, 20, "Couper les aubergines"),
       step(30, 1, "Enfourner à 220 °C"),
     ]);
-    const plan = planMealService([pasta], { serveAt: at(20), now: at(12), offsets: { plat: 0 } });
+    const plan = planMealService([pasta], { serveAt: at(20), now: at(12) });
     const [preheat, cut, bake] = plan.dishes[0].tasks;
     expect(preheat).toMatchObject({ minutes: 15, active: 0, oven: true, temperature: 220 });
     expect(preheat.end).toBe(bake.start);

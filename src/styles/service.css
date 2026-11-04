@@ -22,13 +22,6 @@
 .svc-stat span { font-size: 11px; font-weight: 600; color: var(--text3); }
 .svc-stat.is-warn b { color: var(--spice); }
 
-.svc-dishes { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 12px; padding: 2px 16px 4px; }
-.svc-dishes::-webkit-scrollbar { display: none; }
-.svc-dish { flex-shrink: 0; display: flex; flex-direction: column; gap: 1px; min-width: 120px; max-width: 190px; padding: 9px 11px; border-radius: 14px; background: var(--float-surface); box-shadow: var(--float-shadow); }
-.svc-dish__role { font-size: 9.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text3); }
-.svc-dish__name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.svc-dish__serve { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
-.svc-dish__serve button { width: 22px; height: 22px; border: none; border-radius: 50%; display: grid; place-items: center; background: rgba(var(--accent-rgb), 0.12); color: var(--accent); cursor: pointer; }
 
 .svc-note { --tone: var(--spice-rgb); display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 11px 12px; border-radius: 14px; background: rgba(var(--tone), 0.12); color: rgb(var(--tone)); font-size: 12.5px; line-height: 1.45; }
 .svc-note.is-late { --tone: var(--red-rgb); }
@@ -96,8 +89,7 @@
 
 @media (min-width: 900px) {
   .svc-top, .svc-body, .svc-foot { padding-left: 32px; padding-right: 32px; }
-  .svc-controls .serve-times, .svc-dishes { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; flex-wrap: wrap; }
-  .svc-foot { display: flex; justify-content: flex-end; }
+  .svc-controls .serve-times,   .svc-foot { display: flex; justify-content: flex-end; }
   .svc-foot .serve-cta { width: auto; padding: 0 24px; }
 }
 

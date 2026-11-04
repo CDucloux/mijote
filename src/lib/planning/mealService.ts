@@ -1,6 +1,6 @@
 /**
- * Rétro planning d'un repas à plusieurs plats (« Organiser le service ») : chaque
- * plat a son heure de service (décalée selon son rôle), et ses étapes sont placées
+ * Rétro planning d'un repas à plusieurs plats (« Organiser le service ») : tout le
+ * repas est prêt à l'heure de service, et les étapes de chaque plat sont placées
  * à rebours en partageant deux ressources :
  * - **les mains** : `cooks` tâches « mains occupées » au plus en même temps ;
  * - **le four** : une seule température à la fois (deux plats au même degré
@@ -25,9 +25,6 @@ const STEP_MS = 5 * MINUTE;
 /** Recul maximal d'une étape avant d'abandonner la recherche (deux jours). */
 const MAX_SHIFT_MS = 48 * 60 * MINUTE;
 
-/** Décalage par défaut (minutes) de l'heure de service de chaque rôle après l'entrée. */
-export const DEFAULT_ROLE_OFFSETS: Record<RoleId, number> = { entree: 0, plat: 30, accompagnement: 30, dessert: 75 };
-
 /** Attente au-delà de laquelle un plat prêt trop tôt doit être gardé au chaud. */
 export const HOLD_WARNING_MINUTES = 15;
 
@@ -37,8 +34,6 @@ export interface ServiceDishInput {
   name: string;
   role: RoleId;
   recipe: Pick<Recipe, "steps" | "prepTime" | "cookTime" | "ingredients">;
-  /** Décalage propre au plat (minutes après l'entrée), prioritaire sur celui du rôle. */
-  offset?: number;
   /**
    * Plats qui consomment celui-ci (une base : fond, pâte, sauce). Il est alors placé
    * après eux dans le calcul, pour finir avant le premier d'entre eux.
@@ -48,10 +43,8 @@ export interface ServiceDishInput {
 
 /** Options du calcul. */
 export interface ServiceOptions {
-  /** Heure de service de l'entrée (le premier rôle), en ms. */
+  /** Heure de service du repas (tous les plats prêts), en ms. */
   serveAt: number;
-  /** Décalages par rôle, en minutes (défaut {@link DEFAULT_ROLE_OFFSETS}). */
-  offsets?: Partial<Record<RoleId, number>>;
   /** Nombre de cuisiniers (paires de mains), 1 par défaut. */
   cooks?: number;
   /** Instant présent (ms), pour le retard. */
@@ -142,18 +135,17 @@ function handsFull(hands: Interval[], slot: Interval, cooks: number): boolean {
  * Organise le service d'un repas à plusieurs plats.
  *
  * @param dishes - Les plats du repas.
- * @param options - Heure de service, décalages par rôle, nombre de cuisiniers, instant présent.
+ * @param options - Heure de service, nombre de cuisiniers, instant présent.
  * @returns Le plan : plats placés, conflits de four résolus, retard éventuel.
  */
 export function planMealService(dishes: ServiceDishInput[], options: ServiceOptions): ServicePlan {
-  const offsets = { ...DEFAULT_ROLE_OFFSETS, ...options.offsets };
   const cooks = Math.max(1, Math.round(options.cooks ?? 1));
   const hands: Interval[] = [];
   const oven: OvenInterval[] = [];
   const ovenConflicts: OvenConflict[] = [];
   let handShifts = 0;
 
-  const prepared = dishes.map(dish => ({ dish, timing: recipeTiming(dish.recipe), serveAt: options.serveAt + (dish.offset ?? offsets[dish.role] ?? 0) * MINUTE }));
+  const prepared = dishes.map(dish => ({ dish, timing: recipeTiming(dish.recipe), serveAt: options.serveAt }));
   // Le plus long d'abord : il a le moins de marge, il choisit ses créneaux. Les
   // bases passent après les plats qui les consomment, pour finir avant eux.
   const feeder = (input: ServiceDishInput): number => input.feeds?.length ? 1 : 0;

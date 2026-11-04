@@ -110,7 +110,7 @@ export interface BatchCookInput {
  */
 export function planBatchCooking(dishes: BatchCookInput[], options: { startAt: number; cooks?: number; now: number }): ServicePlan {
   const plan = planMealService(
-    dishes.map(dish => ({ id: dish.id, name: dish.name, role: "plat", offset: 0, recipe: dish.recipe, feeds: dish.feeds })),
+    dishes.map(dish => ({ id: dish.id, name: dish.name, role: "plat", recipe: dish.recipe, feeds: dish.feeds })),
     { serveAt: options.startAt, cooks: options.cooks, now: options.now },
   );
   return { ...shiftPlan(plan, options.startAt - plan.start), lateBy: 0 };

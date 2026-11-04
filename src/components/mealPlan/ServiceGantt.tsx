@@ -12,7 +12,7 @@ const MINUTE = 60_000;
 interface ServiceGanttProps {
   plan: ServicePlan;
   recipeOf: (dishId: string) => Pick<Recipe, "steps" | "ingredients" | "utensils"> | undefined;
-  /** Sous-titre d'un plat (défaut : « servi à … »). */
+  /** Sous-titre d'un plat (défaut : « prêt à … »). */
   dishCaption?: (dish: ServicePlan["dishes"][number]) => string;
   /** Instant présent (ms) : repère « maintenant » quand il tombe dans la frise. */
   now?: number;
@@ -63,7 +63,7 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now, references, isC
             <span className="svc-g__label">
               {!dishCaption && <span className="svc-g__role">{roleLabel(dish.role)}</span>}
               <span className="svc-g__name" title={dish.name}>{dish.name}</span>
-              <span className="svc-g__serve">{dish.start < windowStart ? `dès ${clockLabel(dish.start)} · ` : ""}{dishCaption ? dishCaption(dish) : `servi à ${clockLabel(dish.serveAt)}`}</span>
+              <span className="svc-g__serve">{dish.start < windowStart ? `dès ${clockLabel(dish.start)} · ` : ""}{dishCaption ? dishCaption(dish) : `prêt à ${clockLabel(dish.end)}`}</span>
             </span>
             <span className="svc-g__track">
               {grid}

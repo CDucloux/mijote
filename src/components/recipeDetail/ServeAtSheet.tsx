@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { SwipeableSheet } from "../ui/SwipeableSheet.jsx";
 import { Icon } from "../ui/Icon.jsx";
+import { ClockPicker } from "../ui/ClockPicker.jsx";
 import { fmtTime } from "../../lib/format.js";
 import {
   scheduleService, clockToTime, timeToClock, clockLabel, dayLabel, scheduleDays, serveReminders,
@@ -124,7 +125,7 @@ export function ServeAtSheet({ recipe, onClose, onEditTimings }: ServeAtSheetPro
           <button key={choice} type="button" className={`serve-time${clock === choice ? " on" : ""}`} onClick={() => pick(choice)}>{choice.replace(":", " h ").replace(" h 00", " h")}</button>
         ))}
         <label className={`serve-time serve-time--custom${TIME_CHOICES.includes(clock) ? "" : " on"}`}>
-          <input type="time" value={clock} aria-label="Autre heure" onChange={e => e.target.value && pick(e.target.value)} />
+          <ClockPicker value={clock} label="Autre heure" onChange={value => pick(value)} />
         </label>
       </div>
 

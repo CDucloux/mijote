@@ -9,6 +9,7 @@ import { deriveNotifId, ensureTimerNotificationPermission, scheduleTimerNotifica
 import { BatchPrepTab } from "./BatchPrepTab.jsx";
 import { BatchStoreTab } from "./BatchStoreTab.jsx";
 import { ServiceGantt } from "./ServiceGantt.jsx";
+import { ClockPicker } from "../ui/ClockPicker.jsx";
 import type { StepReferences } from "./ServiceStepModal.jsx";
 import type { Recipe } from "@/lib/types.js";
 import "../../styles/service.css";
@@ -125,7 +126,7 @@ export function BatchSessionView(props: BatchSessionViewProps) {
                 </select>
               </label>
               <label className="bt-pill"><Icon name="clock" size={13} color="currentColor" />
-                <input type="time" value={settings.clock} aria-label="Heure de début" onChange={e => e.target.value && onSettings({ clock: e.target.value })} />
+                <ClockPicker value={settings.clock} label="Heure de début" onChange={clock => onSettings({ clock })} />
               </label>
             </div>
             <span className="bt-hero__k">Pour {mealOccasions} repas · {dishCount} plat{dishCount > 1 ? "s" : ""}{bases ? ` + ${bases} base${bases > 1 ? "s" : ""}` : ""}</span>

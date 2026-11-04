@@ -4,13 +4,14 @@ import { Icon } from "../ui/Icon.jsx";
 import { fmtTime } from "../../lib/format.js";
 import { clockLabel, dayLabel, timeToClock, reminderMessage } from "@/lib/planning/serveSchedule.js";
 import {
-  planMealService, dateAtClock, ovenConflictMessage, holdAdvice, serviceReminders, DEFAULT_SERVE_CLOCK, DEFAULT_ROLE_OFFSETS,
+  planMealService, dateAtClock, ovenConflictMessage, holdAdvice, serviceReminders, DEFAULT_SERVE_CLOCK,
   type ServiceDishInput,
 } from "@/lib/planning/mealService.js";
-import { roleLabel, type RoleId } from "@/lib/planning/composedMeal.js";
+import type { RoleId } from "@/lib/planning/composedMeal.js";
 import { deriveNotifId, ensureTimerNotificationPermission, scheduleTimerNotification } from "@/lib/notifications/localNotifications.js";
 import { SLOT_BY_ID } from "../../constants/mealSlots.js";
 import { ServiceGantt } from "./ServiceGantt.jsx";
+import { ClockPicker } from "../ui/ClockPicker.jsx";
 import type { StepReferences } from "./ServiceStepModal.jsx";
 import type { Recipe } from "@/lib/types.js";
 import "../../styles/service.css";
@@ -37,20 +38,16 @@ const TIME_CHOICES: Record<string, string[]> = {
   midi: ["12:00", "12:30", "13:00", "13:30"],
   soir: ["19:00", "19:30", "20:00", "20:30", "21:00"],
 };
-const OFFSET_STEP = 15;
 const TICK_MS = 30_000;
 
 /**
  * Panneau plein écran « Organiser le service » d'un repas du planning : heure de
  * service, plats placés à rebours en partageant le four et les mains, en frise
- * (chaque étape s'ouvre au tap). Les heures de service par plat
- * se règlent au quart d'heure ; les conflits de four résolus et les plats à garder
- * au chaud sont expliqués.
+ * (chaque étape s'ouvre au tap). Tout le repas est prêt à l'heure choisie ; les
+ * conflits de four résolus et les plats à garder au chaud sont expliqués.
  */
 export function ServicePlanView({ date, slot, dishes, references, onClose }: ServicePlanViewProps) {
   const [clock, setClock] = useState(DEFAULT_SERVE_CLOCK[slot] ?? "20:00");
-  const [cooks, setCooks] = useState(1);
-  const [offsets, setOffsets] = useState<Record<string, number>>({});
   const [remindersSet, setRemindersSet] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -60,12 +57,12 @@ export function ServicePlanView({ date, slot, dishes, references, onClose }: Ser
 
   const inputs = useMemo<ServiceDishInput[]>(() => dishes.map((dish, index) => {
     const id = `${dish.recipe.id ?? "r"}-${index}`;
-    return { id, name: dish.recipe.name || "Sans nom", role: dish.role, recipe: dish.recipe, offset: offsets[id] };
-  }), [dishes, offsets]);
+    return { id, name: dish.recipe.name || "Sans nom", role: dish.role, recipe: dish.recipe };
+  }), [dishes]);
   const recipes = useMemo(() => new Map(inputs.map((input, index) => [input.id, dishes[index].recipe])), [inputs, dishes]);
   const recipeOf = (dishId: string) => recipes.get(dishId);
   const serveAt = dateAtClock(date, clock) ?? now;
-  const plan = useMemo(() => planMealService(inputs, { serveAt, cooks, now }), [inputs, serveAt, cooks, now]);
+  const plan = useMemo(() => planMealService(inputs, { serveAt, now }), [inputs, serveAt, now]);
   const nameOf = (dishId: string) => plan.dishes.find(dish => dish.id === dishId)?.name ?? "";
   const reminders = serviceReminders(plan, now);
   const estimated = plan.dishes.filter(dish => dish.timing.quality !== "reliable").map(dish => dish.name);
@@ -73,10 +70,6 @@ export function ServicePlanView({ date, slot, dishes, references, onClose }: Ser
   const native = Capacitor.isNativePlatform();
 
   const reset = () => setRemindersSet(false);
-  const shiftDish = (dishId: string, role: RoleId, delta: number) => {
-    setOffsets(prev => ({ ...prev, [dishId]: Math.max(-60, (prev[dishId] ?? DEFAULT_ROLE_OFFSETS[role]) + delta) }));
-    reset();
-  };
   const activateReminders = async () => {
     if (!(await ensureTimerNotificationPermission())) return;
     await Promise.all(reminders.map(reminder => scheduleTimerNotification({
@@ -110,15 +103,8 @@ export function ServicePlanView({ date, slot, dishes, references, onClose }: Ser
                 <button key={choice} type="button" className={`serve-time${clock === choice ? " on" : ""}`} onClick={() => { setClock(choice); reset(); }}>{clockLabel(dateAtClock(date, choice) ?? now)}</button>
               ))}
               <label className={`serve-time serve-time--custom${(TIME_CHOICES[slot] ?? TIME_CHOICES.soir).includes(clock) ? "" : " on"}`}>
-                <input type="time" value={clock} aria-label="Autre heure" onChange={e => { if (e.target.value) { setClock(e.target.value); reset(); } }} />
+                <ClockPicker value={clock} label="Autre heure" onChange={value => { setClock(value); reset(); }} />
               </label>
-            </div>
-            <div className="serve-days" role="group" aria-label="Cuisiniers">
-              {[1, 2].map(count => (
-                <button key={count} type="button" className={`serve-day${cooks === count ? " on" : ""}`} onClick={() => { setCooks(count); reset(); }}>
-                  {count === 1 ? "Seul en cuisine" : "À deux"}
-                </button>
-              ))}
             </div>
           </div>
 
@@ -126,20 +112,6 @@ export function ServicePlanView({ date, slot, dishes, references, onClose }: Ser
             <div className="svc-stat"><b>{startPrefix}{clockLabel(plan.start)}</b><span>Début</span></div>
             <div className="svc-stat"><b>{fmtTime(plan.active)}</b><span>Mains occupées</span></div>
             {plan.ovenConflicts.length > 0 && <div className="svc-stat is-warn"><b>{plan.ovenConflicts.length}</b><span>Conflit{plan.ovenConflicts.length > 1 ? "s" : ""} de four résolu{plan.ovenConflicts.length > 1 ? "s" : ""}</span></div>}
-          </div>
-
-          <div className="svc-dishes">
-            {plan.dishes.map(dish => (
-              <div key={dish.id} className="svc-dish">
-                <span className="svc-dish__role">{roleLabel(dish.role)}</span>
-                <span className="svc-dish__name">{dish.name}</span>
-                <span className="svc-dish__serve">
-                  <button type="button" aria-label="Servir plus tôt" onClick={() => shiftDish(dish.id, dish.role, -OFFSET_STEP)}><Icon name="chevronDown" size={12} /></button>
-                  {clockLabel(dish.serveAt)}
-                  <button type="button" aria-label="Servir plus tard" onClick={() => shiftDish(dish.id, dish.role, OFFSET_STEP)}><Icon name="chevronUp" size={12} /></button>
-                </span>
-              </div>
-            ))}
           </div>
 
           {plan.lateBy > 0 && (
