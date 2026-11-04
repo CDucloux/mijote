@@ -98,10 +98,14 @@
 .is-vertical .svc-g__lbl > svg { margin-top: 1px; }
 .is-vertical .svc-g__lbl > span { white-space: normal; text-overflow: clip; line-height: 1.25; max-height: 100%; }
 .is-vertical .is-vertical .svc-g__bar.is-tiny .svc-g__lbl { display: none; }
-.svc-g__legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 11.5px; color: var(--text2); }
+.svc-g__legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 14px; font-size: 11.5px; color: var(--text2); }
 .svc-g__legend span { display: inline-flex; align-items: center; gap: 6px; }
-.svc-g__legend i { color: #fff; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 16px; border-radius: 5px; }
-.svc-g__hint { margin-left: auto; color: var(--text3); }
+.svc-g__legend i { display: inline-block; width: 16px; height: 10px; border-radius: 3px; }
+/* Clé de nature : pilule teintée de la couleur du geste, pastille ronde pleine
+   qui porte l'icône, libellé dans la couleur adoucie vers le texte. */
+.svc-g__key { --c: var(--accent); height: 26px; padding: 0 11px 0 4px; border-radius: 999px; background: color-mix(in srgb, var(--c) 13%, transparent); color: color-mix(in srgb, var(--c) 62%, var(--text)); font-weight: 600; }
+.svc-g__key i { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--c); color: #fff; }
+.svc-g__hint { margin-left: auto; padding-left: 8px; color: var(--text3); }
 .svc-g__legend i.is-moved { background: repeating-linear-gradient(-45deg, rgba(var(--red-rgb), 0.3) 0 3px, transparent 3px 6px); }
 
 .svc-foot { flex-shrink: 0; padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); background: var(--bg); }
