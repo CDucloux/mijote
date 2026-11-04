@@ -4,10 +4,12 @@
  *
  * @module planning/stepTimers
  */
+import type { Step, Utensil } from "@/lib/types.js";
+import { getApplianceSchema, validateParamValues } from "@/lib/utensils/appliances.js";
 
 /** Une durée détectée dans une étape : sa valeur en minutes et son libellé affichable. */
 export interface StepDuration {
-  /** Durée en minutes (arrondie, bornée à 24 h). */
+  /** Durée en minutes, bornée à 24 h (fractionnaire pour un réglage d'appareil en secondes). */
   minutes: number;
   /** Libellé lisible tel qu'on l'affiche sur le bouton, ex. `"6 min"` ou `"1 h 30"`. */
   label: string;
@@ -49,6 +51,84 @@ export function parseDurations(text: string | null | undefined): StepDuration[] 
   for (const m of work.matchAll(/(\d+)\s*(?:min(?:ute)?s?|mn)\b/gi)) push(Number(m[1]), `${m[1]} min`);
 
   return out.sort((a, b) => a.minutes - b.minutes);
+}
+
+/** Durée maximale d'un minuteur, en minutes (24 h). */
+export const MAX_TIMER_MINUTES = 24 * 60;
+
+/**
+ * Libellé d'une durée, au format des minuteurs détectés dans le texte.
+ *
+ * @param minutes - Durée en minutes (fractionnaire sous la minute).
+ * @returns Par exemple `"30 s"`, `"45 min"`, `"2 h"` ou `"1 h 05"`.
+ */
+export function durationLabel(minutes: number): string {
+  if (minutes < 1) return `${Math.round(minutes * 60)} s`;
+  const total = Math.round(minutes);
+  if (total < 60) return `${total} min`;
+  const rest = total % 60;
+  return rest ? `${Math.floor(total / 60)} h ${String(rest).padStart(2, "0")}` : `${Math.floor(total / 60)} h`;
+}
+
+/**
+ * Durées réglées sur les appareils d'une étape (« Four 180 °C · 45 min ») : le
+ * temps y est saisi comme réglage et ne figure souvent pas dans le texte, il doit
+ * pourtant se lancer en minuteur comme les durées écrites.
+ *
+ * @param step - L'étape et ses réglages par ustensile (`utensilParams`).
+ * @param utensils - Ustensiles liés à l'étape.
+ * @param applianceOf - Clé d'appareil d'un ustensile (lue dans la base d'ustensiles).
+ * @returns Les durées trouvées (réglage `duree`, en minutes ou en secondes selon
+ *   l'appareil), triées et dédupliquées ; un réglage invalide est ignoré.
+ */
+export function applianceDurations<U extends Pick<Utensil, "id">>(
+  step: Pick<Step, "utensilParams">,
+  utensils: U[],
+  applianceOf: (utensil: U) => unknown,
+): StepDuration[] {
+  const found = utensils.flatMap(utensil => {
+    const raw = utensil.id ? step.utensilParams?.[utensil.id] : undefined;
+    if (!raw) return [];
+    const appliance = applianceOf(utensil);
+    const duree = validateParamValues(appliance, raw).values.duree;
+    if (typeof duree !== "number" || duree <= 0) return [];
+    const unit = getApplianceSchema(appliance).find(field => field.key === "duree")?.unit;
+    return [unit === "s" ? duree / 60 : duree];
+  });
+  return mergeDurations(found.map(minutes => ({ minutes, label: durationLabel(minutes) })));
+}
+
+/**
+ * Fusionne des listes de durées : dédupliquées par durée (la première l'emporte),
+ * bornées à {@link MAX_TIMER_MINUTES} et triées par ordre croissant.
+ *
+ * @param lists - Listes de durées (texte de l'étape, réglages d'appareils…).
+ * @returns Une seule liste, prête à afficher en boutons de minuteur.
+ */
+export function mergeDurations(...lists: StepDuration[][]): StepDuration[] {
+  const seen = new Set<number>();
+  return lists.flat()
+    .filter(d => d.minutes > 0 && d.minutes <= MAX_TIMER_MINUTES && !seen.has(d.minutes) && !!seen.add(d.minutes))
+    .sort((a, b) => a.minutes - b.minutes);
+}
+
+/** Durées proposées d'un tap pour un minuteur libre. */
+export const TIMER_PRESETS = [1, 3, 5, 10, 15, 20, 30, 45, 60] as const;
+
+/**
+ * Pas suivant d'un sélecteur de durée : à la minute sous 10 min, par 5 jusqu'à
+ * l'heure, par quart d'heure au-delà (la précision utile décroît avec la durée).
+ *
+ * @param minutes - Durée courante.
+ * @param direction - `1` pour allonger, `-1` pour raccourcir.
+ * @returns La nouvelle durée, recalée sur le pas et bornée entre 1 min et 24 h.
+ */
+export function stepTimerMinutes(minutes: number, direction: 1 | -1): number {
+  const current = Math.min(Math.max(Math.round(minutes) || 1, 1), MAX_TIMER_MINUTES);
+  const pace = (m: number): number => (m < 10 ? 1 : m < 60 ? 5 : 15);
+  const size = direction > 0 ? pace(current) : pace(current - 1);
+  const next = direction > 0 ? Math.floor(current / size) * size + size : Math.ceil(current / size) * size - size;
+  return Math.min(Math.max(next, 1), MAX_TIMER_MINUTES);
 }
 
 /**

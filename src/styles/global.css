@@ -5184,10 +5184,47 @@ html.light .sheet-sticky-head::after {
 /* Bouton « Minuteur N min » (mentions de temps d'une étape) : fond épice piloté en
    CSS (et non inline) pour un survol desktop qui appuie le tabac. */
 .cook-timer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 22px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--spice);
+  cursor: pointer;
   background: rgba(var(--spice-rgb), 0.13);
   border: none;
   transition: background-color 0.15s ease;
 }
+/* Minuteur libre : même pilule, en retrait (neutre) derrière les durées repérées. */
+.cook-timer-btn--free { background: var(--surface2); color: var(--text2); gap: 6px; }
+.cook-timer-btn--free:active { background: var(--surface3); }
+
+/* Feuille « Minuteur » : la durée domine, encadrée de deux pastilles −/+. */
+.timer-picker__dial { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.timer-picker__value {
+  font-family: var(--ff-display);
+  font-size: 44px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--spice);
+}
+.timer-picker__step {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface2); color: var(--text); border: none; cursor: pointer;
+}
+.timer-picker__step:disabled { opacity: 0.35; cursor: default; }
+.timer-picker__presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px; }
+.timer-picker__preset {
+  padding: 7px 13px; border-radius: 18px; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums;
+  background: var(--surface2); color: var(--text2);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.timer-picker__preset.is-active { background: rgba(var(--spice-rgb), 0.16); color: var(--spice); font-weight: 600; }
 
 /* Encarts du mode cuisine (mise en place, ingrédients et ustensiles d'une étape) :
    dessinés par leur fond et l'ombre flottante partagée, sans contour. */
@@ -5198,7 +5235,7 @@ html.light .sheet-sticky-head::after {
   padding: 16px;
   margin-bottom: 20px;
 }
-.cook-timer-btn:active { background: rgba(var(--spice-rgb), 0.22); }
+.cook-timer-btn:not(.cook-timer-btn--free):active { background: rgba(var(--spice-rgb), 0.22); }
 
 /* Bouton « Plus de détails » d'une pastille de technique : fond piloté en CSS (à
    partir de la couleur de catégorie passée en `--tech-accent`) pour permettre un
