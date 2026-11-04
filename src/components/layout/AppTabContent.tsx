@@ -92,7 +92,7 @@ export function AppTabContent(props: AppTabContentProps) {
           {tab === "recipes" && <RecipesPage recipes={recipes} collections={collections} ingredientDB={ingredientDB} recipeDerived={recipeDerived} loading={loading}
             onSelect={props.onSelectRecipe} onNewRecipe={props.onNewRecipe} onEditRecipe={(r) => navigate(`/recipes/${r.id}/edit`)}
             setCollections={setCollections} setTab={props.setTab} {...props.library} />}
-          {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={props.onSelectRecipe} ingredientDB={ingredientDB} recipeDerived={recipeDerived}
+          {tab === "meal-plan" && <MealPlanPageMemo mealPlan={mealPlan} recipes={recipes} setMealPlan={setMealPlan} onSelectRecipe={props.onSelectRecipe} ingredientDB={ingredientDB} utensilDB={utensilDB} recipeDerived={recipeDerived}
             preferences={preferences} stock={stock} loading={loading} generate={props.planner.generate} undo={props.planner.undo} undoKey={props.planner.undoKey} />}
           {tab === "shopping" && <ShoppingPage shoppingLists={shoppingLists} setShoppingLists={setShoppingLists} ingredientDB={ingredientDB} recipes={recipes} categories={categories} loading={loading} setStock={setStock} setLowStock={setLowStock} />}
           {tab === "stock" && <StockPage stock={stock} setStock={setStock} lowStock={lowStock} setLowStock={setLowStock} ingredientDB={ingredientDB} categories={categories} loading={loading}

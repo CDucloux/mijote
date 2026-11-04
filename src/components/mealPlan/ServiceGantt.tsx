@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { stepSummary, clockLabel } from "@/lib/planning/serveSchedule.js";
 import { roleLabel } from "@/lib/planning/composedMeal.js";
-import { ServiceStepSheet } from "./ServiceStepSheet.jsx";
+import { ServiceStepModal, type StepReferences } from "./ServiceStepModal.jsx";
 import type { ServicePlan, ServiceTask } from "@/lib/planning/mealService.js";
 import type { Recipe } from "@/lib/types.js";
 
@@ -16,18 +16,22 @@ interface ServiceGanttProps {
   dishCaption?: (dish: ServicePlan["dishes"][number]) => string;
   /** Instant présent (ms) : repère « maintenant » quand il tombe dans la frise. */
   now?: number;
+  /** Bases de référence de l'étape ouverte (vignettes, réglages d'appareils). */
+  references?: StepReferences;
+  /** Étapes cochables (session batch) : état et bascule. */
+  isChecked?: (task: ServiceTask) => boolean;
+  onToggle?: (task: ServiceTask) => void;
 }
 
-/** Couleur du libellé : sur le plein (mains) quand il couvre au moins la moitié de la barre. */
-const taskKind = (task: ServiceTask): string => task.oven ? "is-oven" : task.active * 2 >= task.minutes ? "is-hands" : "is-wait";
 
 /**
  * Frise du service : une ligne par plat, alignée sur l'heure de service. Chaque
  * barre montre en plein la part « mains occupées » (en tête d'étape) puis l'attente ;
- * un tap ouvre l'étape comme dans le mode cuisine. Les créneaux qu'un plat a dû
+ * un tap ouvre l'étape comme dans le mode cuisine (et la coche, dans la session
+ * batch : une étape faite s'efface). Les créneaux qu'un plat a dû
  * céder au four sont hachurés à leur place d'origine.
  */
-export function ServiceGantt({ plan, recipeOf, dishCaption, now }: ServiceGanttProps) {
+export function ServiceGantt({ plan, recipeOf, dishCaption, now, references, isChecked, onToggle }: ServiceGanttProps) {
   const [open, setOpen] = useState<{ dishId: string; stepIndex: number } | null>(null);
   const windowStart = Math.max(plan.start, plan.end - MAX_WINDOW_MS);
   const span = Math.max(1, plan.end - windowStart);
@@ -43,6 +47,7 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now }: ServiceGanttP
   const moved = new Map(plan.ovenConflicts.map(conflict => [`${conflict.dishId}:${conflict.stepIndex}`, conflict.shift]));
   const showNow = now != null && now > windowStart && now < plan.end;
   const openDish = open ? plan.dishes.find(dish => dish.id === open.dishId) : undefined;
+  const openTask = openDish?.tasks.find(task => task.stepIndex === open?.stepIndex);
 
   return (
     <div className="svc-g">
@@ -70,13 +75,17 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now }: ServiceGanttP
               })}
               {dish.tasks.filter(task => task.end > windowStart).map(task => {
                 const summary = stepSummary(recipeOf(dish.id)?.steps?.[task.stepIndex]?.text);
+                const label = task.oven && task.temperature != null ? `${task.temperature} °C` : summary;
                 const hands = task.minutes > 0 ? Math.min(100, task.active / task.minutes * 100) : 0;
                 const style = { left: pos(task.start), width: width(task.start, task.end), "--hands": `${hands}%` } as CSSProperties;
                 return (
-                  <button key={task.stepIndex} type="button" className={`svc-g__bar ${taskKind(task)}`} style={style}
+                  <button key={task.stepIndex} type="button" className={`svc-g__bar${task.oven ? " is-oven" : ""}${isChecked?.(task) ? " is-done" : ""}`} style={style}
                     title={`${clockLabel(task.start)} à ${clockLabel(task.end)} · ${summary}`} aria-label={`Étape ${task.stepIndex + 1} de ${dish.name} : ${summary}`}
                     onClick={() => setOpen({ dishId: dish.id, stepIndex: task.stepIndex })}>
-                    <span className="svc-g__lbl">{task.oven && task.temperature != null ? `${task.temperature} °C` : summary}</span>
+                    {/* Deux calques du même libellé, découpés à la frontière mains / attente :
+                        blanc sur le plein, teinté sur l'attente, lisible des deux côtés. */}
+                    <span className="svc-g__lbl"><span>{label}</span></span>
+                    <span className="svc-g__lbl is-on" aria-hidden="true"><span>{label}</span></span>
                   </button>
                 );
               })}
@@ -93,9 +102,10 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now }: ServiceGanttP
         {plan.ovenConflicts.length > 0 && <span><i className="is-moved" />Créneau cédé au four</span>}
         <span className="svc-g__hint">Touche une étape pour l'ouvrir</span>
       </div>
-      {open && openDish && (
-        <ServiceStepSheet dishName={openDish.name} recipe={recipeOf(openDish.id)} tasks={openDish.tasks} stepIndex={open.stepIndex}
-          onNavigate={stepIndex => setOpen({ dishId: openDish.id, stepIndex })} onClose={() => setOpen(null)} />
+      {open && openDish && openTask && (
+        <ServiceStepModal dishName={openDish.name} recipe={recipeOf(openDish.id)} tasks={openDish.tasks} stepIndex={open.stepIndex} references={references}
+          onNavigate={stepIndex => setOpen({ dishId: openDish.id, stepIndex })} onClose={() => setOpen(null)}
+          checked={isChecked?.(openTask)} onToggle={onToggle && (() => onToggle(openTask))} />
       )}
     </div>
   );

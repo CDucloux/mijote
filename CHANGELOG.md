@@ -1,5 +1,13 @@
 # Changelog – Cardamome
 
+## v4.85.0 – Cardamome · La frise, rien que la frise
+
+### Session batch et organiser le service
+- **La frise remplace la feuille de route** : une seule vue, plus lisible pour un rétro planning. Sur téléphone, le nom du plat reste épinglé à gauche quand la frise défile.
+- **L'étape dans l'habit du mode cuisine** : un tap ouvre l'étape avec le même rendu que le pas à pas (en-tête et progression, consigne et gestes techniques, astuce, ingrédients avec vignettes, ustensiles avec réglages et précautions, photo), son créneau dans le plan, et Précédent / Suivant dans le plat. Plein écran sur téléphone, fenêtre centrée sur ordinateur.
+- **Cocher depuis la frise** (session batch) : « Marquer comme faite » dans l'étape ; une étape faite s'efface et se barre dans la frise.
+- **Libellés lisibles** : blancs sur la part « mains occupées », teintés sur l'attente, même quand une phrase chevauche les deux.
+
 ## v4.84.0 – Cardamome · Frise lisible
 
 ### Session batch et organiser le service

@@ -3,13 +3,13 @@ import { Capacitor } from "@capacitor/core";
 import { Icon } from "../ui/Icon.jsx";
 import { fmtTime } from "@/lib/format.js";
 import { clockLabel, reminderMessage } from "@/lib/planning/serveSchedule.js";
-import { ovenSpans, serviceReminders, serviceTaskKey, type ServicePlan, type RoadmapTask } from "@/lib/planning/mealService.js";
+import { serviceReminders, serviceTaskKey, type ServicePlan, type ServiceTask } from "@/lib/planning/mealService.js";
 import { addDays, boxLabels, prepKey, shortDayLabel, storeKey, weekdayName, type BatchSettings, type BatchStorage, type PrepStage } from "@/lib/planning/batchPlan.js";
 import { deriveNotifId, ensureTimerNotificationPermission, scheduleTimerNotification } from "@/lib/notifications/localNotifications.js";
 import { BatchPrepTab } from "./BatchPrepTab.jsx";
 import { BatchStoreTab } from "./BatchStoreTab.jsx";
-import { ServiceRoadmap } from "./ServiceRoadmap.jsx";
 import { ServiceGantt } from "./ServiceGantt.jsx";
+import type { StepReferences } from "./ServiceStepModal.jsx";
 import type { Recipe } from "@/lib/types.js";
 import "../../styles/service.css";
 import "../../styles/batch.css";
@@ -29,6 +29,8 @@ interface BatchSessionViewProps {
   onSettings: (patch: Partial<BatchSettings>) => void;
   onToggle: (key: string) => void;
   recipeOf: (recipeId: string) => Recipe | undefined;
+  /** Bases de référence pour illustrer une étape ouverte depuis la frise. */
+  references?: StepReferences;
   onClose: () => void;
 }
 
@@ -39,14 +41,13 @@ const THAW_REMINDER_HOUR = 19;
 /**
  * Session batch plein écran (route /meal-plan/batch) : on choisit le jour et
  * l'heure, la session répond par l'heure de fin et guide en trois temps.
- * « Préparer » (découpe groupée), « Cuisiner » (feuille de route ou frise, bases
+ * « Préparer » (découpe groupée), « Cuisiner » (frise, étapes cochées au tap, bases
  * d'abord, four partagé), « Ranger » (frigo ou congélateur, jour par jour).
  * L'avancement est gardé pour la semaine.
  */
 export function BatchSessionView(props: BatchSessionViewProps) {
-  const { weekLabel, weekDays, mealOccasions, prepStages, decoupeByName, cookingPlan: plan, storage, baseIds, settings, onSettings, onToggle, recipeOf, onClose } = props;
+  const { weekLabel, weekDays, mealOccasions, prepStages, decoupeByName, cookingPlan: plan, storage, baseIds, settings, onSettings, onToggle, recipeOf, references, onClose } = props;
   const [tab, setTab] = useState<Tab>("prep");
-  const [frise, setFrise] = useState(false);
   const [remindersSet, setRemindersSet] = useState(false);
   const [copied, setCopied] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -95,8 +96,7 @@ export function BatchSessionView(props: BatchSessionViewProps) {
     const lines = storage.dishes.flatMap(dish => boxLabels(recipeOf(dish.recipeId)?.name ?? "Plat", settings.day, dish));
     try { await navigator.clipboard.writeText(lines.join("\n")); setCopied(true); } catch { setCopied(false); }
   };
-  const dishLabel = (task: RoadmapTask) => `${baseIds.has(task.dishId) ? "Base" : "Plat"} · ${task.dishName}`;
-  const toggleTask = (task: RoadmapTask) => onToggle(serviceTaskKey(task));
+  const toggleTask = (task: ServiceTask) => onToggle(serviceTaskKey(task));
   const span = Math.max(1, plan.end - plan.start);
 
   return (
@@ -149,26 +149,11 @@ export function BatchSessionView(props: BatchSessionViewProps) {
                 <div className="serve-days" role="group" aria-label="Cuisiniers">
                   {[1, 2].map(n => <button key={n} type="button" className={`serve-day${settings.cooks === n ? " on" : ""}`} onClick={() => onSettings({ cooks: n })}>{n === 1 ? "Seul" : "À deux"}</button>)}
                 </div>
-                <div className="serve-days" role="group" aria-label="Vue">
-                  <button type="button" className={`serve-day${!frise ? " on" : ""}`} onClick={() => setFrise(false)}>Feuille de route</button>
-                  <button type="button" className={`serve-day${frise ? " on" : ""}`} onClick={() => setFrise(true)}>Frise</button>
-                </div>
               </div>
-              {!frise && ovenSpans(plan).length > 0 && (
-                <div className="bt-oven">
-                  <span className="bt-oven__l"><span>Four</span><span>{clockLabel(plan.start)} → {clockLabel(plan.end)}</span></span>
-                  <span className="bt-oven__track">
-                    {ovenSpans(plan).map(oven => (
-                      <i key={oven.start} style={{ left: `${(oven.start - plan.start) / span * 100}%`, width: `${(oven.end - oven.start) / span * 100}%` }}>{oven.temperature != null ? `${oven.temperature}°` : ""}</i>
-                    ))}
-                  </span>
-                </div>
-              )}
             </div>
-            <div className={frise ? "svc-wide" : "svc-col"}>
-              {frise
-                ? <ServiceGantt plan={plan} recipeOf={recipeOf} dishCaption={dish => `${baseIds.has(dish.id) ? "Base" : "Plat"} · prêt à ${clockLabel(dish.end)}`} />
-                : <ServiceRoadmap plan={plan} now={now} recipeOf={recipeOf} dishLabel={dishLabel} isChecked={task => isChecked(serviceTaskKey(task))} onToggle={toggleTask} end={{ time: plan.end, label: "tout est cuit" }} />}
+            <div className="svc-wide">
+              <ServiceGantt plan={plan} recipeOf={recipeOf} dishCaption={dish => `${baseIds.has(dish.id) ? "Base" : "Plat"} · prêt à ${clockLabel(dish.end)}`}
+                references={references} isChecked={task => isChecked(serviceTaskKey(task))} onToggle={toggleTask} />
             </div>
           </>
         )}

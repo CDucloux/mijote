@@ -226,25 +226,6 @@ export function planMealService(dishes: ServiceDishInput[], options: ServiceOpti
   };
 }
 
-/** Une tâche du plan, avec son plat, pour la feuille de route chronologique. */
-export interface RoadmapTask extends ServiceTask {
-  dishName: string;
-  role: RoleId;
-}
-
-/**
- * Feuille de route : toutes les étapes de tous les plats, dans l'ordre chronologique
- * (à égalité, dans l'ordre de service des plats).
- *
- * @param plan - Le plan du service.
- * @returns Les tâches triées par heure de début.
- */
-export function serviceRoadmap(plan: Pick<ServicePlan, "dishes">): RoadmapTask[] {
-  return plan.dishes
-    .flatMap(dish => dish.tasks.map(task => ({ ...task, dishName: dish.name, role: dish.role })))
-    .sort((a, b) => a.start - b.start || roleOrder(a.role) - roleOrder(b.role));
-}
-
 /**
  * Clé stable d'une étape du plan, pour la cocher.
  *
@@ -253,35 +234,6 @@ export function serviceRoadmap(plan: Pick<ServicePlan, "dishes">): RoadmapTask[]
  */
 export function serviceTaskKey(task: Pick<ServiceTask, "dishId" | "stepIndex">): string {
   return `t:${task.dishId}:${task.stepIndex}`;
-}
-
-/** Usage du four sur une plage (température constante). */
-export interface OvenSpan extends Interval {
-  temperature: number | null;
-  dishIds: string[];
-}
-
-/**
- * Occupation du four au fil du service, plages contiguës à même température
- * fusionnées : la ligne « Four » de la frise.
- *
- * @param plan - Le plan du service.
- * @returns Les plages, dans l'ordre chronologique.
- */
-export function ovenSpans(plan: Pick<ServicePlan, "dishes">): OvenSpan[] {
-  const uses = plan.dishes.flatMap(dish => dish.tasks.filter(task => task.oven).map(task => ({ start: task.start, end: task.end, temperature: task.temperature, dishId: dish.id })))
-    .sort((a, b) => a.start - b.start);
-  const spans: OvenSpan[] = [];
-  for (const use of uses) {
-    const last = spans[spans.length - 1];
-    if (last && use.start <= last.end && use.temperature === last.temperature) {
-      last.end = Math.max(last.end, use.end);
-      if (!last.dishIds.includes(use.dishId)) last.dishIds.push(use.dishId);
-    } else {
-      spans.push({ start: use.start, end: use.end, temperature: use.temperature, dishIds: [use.dishId] });
-    }
-  }
-  return spans;
 }
 
 /** Rappel du service : départ du plat, ou retour en cuisine après une attente. */

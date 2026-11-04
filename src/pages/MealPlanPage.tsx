@@ -37,7 +37,7 @@ import type { useMealPlanner } from "../hooks/useMealPlanner.js";
 import type { UseRecipeDerivedResult } from "../hooks/useRecipeDerived.js";
 import type { DbEntry } from "@/lib/food/nameMatcher.js";
 import type { SlotGroup } from "@/lib/planning/composedMeal.js";
-import type { MealPlan, Recipe, SavedRecipe } from "@/lib/types.js";
+import type { MealPlan, Recipe, SavedRecipe, UtensilDbItem } from "@/lib/types.js";
 import { DEFAULT_PREFERENCES, type Preferences } from "../constants/preferences.js";
 import type { DragInfo } from "../components/mealPlan/SlotZone.jsx";
 
@@ -49,6 +49,8 @@ interface MealPlanPageProps {
   setMealPlan: Dispatch<SetStateAction<MealPlan>>;
   onSelectRecipe: (recipeId: string) => void;
   ingredientDB: DbEntry[];
+  /** Base d'ustensiles : vignettes et réglages des étapes ouvertes depuis la frise. */
+  utensilDB?: UtensilDbItem[];
   /** Dérivés mémoïsés au niveau App (Nutri-Score en direct par recette). */
   recipeDerived?: UseRecipeDerivedResult;
   preferences?: Preferences;
@@ -94,7 +96,7 @@ function scrollToDateCard(container: HTMLElement | null, date: string, behavior:
 // Réinitialisé après usage et au rechargement complet.
 let mealPlanReturnDate: string | null = null;
 
-export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, recipeDerived, preferences = DEFAULT_PREFERENCES, stock = [], loading = false, generate, undo, undoKey = null }: MealPlanPageProps) {
+export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, ingredientDB, utensilDB, recipeDerived, preferences = DEFAULT_PREFERENCES, stock = [], loading = false, generate, undo, undoKey = null }: MealPlanPageProps) {
   const { notify, user, isPlus, logActivity } = useAppShell();
   // Routeur (distinct du `navigate` local de navigation entre semaines) : renvoie
   // vers l'offre Cardamome+ quand une fonctionnalité premium est verrouillée.
@@ -125,6 +127,7 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
 
   // Composition manuelle : contexte pour suggérer des recettes par rôle.
   const resolver = useMemo(() => createIngredientResolver(ingredientDB || []), [ingredientDB]);
+  const stepReferences = useMemo(() => ({ ingredientDB, utensilDB }), [ingredientDB, utensilDB]);
   const suggestCtx = useMemo(() => ({ resolver, byId: recipesById, month: currentMonth(), stockSet: new Set(stock || []), preferences }), [resolver, recipesById, stock, preferences]);
   const eligiblePool = useMemo(() => recipes.filter(r => !r.isComponent && isEligible(r, preferences, { resolver, byId: recipesById })), [recipes, preferences, resolver, recipesById]);
   const [composeFor, setComposeFor] = useState<ComposeTarget | null>(null);
@@ -371,14 +374,14 @@ export function MealPlanPage({ mealPlan, recipes, setMealPlan, onSelectRecipe, i
           prepStages={batchSession.prepStages} decoupeByName={batchSession.decoupeByName}
           cookingPlan={batchSession.cookingPlan} storage={batchSession.storage} baseIds={batchBaseIds}
           settings={batchSession.settings} onSettings={batchSession.updateSettings} onToggle={batchSession.toggleChecked}
-          recipeOf={id => recipesById.get(id)}
+          recipeOf={id => recipesById.get(id)} references={stepReferences}
           onClose={closeBatch}
         />,
         document.body,
       )}
 
       {serviceFor && createPortal(
-        <ServicePlanView date={serviceFor.date} slot={serviceFor.slot} dishes={serviceFor.dishes} onClose={() => setServiceFor(null)} />,
+        <ServicePlanView date={serviceFor.date} slot={serviceFor.slot} dishes={serviceFor.dishes} references={stepReferences} onClose={() => setServiceFor(null)} />,
         document.body,
       )}
 
