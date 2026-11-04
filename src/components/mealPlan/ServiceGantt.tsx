@@ -3,7 +3,8 @@ import { stepSummary, clockLabel } from "@/lib/planning/serveSchedule.js";
 import { roleLabel } from "@/lib/planning/composedMeal.js";
 import { ServiceStepModal, type StepReferences } from "./ServiceStepModal.jsx";
 import { useIsDesktop } from "../../hooks/useIsDesktop.js";
-import { Icon, type IconName } from "../ui/Icon.jsx";
+import { Icon } from "../ui/Icon.jsx";
+import { techniqueVisual } from "@/lib/recipes/techniqueDisplay.js";
 import type { StepPhase } from "@/lib/planning/stepEstimate.js";
 import type { ServiceDish, ServicePlan, ServiceTask } from "@/lib/planning/mealService.js";
 import type { Recipe } from "@/lib/types.js";
@@ -26,13 +27,13 @@ interface ServiceGanttProps {
   onToggle?: (task: ServiceTask) => void;
 }
 
-/** Icône et libellé de chaque nature d'étape, dans la légende comme sur les barres. */
-const PHASES: readonly { phase: StepPhase; icon: IconName; label: string }[] = [
-  { phase: "decoupe", icon: "knife", label: "Découpe" },
-  { phase: "cuisson", icon: "fire", label: "Cuisson, four ou feu" },
-  { phase: "preparation", icon: "spoon", label: "Préparation" },
+/** Libellé de chaque nature d'étape ; icône et couleur sont celles de la catégorie de geste du même nom. */
+const PHASES: readonly { phase: StepPhase; label: string }[] = [
+  { phase: "decoupe", label: "Découpe" },
+  { phase: "cuisson", label: "Cuisson, four ou feu" },
+  { phase: "preparation", label: "Préparation" },
 ];
-const PHASE_ICON = Object.fromEntries(PHASES.map(entry => [entry.phase, entry.icon])) as Record<StepPhase, IconName>;
+const CUT_COLOR = techniqueVisual("decoupe").color;
 
 /** Hauteur d'une minute dans la frise pivotée (téléphone) : 2 h tiennent sur ~290 px. */
 const PX_PER_MINUTE = 2.4;
@@ -94,16 +95,14 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now, references, isC
         const summary = stepSummary(recipeOf(dish.id)?.steps?.[task.stepIndex]?.text);
         const text = task.oven && task.temperature != null ? `${task.temperature} °C · ${summary}` : summary;
         const cut = task.minutes > 0 ? Math.min(100, task.cut / task.minutes * 100) : 0;
+        const visual = techniqueVisual(task.phase);
         const tiny = vertical && (Math.min(task.end, plan.end) - Math.max(task.start, windowStart)) / MINUTE * PX_PER_MINUTE < MIN_LABEL_PX;
         return (
           <button key={task.stepIndex} type="button" className={`svc-g__bar is-${task.phase}${isChecked?.(task) ? " is-done" : ""}${tiny ? " is-tiny" : ""}`}
-            style={{ "--at": at(task.start), "--len": len(task.start, task.end), "--cut": `${cut}%` } as CSSProperties}
+            style={{ "--at": at(task.start), "--len": len(task.start, task.end), "--cut": `${cut}%`, "--phase-fill": visual.color, "--cut-fill": CUT_COLOR } as CSSProperties}
             title={`${clockLabel(task.start)} à ${clockLabel(task.end)} · ${summary}`} aria-label={`Étape ${task.stepIndex + 1} de ${dish.name} : ${summary}`}
             onClick={() => setOpen({ dishId: dish.id, stepIndex: task.stepIndex })}>
-            {/* Deux calques du même libellé, découpés à la frontière découpe / reste :
-                chaque part garde un texte lisible sur sa couleur. */}
-            <span className="svc-g__lbl"><Icon name={PHASE_ICON[task.phase]} size={12} color="currentColor" /><span>{text}</span></span>
-            <span className="svc-g__lbl is-on" aria-hidden="true"><Icon name={PHASE_ICON[task.phase]} size={12} color="currentColor" /><span>{text}</span></span>
+            <span className="svc-g__lbl"><Icon name={visual.icon} size={12} color="currentColor" /><span>{text}</span></span>
           </button>
         );
       })}
@@ -127,7 +126,7 @@ export function ServiceGantt({ plan, recipeOf, dishCaption, now, references, isC
       )}
       <div className="svc-g__legend">
         {PHASES.map(entry => (
-          <span key={entry.phase}><i className={`is-${entry.phase}`}><Icon name={entry.icon} size={11} color="currentColor" /></i>{entry.label}</span>
+          <span key={entry.phase}><i style={{ background: techniqueVisual(entry.phase).color }}><Icon name={techniqueVisual(entry.phase).icon} size={11} color="currentColor" /></i>{entry.label}</span>
         ))}
         {plan.ovenConflicts.length > 0 && <span><i className="is-moved" />Créneau cédé au four</span>}
         <span className="svc-g__hint">Touche une étape pour l'ouvrir</span>

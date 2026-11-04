@@ -9,7 +9,7 @@ toujours avec vous.
 
 <br />
 
-![Version](https://img.shields.io/badge/version-4.88.0-6e9a3f?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-4.89.0-6e9a3f?style=for-the-badge)
 ![License](https://img.shields.io/badge/licence-propri%C3%A9taire-8fba7a?style=for-the-badge)
 ![PWA](https://img.shields.io/badge/PWA-installable-5b9cf6?style=for-the-badge)
 ![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
@@ -113,7 +113,7 @@ toujours avec vous.
   fois faite, rangement frigo ou congélateur repas par repas),
   **organiser le service** d'un repas à plusieurs plats (page `/retroplanning` :
   tout le repas prêt à l'heure choisie, heure de départ de chaque plat, four et
-  mains partagés, frise colorée et iconée par nature d'étape, découpe, cuisson ou préparation,
+  mains partagés, frise aux couleurs et icônes des catégories de gestes (découpe, cuisson, préparation),
   pivotée sur téléphone ; durées d'étape chiffrées :
   préchauffage selon la température, calé juste avant l'enfournement, découpe
   ingrédient par ingrédient selon la forme, gestes courants), **apports du jour**

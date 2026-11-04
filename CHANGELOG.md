@@ -1,5 +1,11 @@
 # Changelog – Cardamome
 
+## v4.89.0 – Cardamome · Frise aux couleurs des gestes
+
+### Organiser le service et session batch
+- **Couleurs des catégories de gestes** : découpe en orange, cuisson en rouge, préparation en bleu, avec les icônes des bulles de technique (couteau, flamme, ustensiles). Une seule source pour les gestes et la frise.
+- **La sortie du four n'est plus une étape au four** : « à la sortie du four, … » ne s'affiche plus en cuisson et n'occupe plus le four dans le calcul.
+
 ## v4.88.0 – Cardamome · Frise lisible d'un coup d'œil
 
 ### Organiser le service et session batch
